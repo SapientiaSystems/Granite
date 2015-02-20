@@ -1,0 +1,83 @@
+<project 
+    name="SubscriptionManager" 
+    default="run-commit-stage" 
+    basedir=".">
+
+	
+    <!-- root directories -->
+    <property name="workspace.root" value="${basedir}"/>
+    <property name="applications.root" value="${basedir}/applications"/>
+    <property name="components.root" value="${basedir}/components"/>
+    <property name="tests.root" value="${basedir}/tests"/>
+    
+    <property name="common.root" value="${components.root}/SubscriptionManagerCommon"/>
+    <property name="service.root" value="${components.root}/SubscriptionManagerService"/>
+    <property name="integration.root" value="${components.root}/SubscriptionManagerIntegration"/>
+    <property name="application.root" value="${components.root}/SubscriptionManagerApplication"/>
+    <property name="domain.root" value="${components.root}/SubscriptionManagerDomain"/>
+    <property name="clientplatform.root" value="${components.root}/SubscriptionManagerClientPlatform"/>
+    <property name="serverplatform.root" value="${components.root}/SubscriptionManagerServerPlatform"/>
+
+    <property name="commontest.root" value="${test.root}/SubscriptionManagerCommonTest"/>
+    <property name="servicetest.root" value="${test.root}/SubscriptionManagerServiceTest"/>
+    <property name="integrationtest.root" value="${test.root}/SubscriptionManagerIntegrationTest"/>
+    <property name="applicationtest.root" value="${test.root}/SubscriptionManagerApplicationTest"/>
+    <property name="domaintest.root" value="${test.root}/SubscriptionManagerDomainTest"/>
+    <property name="clientplatformtest.root" value="${test.root}/SubscriptionManagerClientPlatformTest"/>
+    <property name="serverplatformtest.root" value="${test.root}/SubscriptionManagerServerPlatformTest"/>
+    
+    <filelist id="build.files">
+        <file name="${common.root}/build.xml"/>
+        <file name="${commontest.root}/build.xml"/>
+        
+        <file name="${service.root}/build.xml"/>
+        <file name="${servicetest.root}/build.xml"/>
+        
+        <file name="${integration.root}/build.xml"/>
+        <file name="${integrationtest.root}/build.xml"/>
+                
+        <file name="${application.root}/build.xml"/>
+        <file name="${applicationtest.root}/build.xml"/>
+        
+        <file name="${domain.root}/build.xml"/>
+        <file name="${domaintest.root}/build.xml"/>
+                
+        <file name="${clientplatform.root}/build.xml"/>
+        <file name="${clientplatformtest.root}/build.xml"/>
+                
+        <file name="${serverplatform.root}/build.xml"/>
+        <file name="${serverplatformtest.root}/build.xml"/>
+                                       
+    </filelist>
+        
+ 	<macrodef 
+ 	    name="iterate">
+        <attribute name="target"/>
+        <sequential>
+        	<subant target="@{target}">
+            	<filelist refid="build.files"/>
+            </subant>
+        </sequential>
+    </macrodef>
+
+    <target name="clean">
+    	<iterate target="clean"/>
+    </target>
+ 	
+    <target name="run-commit-stage">
+    	<iterate target="run-commit-stage"/>
+    </target>
+    
+    <target name="run-integration-stage">
+    	<iterate target="run-integration-stage"/>
+    </target>
+    
+    <target name="deploy-to-local-repository">
+    	<iterate target="deploy-to-local-repository"/>
+    </target>
+ 	
+ 	<target name="deploy-to-remote-repository">
+    	<iterate target="deploy-to-remote-repository"/>
+    </target>
+    
+ </project>

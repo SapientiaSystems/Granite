@@ -1,0 +1,8 @@
+sapientia
+sym
+num
+int
+serializable
+servlet
+init
+href
