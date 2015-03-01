@@ -4,7 +4,11 @@
 	default="run-commit-stage">
 
     <import file="build-properties.xml"/>
-    
+     
+	<taskdef 
+	    name="genclasspath" 
+	    classname="strata1.classpathgenerator.task.GenerateClasspathTask"/>
+   
     <!--  
     <property name="source.dir" value="src"/>
     <property name="output.dir" value="bin"/>
@@ -69,10 +73,26 @@
 	    	destfile="${test.artifact}"
 		    basedir="${output.dir}"/>
 	</target>
+
+    <target
+        name="install-to-local-repository"
+        depends="package">
+		<artifact:writepom 
+		    pomRefId="${ant.project.name}" 
+		    file="${output.dir}/${ant.project.name}-pom.xml" />
+		<artifact:pom 
+		    id="${ant.project.name}-pomfile" 
+		    file="${output.dir}/${ant.project.name}-pom.xml" />       	
+		<artifact:install 
+			file="${test.artifact}">
+			<pom refid="${ant.project.name}-pomfile"/>
+            <localRepository path="${repository.dir}"/> 
+		</artifact:install>  
+    </target>
 	
 	<target 
 		name="run-commit-stage"
-		depends="package">
+		depends="install-to-local-repository">
 		<junit 
 			printsummary="true" 
 			showoutput="true" 
@@ -121,9 +141,23 @@
 		        <report format="frames" todir="${test.reports}"/>
 		    </junitreport>
     </target>
-
-    <target name="deploy-to-local-repository"/>
     
     <target name="deploy-to-remote-repository"/>
+    
+	<target 
+		name="update-classpath"
+		depends="define-properties">
+		
+		<pathconvert property="expanded.classpath" refid="dependency.classpath"/>
+
+    	<genclasspath 
+    	    classpath="${expanded.classpath}"
+          	outputFile=".classpath"
+          	source="src"
+          	output="bin"
+          	container="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
+    		<variable name="REPO_ROOT" value="C:/Users/John/Development/Workspaces/Strata/java/.repository"/>
+    	</genclasspath>
+	</target>
     
 </project>	

@@ -1,0 +1,37 @@
+<project 
+	xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+	name="SubscriptionManagerDomain" 
+	default="run-commit-stage">
+	
+	<import file="../../component-targets.xml"/>
+	
+	<target name="define-properties">
+		
+	    <property name="source.dir" value="src"/>
+	    <property name="output.dir" value="bin"/>
+	    <property name="distribution.dir" value="lib"/>
+	    <property name="artifact.name" value="${ant.project.name}-${version}"/>
+	    <property name="component.artifact" value="${distribution.dir}/${artifact.name}.jar"/>
+		
+		<artifact:pom 
+			name="SubscriptionManager Domain Component"
+			id="${ant.project.name}" 
+			groupId="subscriptionmanager" 
+			artifactId="${ant.project.name}" 
+			version="${version}">
+	        <dependency groupId="strata1" artifactId="StrataCommon" version="${strata.version}"/>
+	        <dependency groupId="strata1" artifactId="StrataInjector" version="${strata.version}"/>
+	        <dependency groupId="strata1" artifactId="StrataPersistence" version="${strata.version}"/>
+		</artifact:pom>
+			
+	    <artifact:dependencies 
+	    	pathId="dependency.classpath"
+	    	pomRefId="${ant.project.name}">
+	        <localRepository path="${repository.dir}"/>
+	    </artifact:dependencies>
+		
+		<property name="component.classpath" value="dependency.classpath"/>
+				
+	</target>
+	
+</project>	

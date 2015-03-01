@@ -18,13 +18,13 @@
     <property name="clientplatform.root" value="${components.root}/SubscriptionManagerClientPlatform"/>
     <property name="serverplatform.root" value="${components.root}/SubscriptionManagerServerPlatform"/>
 
-    <property name="commontest.root" value="${test.root}/SubscriptionManagerCommonTest"/>
-    <property name="servicetest.root" value="${test.root}/SubscriptionManagerServiceTest"/>
-    <property name="integrationtest.root" value="${test.root}/SubscriptionManagerIntegrationTest"/>
-    <property name="applicationtest.root" value="${test.root}/SubscriptionManagerApplicationTest"/>
-    <property name="domaintest.root" value="${test.root}/SubscriptionManagerDomainTest"/>
-    <property name="clientplatformtest.root" value="${test.root}/SubscriptionManagerClientPlatformTest"/>
-    <property name="serverplatformtest.root" value="${test.root}/SubscriptionManagerServerPlatformTest"/>
+    <property name="commontest.root" value="${tests.root}/SubscriptionManagerCommonTest"/>
+    <property name="servicetest.root" value="${tests.root}/SubscriptionManagerServiceTest"/>
+    <property name="integrationtest.root" value="${tests.root}/SubscriptionManagerIntegrationTest"/>
+    <property name="applicationtest.root" value="${tests.root}/SubscriptionManagerApplicationTest"/>
+    <property name="domaintest.root" value="${tests.root}/SubscriptionManagerDomainTest"/>
+    <property name="clientplatformtest.root" value="${tests.root}/SubscriptionManagerClientPlatformTest"/>
+    <property name="serverplatformtest.root" value="${tests.root}/SubscriptionManagerServerPlatformTest"/>
     
     <filelist id="build.files">
         <file name="${common.root}/build.xml"/>
@@ -35,12 +35,12 @@
         
         <file name="${integration.root}/build.xml"/>
         <file name="${integrationtest.root}/build.xml"/>
-                
-        <file name="${application.root}/build.xml"/>
-        <file name="${applicationtest.root}/build.xml"/>
         
         <file name="${domain.root}/build.xml"/>
         <file name="${domaintest.root}/build.xml"/>
+                
+        <file name="${application.root}/build.xml"/>
+        <file name="${applicationtest.root}/build.xml"/>
                 
         <file name="${clientplatform.root}/build.xml"/>
         <file name="${clientplatformtest.root}/build.xml"/>
@@ -72,8 +72,8 @@
     	<iterate target="run-integration-stage"/>
     </target>
     
-    <target name="deploy-to-local-repository">
-    	<iterate target="deploy-to-local-repository"/>
+    <target name="install-to-local-repository">
+    	<iterate target="install-to-local-repository"/>
     </target>
  	
  	<target name="deploy-to-remote-repository">
