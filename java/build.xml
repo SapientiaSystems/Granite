@@ -10,6 +10,9 @@
     <property name="components.root" value="${basedir}/components"/>
     <property name="tests.root" value="${basedir}/tests"/>
     
+    <property name="server.root" value="${applications.root}/SubscriptionManagerServer"/>
+    <property name="batch.root" value="${applications.root}/SubscriptionManagerBatch"/>
+
     <property name="common.root" value="${components.root}/SubscriptionManagerCommon"/>
     <property name="service.root" value="${components.root}/SubscriptionManagerService"/>
     <property name="integration.root" value="${components.root}/SubscriptionManagerIntegration"/>
@@ -25,6 +28,7 @@
     <property name="domaintest.root" value="${tests.root}/SubscriptionManagerDomainTest"/>
     <property name="clientplatformtest.root" value="${tests.root}/SubscriptionManagerClientPlatformTest"/>
     <property name="serverplatformtest.root" value="${tests.root}/SubscriptionManagerServerPlatformTest"/>
+    <property name="testsuite.root" value="${tests.root}/SubscriptionManagerTestSuite"/>
     
     <filelist id="build.files">
         <file name="${common.root}/build.xml"/>
@@ -47,7 +51,12 @@
                 
         <file name="${serverplatform.root}/build.xml"/>
         <file name="${serverplatformtest.root}/build.xml"/>
-                                       
+                
+        <file name="${testsuite.root}/build.xml"/>
+
+        <file name="${server.root}/build.xml"/>
+        <file name="${batch.root}/build.xml"/>
+        
     </filelist>
         
  	<macrodef 

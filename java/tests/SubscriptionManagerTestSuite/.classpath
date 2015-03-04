@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerApplicationTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerClientPlatformTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerCommonTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerDomainTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerIntegrationTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerServerPlatformTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerServiceTest"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
