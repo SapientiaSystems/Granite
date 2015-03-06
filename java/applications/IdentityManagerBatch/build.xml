@@ -1,6 +1,6 @@
 <project 
 	xmlns:artifact="antlib:org.apache.maven.artifact.ant"
-	name="SubscriptionManagerBatch" 
+	name="IdentityManagerBatch" 
 	default="run-commit-stage">
 	
 	<import file="../../component-targets.xml"/>
@@ -14,12 +14,12 @@
 	    <property name="component.artifact" value="${distribution.dir}/${artifact.name}.jar"/>
 		
 		<artifact:pom 
-			name="SubscriptionManager Batch Application"
+			name="IdentityManager Batch Application"
 			id="${ant.project.name}" 
-			groupId="subscriptionmanager" 
+			groupId="identitymanager" 
 			artifactId="${ant.project.name}" 
 			version="${version}">
-	        <dependency groupId="subscriptionmanager" artifactId="SubscriptionManagerClientPlatform" version="${version}"/>
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerClientPlatform" version="${version}"/>
 		</artifact:pom>
 			
 	    <artifact:dependencies 

@@ -1,6 +1,6 @@
 <project 
 	xmlns:artifact="antlib:org.apache.maven.artifact.ant"
-	name="SubscriptionManagerIntegrationTest" 
+	name="IdentityManagerIntegrationTest" 
 	default="run-commit-stage">
 	
 	<import file="../../component-targets.xml"/>
@@ -13,17 +13,17 @@
 	    
 	    <property name="artifact.name" value="${ant.project.name}-${version}"/>
 	    <property name="component.artifact" value="${distribution.dir}/${artifact.name}.jar"/>
-		<property name="commit.test.suite" value="subscriptionmanager.integration.testsuite.CommitStageSuite"/>
-		<property name="integration.test.suite" value="subscriptionmanager.integration.testsuite.IntegrationStageSuite"/>
+		<property name="commit.test.suite" value="identitymanager.integration.testsuite.CommitStageSuite"/>
+		<property name="integration.test.suite" value="identitymanager.integration.testsuite.IntegrationStageSuite"/>
 	    <property name="test.reports" value="${output.dir}/reports"/>
 		
 		<artifact:pom 
-			name="SubscriptionManager Integration Test"
+			name="IdentityManager Integration Test"
 			id="${ant.project.name}" 
-			groupId="subscriptionmanager" 
+			groupId="identitymanager" 
 			artifactId="${ant.project.name}" 
 			version="${version}">
-		    <dependency groupId="subscriptionmanager" artifactId="SubscriptionManagerIntegration" version="${version}"/>
+		    <dependency groupId="identitymanager" artifactId="IdentityManagerIntegration" version="${version}"/>
 	        <dependency groupId="junit" artifactId="junit" version="4.9"/>
 	        <dependency groupId="org.mockito" artifactId="mockito-all" version="1.9.0"/>
 	    </artifact:pom>

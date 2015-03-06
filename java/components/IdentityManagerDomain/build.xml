@@ -1,6 +1,6 @@
 <project 
 	xmlns:artifact="antlib:org.apache.maven.artifact.ant"
-	name="SubscriptionManagerDomain" 
+	name="IdentityManagerDomain" 
 	default="run-commit-stage">
 	
 	<import file="../../component-targets.xml"/>
@@ -14,9 +14,9 @@
 	    <property name="component.artifact" value="${distribution.dir}/${artifact.name}.jar"/>
 		
 		<artifact:pom 
-			name="SubscriptionManager Domain Component"
+			name="IdentityManager Domain Component"
 			id="${ant.project.name}" 
-			groupId="subscriptionmanager" 
+			groupId="identitymanager" 
 			artifactId="${ant.project.name}" 
 			version="${version}">
 	        <dependency groupId="strata1" artifactId="StrataCommon" version="${strata.version}"/>

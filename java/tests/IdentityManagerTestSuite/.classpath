@@ -3,12 +3,19 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerApplicationTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerClientPlatformTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerCommonTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerDomainTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerIntegrationTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerServerPlatformTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SubscriptionManagerServiceTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplication"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerClientPlatform"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommon"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerDomain"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegration"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerServerPlatform"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplicationTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerClientPlatformTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommonTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerDomainTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegrationTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerServerPlatformTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerServiceTest"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,6 +1,6 @@
 <project 
 	xmlns:artifact="antlib:org.apache.maven.artifact.ant"
-	name="SubscriptionManagerServer" 
+	name="IdentityManagerServer" 
 	default="run-commit-stage">
 	
 	<import file="../../component-targets.xml"/>
@@ -14,13 +14,13 @@
 	    <property name="component.artifact" value="${distribution.dir}/${artifact.name}.jar"/>
 		
 		<artifact:pom 
-			name="SubscriptionManager Server Application"
+			name="IdentityManager Server Application"
 			id="${ant.project.name}" 
-			groupId="subscriptionmanager" 
+			groupId="identitymanager" 
 			artifactId="${ant.project.name}" 
 			version="${version}">
-	        <dependency groupId="subscriptionmanager" artifactId="SubscriptionManagerApplication" version="${version}"/>
-	        <dependency groupId="subscriptionmanager" artifactId="SubscriptionManagerServerPlatform" version="${version}"/>
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerApplication" version="${version}"/>
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerServerPlatform" version="${version}"/>
 		</artifact:pom>
 			
 	    <artifact:dependencies 
