@@ -1,2 +1,2 @@
-# SubscriptionManager
-SubscriptionManager - a system that manages subscriptions and payments
+# IdentityManager
+A system that manages subject identities, roles, subscriptions, and payments
