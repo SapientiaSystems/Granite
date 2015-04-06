@@ -88,5 +88,9 @@
  	<target name="deploy-to-remote-repository">
     	<iterate target="deploy-to-remote-repository"/>
     </target>
+ 	
+ 	<target name="update-classpath">
+    	<iterate target="update-classpath"/>
+    </target>
     
  </project>

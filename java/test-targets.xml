@@ -156,7 +156,7 @@
           	source="src"
           	output="bin"
           	container="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
-    		<variable name="REPO_ROOT" value="C:/Users/John/Development/Workspaces/Strata/java/.repository"/>
+    		<variable name="REPO_ROOT" value="C:/Users/John/Development/Workspaces/IdentityManager/java/.repository"/>
     	</genclasspath>
 	</target>
     

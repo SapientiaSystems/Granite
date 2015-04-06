@@ -21,7 +21,7 @@
 			version="${version}">
 	        <dependency groupId="identitymanager" artifactId="IdentityManagerService" version="${version}"/>
 	        <dependency groupId="identitymanager" artifactId="IdentityManagerDomain" version="${version}"/>
-		</artifact:pom>
+	    </artifact:pom>
 			
 	    <artifact:dependencies 
 	    	pathId="dependency.classpath"

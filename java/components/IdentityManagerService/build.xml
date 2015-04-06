@@ -13,6 +13,10 @@
 	    <property name="artifact.name" value="${ant.project.name}-${version}"/>
 	    <property name="component.artifact" value="${distribution.dir}/${artifact.name}.jar"/>
 		
+		<property name="schema.dir" value="../../../xsd/IdentityManagerService"/>
+		<property name="generated.dir" value="generated"/>
+		<property name="generated.package" value="identitymanager.service.authentication"/>
+		
 		<artifact:pom 
 			name="IdentityManager Service Component"
 			id="${ant.project.name}" 
@@ -30,6 +34,19 @@
 		
 		<property name="component.classpath" value="dependency.classpath"/>
 				
+	</target>
+
+	<target 
+		name="generate-transfer-objects"
+		depends="define-properties">
+		<mkdir dir="${generated.dir}"/>
+		<java classname="com.sun.tools.internal.xjc.XJCFacade"> 
+		    <arg value="-d"/>
+		    <arg value="${generated.dir}"/>
+		    <arg value="-p"/>
+		    <arg value="${generated.package}"/>
+		    <arg value="${schema.dir}/AuthenticationSchema.xsd"/>
+		</java>
 	</target>
 	
 </project>	
