@@ -25,6 +25,7 @@
 package identitymanager.service.authentication;
 
 import identitymanager.service.subject.ISubject;
+import identitymanager.service.transferobject.OperationStatus;
 
 /****************************************************************************
  * 
@@ -130,7 +131,7 @@ class AbstractAuthenticationReplyReceiver
     private boolean 
     isAuthenticated(AuthenticateReply reply)
     {
-        return reply.getStatus().equals( AuthenticationStatus.SUCCEEDED );
+        return reply.getStatus().equals( OperationStatus.SUCCEEDED );
     }
 
     /************************************************************************

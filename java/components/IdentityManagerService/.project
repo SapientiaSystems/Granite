@@ -14,4 +14,21 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>schema/AuthenticationSchema.xsd</name>
+			<type>1</type>
+			<locationURI>$%7BPARENT-3-PROJECT_LOC%7D/xsd/IdentityManagerService/AuthenticationSchema.xsd</locationURI>
+		</link>
+		<link>
+			<name>schema/SubscriptionSchema.xsd</name>
+			<type>1</type>
+			<locationURI>$%7BPARENT-3-PROJECT_LOC%7D/xsd/IdentityManagerService/SubscriptionSchema.xsd</locationURI>
+		</link>
+		<link>
+			<name>schema/TransferObjectSchema.xsd</name>
+			<type>1</type>
+			<locationURI>$%7BPARENT-3-PROJECT_LOC%7D/xsd/IdentityManagerService/TransferObjectSchema.xsd</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>

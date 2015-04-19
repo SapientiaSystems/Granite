@@ -3,38 +3,37 @@
 	id="GeneratedAuthenticationTypes" 
 	xmlns="http://www.w3.org/2001/XMLSchema" 
 	targetNamespace="http://IdentityManager.Service.Authentication"
+	xmlns:TransferObject="http://IdentityManager.Service.TransferObject"
 	xmlns:Authentication="http://IdentityManager.Service.Authentication" 
 	elementFormDefault="qualified">
 
-	<element name="Request" type="Authentication:AuthenticateRequest"/>
-	<element name="Reply" type="Authentication:AuthenticateReply"/>
-	
+	<import 
+		schemaLocation="TransferObjectSchema.xsd" 
+        namespace="http://IdentityManager.Service.TransferObject"/>
+        	
     <complexType name="AuthenticateRequest" abstract="true">
-		<sequence>
-			<element name="RequestId" type="string"></element>
-			<element name="Duplicate" type="boolean"></element>
-			<element name="Timestamp" type="dateTime" minOccurs="0" maxOccurs="1"></element>
-		</sequence>
+    	<complexContent>
+		   	<extension base="TransferObject:IdentityManagerRequest"/>
+		</complexContent>
 	</complexType>
     
     <complexType name="AuthenticateReply">
-		<sequence>
-			<element name="ReplyId" type="string"></element>
-			<element name="OriginatingRequestId" type="string"></element>
-			<element name="Duplicate" type="boolean"></element>
-			<element name="Timestamp" type="dateTime" minOccurs="0" maxOccurs="1"></element>
-			<element name="Status" type="Authentication:AuthenticationStatus" minOccurs="1" maxOccurs="1"></element>
-			<element name="Message" type="string" minOccurs="0" maxOccurs="1"></element>
-			<element name="Subject" type="Authentication:SubjectDescriptor" minOccurs="0" maxOccurs="1"></element>
-		</sequence>
+    	<complexContent>
+		   	<extension base="TransferObject:IdentityManagerReply">
+				<sequence>
+					<element name="Authenticated" type="boolean" minOccurs="1" maxOccurs="1"/>
+					<element name="Subject" type="Authentication:SubjectDescriptor" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
 	</complexType>
 
     <complexType name="UserNamePasswordAuthenticateRequest">
     	<complexContent>
 		   	<extension base="Authentication:AuthenticateRequest">
 				<sequence>
-					<element name="UserName" type="string"  minOccurs="1" maxOccurs="1"></element>
-					<element name="UserPassword" type="string"  minOccurs="1" maxOccurs="1"></element>
+					<element name="UserName" type="string"  minOccurs="1" maxOccurs="1"/>
+					<element name="UserPassword" type="string"  minOccurs="1" maxOccurs="1"/>
 				</sequence>
 			</extension>
 		</complexContent>
@@ -45,7 +44,6 @@
 		   	<extension base="Authentication:AuthenticateReply">
 				<sequence>
 					<element name="ExceptionKind" type="string"></element>
-					<element name="Message" type="string"></element>
 				</sequence>
 			</extension>
 		</complexContent>
@@ -53,9 +51,9 @@
 
     <complexType name="SubjectDescriptor" abstract="true">
         <sequence>
-            <element name="SubjectId" type="long" minOccurs="1" maxOccurs="1"></element>            
-            <element name="SessionId" type="string"></element>
-			<element name="Roles" type="Authentication:RoleDescriptor" maxOccurs="unbounded" minOccurs="1"></element>
+            <element name="SubjectId" type="long" minOccurs="1" maxOccurs="1"/>            
+            <element name="SessionId" type="string"/>
+			<element name="Roles" type="Authentication:RoleDescriptor" maxOccurs="unbounded" minOccurs="1"/>
         </sequence>
     </complexType>
     
@@ -63,7 +61,7 @@
     	<complexContent>
 		   	<extension base="Authentication:SubjectDescriptor">
 				<sequence>
-					<element name="UserName" type="string"  minOccurs="1" maxOccurs="1"></element>
+					<element name="UserName" type="string"  minOccurs="1" maxOccurs="1"/>
 				</sequence>
 			</extension>
 		</complexContent>
@@ -71,28 +69,22 @@
     
     <complexType name="RoleDescriptor">
         <sequence>
-            <element name="SubjectId" type="long" minOccurs="1" maxOccurs="1"></element>
-            <element name="RoleId" type="long" minOccurs="1" maxOccurs="1"></element>
-            <element name="ParentRoleIds" type="long" minOccurs="0" maxOccurs="unbounded"></element>
-            <element name="RoleName" type="string" minOccurs="1" maxOccurs="1"></element>
-            <element name="Permissions" type="Authentication:PermissionDescriptor" minOccurs="1" maxOccurs="unbounded"></element>
+            <element name="SubjectId" type="long" minOccurs="1" maxOccurs="1"/>
+            <element name="RoleId" type="long" minOccurs="1" maxOccurs="1"/>
+            <element name="ParentRoleIds" type="long" minOccurs="0" maxOccurs="unbounded"/>
+            <element name="RoleName" type="string" minOccurs="1" maxOccurs="1"/>
+            <element name="Permissions" type="Authentication:PermissionDescriptor" minOccurs="1" maxOccurs="unbounded"/>
         </sequence>
     </complexType>
 
     <complexType name="PermissionDescriptor">
         <sequence>
-            <element name="SubjectId" type="long" minOccurs="1" maxOccurs="1"></element>
-            <element name="RoleId" type="long" minOccurs="1" maxOccurs="1"></element>
-            <element name="PermissionId" type="string" minOccurs="1" maxOccurs="1"></element>
-            <element name="ImpliedPermissions" type="Authentication:PermissionDescriptor" minOccurs="0" maxOccurs="unbounded"></element>
-            <element name="PermissionName" type="string"></element>
+            <element name="SubjectId" type="long" minOccurs="1" maxOccurs="1"/>
+            <element name="RoleId" type="long" minOccurs="1" maxOccurs="1"/>
+            <element name="PermissionId" type="string" minOccurs="1" maxOccurs="1"/>
+            <element name="ImpliedPermissions" type="Authentication:PermissionDescriptor" minOccurs="0" maxOccurs="unbounded"/>
+            <element name="PermissionName" type="string"/>
         </sequence>
     </complexType>
 
-	<simpleType name="AuthenticationStatus">
-		<restriction base="string">
-			<enumeration value="SUCCEEDED"></enumeration>
-			<enumeration value="FAILED"></enumeration>
-		</restriction>
-	</simpleType>
 </schema>

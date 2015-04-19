@@ -24,16 +24,17 @@
 
 package identitymanager.service.authentication;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import identitymanager.service.subject.IRole;
 import identitymanager.service.subject.PrincipalConstant;
 import identitymanager.service.subject.ResourceActionPermission;
+import identitymanager.service.transferobject.OperationStatus;
 import identitymanager.service.user.IUser;
 import identitymanager.service.user.UserName;
 import java.util.GregorianCalendar;
-import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +91,7 @@ class AuthenticationReplyReceiverTest
         reply.setReplyId( "23571113" );
         reply.setDuplicate( false );
         reply.setTimestamp( DatatypeFactory.newInstance().newXMLGregorianCalendar( (GregorianCalendar)new DateTime().getCalendar() ) );
-        reply.setStatus( AuthenticationStatus.SUCCEEDED );
+        reply.setStatus( OperationStatus.SUCCEEDED );
         reply.setSubject( createSubjectDescriptor() );
         
         itsTarget.onAuthenticate( reply );
@@ -125,7 +126,7 @@ class AuthenticationReplyReceiverTest
         reply.setReplyId( "23571113" );
         reply.setDuplicate( false );
         reply.setTimestamp( DatatypeFactory.newInstance().newXMLGregorianCalendar( (GregorianCalendar)new DateTime().getCalendar() ) );
-        reply.setStatus( AuthenticationStatus.FAILED );
+        reply.setStatus( OperationStatus.SUCCEEDED );
         reply.setMessage( "Exception message." );
         
         try
@@ -153,7 +154,7 @@ class AuthenticationReplyReceiverTest
         reply.setReplyId( "23571113" );
         reply.setDuplicate( false );
         reply.setTimestamp( DatatypeFactory.newInstance().newXMLGregorianCalendar( (GregorianCalendar)new DateTime().getCalendar() ) );
-        reply.setStatus( AuthenticationStatus.SUCCEEDED );
+        reply.setStatus( OperationStatus.SUCCEEDED );
         reply.setSubject( createSubjectDescriptor() );
         
         itsTarget.onAuthenticate( reply );
@@ -177,7 +178,7 @@ class AuthenticationReplyReceiverTest
         reply.setReplyId( "23571113" );
         reply.setDuplicate( false );
         reply.setTimestamp( DatatypeFactory.newInstance().newXMLGregorianCalendar( (GregorianCalendar)new DateTime().getCalendar() ) );
-        reply.setStatus( AuthenticationStatus.SUCCEEDED );
+        reply.setStatus( OperationStatus.SUCCEEDED );
         reply.setSubject( createSubjectDescriptor() );
         
         itsTarget.onAuthenticate( reply );

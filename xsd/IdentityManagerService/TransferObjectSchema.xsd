@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema
+	id="GeneratedTransferObjectTypes" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://IdentityManager.Service.TransferObject"
+	xmlns:TransferObject="http://IdentityManager.Service.TransferObject" 
+	elementFormDefault="qualified">
+
+	<element name="Request" type="TransferObject:IdentityManagerRequest"/>
+	<element name="Reply" type="TransferObject:IdentityManagerReply"/>
+	<element name="Event" type="TransferObject:IdentityManagerEvent"/>	
+	
+    <complexType name="IdentityManagerRequest" abstract="true">
+		<sequence>
+			<element name="RequestId" type="string" minOccurs="1" maxOccurs="1"/>
+			<element name="Duplicate" type="boolean" minOccurs="0" maxOccurs="1"/>
+			<element name="Timestamp" type="dateTime" minOccurs="0" maxOccurs="1"/>
+		</sequence>
+	</complexType>
+    
+    <complexType name="IdentityManagerReply">
+		<sequence>
+			<element name="ReplyId" type="string" minOccurs="1" maxOccurs="1"/>
+			<element name="OriginatingRequestId" type="string" minOccurs="1" maxOccurs="1"/>
+			<element name="Duplicate" type="boolean" minOccurs="0" maxOccurs="1"/>
+			<element name="Timestamp" type="dateTime" minOccurs="0" maxOccurs="1"/>
+			<element name="Status" type="TransferObject:OperationStatus" minOccurs="1" maxOccurs="1"/>
+			<element name="Message" type="string" minOccurs="0" maxOccurs="1"/>
+		</sequence>
+	</complexType>
+	
+    <complexType name="IdentityManagerEvent" abstract="true">
+		<sequence>
+			<element name="EventId" type="string" minOccurs="1" maxOccurs="1"/>
+			<element name="Duplicate" type="boolean" minOccurs="0" maxOccurs="1"/>
+			<element name="Timestamp" type="dateTime" minOccurs="0" maxOccurs="1"/>
+		</sequence>
+	</complexType>
+    
+	<simpleType name="OperationStatus">
+		<restriction base="string">
+			<enumeration value="SUCCEEDED"/>
+			<enumeration value="FAILED"/>
+		</restriction>
+	</simpleType>
+</schema>

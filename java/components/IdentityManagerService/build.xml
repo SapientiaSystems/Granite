@@ -42,10 +42,32 @@
 		<mkdir dir="${generated.dir}"/>
 		<java classname="com.sun.tools.internal.xjc.XJCFacade"> 
 		    <arg value="-d"/>
-		    <arg value="${generated.dir}"/>
+			<arg value="${generated.dir}"/>
+			<arg value="-episode"/>
+		    <arg value="TransferObject.episode"/>
 		    <arg value="-p"/>
-		    <arg value="${generated.package}"/>
+		    <arg value="identitymanager.service.transferobject"/>
+		    <arg value="${schema.dir}/TransferObjectSchema.xsd"/>
+		</java>		
+		<java classname="com.sun.tools.internal.xjc.XJCFacade"> 
+		    <arg value="-d"/>
+		    <arg value="${generated.dir}"/>
+			<arg value="-extension"/>
+			<arg value="-b"/>
+			<arg value="TransferObject.episode"/>
+		    <arg value="-p"/>
+		    <arg value="identitymanager.service.authentication"/>
 		    <arg value="${schema.dir}/AuthenticationSchema.xsd"/>
+		</java>
+		<java classname="com.sun.tools.internal.xjc.XJCFacade"> 
+		    <arg value="-d"/>
+		    <arg value="${generated.dir}"/>
+			<arg value="-extension"/>
+			<arg value="-b"/>
+			<arg value="TransferObject.episode"/>
+		    <arg value="-p"/>
+		    <arg value="identitymanager.service.subscription"/>
+		    <arg value="${schema.dir}/SubscriptionSchema.xsd"/>
 		</java>
 	</target>
 	
