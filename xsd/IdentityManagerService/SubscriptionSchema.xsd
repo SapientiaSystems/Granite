@@ -112,7 +112,7 @@
     	<complexContent>
 		   	<extension base="Subscription:SubscriptionEvent">
 				<sequence>
-					<element name="DaysRemaining" type="integer"  minOccurs="1" maxOccurs="1"/>
+					<element name="DaysRemaining" type="int"  minOccurs="1" maxOccurs="1"/>
 				</sequence>
 			</extension>
 		</complexContent>

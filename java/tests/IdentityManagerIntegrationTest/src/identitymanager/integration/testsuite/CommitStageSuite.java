@@ -24,6 +24,9 @@
 
 package identitymanager.integration.testsuite;
 
+import identitymanager.integration.mapper.JaxbEventMapperTest;
+import identitymanager.integration.mapper.JaxbReplyMapperTest;
+import identitymanager.integration.mapper.JaxbRequestMapperTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -35,7 +38,10 @@ import org.junit.runners.Suite;
  *     <a href="{@docRoot}/NamingConventions.html">Naming Conventions</a>
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({NullTest.class})
+@Suite.SuiteClasses({
+    JaxbRequestMapperTest.class,
+    JaxbReplyMapperTest.class,
+    JaxbEventMapperTest.class})
 public 
 class CommitStageSuite {}
 
