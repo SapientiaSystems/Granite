@@ -70,5 +70,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerServerPlatform"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegration"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplicationTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplication"/>
+	<classpathentry kind="var" path="REPO_ROOT/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

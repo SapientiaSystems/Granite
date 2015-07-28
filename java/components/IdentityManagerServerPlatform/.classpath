@@ -67,5 +67,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegration"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommon"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>
+	<classpathentry kind="var" path="REPO_ROOT/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/net/sf/jtidy/jtidy/r938/jtidy-r938.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

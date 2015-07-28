@@ -21,6 +21,7 @@
 			version="${version}">
 	        <dependency groupId="identitymanager" artifactId="IdentityManagerService" version="${version}"/>
 	        <dependency groupId="identitymanager" artifactId="IdentityManagerDomain" version="${version}"/>
+	        <dependency groupId="net.sf.jtidy" artifactId="jtidy" version="r938"/>
 	    </artifact:pom>
 			
 	    <artifact:dependencies 

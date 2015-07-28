@@ -25,7 +25,7 @@
 package identitymanager.service.authentication;
 
 import identitymanager.service.subject.ISubject;
-import identitymanager.service.transferobject.OperationStatus;
+import identitymanager.service.shared.OperationStatus;
 
 /****************************************************************************
  * 

@@ -61,5 +61,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommon"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerDomain"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>
+	<classpathentry kind="var" path="REPO_ROOT/net/sf/jtidy/jtidy/r938/jtidy-r938.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

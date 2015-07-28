@@ -3,17 +3,17 @@
 	id="GeneratedSubscriptionTypes" 
 	xmlns="http://www.w3.org/2001/XMLSchema" 
 	targetNamespace="http://IdentityManager.Service.Subscription"
-	xmlns:TransferObject="http://IdentityManager.Service.TransferObject"
+	xmlns:Shared="http://IdentityManager.Service.Shared"
 	xmlns:Subscription="http://IdentityManager.Service.Subscription" 
 	elementFormDefault="qualified">
 
 	<import 
-		schemaLocation="TransferObjectSchema.xsd" 
-        namespace="http://IdentityManager.Service.TransferObject"/>
+		schemaLocation="SharedSchema.xsd" 
+        namespace="http://IdentityManager.Service.Shared"/>
 
     <complexType name="SubscriptionRequest" abstract="true">
     	<complexContent>
-		   	<extension base="TransferObject:IdentityManagerRequest">
+		   	<extension base="Shared:IdentityManagerRequest">
 				<sequence>
 					<element name="SessionId" type="string"  minOccurs="1" maxOccurs="1"/>
 					<element name="SubjectId" type="string"  minOccurs="1" maxOccurs="1"/>
@@ -24,7 +24,7 @@
     
     <complexType name="SubscriptionReply" abstract="true">
     	<complexContent>
-		   	<extension base="TransferObject:IdentityManagerReply">
+		   	<extension base="Shared:IdentityManagerReply">
 				<sequence>
 					<element name="SessionId" type="string"  minOccurs="1" maxOccurs="1"/>
 				</sequence>
@@ -34,7 +34,7 @@
 	
     <complexType name="SubscriptionEvent" abstract="true">
     	<complexContent>
-		   	<extension base="TransferObject:IdentityManagerEvent">
+		   	<extension base="Shared:IdentityManagerEvent">
 				<sequence>
 					<element name="SessionId" type="string"  minOccurs="1" maxOccurs="1"/>
 				</sequence>

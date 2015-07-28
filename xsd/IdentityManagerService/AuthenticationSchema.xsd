@@ -3,23 +3,23 @@
 	id="GeneratedAuthenticationTypes" 
 	xmlns="http://www.w3.org/2001/XMLSchema" 
 	targetNamespace="http://IdentityManager.Service.Authentication"
-	xmlns:TransferObject="http://IdentityManager.Service.TransferObject"
+	xmlns:Shared="http://IdentityManager.Service.Shared"
 	xmlns:Authentication="http://IdentityManager.Service.Authentication" 
 	elementFormDefault="qualified">
 
 	<import 
-		schemaLocation="TransferObjectSchema.xsd" 
-        namespace="http://IdentityManager.Service.TransferObject"/>
+		schemaLocation="SharedSchema.xsd" 
+        namespace="http://IdentityManager.Service.Shared"/>
         	
     <complexType name="AuthenticateRequest" abstract="true">
     	<complexContent>
-		   	<extension base="TransferObject:IdentityManagerRequest"/>
+		   	<extension base="Shared:IdentityManagerRequest"/>
 		</complexContent>
 	</complexType>
     
     <complexType name="AuthenticateReply">
     	<complexContent>
-		   	<extension base="TransferObject:IdentityManagerReply">
+		   	<extension base="Shared:IdentityManagerReply">
 				<sequence>
 					<element name="Authenticated" type="boolean" minOccurs="1" maxOccurs="1"/>
 					<element name="Subject" type="Authentication:SubjectDescriptor" minOccurs="0" maxOccurs="1"/>

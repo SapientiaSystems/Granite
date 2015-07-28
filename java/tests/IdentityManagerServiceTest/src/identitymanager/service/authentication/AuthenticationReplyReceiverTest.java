@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 import identitymanager.service.subject.IRole;
 import identitymanager.service.subject.PrincipalConstant;
 import identitymanager.service.subject.ResourceActionPermission;
-import identitymanager.service.transferobject.OperationStatus;
+import identitymanager.service.shared.OperationStatus;
 import identitymanager.service.user.IUser;
 import identitymanager.service.user.UserName;
 import java.util.GregorianCalendar;

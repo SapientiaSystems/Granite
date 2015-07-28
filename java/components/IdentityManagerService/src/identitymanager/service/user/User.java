@@ -26,6 +26,7 @@ package identitymanager.service.user;
 
 import identitymanager.service.subject.AbstractSubject;
 import identitymanager.service.subject.IPrincipal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,7 +80,7 @@ class User
     public Map<String,IPrincipal> 
     getPrincipals()
     {
-        return itsPrincipals;
+        return Collections.unmodifiableMap( itsPrincipals );
     }
 
     /************************************************************************

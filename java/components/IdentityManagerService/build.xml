@@ -44,17 +44,17 @@
 		    <arg value="-d"/>
 			<arg value="${generated.dir}"/>
 			<arg value="-episode"/>
-		    <arg value="TransferObject.episode"/>
+		    <arg value="Shared.episode"/>
 		    <arg value="-p"/>
-		    <arg value="identitymanager.service.transferobject"/>
-		    <arg value="${schema.dir}/TransferObjectSchema.xsd"/>
-		</java>		
+		    <arg value="identitymanager.service.shared"/>
+		    <arg value="${schema.dir}/SharedSchema.xsd"/>
+		</java>	
 		<java classname="com.sun.tools.internal.xjc.XJCFacade"> 
 		    <arg value="-d"/>
 		    <arg value="${generated.dir}"/>
 			<arg value="-extension"/>
 			<arg value="-b"/>
-			<arg value="TransferObject.episode"/>
+			<arg value="Shared.episode"/>
 		    <arg value="-p"/>
 		    <arg value="identitymanager.service.authentication"/>
 		    <arg value="${schema.dir}/AuthenticationSchema.xsd"/>
@@ -64,11 +64,23 @@
 		    <arg value="${generated.dir}"/>
 			<arg value="-extension"/>
 			<arg value="-b"/>
-			<arg value="TransferObject.episode"/>
+			<arg value="Shared.episode"/>
 		    <arg value="-p"/>
-		    <arg value="identitymanager.service.subscription"/>
-		    <arg value="${schema.dir}/SubscriptionSchema.xsd"/>
+		    <arg value="identitymanager.service.useridentity"/>
+		    <arg value="${schema.dir}/UserIdentitySchema.xsd"/>
 		</java>
+		<!--
+		<java classname="com.sun.tools.internal.xjc.XJCFacade"> 
+		    <arg value="-d"/>
+		    <arg value="${generated.dir}"/>
+			<arg value="-extension"/>
+			<arg value="-b"/>
+			<arg value="Shared.episode"/>
+		    <arg value="-p"/>
+		    <arg value="identitymanager.service.payment"/>
+		    <arg value="${schema.dir}/PaymentSchema.xsd"/>
+		</java>
+		-->
 	</target>
 	
 </project>	
