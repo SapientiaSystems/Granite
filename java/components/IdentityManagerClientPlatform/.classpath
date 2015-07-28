@@ -18,9 +18,16 @@
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-context/3.0.6.RELEASE/spring-context-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-aop/3.0.6.RELEASE/spring-aop-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-expression/3.0.6.RELEASE/spring-expression-3.0.6.RELEASE.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/javax/activation/activation/1.1/activation-1.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataIntegrator/1.0.0/StrataIntegrator-1.0.0.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataJmsIntegrator/1.0.0/StrataJmsIntegrator-1.0.0.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/javax/jms/javax.jms-api/2.0/javax.jms-api-2.0.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/apache/activemq/activemq-all/5.9.1/activemq-all-5.9.1.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/stompjms/stompjms-client/1.19/stompjms-client-1.19.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/hawtdispatch/hawtdispatch-transport/1.20/hawtdispatch-transport-1.20.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/hawtdispatch/hawtdispatch/1.20/hawtdispatch-1.20.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/hawtbuf/hawtbuf/1.9/hawtbuf-1.9.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommon"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegration"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>

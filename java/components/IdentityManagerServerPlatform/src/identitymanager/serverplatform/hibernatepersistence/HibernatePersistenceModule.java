@@ -77,7 +77,7 @@ class HibernatePersistenceModule
     protected Class<? extends IUserIdentityEventRepositoryProvider> 
     getUserIdentityEventRepositoryProviderType()
     {
-        return null;//HibernateUserIdentityEventRepositoryProvider.class;
+        return HibernateUserIdentityEventRepositoryProvider.class;
     }
 
 }

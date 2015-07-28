@@ -19,8 +19,12 @@
 			groupId="identitymanager" 
 			artifactId="${ant.project.name}" 
 			version="${version}">
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerCommon" version="${version}"/>
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerService" version="${version}"/>
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerIntegration" version="${version}"/>
+	        <dependency groupId="identitymanager" artifactId="IdentityManagerDomain" version="${version}"/>
 	        <dependency groupId="identitymanager" artifactId="IdentityManagerApplication" version="${version}"/>
-	        <dependency groupId="identitymanager" artifactId="IdentityManagerServerPlatform" version="${version}"/>
+		    <dependency groupId="identitymanager" artifactId="IdentityManagerServerPlatform" version="${version}"/>
 		</artifact:pom>
 			
 	    <artifact:dependencies 

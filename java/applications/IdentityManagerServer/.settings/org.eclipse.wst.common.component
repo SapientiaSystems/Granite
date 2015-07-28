@@ -3,7 +3,7 @@
     <wb-module deploy-name="SubscriptionManagerServer">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-        <property name="context-root" value="SubscriptionManagerServer"/>
         <property name="java-output-path" value="/SubscriptionManagerServer/bin"/>
+        <property name="context-root" value="IdentityManagerServer"/>
     </wb-module>
 </project-modules>
