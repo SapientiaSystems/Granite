@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Jun 27, 2015 9:05:04 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class 
+        name="identitymanager.domain.useridentity.IUserIdentityEvent" 
+        table="UserIdentityEvent" 
+        abstract="true">
+        <id 
+            name="EventId" 
+            column="UserId"
+            type="java.lang.Long">
+            <generator class="native" />
+        </id>
+        <discriminator 
+            column="UserIdentityEventType"
+            type="string"/>
+        <version 
+            column="Version" 
+            name="Version" 
+            type="java.lang.Integer"/>
+        <property
+            name="Timestamp"
+            column="Timestamp"
+            type="strata1.persistence.hibernaterepository.DateTimeType"/>
+   		<property 
+   		    name="EventKind" 
+   		    column="EventKind">
+   		    <type name="org.hibernate.type.EnumType">
+   		    	<param name="enumClass">identitymanager.domain.useridentity.UserIdentityEventKind</param>
+   		    	<param name="type">12</param>
+   		    	<param name="useNamed">true</param>
+   		    </type>
+   		</property>
+   		<property 
+   		    name="StateKind" 
+   		    column="StateKind">
+   		    <type name="org.hibernate.type.EnumType">
+   		    	<param name="enumClass">identitymanager.domain.useridentity.UserIdentityStateKind</param>
+   		    	<param name="type">12</param>
+   		    	<param name="useNamed">true</param>
+   		    </type>
+   		</property>
+        <property
+            name="UserId"
+            column="UserId"
+            type="java.lang.String"
+            unique="true"/>
+        <property 
+            name="UserName" 
+            column="UserName"
+            type="java.lang.String"
+            unique="true"/>
+        <property 
+            name="Password" 
+            column="Password"
+            type="java.lang.String"/>
+        <component 
+            class="identitymanager.common.value.PersonName" 
+            name="Name">
+            <property 
+                name="FirstName"
+                column="FirstName" 
+                type="java.lang.String"/>
+            <property 
+                name="MiddleName"
+                column="MiddleName" 
+                type="java.lang.String"/>
+            <property 
+                name="LastName"
+                column="LastName" 
+                type="java.lang.String"/>
+        </component>
+        <component
+            class="identitymanager.common.value.EmailAddress"
+            name="EmailAddress">
+            <property
+                name="Email"
+                column="Email"
+                type="java.lang.String"/>
+        </component>
+        <property
+            name="EmailVerification"
+            column="EmailVerification"
+            type="java.lang.String"/>
+        <component
+            class="identitymanager.common.value.PostalAddress"
+            name="PostalAddress">
+            <property
+                name="Address"
+                column="Address"
+                type="java.lang.String"/>
+            <property
+                name="Street"
+                column="Street"
+                type="java.lang.String"/>
+            <property
+                name="City"
+                column="City"
+                type="java.lang.String"/>
+            <property
+                name="StateProvince"
+                column="StateProvince"
+                type="java.lang.String"/>
+            <property
+                name="CountryCode"
+                column="PostalCountryCode"
+                type="java.lang.String"/>
+            <property
+                name="PostalCode"
+                column="PostalCode"
+                type="java.lang.String"/>
+        </component>
+        <component
+            class="identitymanager.common.value.PhoneNumber"
+            name="PhoneNumber">
+            <property
+                name="CountryCode"
+                column="PhoneCountryCode"
+                type="java.lang.String"/>
+            <property
+                name="AreaCode"
+                column="AreaCode"
+                type="java.lang.String"/>
+            <property
+                name="Number"
+                column="PhoneNumber"
+                type="java.lang.String"/>
+        </component>            
+        <property
+            name="PhoneVerification"
+            column="PhoneVerification"
+            type="java.lang.String"/>
+        <component
+            class="identitymanager.common.value.SecurityQuestion"
+            name="SecurityQuestion">
+            <property
+                name="QuestionId"
+                column="QuestionId"
+                type="java.lang.String"/>
+            <property
+                name="Question"
+                column="Question"
+                type="java.lang.String"/>
+            <property
+                name="Answer"
+                column="Answer"
+                type="java.lang.String"/>
+        </component>            
+       	<subclass 
+        	extends="identitymanager.domain.useridentity.IUserIdentityEvent"
+            proxy="identitymanager.domain.useridentity.IUserIdentityEvent"
+            name="identitymanager.domain.useridentity.UserIdentityEvent" 
+            discriminator-value="UserIdentityEvent"/> 	
+        <query 
+            fetch-size="1" 
+            name="getUserIdentityEventWithUserName" 
+            read-only="true">
+            select u from IUserIdentityEvent u where u.UserName = :userName
+        </query>
+        <query 
+            fetch-size="2" 
+            name="hasUserIdentityEventWithUserName" 
+            read-only="true">
+            select count(u) from IUserIdentityEvent u where u.UserName = :userName
+        </query>
+    </class>
+</hibernate-mapping>
