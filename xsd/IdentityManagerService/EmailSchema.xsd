@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema
+	id="GeneratedEmailTypes" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://IdentityManager.Service.EmailVerification"
+	xmlns:Shared="http://IdentityManager.Service.Shared"
+	xmlns:Email="http://IdentityManager.Service.EmailVerification" 
+	elementFormDefault="qualified">
+
+	<import 
+		schemaLocation="SharedSchema.xsd" 
+        namespace="http://IdentityManager.Service.Shared"/>
+
+    <complexType name="VerifyEmailRequest">
+    	<complexContent>
+		   	<extension base="Shared:IdentityManagerRequest">
+				<sequence>
+					<element name="OriginatingRequestId" type="string"  minOccurs="1" maxOccurs="1"/>
+					<element name="UserId" type="string"  minOccurs="1" maxOccurs="1"/>
+					<element name="VerficationKey" type="string"  minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+    
+    <complexType name="VerifyEmailReply">
+    	<complexContent>
+		   	<extension base="Shared:IdentityManagerReply">
+				<sequence>
+					<element name="SessionId" type="string"  minOccurs="1" maxOccurs="1"/>
+					<element name="ExceptionKind" type="Email:EmailExceptionKind" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+     
+	<simpleType name="EmailExceptionKind">
+		<restriction base="string">
+			<enumeration value="VERIFY_FAILED"/>
+		</restriction>
+	</simpleType>
+    
+</schema>
