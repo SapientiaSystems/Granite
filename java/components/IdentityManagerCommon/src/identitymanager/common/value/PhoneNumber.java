@@ -25,6 +25,7 @@
 package identitymanager.common.value;
 
 import strata1.common.utility.ICopyable;
+import java.io.Serializable;
 
 /****************************************************************************
  * 
@@ -35,8 +36,10 @@ import strata1.common.utility.ICopyable;
  */
 public 
 class PhoneNumber
-    implements ICopyable,Comparable<PhoneNumber>
+    implements ICopyable,Comparable<PhoneNumber>,Serializable
 {
+    private static final long serialVersionUID = 6587480753283610653L;
+    
     private final String itsCountryCode;
     private final String itsAreaCode;
     private final String itsNumber;
@@ -54,6 +57,10 @@ class PhoneNumber
         final String areaCode,
         final String number)
     {
+        checkCountryCode( countryCode );
+        checkAreaCode( areaCode );
+        checkNumber( number );
+        
         itsCountryCode = countryCode;
         itsAreaCode    = areaCode;
         itsNumber      = number;
@@ -74,7 +81,7 @@ class PhoneNumber
      * {@inheritDoc} 
      */
     @Override
-    public ICopyable 
+    public PhoneNumber 
     copy()
     {
         return new PhoneNumber( this );
@@ -149,6 +156,70 @@ class PhoneNumber
             .append( itsNumber);
         
         return builder.toString();
+    }
+
+    /************************************************************************
+     *  
+     *
+     * @return
+     */
+    public String
+    getCountryCode()
+    {
+        return itsCountryCode;
+    }
+    
+    /************************************************************************
+     *  
+     *
+     * @return
+     */
+    public String
+    getAreaCode()
+    {
+        return itsAreaCode;
+    }
+    
+    /************************************************************************
+     *  
+     *
+     * @return
+     */
+    public String
+    getSubscriberNumber()
+    {
+        return itsNumber;
+    }
+    
+    /************************************************************************
+     *  
+     *
+     * @param countryCode
+     */
+    private void 
+    checkCountryCode(String countryCode)
+    {
+        
+    }
+
+    /************************************************************************
+     *  
+     *
+     * @param areaCode
+     */
+    private void 
+    checkAreaCode(String areaCode)
+    {
+    }
+
+    /************************************************************************
+     *  
+     *
+     * @param number
+     */
+    private void 
+    checkNumber(String number)
+    {
     }
 
 }

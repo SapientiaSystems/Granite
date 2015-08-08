@@ -24,6 +24,8 @@
 
 package identitymanager.domain.testsuite;
 
+import identitymanager.domain.useridentity.InMemoryUserIdentityEventRepositoryTest;
+import identitymanager.domain.useridentity.InMemoryUserIdentityRepositoryTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -35,7 +37,9 @@ import org.junit.runners.Suite;
  *     <a href="{@docRoot}/NamingConventions.html">Naming Conventions</a>
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({NullTest.class})
+@Suite.SuiteClasses({
+    InMemoryUserIdentityEventRepositoryTest.class,
+    InMemoryUserIdentityRepositoryTest.class})
 public 
 class CommitStageSuite {}
 

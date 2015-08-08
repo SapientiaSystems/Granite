@@ -45,6 +45,7 @@ import strata1.persistence.repository.IRepositoryContext;
 import strata1.persistence.repository.IUnitOfWork;
 import strata1.persistence.repository.RepositoryException;
 import strata1.persistence.repository.RollbackFailedException;
+import javax.inject.Inject;
 
 /****************************************************************************
  * 
@@ -65,6 +66,7 @@ class UserIdentityServiceImp
      * Creates a new UserIdentityServiceImp. 
      *
      */
+    @Inject
     public 
     UserIdentityServiceImp(
         IRepositoryContext     context,

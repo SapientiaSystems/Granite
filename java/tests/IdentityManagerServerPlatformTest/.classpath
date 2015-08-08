@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataCommon/1.0.0/StrataCommon-1.0.0.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataCommon/1.0.0/StrataCommon-1.0.0.jar" sourcepath="/STRATA_HOME/components/StrataCommon/src"/>
 	<classpathentry kind="var" path="REPO_ROOT/com/lmax/disruptor/3.2.1/disruptor-3.2.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/javax/inject/javax.inject/1/javax.inject-1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataInjector/1.0.0/StrataInjector-1.0.0.jar"/>
@@ -18,8 +18,10 @@
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-context/3.0.6.RELEASE/spring-context-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-aop/3.0.6.RELEASE/spring-aop-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-expression/3.0.6.RELEASE/spring-expression-3.0.6.RELEASE.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/javax/activation/activation/1.1/activation-1.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataIntegrator/1.0.0/StrataIntegrator-1.0.0.jar"/>
-	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataPersistence/1.0.0/StrataPersistence-1.0.0.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataPersistence/1.0.0/StrataPersistence-1.0.0.jar" sourcepath="/STRATA_HOME/components/StrataPersistence/src"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-orm/3.0.6.RELEASE/spring-orm-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-jdbc/3.0.6.RELEASE/spring-jdbc-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/springframework/spring-tx/3.0.6.RELEASE/spring-tx-3.0.6.RELEASE.jar"/>
@@ -33,7 +35,7 @@
 	<classpathentry kind="var" path="REPO_ROOT/org/hibernate/common/hibernate-commons-annotations/4.0.1.Final/hibernate-commons-annotations-4.0.1.Final.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/hibernate/hibernate-annotations/3.5.6-Final/hibernate-annotations-3.5.6-Final.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/hibernate/hibernate-commons-annotations/3.2.0.Final/hibernate-commons-annotations-3.2.0.Final.jar"/>
-	<classpathentry kind="var" path="REPO_ROOT/org/slf4j/slf4j-api/1.5.8/slf4j-api-1.5.8.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/hibernate/hibernate-tools/3.6.0.CR1/hibernate-tools-3.6.0.CR1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/hibernate/hibernate-entitymanager/3.6.9.Final/hibernate-entitymanager-3.6.9.Final.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/cglib/cglib/2.2/cglib-2.2.jar"/>
@@ -55,23 +57,31 @@
 	<classpathentry kind="var" path="REPO_ROOT/org/eclipse/core/contenttype/3.4.200-v20140207-1251/contenttype-3.4.200-v20140207-1251.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/mysql/mysql-connector-java/5.1.33/mysql-connector-java-5.1.33.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/slf4j/slf4j-simple/1.6.1/slf4j-simple-1.6.1.jar"/>
-	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataJmsIntegrator/1.0.0/StrataJmsIntegrator-1.0.0.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/net/sf/jtidy/jtidy/r938/jtidy-r938.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/strata1/StrataJmsIntegrator/1.0.0/StrataJmsIntegrator-1.0.0.jar" sourcepath="/STRATA_HOME/components/StrataJmsIntegrator/src"/>
 	<classpathentry kind="var" path="REPO_ROOT/javax/jms/javax.jms-api/2.0/javax.jms-api-2.0.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/net/authorize/anet-java-sdk/1.8.3/anet-java-sdk-1.8.3.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/apache/httpcomponents/httpclient/4.0.1/httpclient-4.0.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/apache/httpcomponents/httpcore/4.0.1/httpcore-4.0.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/commons-codec/commons-codec/1.3/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/apache/activemq/activemq-all/5.9.1/activemq-all-5.9.1.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/stompjms/stompjms-client/1.19/stompjms-client-1.19.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/hawtdispatch/hawtdispatch-transport/1.20/hawtdispatch-transport-1.20.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/hawtdispatch/hawtdispatch/1.20/hawtdispatch-1.20.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/fusesource/hawtbuf/hawtbuf/1.9/hawtbuf-1.9.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/junit/junit/4.9/junit-4.9.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar"/>
 	<classpathentry kind="var" path="REPO_ROOT/org/mockito/mockito-all/1.9.0/mockito-all-1.9.0.jar"/>
+	<classpathentry kind="var" path="REPO_ROOT/org/slf4j/slf4j-log4j12/1.6.1/slf4j-log4j12-1.6.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplication"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplicationTest"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommon"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerDomain"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerDomainTest"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegration"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegrationTest"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerServerPlatform"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerIntegration"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplicationTest"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerApplication"/>
-	<classpathentry kind="var" path="REPO_ROOT/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

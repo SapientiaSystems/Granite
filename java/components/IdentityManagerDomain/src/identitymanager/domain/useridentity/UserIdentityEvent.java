@@ -43,7 +43,7 @@ class UserIdentityEvent
     implements IUserIdentityEvent
 {
     protected Long                  itsEventId;
-    protected Long                  itsVersion;
+    protected Integer               itsVersion;
     protected DateTime              itsTimestamp;
     protected UserIdentityEventKind itsEventKind;
     protected UserIdentityStateKind itsStateKind;
@@ -66,13 +66,13 @@ class UserIdentityEvent
     UserIdentityEvent()
     {
         itsEventId           = 0L;
-        itsVersion           = 1L;
+        itsVersion           = 1;
         itsTimestamp         = new DateTime();
         itsEventKind         = null;
         itsStateKind         = null;
-        itsUserId            = "";
-        itsUserName          = "";
-        itsPassword          = "";
+        itsUserId            = null;
+        itsUserName          = null;
+        itsPassword          = null;
         itsName              = null;
         itsEmailAddress      = null;
         itsEmailVerification = null;
@@ -80,6 +80,41 @@ class UserIdentityEvent
         itsPhoneNumber       = null;
         itsPhoneVerification = null;
         itsSecurityQuestion  = null;
+    }
+
+    /************************************************************************
+     * Creates a new UserIdentityEvent. 
+     *
+     * @param other
+     */
+    public 
+    UserIdentityEvent(UserIdentityEvent other)
+    {
+        itsEventId           = other.itsEventId;
+        itsVersion           = other.itsVersion;
+        itsTimestamp         = other.itsTimestamp;
+        itsEventKind         = other.itsEventKind;
+        itsStateKind         = other.itsStateKind;
+        itsUserId            = other.itsUserId;
+        itsUserName          = other.itsUserName;
+        itsPassword          = other.itsPassword;
+        itsName              = other.itsName;
+        itsEmailAddress      = other.itsEmailAddress;
+        itsEmailVerification = other.itsEmailVerification;
+        itsPostalAddress     = other.itsPostalAddress;
+        itsPhoneNumber       = other.itsPhoneNumber;
+        itsPhoneVerification = other.itsPhoneVerification;
+        itsSecurityQuestion  = other.itsSecurityQuestion;
+    }
+
+    /************************************************************************
+     * {@inheritDoc} 
+     */
+    @Override
+    public UserIdentityEvent 
+    copy()
+    {
+        return new UserIdentityEvent( this );
     }
 
     /************************************************************************
@@ -97,7 +132,7 @@ class UserIdentityEvent
      */
     @Override
     public void 
-    setVersion(Long version)
+    setVersion(Integer version)
     {
         itsVersion = version;
     }
@@ -107,7 +142,7 @@ class UserIdentityEvent
      */
     @Override
     public void 
-    setTimeStamp(DateTime timestamp)
+    setTimestamp(DateTime timestamp)
     {
         itsTimestamp = timestamp;
     }
@@ -246,7 +281,7 @@ class UserIdentityEvent
      * {@inheritDoc} 
      */
     @Override
-    public Long 
+    public Integer 
     getVersion()
     {
         return itsVersion;

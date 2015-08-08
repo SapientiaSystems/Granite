@@ -24,6 +24,7 @@
 
 package identitymanager.serverplatform.testsuite;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /****************************************************************************
@@ -37,10 +38,10 @@ public class NullTest
 {
 
     @Test
+    @Ignore
     public void test()
     {
     }
-
 }
 
 // ##########################################################################

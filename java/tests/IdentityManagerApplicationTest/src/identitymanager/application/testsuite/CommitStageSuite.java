@@ -24,6 +24,8 @@
 
 package identitymanager.application.testsuite;
 
+import identitymanager.application.taskdispatcher.TaskDispatcherModuleTest;
+import identitymanager.application.useridentity.UserIdentityFactoryTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -35,7 +37,9 @@ import org.junit.runners.Suite;
  *     <a href="{@docRoot}/NamingConventions.html">Naming Conventions</a>
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({NullTest.class})
+@Suite.SuiteClasses({
+    TaskDispatcherModuleTest.class,
+    UserIdentityFactoryTest.class})
 public 
 class CommitStageSuite {}
 

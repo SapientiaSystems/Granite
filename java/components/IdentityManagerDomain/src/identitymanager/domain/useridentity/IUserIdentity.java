@@ -29,6 +29,7 @@ import identitymanager.common.value.PersonName;
 import identitymanager.common.value.PhoneNumber;
 import identitymanager.common.value.PostalAddress;
 import identitymanager.common.value.SecurityQuestion;
+import strata1.common.utility.ICopyable;
 
 /****************************************************************************
  * 
@@ -39,12 +40,16 @@ import identitymanager.common.value.SecurityQuestion;
  */
 public 
 interface IUserIdentity
+    extends ICopyable
 {
+    public IUserIdentity
+    copy();
+    
     public void
     setUserId(String userId);
     
     public void
-    setVersion(Long version);
+    setVersion(Integer version);
     
     public void
     setUserName(String userName);
@@ -70,7 +75,7 @@ interface IUserIdentity
     public String
     getUserId();
     
-    public Long
+    public Integer
     getVersion();
     
     public String

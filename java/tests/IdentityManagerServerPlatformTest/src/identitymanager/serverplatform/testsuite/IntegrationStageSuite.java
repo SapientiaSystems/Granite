@@ -24,6 +24,12 @@
 
 package identitymanager.serverplatform.testsuite;
 
+import identitymanager.domain.useridentity.HibernateUserIdentityEventRepositoryTest;
+import identitymanager.domain.useridentity.HibernateUserIdentityRepositoryTest;
+import identitymanager.serverplatform.javamail.JavaMailMessageTest;
+import identitymanager.serverplatform.javamail.JavaMailModuleTest;
+import identitymanager.serverplatform.javamail.JavaMailSenderTest;
+import identitymanager.serverplatform.jmsmessaging.JmsMessagingModuleTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -35,7 +41,13 @@ import org.junit.runners.Suite;
  *     <a href="{@docRoot}/NamingConventions.html">Naming Conventions</a>
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({NullTest.class})
+@Suite.SuiteClasses({
+    JmsMessagingModuleTest.class,
+    JavaMailModuleTest.class,
+    JavaMailMessageTest.class,
+    JavaMailSenderTest.class,
+    HibernateUserIdentityEventRepositoryTest.class,
+    HibernateUserIdentityRepositoryTest.class})
 public 
 class IntegrationStageSuite {}
 

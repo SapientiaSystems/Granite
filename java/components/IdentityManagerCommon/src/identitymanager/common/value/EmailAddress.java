@@ -26,6 +26,7 @@ package identitymanager.common.value;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -40,8 +41,9 @@ import strata1.common.utility.ICopyable;
  */
 public 
 class EmailAddress
-    implements ICopyable,Comparable<EmailAddress>
+    implements ICopyable,Comparable<EmailAddress>,Serializable
 {
+    private static final long serialVersionUID = 2320238746080434459L;
     private final String itsEmail;
     
     /************************************************************************
@@ -71,7 +73,7 @@ class EmailAddress
      * {@inheritDoc} 
      */
     @Override
-    public ICopyable 
+    public EmailAddress 
     copy()
     {
         return new EmailAddress( this );

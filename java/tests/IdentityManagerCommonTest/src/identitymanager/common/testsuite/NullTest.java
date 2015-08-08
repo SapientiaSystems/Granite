@@ -24,6 +24,7 @@
 
 package identitymanager.common.testsuite;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /****************************************************************************
@@ -36,6 +37,7 @@ import org.junit.Test;
 public class NullTest
 {
 
+    @Ignore
     @Test
     public void test()
     {

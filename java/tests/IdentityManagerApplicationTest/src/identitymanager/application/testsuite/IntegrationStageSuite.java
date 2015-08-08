@@ -24,6 +24,7 @@
 
 package identitymanager.application.testsuite;
 
+import identitymanager.application.useridentity.UserIdentityAppModuleTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -35,7 +36,8 @@ import org.junit.runners.Suite;
  *     <a href="{@docRoot}/NamingConventions.html">Naming Conventions</a>
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({NullTest.class})
+@Suite.SuiteClasses({
+    UserIdentityAppModuleTest.class})
 public 
 class IntegrationStageSuite {}
 

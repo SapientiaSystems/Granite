@@ -69,6 +69,18 @@ class ServiceInvokerModule
                             "ReplyChannelId1",
                             "EventSession1",
                             "EventChannelId1") )
+                    .withScope( new SingletonScope<ServiceInvoker>() ) )
+            .insertBinding( 
+                bindType(ServiceInvoker.class)
+                    .withKey( "ServiceInvoker2" )
+                    .toProvider( 
+                        new ServiceInvokerProvider(
+                            container,
+                            "CommandSession2",
+                            "RequestChannelId2",
+                            "ReplyChannelId2",
+                            "EventSession2",
+                            "EventChannelId2") )
                     .withScope( new SingletonScope<ServiceInvoker>() ) );
     }
 }

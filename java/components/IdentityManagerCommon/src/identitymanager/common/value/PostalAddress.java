@@ -25,6 +25,7 @@
 package identitymanager.common.value;
 
 import strata1.common.utility.ICopyable;
+import java.io.Serializable;
 
 /****************************************************************************
  * 
@@ -35,8 +36,10 @@ import strata1.common.utility.ICopyable;
  */
 public 
 class PostalAddress
-    implements ICopyable,Comparable<PostalAddress>
+    implements ICopyable,Comparable<PostalAddress>,Serializable
 {
+    private static final long serialVersionUID = 8284898731222924307L;
+    
     private final String itsAddress;
     private final String itsStreet;
     private final String itsCity;
@@ -85,7 +88,7 @@ class PostalAddress
      * {@inheritDoc} 
      */
     @Override
-    public ICopyable 
+    public PostalAddress 
     copy()
     {
         return new PostalAddress( this );
@@ -211,6 +214,17 @@ class PostalAddress
     getStreet()
     {
         return itsStreet;
+    }
+    
+    /************************************************************************
+     *  
+     *
+     * @return
+     */
+    public String
+    getCity()
+    {
+        return itsCity;
     }
     
     /************************************************************************

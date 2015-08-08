@@ -71,7 +71,7 @@ public
 class UserIdentityProcessor
     implements IUserIdentityProcessor
 {
-    private static final int EMAIL_VERIFICATION_MESSAGE = 1;
+    public static final int EMAIL_VERIFICATION_MESSAGE = 1;
     
     private final IUserIdentityEventRepository itsEventRepository;
     private final IUserIdentityRepository      itsEntityRepository;

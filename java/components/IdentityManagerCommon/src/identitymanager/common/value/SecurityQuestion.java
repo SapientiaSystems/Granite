@@ -25,6 +25,7 @@
 package identitymanager.common.value;
 
 import strata1.common.utility.ICopyable;
+import java.io.Serializable;
 
 /****************************************************************************
  * 
@@ -35,8 +36,10 @@ import strata1.common.utility.ICopyable;
  */
 public 
 class SecurityQuestion
-    implements ICopyable,Comparable<SecurityQuestion>
+    implements ICopyable,Comparable<SecurityQuestion>,Serializable
 {
+    private static final long serialVersionUID = 3134160866540771185L;
+    
     private final Integer itsQuestionId;
     private final String  itsQuestion;
     private final String  itsAnswer;
@@ -74,7 +77,7 @@ class SecurityQuestion
      * {@inheritDoc} 
      */
     @Override
-    public ICopyable 
+    public SecurityQuestion 
     copy()
     {
         return new SecurityQuestion( this );

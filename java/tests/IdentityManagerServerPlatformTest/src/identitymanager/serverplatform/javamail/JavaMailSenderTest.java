@@ -70,10 +70,10 @@ class JavaMailSenderTest
     {
         Properties  properties = new Properties();
         InputStream input = 
-            ClassLoader
-                .getSystemClassLoader()
+            this
+                .getClass()
                 .getResourceAsStream( 
-                    "identitymanager/serverplatform/testsuite/identitymanagertest.properties" );
+                    "/identitymanager/application/email/emailtest.properties" );
         
         try
         {

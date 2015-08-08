@@ -22,7 +22,7 @@
 // #			Framework. If not, see http://www.gnu.org/licenses/.
 // ##########################################################################
 
-package identitymanager.server.main;
+package identitymanager.server.bootstrap;
 
 import indentitymanager.integration.serviceinvoker.ServiceInvoker;
 import strata1.common.task.ITaskDispatcher;

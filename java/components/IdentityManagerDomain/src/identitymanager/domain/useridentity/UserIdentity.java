@@ -42,7 +42,7 @@ class UserIdentity
     implements IUserIdentity
 {
     protected String           itsUserId;
-    protected Long             itsVersion;
+    protected Integer          itsVersion;
     protected String           itsUserName;
     protected String           itsPassword;
     protected PersonName       itsName;
@@ -59,7 +59,7 @@ class UserIdentity
     UserIdentity()
     {
         itsUserId           = "";
-        itsVersion          = 0L;
+        itsVersion          = 1;
         itsUserName         = "";
         itsPassword         = "";
         itsName             = null;
@@ -67,6 +67,34 @@ class UserIdentity
         itsPostalAddress    = null;
         itsPhoneNumber      = null;
         itsSecurityQuestion = null;
+    }
+
+    /************************************************************************
+     * Creates a new UserIdentity. 
+     *
+     */
+    public 
+    UserIdentity(UserIdentity other)
+    {
+        itsUserId           = other.itsUserId;
+        itsVersion          = other.itsVersion;
+        itsUserName         = other.itsUserName;
+        itsPassword         = other.itsPassword;
+        itsName             = other.itsName;
+        itsEmailAddress     = other.itsEmailAddress;
+        itsPostalAddress    = other.itsPostalAddress;
+        itsPhoneNumber      = other.itsPhoneNumber;
+        itsSecurityQuestion = other.itsSecurityQuestion;
+    }
+
+    /************************************************************************
+     * {@inheritDoc} 
+     */
+    @Override
+    public UserIdentity 
+    copy()
+    {
+        return new UserIdentity( this );
     }
 
     /************************************************************************
@@ -84,7 +112,7 @@ class UserIdentity
      */
     @Override
     public void 
-    setVersion(Long version)
+    setVersion(Integer version)
     {
         itsVersion = version;
     }
@@ -173,7 +201,7 @@ class UserIdentity
      * {@inheritDoc} 
      */
     @Override
-    public Long 
+    public Integer 
     getVersion()
     {
         return itsVersion;

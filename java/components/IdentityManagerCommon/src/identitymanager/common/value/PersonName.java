@@ -25,6 +25,7 @@
 package identitymanager.common.value;
 
 import strata1.common.utility.ICopyable;
+import java.io.Serializable;
 
 /****************************************************************************
  * 
@@ -35,8 +36,10 @@ import strata1.common.utility.ICopyable;
  */
 public 
 class PersonName
-    implements ICopyable,Comparable<PersonName>
+    implements ICopyable,Comparable<PersonName>,Serializable
 {
+    private static final long serialVersionUID = 5784164278230827162L;
+    
     private final String itsFirstName;
     private final String itsMiddleName;
     private final String itsLastName;
@@ -51,9 +54,9 @@ class PersonName
     public 
     PersonName(String first,String middle,String last)
     {
-        itsFirstName  = first;
-        itsMiddleName = middle;
-        itsLastName   = last;
+        itsFirstName  = first != null ? first : "";
+        itsMiddleName = middle != null ? middle : "";
+        itsLastName   = last != null ? last : "";
     }
 
     /************************************************************************
@@ -86,7 +89,7 @@ class PersonName
      * {@inheritDoc} 
      */
     @Override
-    public ICopyable 
+    public PersonName 
     copy()
     {
         return new PersonName( this );
@@ -124,6 +127,9 @@ class PersonName
     public boolean 
     equals(Object other)
     {
+        if ( other == null ) 
+            return false;
+        
         if ( other instanceof PersonName)
         {
             PersonName p = (PersonName)other;

@@ -24,6 +24,14 @@
 
 package identitymanager.common.testsuite;
 
+import identitymanager.common.utility.IdentifierGeneratorTest;
+import identitymanager.common.utility.TimestampGeneratorTest;
+import identitymanager.common.utility.UtilityModuleTest;
+import identitymanager.common.value.EmailAddressTest;
+import identitymanager.common.value.PersonNameTest;
+import identitymanager.common.value.PhoneNumberTest;
+import identitymanager.common.value.PostalAddressTest;
+import identitymanager.common.value.SecurityQuestionTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -35,7 +43,15 @@ import org.junit.runners.Suite;
  *     <a href="{@docRoot}/NamingConventions.html">Naming Conventions</a>
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({NullTest.class})
+@Suite.SuiteClasses({
+    IdentifierGeneratorTest.class,
+    TimestampGeneratorTest.class,
+    UtilityModuleTest.class,
+    PersonNameTest.class,
+    EmailAddressTest.class,
+    PhoneNumberTest.class,
+    PostalAddressTest.class,
+    SecurityQuestionTest.class})
 public 
 class CommitStageSuite {}
 

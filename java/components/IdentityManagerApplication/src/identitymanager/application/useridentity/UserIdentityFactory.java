@@ -161,7 +161,7 @@ class UserIdentityFactory
         UserIdentityData   user  = request.getUser();
         PersonNameData     name  = user.getPersonName();
         
-        event.setTimeStamp( new DateTime() );
+        event.setTimestamp( new DateTime() );
         event.setEventKind( UserIdentityEventKind.CREATE_USERIDENTITY );
         event.setStateKind( UserIdentityStateKind.PENDING );
         event.setUserName( user.getUserName() );
@@ -193,6 +193,7 @@ class UserIdentityFactory
         identity.setUserName( event.getUserName() );
         identity.setPassword( event.getPassword() );
         identity.setEmailAddress( event.getEmailAddress() );
+        identity.setName( event.getName() );
         identity.setPostalAddress( event.getPostalAddress() );
         identity.setPhoneNumber( event.getPhoneNumber() );
         identity.setSecurityQuestion( event.getSecurityQuestion() );

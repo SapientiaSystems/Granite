@@ -23,5 +23,6 @@
 	<classpathentry kind="var" path="REPO_ROOT/org/mockito/mockito-all/1.9.0/mockito-all-1.9.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerCommon"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IdentityManagerService"/>
+	<classpathentry kind="src" path="/IdentityManagerApplication"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

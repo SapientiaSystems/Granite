@@ -25,6 +25,8 @@
 package identitymanager.application.useridentity;
 
 import identitymanager.service.useridentity.IUserIdentityService;
+import identitymanager.application.email.IEmailContentGenerator;
+import identitymanager.common.value.EmailAddress;
 import strata1.injector.container.AbstractModule;
 import strata1.injector.container.IContainer;
 import strata1.injector.container.ThreadScope;
@@ -61,9 +63,21 @@ class UserIdentityAppModule
     {
         container
             .insertBinding( 
+                bindType(IEmailContentGenerator.class)
+                    .toType(HtmlEmailContentGenerator.class)
+                    .withScope(new ThreadScope<IEmailContentGenerator>()))
+            .insertBinding( 
                 bindType(IUserIdentityFactory.class)
                     .toType(UserIdentityFactory.class)
                     .withScope(new ThreadScope<IUserIdentityFactory>()))
+            .insertBinding( 
+                bindType(EmailAddress.class)
+                    .withKey("EmailVerificationFrom")
+                    .toInstance(new EmailAddress("usersetup@zymurgistics.com")))
+            .insertBinding( 
+                bindType(String.class)
+                    .withKey("EmailVerificationSubject")
+                    .toInstance("Zymurgistics User Setup"))
             .insertBinding( 
                 bindType(IUserIdentityProcessor.class)
                     .toType(UserIdentityProcessor.class)

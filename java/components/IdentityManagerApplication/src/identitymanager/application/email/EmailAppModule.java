@@ -24,7 +24,6 @@
 
 package identitymanager.application.email;
 
-import identitymanager.domain.useridentity.IUserIdentityRepositoryProvider;
 import strata1.injector.container.AbstractModule;
 import strata1.injector.container.IContainer;
 import strata1.injector.container.ThreadScope;

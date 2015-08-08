@@ -25,6 +25,7 @@
 package identitymanager.domain.useridentity;
 
 import strata1.common.datetime.DateTime;
+import strata1.common.utility.ICopyable;
 import identitymanager.common.value.EmailAddress;
 import identitymanager.common.value.PersonName;
 import identitymanager.common.value.PhoneNumber;
@@ -40,15 +41,19 @@ import identitymanager.common.value.SecurityQuestion;
  */
 public 
 interface IUserIdentityEvent
+    extends ICopyable
 {
+    public IUserIdentityEvent
+    copy();
+    
     public void
     setEventId(Long eventId);
     
     public void
-    setVersion(Long version);
+    setVersion(Integer version);
     
     public void
-    setTimeStamp(DateTime timestamp);
+    setTimestamp(DateTime timestamp);
     
     public void
     setEventKind(UserIdentityEventKind eventKind);
@@ -89,7 +94,7 @@ interface IUserIdentityEvent
     public Long
     getEventId();
     
-    public Long
+    public Integer
     getVersion();
     
     public DateTime

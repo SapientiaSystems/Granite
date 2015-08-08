@@ -91,7 +91,7 @@ class IdentityManagerServerFactory
     public IStartStopController 
     createStartStopController()
     {
-        return null;
+        return new IdentityManagerStartStopController();
     }
 
     /************************************************************************
@@ -111,6 +111,11 @@ class IdentityManagerServerFactory
         
         try
         {
+            if ( input == null )
+                throw 
+                    new IllegalStateException( 
+                        "properties file input is null" );
+            
             properties.load( input );
         }
         catch (IOException e)
