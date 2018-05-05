@@ -15,7 +15,11 @@ namespace Granite.RequiredService.User
     public
     class DeleteExternalUserReply
     {
-        public string UserId { get; set; }
+        public Guid   UserId { get; set; }
+        public string ExternalUserId { get; set; }
+        public bool   IsSuccessful { get; set; }
+        public string FailureMessage { get; set; }
+        public string StackTrace { get; set; }
     }
 }
 

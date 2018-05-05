@@ -9,6 +9,7 @@ using Microsoft.Azure.ActiveDirectory.GraphClient;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Strata.Foundation.Injection;
 using System;
+using System.Configuration;
 
 namespace Granite.ServerPlatform.ActiveDirectory
 {
@@ -34,16 +35,20 @@ namespace Granite.ServerPlatform.ActiveDirectory
         public override void 
         Initialize()
         {
-            Bind<AuthenticationContext>()
-                .ToProvider(
-                    new FuncBasedProvider<AuthenticationContext>(
-                        () => null))
-                .WithScope<RequestScope>();
 
-            Bind<ActiveDirectoryClient>()
+            Bind<ActiveDirectoryGraphClient>()
                 .ToProvider(
-                    new FuncBasedProvider<ActiveDirectoryClient>(
-                        () => null))
+                    new FuncBasedProvider<ActiveDirectoryGraphClient>(
+                        () =>
+                        {
+                            string clientId = ConfigurationManager.AppSettings["ClientId"];
+                            string appKey = ConfigurationManager.AppSettings["AppKey"];
+                            string tenantId = ConfigurationManager.AppSettings["TenantId"];
+
+                            return
+                                new ActiveDirectoryGraphClient(clientId,appKey,tenantId);
+
+                        }))
                 .WithScope<RequestScope>();
 
             Bind<IExternalUserService>()

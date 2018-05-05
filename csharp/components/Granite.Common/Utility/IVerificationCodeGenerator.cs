@@ -1,11 +1,11 @@
 ﻿//  ##########################################################################
-//  # File Name: IUserIdentityProcessor.cs
+//  # File Name: IVerificationCodeGenerator.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using System;
 
-namespace Granite.Application.User
+namespace Granite.Common.Utility
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
@@ -13,8 +13,10 @@ namespace Granite.Application.User
     /// </summary>
     ///  
     public
-    interface IUserIdentityProcessor
+    interface IVerificationCodeGenerator
     {
+        string
+        Generate();
     }
 }
 

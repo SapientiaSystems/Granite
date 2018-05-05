@@ -10,8 +10,7 @@
 
 namespace Granite.Server.App_Start
 {
-    using Granite.Application.Session;
-    using Granite.Application.User;
+    using Granite.ServerPlatform.Bootstrap;
     using Microsoft.Web.Infrastructure.DynamicModuleHelper;
     using Ninject;
     using Ninject.Web.Common;
@@ -21,12 +20,9 @@ namespace Granite.Server.App_Start
     using System.Web;
     using System.Web.Http;
     using WebApiContrib.IoC.Ninject;
-
-    using INinjectBootstrapper = Ninject.Web.Common.IBootstrapper;
-    using NinjectBootstrapper = Ninject.Web.Common.Bootstrapper;
-    using IBootstrapper = Strata.Foundation.Bootstrap.IBootstrapper;
     using Bootstrapper = Strata.Foundation.Bootstrap.Bootstrapper;
-    using Granite.Server.Bootstrap;
+    using IBootstrapper = Strata.Foundation.Bootstrap.IBootstrapper;
+    using NinjectBootstrapper = Ninject.Web.Common.Bootstrapper;
 
     //////////////////////////////////////////////////////////////////////////
     /// <summary>

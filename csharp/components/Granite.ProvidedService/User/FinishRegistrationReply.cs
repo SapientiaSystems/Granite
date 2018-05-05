@@ -3,6 +3,8 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Strata.Service.Core;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User
@@ -14,8 +16,11 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class FinishRegistrationReply
+    class FinishRegistrationReply:
+        ServiceReply
     {
+        [DataMember]
+        public Guid RegistrationId { get; set; }
     }
 }
 

@@ -7,7 +7,6 @@ using Granite.RequiredService.Authentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Granite.ServerPlatform.ActiveDirectory
 {
@@ -39,27 +38,26 @@ namespace Granite.ServerPlatform.ActiveDirectory
         public AuthenticateReply 
         Authenticate(AuthenticateRequest request)
         {
-            Task<AuthenticationResult> result = null;
+            AuthenticationResult result = null;
 
             for (int attempt=0;attempt<3;++attempt)
             {
                 try
                 {
                     result =
-                        itsContext.AcquireTokenAsync(
+                        itsContext.AcquireToken(
                             itsResource,
                             itsClientId,
-                            new UserPasswordCredential(
+                            new UserCredential(
                                 request.Username,
                                 request.Password));
 
-                    result.Wait();
 
                     return
                         new AuthenticateReply()
                         {
-                            AccessToken = result.Result.AccessToken,
-                            AccessTokenType = result.Result.AccessTokenType
+                            AccessToken = result.AccessToken,
+                            AccessTokenType = result.AccessTokenType
                         };
                 }
                 catch (AdalException e)

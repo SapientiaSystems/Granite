@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using System;
+using System.Runtime.Serialization;
 
 namespace Granite.RequiredService.User
 {
@@ -12,10 +12,18 @@ namespace Granite.RequiredService.User
     /// 
     /// </summary>
     ///  
+    [DataContract]
     public
     class CreateExternalUserReply
     {
-        public string UserId { get; set; }
+        [DataMember]
+        public string ExternalUserId { get; set; }
+        [DataMember]
+        public bool   IsSuccessful { get; set; }
+        [DataMember]
+        public string FailureMessage { get; set; }
+        [DataMember]
+        public string StackTrace { get; set; }
     }
 }
 

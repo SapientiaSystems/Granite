@@ -3,6 +3,8 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Strata.Service.Core;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Shared
@@ -13,16 +15,13 @@ namespace Granite.ProvidedService.Shared
     ///  
     [DataContract]
     public
-    class GraniteReply
+    class GraniteReply:
+        ServiceReply
     {
         [DataMember]
-        public long SentTimestamp { get; set; }
-
+        public Guid SessionId { get; set; }
         [DataMember]
-        public long ReceivedTimestamp { get; set; }
-
-        [DataMember]
-        public long ExecutionMilliseconds { get; set; }
+        public Guid UserId { get; set; }
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -31,9 +30,6 @@ namespace Granite.ProvidedService.Shared
         protected
         GraniteReply()
         {
-            SentTimestamp         = 0;
-            ReceivedTimestamp     = 0;
-            ExecutionMilliseconds = 0;
         }
     }
 }

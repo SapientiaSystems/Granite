@@ -48,7 +48,13 @@
       <HintPath>..\..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.2.3\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.2.8\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+    </Reference>
+    <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Strata.Persistence.0.2.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
+    </Reference>
+    <Reference Include="Strata.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Strata.Service.0.0.0\lib\net45\Debug\Strata.Service.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -86,10 +92,13 @@
     <Compile Include="Payment\UpdateExternalSubscriptionReply.cs" />
     <Compile Include="Payment\UpdateExternalSubscriptionRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="User\AbstractExternalUserService.cs" />
     <Compile Include="User\CreateExternalUserReply.cs" />
     <Compile Include="User\CreateExternalUserRequest.cs" />
+    <Compile Include="User\DefaultExternalUserRequestValidator.cs" />
     <Compile Include="User\DeleteExternalUserReply.cs" />
     <Compile Include="User\DeleteExternalUserRequest.cs" />
+    <Compile Include="User\IExternalUserRequestValidator.cs" />
     <Compile Include="User\IExternalUserService.cs" />
     <Compile Include="User\UpdateExternalUserReply.cs" />
     <Compile Include="User\UpdateExternalUserRequest.cs" />

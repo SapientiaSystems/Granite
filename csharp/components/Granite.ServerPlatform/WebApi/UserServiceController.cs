@@ -1,87 +1,96 @@
 ﻿//  ##########################################################################
-//  # File Name: UserIdentityService.cs
+//  # File Name: UserServiceController.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Application.Shared;
 using Granite.ProvidedService.User;
-using Strata.Foundation.Logging;
-using Strata.Persistence.UnitOfWork;
 using System;
-using System.Threading;
+using System.Web.Http;
+using System.Web.Mvc;
 using SystemEx.Injection;
 
-namespace Granite.Application.User
+namespace Granite.ServerPlatform.WebApi
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 
     /// </summary>
     ///  
+    [System.Web.Http.RoutePrefix("v1/user")]
+    [RequireHttps]
     public
-    class UserIdentityService:
-        AbstractService,
-        IUserIdentityService
+    class UserServiceController:
+        ApiController,
+        IUserService
     {
+        private IUserService itsImp;
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         /// 
         [Inject]
         public
-        UserIdentityService(IUnitOfWorkProvider provider,ILogger logger):
-            base(provider,logger) {}
+        UserServiceController(IUserService imp)
+        {
+            itsImp = imp;
+        }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [System.Web.Http.Route("start-registration")]
+        [RequireHttps]
         public StartRegistrationReply 
         StartRegistration(StartRegistrationRequest request)
         {
-            StartRegistrationReply reply =
-                new StartRegistrationReply();
+            StartRegistrationReply reply = null;
 
-            Thread.Sleep(1);
+            request.ReceivedTimestamp = DateTime.UtcNow.Ticks/10000;
+            reply = itsImp.StartRegistration(request);
+
             return reply;
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [System.Web.Http.Route("finish-registration")]
+        [RequireHttps]
         public FinishRegistrationReply 
         FinishRegistration(FinishRegistrationRequest request)
         {
-            FinishRegistrationReply reply =
-                new FinishRegistrationReply();
-
-            return reply;
+            return itsImp.FinishRegistration(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [System.Web.Http.Route("update")]
         public UpdateReply 
         Update(UpdateRequest request)
         {
-            throw new NotImplementedException();
+            return itsImp.Update(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [System.Web.Http.Route("remove")]
         public RemoveReply
         Remove(RemoveRequest request)
         {
-            throw new NotImplementedException();
+            return itsImp.Remove(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [System.Web.Http.Route("current")]
         public GetCurrentReply 
         GetCurrent()
         {
-            throw new NotImplementedException();
+            return itsImp.GetCurrent();
         }
     }
 }

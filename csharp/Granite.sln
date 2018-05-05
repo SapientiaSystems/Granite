@@ -44,6 +44,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{18
 		Settings.StyleCop = Settings.StyleCop
 	EndProjectSection
 EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Granite.Database", "components\Granite.Database\Granite.Database.sqlproj", "{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +112,12 @@ Global
 		{BEE84BF7-9183-44C4-A994-41318F3883C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEE84BF7-9183-44C4-A994-41318F3883C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEE84BF7-9183-44C4-A994-41318F3883C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -130,6 +138,7 @@ Global
 		{63C4DE91-6536-4846-A318-03402E8972F2} = {5432F877-2876-4A90-836F-FEAD1F326924}
 		{C4B60328-2516-47E7-BF07-1CCA4C3317A3} = {5432F877-2876-4A90-836F-FEAD1F326924}
 		{BEE84BF7-9183-44C4-A994-41318F3883C9} = {5432F877-2876-4A90-836F-FEAD1F326924}
+		{8A3317F4-61E8-4AEE-BFB9-9EA2F8C7A365} = {E43FB9A6-0351-4941-B870-9105BCD0B451}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D5D40983-ED23-4383-B4E3-14B82A29ECD0}

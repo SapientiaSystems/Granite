@@ -3,10 +3,10 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Application.Shared;
 using Granite.ProvidedService.Payment;
 using Strata.Foundation.Logging;
 using Strata.Persistence.UnitOfWork;
+using Strata.Service.Core;
 using System;
 using SystemEx.Injection;
 

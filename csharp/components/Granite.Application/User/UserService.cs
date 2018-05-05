@@ -1,28 +1,28 @@
 ﻿//  ##########################################################################
-//  # File Name: UserIdentityServiceController.cs
+//  # File Name: UserService.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using Granite.ProvidedService.User;
+using Strata.Foundation.Logging;
+using Strata.Persistence.UnitOfWork;
+using Strata.Service.Core;
 using System;
-using System.Web.Http;
-using System.Web.Mvc;
 using SystemEx.Injection;
 
-namespace Granite.ServerPlatform.WebApi
+namespace Granite.Application.User
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 
     /// </summary>
     ///  
-    [System.Web.Http.RoutePrefix("v1/user")]
     public
-    class UserIdentityServiceController:
-        ApiController,
-        IUserIdentityService
+    class UserService:
+        AbstractService,
+        IUserService
     {
-        private IUserIdentityService itsImp;
+        private IUserProcessor itsProcessor;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -30,68 +30,66 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        UserIdentityServiceController(IUserIdentityService imp)
+        UserService(
+            IUnitOfWorkProvider    provider,
+            ILogger                logger,
+            IUserProcessor processor):
+            base(provider,logger)
         {
-            itsImp = imp;
+            itsProcessor = processor;
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("start-registration")]
-        [RequireHttps]
         public StartRegistrationReply 
         StartRegistration(StartRegistrationRequest request)
         {
-            StartRegistrationReply reply = null;
-
-            request.ReceivedTimestamp = DateTime.UtcNow.Ticks/10000;
-            reply = itsImp.StartRegistration(request);
-            reply.SentTimestamp = DateTime.UtcNow.Ticks/10000;
-            reply.ExecutionMilliseconds =
-                reply.SentTimestamp - request.ReceivedTimestamp;
-
-            return reply;
+            return
+                Execute(
+                    (StartRegistrationRequest r) =>
+                        { return itsProcessor.StartRegistration(r); },
+                    request );
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("finish-registration")]
         public FinishRegistrationReply 
         FinishRegistration(FinishRegistrationRequest request)
         {
-            return itsImp.FinishRegistration(request);
+            return
+                Execute(
+                    (FinishRegistrationRequest r) =>
+                    { return itsProcessor.FinishRegistration(r); },
+                    request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("update")]
         public UpdateReply 
         Update(UpdateRequest request)
         {
-            return itsImp.Update(request);
+            throw new NotImplementedException();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("remove")]
         public RemoveReply
         Remove(RemoveRequest request)
         {
-            return itsImp.Remove(request);
+            throw new NotImplementedException();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("current")]
         public GetCurrentReply 
         GetCurrent()
         {
-            return itsImp.GetCurrent();
+            throw new NotImplementedException();
         }
     }
 }

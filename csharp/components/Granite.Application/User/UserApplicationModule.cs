@@ -1,11 +1,11 @@
 ﻿//  ##########################################################################
-//  # File Name: UserApplicationModule.cs
+//  # File Name: UtilityModule.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Utility;
 using Granite.ProvidedService.User;
 using Strata.Foundation.Injection;
-using System;
 
 namespace Granite.Application.User
 {
@@ -23,8 +23,8 @@ namespace Granite.Application.User
         /// </summary>
         /// 
         public
-        UserApplicationModule() :
-            base("UserApplicationModule") {}
+        UserApplicationModule():
+            base("UtilityModule") {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
@@ -32,8 +32,11 @@ namespace Granite.Application.User
         public override void 
         Initialize()
         {
-            Bind<IUserIdentityService>()
-                .ToType<UserIdentityService>()
+            Bind<IUserProcessor>()
+                .ToType<UserProcessor>()
+                .WithScope<RequestScope>();
+            Bind<IUserService>()
+                .ToType<UserService>()
                 .WithScope<RequestScope>();
         }
     }

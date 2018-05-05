@@ -5,7 +5,6 @@
 
 using Strata.Foundation.Injection;
 using Strata.Persistence.UnitOfWork;
-using System;
 using SystemEx.Injection;
 
 namespace Granite.Domain.Persistence

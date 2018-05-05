@@ -1,40 +1,34 @@
 ﻿//  ##########################################################################
-//  # File Name: IUserIdentityService.cs
+//  # File Name: IUserProcessor.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using System.ServiceModel;
+using Granite.ProvidedService.User;
+using System;
 
-namespace Granite.ProvidedService.User
+namespace Granite.Application.User
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
-    [ServiceContract]
     public
-    interface IUserIdentityService
+    interface IUserProcessor
     {
-        [OperationContract]
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         StartRegistrationReply
         StartRegistration(StartRegistrationRequest request);
 
-        [OperationContract]
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         FinishRegistrationReply
         FinishRegistration(FinishRegistrationRequest request);
 
-        [OperationContract]
-        UpdateReply
-        Update(UpdateRequest request);
-
-        [OperationContract]
-        RemoveReply
-        Remove(RemoveRequest request);
-
-        [OperationContract]
-        GetCurrentReply
-        GetCurrent();
     }
 }
 
