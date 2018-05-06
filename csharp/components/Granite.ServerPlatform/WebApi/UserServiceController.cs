@@ -6,6 +6,7 @@
 using Granite.ProvidedService.User;
 using System;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using System.Web.Mvc;
 using SystemEx.Injection;
 
@@ -18,6 +19,7 @@ namespace Granite.ServerPlatform.WebApi
     ///  
     [System.Web.Http.RoutePrefix("v1/user")]
     [RequireHttps]
+    [EnableCors("*","*","*")]
     public
     class UserServiceController:
         ApiController,

@@ -2,11 +2,11 @@
 <package >
 	<metadata>
 		<id>Granite</id>
-		<version>0.0.3</version>
+		<version>0.0.5</version>
 		<authors>John Liebenau</authors>
 		<owners>John Liebenau</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>Granite Framework 0.0.3</description>
+		<description>Granite Framework 0.0.5</description>
 		<releaseNotes>
 		</releaseNotes>
 		<copyright>Copyright 2018</copyright>

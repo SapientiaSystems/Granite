@@ -5,6 +5,7 @@
 
 using Granite.ProvidedService.Session;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using System.Web.Mvc;
 using SystemEx.Injection;
 
@@ -16,6 +17,8 @@ namespace Granite.ServerPlatform.WebApi
     /// </summary>
     ///  
     [System.Web.Http.RoutePrefix("v1/session")]
+    [RequireHttps]
+    [EnableCors("*","*","*")]
     public
     class SessionServiceController:
         ApiController,
