@@ -34,7 +34,7 @@ namespace Granite.Application.Payment
         {
             Bind<IPaymentService>()
                 .ToType<PaymentService>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }

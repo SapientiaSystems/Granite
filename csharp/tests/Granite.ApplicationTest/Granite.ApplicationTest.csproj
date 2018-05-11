@@ -98,6 +98,10 @@
       <Project>{cc2004ee-4c4d-4d81-9efd-1e2dbb7ba32a}</Project>
       <Name>Granite.RequiredService</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Granite.CommonTest\Granite.CommonTest.csproj">
+      <Project>{0FA3A372-2703-4769-904A-09EC8806A483}</Project>
+      <Name>Granite.CommonTest</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

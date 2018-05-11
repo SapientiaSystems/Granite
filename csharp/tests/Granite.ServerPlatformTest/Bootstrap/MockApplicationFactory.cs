@@ -48,7 +48,7 @@ namespace Granite.ServerPlatform.Bootstrap
 
             modules.Add(new NhibernateModule());
             modules.Add(new ActiveDirectoryModule());
-            modules.Add(new MockUtilityModule());
+            modules.Add(new FakeUtilityModule());
             modules.Add(new UserDomainModule());
             modules.Add(new UserApplicationModule());
             modules.Add(new SessionApplicationModule());

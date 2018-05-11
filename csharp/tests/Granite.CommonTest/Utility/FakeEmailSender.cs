@@ -3,6 +3,8 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Value;
+using Granite.ProvidedService.User;
 using System;
 using System.Collections.Generic;
 
@@ -13,9 +15,11 @@ namespace Granite.Common.Utility
     /// </summary>
     ///  
     public
-    class MockEmailSender:
+    class FakeEmailSender:
         IEmailSender
     {
+        public FinishRegistrationRequest Request { get; protected set; }
+
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
@@ -25,6 +29,18 @@ namespace Granite.Common.Utility
             string                     to,
             IDictionary<string,string> parameters)
         {
+            Request =
+                new FinishRegistrationRequest()
+                {
+                    CorrelationId =
+                        Guid.Parse(parameters[Constant.CORRELATION_ID_PROPERTY]),
+                    UserId = 
+                        Guid.Parse(parameters[Constant.USER_ID_PROPERTY]),
+                    UserNameToVerify =
+                        parameters[Constant.USER_NAME_PROPERTY],
+                    VerificationCode = 
+                        parameters[Constant.VERIFICATION_CODE_PROPERTY]
+                };
         }
     }
 }

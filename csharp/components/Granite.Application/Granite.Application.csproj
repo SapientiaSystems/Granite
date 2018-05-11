@@ -79,6 +79,7 @@
     <Compile Include="User\UserApplicationModule.cs" />
     <Compile Include="User\UserProcessor.cs" />
     <Compile Include="User\UserService.cs" />
+    <Compile Include="User\VerificationFailedException.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Granite.Common\Granite.Common.csproj">

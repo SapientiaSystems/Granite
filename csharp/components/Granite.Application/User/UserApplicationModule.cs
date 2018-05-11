@@ -34,10 +34,10 @@ namespace Granite.Application.User
         {
             Bind<IUserProcessor>()
                 .ToType<UserProcessor>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
             Bind<IUserService>()
                 .ToType<UserService>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }

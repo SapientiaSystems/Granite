@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Utility;
 using Granite.ProvidedService.User;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
@@ -23,6 +24,7 @@ namespace Granite.Application.User
     class UserServiceTest
     {
         private IUserService        itsTarget;
+        private FakeEmailSender     itsSender;
         private ISet<RemoveRequest> itsRemovals;
 
         [SetUp]
@@ -32,6 +34,7 @@ namespace Granite.Application.User
             IContainer container = CreateContainer();
 
             itsTarget = container.GetInstance<IUserService>();
+            itsSender = (FakeEmailSender)container.GetInstance<IEmailSender>();
             itsRemovals = new HashSet<RemoveRequest>();
         }
 
@@ -155,6 +158,21 @@ namespace Granite.Application.User
                 Assert.AreEqual(request.Email.ToString(),reply.Email.ToString());
 
             Assert.AreEqual(expectedMessage,reply.SuccessMessage);
+        }
+
+        [TestCaseSource("StartRegistrationTestCases")]
+        public virtual void
+        TestFinishRegistration(StartRegistrationRequest request)
+        {
+            FinishRegistrationReply reply = null;
+            TestStartRegistration(request);
+
+            Assert.NotNull(itsSender.Request);
+            Assert.AreEqual(request.CorrelationId,itsSender.Request.CorrelationId);
+
+            reply = itsTarget.FinishRegistration(itsSender.Request);
+            Assert.AreEqual(itsSender.Request.CorrelationId,reply.CorrelationId);
+            Assert.IsTrue(reply.IsSuccessful);
         }
 
         protected abstract IContainer 

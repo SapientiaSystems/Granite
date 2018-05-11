@@ -31,7 +31,7 @@ namespace Granite.Domain.User
         {
             Bind<IUserRepository>()
                 .ToType<UserRepository>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }

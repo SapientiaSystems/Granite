@@ -5,12 +5,13 @@
 
 using Granite.Common.Utility;
 using Granite.Common.Value;
+using Granite.Domain.Shared;
 using Granite.Domain.User;
 using Granite.ProvidedService.User;
 using Granite.RequiredService.User;
+using Strata.Foundation.Logging;
 using Strata.Persistence.UnitOfWork;
 using Strata.Service.Core;
-using System;
 using System.Collections.Generic;
 using SystemEx.Injection;
 
@@ -29,6 +30,7 @@ namespace Granite.Application.User
         private IUserRepository            itsRepository;
         private IVerificationCodeGenerator itsGenerator;
         private IEmailSender               itsSender;
+        private ILogger                    itsLogger;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -41,13 +43,15 @@ namespace Granite.Application.User
             IExternalUserService       service,
             IUserRepository            repository,
             IVerificationCodeGenerator generator,
-            IEmailSender               sender):
+            IEmailSender               sender,
+            ILogger                    logger):
             base(provider)
         {
             itsService = service;
             itsRepository = repository;
             itsGenerator = generator;
             itsSender = sender;
+            itsLogger = logger;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -89,7 +93,9 @@ namespace Granite.Application.User
                 request.Email.ToString(),
                 new Dictionary<string,string>()
                 {
-                    {Constant.USER_NAME_PROPERTY,request.UserName},
+                    {Constant.CORRELATION_ID_PROPERTY,request.CorrelationId.ToString()},
+                    {Constant.USER_ID_PROPERTY,user.UserId.ToString()},
+                    {Constant.USER_NAME_PROPERTY,user.UserName},
                     {Constant.VERIFICATION_CODE_PROPERTY,user.VerificationCode}
                 } );
 
@@ -117,9 +123,28 @@ namespace Granite.Application.User
         public FinishRegistrationReply
         FinishRegistration(FinishRegistrationRequest request)
         {
-            FinishRegistrationReply reply = new FinishRegistrationReply();
+            IUser user = 
+                itsRepository.GetUniqueWithUserName(request.UserNameToVerify);
 
-            return reply;
+            if (user == null)
+                throw 
+                    new NoSuchEntityException(
+                        typeof(IUser),
+                        request.UserNameToVerify);
+
+            user = VerifyUser(user,request.VerificationCode);
+            user = itsRepository.Update(user);
+
+            return
+                new FinishRegistrationReply()
+                {
+                    UserIdVerified = user.UserId,
+                    IsSuccessful = true,
+                    SuccessMessage =
+                        string.Format(
+                            "User '{0}' has been verified.",
+                            user.UserName)
+                };
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -225,6 +250,26 @@ namespace Granite.Application.User
 
             return null;
         }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected IUser 
+        VerifyUser(IUser user,string verificationCode)
+        {
+            if (user.VerificationCode.Equals(verificationCode))
+                user.Status = UserStatus.VERIFIED;
+            else
+                throw
+                    new VerificationFailedException(
+                        user.UserId,
+                        user.VerificationCode,
+                        verificationCode);
+
+            return user;
+        }
+
     }
 }
 

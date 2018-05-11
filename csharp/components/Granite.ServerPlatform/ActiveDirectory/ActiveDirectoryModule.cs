@@ -49,15 +49,15 @@ namespace Granite.ServerPlatform.ActiveDirectory
                                 new ActiveDirectoryGraphClient(clientId,appKey,tenantId);
 
                         }))
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
 
             Bind<IExternalUserService>()
                 .ToType<ActiveDirectoryUserService>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
 
             Bind<IAuthenticationService>()
                 .ToType<ActiveDirectoryAuthenticationService>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }

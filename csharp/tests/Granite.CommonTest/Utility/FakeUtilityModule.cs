@@ -1,13 +1,9 @@
 ﻿//  ##########################################################################
-//  # File Name: MockUtilityModule.cs
+//  # File Name: FakeUtilityModule.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Email;
 using Strata.Foundation.Injection;
-using System.Configuration;
-using System.Net;
-using System.Net.Mail;
 
 namespace Granite.Common.Utility
 {
@@ -17,7 +13,7 @@ namespace Granite.Common.Utility
     /// </summary>
     ///  
     public
-    class MockUtilityModule:
+    class FakeUtilityModule:
         AbstractModule
     {
         //////////////////////////////////////////////////////////////////////
@@ -25,8 +21,8 @@ namespace Granite.Common.Utility
         /// </summary>
         /// 
         public
-        MockUtilityModule():
-            base("MockUtilityModule") {}
+        FakeUtilityModule():
+            base("FakeUtilityModule") {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
@@ -35,11 +31,11 @@ namespace Granite.Common.Utility
         Initialize()
         {
             Bind<IEmailSender>()
-                .ToType<MockEmailSender>()
-                .WithScope<RequestScope>();
+                .ToType<FakeEmailSender>()
+                .WithScope(DefaultScope);
             Bind<IVerificationCodeGenerator>()
                 .ToType<VerificationCodeGenerator>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }

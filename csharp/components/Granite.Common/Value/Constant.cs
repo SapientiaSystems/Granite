@@ -15,6 +15,8 @@ namespace Granite.Common.Value
     public static
     class Constant
     {
+        public static readonly string CORRELATION_ID_PROPERTY = "CorrelationId";
+        public static readonly string USER_ID_PROPERTY = "UserId";
         public static readonly string USER_NAME_PROPERTY = "UserName";
         public static readonly string VERIFICATION_CODE_PROPERTY = "VerificationCode";
     }

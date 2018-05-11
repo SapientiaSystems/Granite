@@ -57,16 +57,16 @@ namespace Granite.Common.Utility
 
                             return new SmtpEmailSession(client);
                         } ) )
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
             Bind<IEmailGenerator>()
                 .ToType<HtmlEmailGenerator>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
             Bind<IEmailSender>()
                 .ToType<EmailSender>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
             Bind<IVerificationCodeGenerator>()
                 .ToType<VerificationCodeGenerator>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }

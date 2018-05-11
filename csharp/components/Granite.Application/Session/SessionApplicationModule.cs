@@ -33,7 +33,7 @@ namespace Granite.Application.Session
         {
             Bind<ISessionService>()
                 .ToType<SessionService>()
-                .WithScope<RequestScope>();
+                .WithScope(DefaultScope);
         }
     }
 }
