@@ -8,6 +8,9 @@ using Granite.Common.Value;
 using Granite.Domain.User;
 using Granite.ProvidedService.User;
 using Granite.RequiredService.User;
+using Strata.Persistence.UnitOfWork;
+using Strata.Service.Core;
+using System;
 using System.Collections.Generic;
 using SystemEx.Injection;
 
@@ -19,6 +22,7 @@ namespace Granite.Application.User
     ///  
     public
     class UserProcessor:
+        AbstractProcessor,
         IUserProcessor
     {
         private IExternalUserService       itsService;
@@ -33,10 +37,12 @@ namespace Granite.Application.User
         [Inject]
         public 
         UserProcessor(
+            IUnitOfWorkProvider        provider,
             IExternalUserService       service,
             IUserRepository            repository,
             IVerificationCodeGenerator generator,
-            IEmailSender               sender)
+            IEmailSender               sender):
+            base(provider)
         {
             itsService = service;
             itsRepository = repository;
@@ -51,19 +57,9 @@ namespace Granite.Application.User
         StartRegistration(StartRegistrationRequest request)
         {
             CreateExternalUserReply createdUser = null;
-            UserIdentity            user = null;
+            IUser                   user = null;
 
-            createdUser = 
-                itsService.CreateExternalUser(
-                    new CreateExternalUserRequest()
-                    {
-                        UserName      = request.UserName,
-                        Password      = request.Password,
-                        Name          = request.Name,
-                        Email         = request.Email,
-                        Phone         = request.Phone,
-                        Address       = request.Address
-                    } );
+            createdUser = CreateExternalUser(request);
 
             if (!createdUser.IsSuccessful)
                 return
@@ -78,9 +74,12 @@ namespace Granite.Application.User
 
             user =
                 itsRepository.Insert(
-                    new UserIdentity()
+                    new StandardUser()
                     {
                         ExternalUserId   = createdUser.ExternalUserId,
+                        UserName         = createdUser.UserName,
+                        Email            = createdUser.Email,
+                        JobTitle         = createdUser.JobTitle,
                         VerificationCode = itsGenerator.Generate(),
                         Status           = UserStatus.PENDING
                     } );
@@ -94,22 +93,137 @@ namespace Granite.Application.User
                     {Constant.VERIFICATION_CODE_PROPERTY,user.VerificationCode}
                 } );
 
-            return 
+            return
                 new StartRegistrationReply()
                 {
-                    UserId = user.UserId
-                };
+                    UserId = user.UserId,
+                    UserName = createdUser.UserName,
+                    Email = createdUser.Email,
+                    JobTitle = createdUser.JobTitle,
+                    SuccessMessage =
+                         string.Format(
+                            "Registration for user '{0}' has started. " +
+                            "A confirmation email was sent to '{1}'. " +
+                            "Please following the instructions in this " +
+                            "email to finish user registration. Thank you.",
+                            createdUser.UserName,
+                            createdUser.Email.ToString())
+                        };
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public FinishRegistrationReply 
+        public FinishRegistrationReply
         FinishRegistration(FinishRegistrationRequest request)
         {
             FinishRegistrationReply reply = new FinishRegistrationReply();
 
             return reply;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public RemoveReply 
+        Remove(RemoveRequest request)
+        {
+            IUser                   user = GetUserToRemove(request);
+            DeleteExternalUserReply deleted = null;
+
+            if (user == null)
+                return
+                    new RemoveReply()
+                    {
+                        UserId = request.UserId,
+                        SessionId = request.SessionId,
+                        IsSuccessful = true
+                    };
+
+            deleted =
+                itsService.DeleteExternalUser(
+                    new DeleteExternalUserRequest()
+                    {
+                        UserId = request.UserId,
+                        ExternalUserId = user.ExternalUserId
+                    } );
+
+            if (!deleted.IsSuccessful)
+                return
+                    new RemoveReply()
+                    {
+                        UserId = request.UserId,
+                        SessionId = request.SessionId,
+                        IsSuccessful = false,
+                        FailureMessage = deleted.FailureMessage,
+                        StackTrace = deleted.StackTrace
+                    };
+
+            itsRepository.Remove(user);
+
+            return
+                new RemoveReply()
+                {
+                    UserId = request.UserId,
+                    SessionId = request.SessionId,
+                    IsSuccessful = true,
+                    UserIdRemoved = user.UserId
+                };
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected CreateExternalUserReply
+        CreateExternalUser(StartRegistrationRequest request)
+        {
+            CreateExternalUserReply created = 
+                itsService.CreateExternalUser(
+                    new CreateExternalUserRequest()
+                    {
+                        UserName = request.UserName,
+                        Password = request.Password,
+                        Name = request.Name,
+                        Email = request.Email,
+                        JobTitle = request.JobTitle,
+                        Phone = request.Phone,
+                        Address = request.Address
+                    });
+            PushRollbackAction(
+                () =>
+                {
+                    DeleteExternalUserReply deleted = 
+                        itsService.DeleteExternalUser(
+                            new DeleteExternalUserRequest()
+                            {
+                                ExternalUserId = created.ExternalUserId
+                            });
+
+                    if (!deleted.IsSuccessful)
+                        throw
+                            new RollbackFailedException(
+                                deleted.FailureMessage);
+                });
+
+            return created;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected IUser
+        GetUserToRemove(RemoveRequest request)
+        {
+            if (request.UserIdToRemove != null)
+                return itsRepository.GetUnique(request.UserIdToRemove);
+            else if (!string.IsNullOrEmpty(request.UserNameToRemove))
+                return 
+                    itsRepository.GetUniqueWithUserName(
+                        request.UserNameToRemove);
+
+            return null;
         }
     }
 }

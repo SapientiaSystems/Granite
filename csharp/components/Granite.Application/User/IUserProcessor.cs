@@ -29,6 +29,13 @@ namespace Granite.Application.User
         FinishRegistrationReply
         FinishRegistration(FinishRegistrationRequest request);
 
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        RemoveReply
+        Remove(RemoveRequest request);
+
     }
 }
 

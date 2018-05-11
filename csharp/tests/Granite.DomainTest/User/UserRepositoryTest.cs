@@ -1,10 +1,11 @@
 ﻿//  ##########################################################################
-//  # File Name: UserIdentityRepositoryTest.cs
+//  # File Name: UserRepositoryTest.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using NUnit.Framework;
 using Strata.Foundation.Injection;
+using Strata.Foundation.Value;
 using Strata.Ninject.Injection;
 using Strata.Persistence.UnitOfWork;
 using System;
@@ -19,10 +20,10 @@ namespace Granite.Domain.User
     ///  
     [TestFixture]
     public abstract
-    class UserIdentityRepositoryTest
+    class UserRepositoryTest
     {
         private IUserRepository itsTarget;
-        private ISet<Guid>              itsIds;
+        private ISet<Guid>      itsIds;
 
         [SetUp]
         public virtual void
@@ -65,25 +66,70 @@ namespace Granite.Domain.User
                     .Provider
                     .GetUnitOfWork();
 
-            UserIdentity expected =
-                new UserIdentity()
+            IUser expected =
+                new StandardUser()
                 {
                     ExternalUserId = "12345",
+                    UserName = "adamsmith",
+                    //Email = new EmailAddress("adamsmith@wealthofnations.com"),
                     VerificationCode = "112233",
                     Status = UserStatus.PENDING,
                     Created = DateTime.Now,
                     LastModified = DateTime.Now
                 };
-            UserIdentity actual =
+            IUser actual =
                 itsTarget.Insert(expected);
 
             unitOfWork.Commit();
 
-            itsIds.Add(actual.UserId);
+            //itsIds.Add(actual.UserId);
 
             Assert.NotNull(actual);
             Assert.AreNotEqual(Guid.Empty,actual.UserId);
             Assert.AreEqual(expected.ExternalUserId,actual.ExternalUserId);
+            Assert.AreEqual(expected.VerificationCode,actual.VerificationCode);
+            Assert.AreEqual(expected.Created,actual.Created);
+            Assert.AreEqual(expected.LastModified,actual.LastModified);
+        }
+
+        [Test]
+        public virtual void
+        TestUpdate()
+        {
+            IUnitOfWork unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+
+            IUser expected =
+                new StandardUser()
+                {
+                    ExternalUserId = "12345",
+                    UserName = "adamsmith",
+                    VerificationCode = "112233",
+                    Status = UserStatus.PENDING,
+                    Created = DateTime.Now,
+                    LastModified = DateTime.Now
+                };
+            IUser actual =
+                itsTarget.Insert(expected);
+
+            unitOfWork.Commit();
+            unitOfWork = itsTarget.Provider.GetUnitOfWork();
+
+            itsIds.Add(actual.UserId);
+
+            expected = actual;
+            expected.Email = new EmailAddress("adam.smith@wealthofnations.com");
+
+            actual = itsTarget.Update(expected);
+            unitOfWork.Commit();
+
+            Assert.NotNull(actual);
+            Assert.AreNotEqual(Guid.Empty,actual.UserId);
+            Assert.AreEqual(expected.ExternalUserId,actual.ExternalUserId);
+            Assert.AreEqual(expected.UserName,actual.UserName);
+            Assert.AreEqual(expected.Email,actual.Email);
             Assert.AreEqual(expected.VerificationCode,actual.VerificationCode);
             Assert.AreEqual(expected.Created,actual.Created);
             Assert.AreEqual(expected.LastModified,actual.LastModified);

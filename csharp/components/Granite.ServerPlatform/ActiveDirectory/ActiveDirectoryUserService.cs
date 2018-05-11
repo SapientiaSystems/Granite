@@ -7,8 +7,10 @@ using Granite.RequiredService.User;
 using Microsoft.Azure.ActiveDirectory.GraphClient;
 using Newtonsoft.Json;
 using Strata.Foundation.Mapper;
+using Strata.Foundation.Value;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.ActiveDirectory
@@ -58,7 +60,8 @@ namespace Granite.ServerPlatform.ActiveDirectory
         {
             try
             {
-                User newUser = new User();
+                User         newUser = new User();
+                EmailAddress email = null;
 
                 Validator.Validate(request);
 
@@ -69,10 +72,16 @@ namespace Granite.ServerPlatform.ActiveDirectory
                         itsClient.CreateUser(
                             itsMapper.ToPayload(newUser)));
 
+                if (newUser.OtherMails.Any())
+                    email = new EmailAddress(newUser.OtherMails.First());
+
                 return
                     new CreateExternalUserReply()
                     {
                         ExternalUserId = newUser.ObjectId,
+                        UserName = newUser.SignInNames.First().Value,
+                        Email = email,
+                        JobTitle = newUser.JobTitle,
                         IsSuccessful = true
                     };
             }
@@ -83,7 +92,8 @@ namespace Granite.ServerPlatform.ActiveDirectory
                     {
                         IsSuccessful = false,
                         FailureMessage = e.Message,
-                        StackTrace = e.StackTrace
+                        StackTrace = e.StackTrace,
+                        Cause = e.InnerException
                     };
             }
         }
@@ -251,7 +261,7 @@ namespace Granite.ServerPlatform.ActiveDirectory
 
             if (request.Address != null)
             {
-                user.StreetAddress = request.Address.Address;
+                user.StreetAddress = request.Address.StreetAddress;
                 user.City = request.Address.City;
                 user.State = request.Address.State;
                 user.Country = request.Address.CountryCode;
@@ -294,7 +304,7 @@ namespace Granite.ServerPlatform.ActiveDirectory
 
             if (request.Address != null)
             {
-                user.StreetAddress = request.Address.Address;
+                user.StreetAddress = request.Address.StreetAddress;
                 user.City = request.Address.City;
                 user.State = request.Address.State;
                 user.Country = request.Address.CountryCode;

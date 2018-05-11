@@ -33,7 +33,7 @@ namespace Granite.Domain.Persistence
         {
             Bind<IUnitOfWorkProvider>()
                 .ToProvider(GetUnitOfWorkProviderProvider())
-                .WithScope<RequestScope>();
+                .WithScope(AbstractModule.DefaultScope);
         }
 
         //////////////////////////////////////////////////////////////////////

@@ -37,7 +37,7 @@ namespace Granite.ServerPlatform.Nhibernate
             return
                 new FuncBasedProvider<IUnitOfWorkProvider>(
                     () => new NhibernateUnitOfWorkProvider(
-                        new string[] {"Granite.Domain","Granite.ServerPlatform"} ) );
+                        new string[] {"Granite.ServerPlatform"} ) );
         }
     }
 }

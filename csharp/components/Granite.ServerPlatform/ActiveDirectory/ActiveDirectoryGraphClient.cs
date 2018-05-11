@@ -32,18 +32,20 @@ namespace Granite.ServerPlatform.ActiveDirectory
         /// </summary>
         ///  
         public
-        ActiveDirectoryGraphClient(string clientId,string clientSecret,string tenantId)
+        ActiveDirectoryGraphClient(
+            string clientId,
+            string clientSecret,
+            string tenantId)
         {
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.tenantId = tenantId;
             baseUrl = Globals.aadGraphEndpoint + tenantId;
 
-            // The AuthenticationContext is ADAL's primary class, in which you indicate the direcotry to use.
-            this.authContext = new AuthenticationContext("https://login.microsoftonline.com/" + tenantId);
+            this.authContext = 
+                new AuthenticationContext(
+                    "https://login.microsoftonline.com/" + tenantId);
 
-            // The ClientCredential is where you pass in your client_id and client_secret, which are 
-            // provided to Azure AD in order to receive an access_token using the app's identity.
             this.credential = new ClientCredential(clientId,clientSecret);
         }
 

@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 using Granite.Domain.Persistence;
+using Granite.Domain.User;
 using Strata.Foundation.Injection;
 using Strata.Persistence.InMemory;
 using Strata.Persistence.UnitOfWork;
@@ -35,7 +36,35 @@ namespace Granite.ServerPlatform.InMemory
         {
             return 
                 new FuncBasedProvider<IUnitOfWorkProvider>(
-                    () => new InMemoryUnitOfWorkProvider() );
+                    () =>
+                    {
+                        InMemoryUnitOfWorkProvider provider =
+                            new InMemoryUnitOfWorkProvider();
+
+                        provider
+                            .InsertNamedQuery(
+                                new InMemoryNamedQuery<IUser>(
+                                    provider,
+                                    "User.GetUniqueWithExternalUserId",
+                                    new ExternalUserIdEqualsPredicate()))
+                            .InsertNamedQuery(
+                                new InMemoryNamedQuery<IUser>(
+                                    provider,
+                                    "User.GetUniqueWithUserName",
+                                    new UserNameEqualsPredicate()))
+                            .InsertNamedQuery(
+                                new InMemoryNamedQuery<IUser>(
+                                    provider,
+                                    "User.HasUniqueWithExternalUserId",
+                                    new ExternalUserIdEqualsPredicate()))
+                            .InsertNamedQuery(
+                                new InMemoryNamedQuery<IUser>(
+                                    provider,
+                                    "User.HasUniqueWithUserName",
+                                    new UserNameEqualsPredicate() ) );
+
+                        return provider;
+                    } );
         }
     }
 }

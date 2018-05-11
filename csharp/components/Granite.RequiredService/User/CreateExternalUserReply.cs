@@ -3,7 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using System;
 using System.Runtime.Serialization;
+using Strata.Foundation.Value;
 
 namespace Granite.RequiredService.User
 {
@@ -17,13 +19,21 @@ namespace Granite.RequiredService.User
     class CreateExternalUserReply
     {
         [DataMember]
-        public string ExternalUserId { get; set; }
+        public string       ExternalUserId { get; set; }
         [DataMember]
-        public bool   IsSuccessful { get; set; }
+        public string       UserName { get; set; }
         [DataMember]
-        public string FailureMessage { get; set; }
+        public EmailAddress Email { get; set; }
         [DataMember]
-        public string StackTrace { get; set; }
+        public string       JobTitle { get; set; }
+        [DataMember]
+        public bool         IsSuccessful { get; set; }
+        [DataMember]
+        public string       FailureMessage { get; set; }
+        [DataMember]
+        public string       StackTrace { get; set; }
+        [DataMember]
+        public Exception    Cause { get; set; }
     }
 }
 

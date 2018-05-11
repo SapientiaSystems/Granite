@@ -90,6 +90,9 @@
     <Reference Include="Ninject.Web.Common, Version=3.3.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Ninject.Web.Common.3.3.0\lib\net45\Ninject.Web.Common.dll</HintPath>
     </Reference>
+    <Reference Include="Ninject.Web.WebApi, Version=3.3.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Ninject.Web.WebApi.3.3.0\lib\net45\Ninject.Web.WebApi.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
@@ -103,22 +106,22 @@
       <HintPath>..\..\packages\Remotion.Linq.EagerFetching.2.1.0\lib\net45\Remotion.Linq.EagerFetching.dll</HintPath>
     </Reference>
     <Reference Include="Strata.EntityFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.EntityFramework.0.2.2\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
+      <HintPath>..\..\packages\Strata.EntityFramework.0.4.0\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.2.8\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.3.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Nhibernate, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.NHibernate.0.2.2\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Nhibernate.0.4.0\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Ninject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Ninject.0.2.1\lib\net45\Debug\Strata.Ninject.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Ninject.0.3.0\lib\net45\Debug\Strata.Ninject.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Persistence.0.2.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Persistence.0.4.0\lib\net45\Debug\Strata.Persistence.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Service.0.0.0\lib\net45\Debug\Strata.Service.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Service.0.5.0\lib\net45\Debug\Strata.Service.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -151,6 +154,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
     </Reference>
@@ -168,8 +172,11 @@
     <Compile Include="ActiveDirectory\ActiveDirectoryUserServiceTest.cs" />
     <Compile Include="ActiveDirectory\UserMapperTest.cs" />
     <Compile Include="Bootstrap\BootstrapperTest.cs" />
+    <Compile Include="Bootstrap\MockApplicationFactory.cs" />
+    <Compile Include="Nhibernate\SchemaGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="User\NhibernateUserIdentityRepositoryTest.cs" />
+    <Compile Include="Nhibernate\NhibernateUserRepositoryTest.cs" />
+    <Compile Include="User\ActiveDirectoryAndNhibernateUserServiceTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\components\Granite.Application\Granite.Application.csproj">
@@ -195,6 +202,14 @@
     <ProjectReference Include="..\..\components\Granite.ServerPlatform\Granite.ServerPlatform.csproj">
       <Project>{3ff763a6-b004-43f2-be2b-3fcd03a7c4e4}</Project>
       <Name>Granite.ServerPlatform</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Granite.ApplicationTest\Granite.ApplicationTest.csproj">
+      <Project>{4CC24F12-B9C3-4E03-872D-C21C68F1DA87}</Project>
+      <Name>Granite.ApplicationTest</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Granite.CommonTest\Granite.CommonTest.csproj">
+      <Project>{0fa3a372-2703-4769-904a-09ec8806a483}</Project>
+      <Name>Granite.CommonTest</Name>
     </ProjectReference>
     <ProjectReference Include="..\Granite.DomainTest\Granite.DomainTest.csproj">
       <Project>{12915ebd-6e45-400d-afac-17e8d72c9aa2}</Project>

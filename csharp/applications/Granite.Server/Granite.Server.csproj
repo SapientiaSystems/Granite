@@ -105,22 +105,22 @@
       <HintPath>..\..\packages\Remotion.Linq.EagerFetching.2.1.0\lib\net45\Remotion.Linq.EagerFetching.dll</HintPath>
     </Reference>
     <Reference Include="Strata.EntityFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.EntityFramework.0.2.2\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
+      <HintPath>..\..\packages\Strata.EntityFramework.0.4.0\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.2.8\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.3.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Nhibernate, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.NHibernate.0.2.2\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Nhibernate.0.4.0\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Ninject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Ninject.0.2.1\lib\net45\Debug\Strata.Ninject.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Ninject.0.3.0\lib\net45\Debug\Strata.Ninject.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Persistence.0.2.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Persistence.0.4.0\lib\net45\Debug\Strata.Persistence.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Service.0.0.0\lib\net45\Debug\Strata.Service.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Service.0.5.0\lib\net45\Debug\Strata.Service.dll</HintPath>
     </Reference>
     <Reference Include="Swashbuckle.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cd1bb07a5ac7c7bc, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Swashbuckle.Core.5.6.0\lib\net40\Swashbuckle.Core.dll</HintPath>

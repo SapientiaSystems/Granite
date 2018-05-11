@@ -52,13 +52,13 @@
       <HintPath>..\..\packages\NUnit.3.9.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.2.8\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.3.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Persistence.0.2.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Persistence.0.4.0\lib\net45\Debug\Strata.Persistence.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Service.0.0.0\lib\net45\Debug\Strata.Service.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Service.0.5.0\lib\net45\Debug\Strata.Service.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="User\UserServiceTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\components\Granite.Application\Granite.Application.csproj">

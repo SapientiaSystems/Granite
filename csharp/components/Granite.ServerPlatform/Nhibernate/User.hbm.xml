@@ -1,43 +1,71 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<hibernate-mapping 
+<hibernate-mapping
     xmlns="urn:nhibernate-mapping-2.2"
     assembly="Granite.Domain"
     namespace="Granite.Domain.User">
 
     <class
-      name="UserIdentity"
-      table="dbo.UserIdentity"
-      batch-size="50">
-      <cache usage="read-write" region="UserIdentity"/>
+        name="IUser"
+        table="dbo.UserData"
+        batch-size="50">
+        <cache usage="read-write" region="IUser"/>
 
-      <id name="UserId" column="UserId" generator="guid.comb"/>
-      <version name="Version" column="Version"/>
+        <id name="UserId" column="UserId" generator="guid.comb"/>
+        <discriminator column="UserType" type="String"/>
+        <version name="Version" column="Version"/>
 
-      <property name="ExternalUserId" column="ExternalUserId" not-null="true"/>
-      <property
-          name="Status"
-          column="Status"
-          type="NHibernate.Type.EnumStringType`1[[Granite.Domain.User.UserStatus, Granite.Domain]], NHibernate"
-          not-null="true"/>
-      <property name="VerificationCode" column="VerificationCode"  not-null="false"/>
-      <property name="Created" column="Created" not-null="true"/>
-      <property name="LastModified" column="LastModified" not-null="true"/>
+        <property name="ExternalUserId" column="ExternalUserId" not-null="true"/>
+        <property name="UserName" column="UserName" not-null="true"/>
+        <property
+            name="Email"
+            type="Strata.Nhibernate.Mapping.EmailAddressType, Strata.Nhibernate">
+            <column name="Email"/>
+        </property>
+        <property name="JobTitle" column="JobTitle" />
+        <property
+            name="Status"
+            column="Status"
+            type="NHibernate.Type.EnumStringType`1[[Granite.Domain.User.UserStatus, Granite.Domain]], NHibernate"
+            not-null="true"/>
+        <property name="VerificationCode" column="VerificationCode"  not-null="false"/>
+        <property name="Created" column="Created" not-null="true"/>
+        <property name="LastModified" column="LastModified" not-null="true"/>
+
+        <subclass
+            name="StandardUser"
+            discriminator-value="StandardUser"/>
+            
     </class>
-  
+
     <query
-        name="UserIdentity.GetUserIdentityWithExternalUserId">
+        name="User.GetUniqueWithExternalUserId">
         <![CDATA[
             select distinct u
-            from UserIdentity u
-            where u.ExternalUserId = :id]]>
+            from IUser u
+            where u.ExternalUserId = :externalUserId]]>
     </query>
     <query
-        name="UserIdentity.HasUserIdentityWithExternalUserId"
+        name="User.GetUniqueWithUserName">
+        <![CDATA[
+            select distinct u
+            from IUser u
+            where u.UserName = :userName]]>
+    </query>
+    <query
+        name="User.HasUniqueWithExternalUserId"
         cacheable="true">
         <![CDATA[
             select count(u.ExternalUserId)
-            from UserIdentity u
-            where u.ExternalUserId = :id]]>
+            from IUser u
+            where u.ExternalUserId = :externalUserId]]>
+    </query>
+    <query
+        name="User.HasUniqueWithUserName"
+        cacheable="true">
+        <![CDATA[
+            select count(u.UserName)
+            from IUser u
+            where u.UserName = :userName]]>
     </query>
 
 </hibernate-mapping>

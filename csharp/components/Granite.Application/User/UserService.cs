@@ -33,7 +33,7 @@ namespace Granite.Application.User
         UserService(
             IUnitOfWorkProvider    provider,
             ILogger                logger,
-            IUserProcessor processor):
+            IUserProcessor         processor):
             base(provider,logger)
         {
             itsProcessor = processor;
@@ -61,7 +61,7 @@ namespace Granite.Application.User
             return
                 Execute(
                     (FinishRegistrationRequest r) =>
-                    { return itsProcessor.FinishRegistration(r); },
+                        { return itsProcessor.FinishRegistration(r); },
                     request);
         }
 
@@ -80,7 +80,11 @@ namespace Granite.Application.User
         public RemoveReply
         Remove(RemoveRequest request)
         {
-            throw new NotImplementedException();
+            return
+                Execute(
+                    (RemoveRequest r) =>
+                        { return itsProcessor.Remove(r); },
+                    request);
         }
 
         //////////////////////////////////////////////////////////////////////
