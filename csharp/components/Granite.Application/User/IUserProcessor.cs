@@ -19,22 +19,22 @@ namespace Granite.Application.User
         /// <summary>
         /// </summary>
         ///  
-        StartRegistrationReply
-        StartRegistration(StartRegistrationRequest request);
+        CreateUserReply
+        StartRegistration(CreateUserRequest request);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
-        FinishRegistrationReply
-        FinishRegistration(FinishRegistrationRequest request);
+        VerifyUserReply
+        FinishRegistration(VerifyUserRequest request);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
-        RemoveReply
-        Remove(RemoveRequest request);
+        DeleteUserReply
+        Remove(DeleteUserRequest request);
 
     }
 }

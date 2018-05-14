@@ -16,21 +16,20 @@ namespace Granite.Common.Utility
     ///  
     public
     class FakeEmailSender:
-        IEmailSender
+        IVerificationNotifier
     {
-        public FinishRegistrationRequest Request { get; protected set; }
+        public VerifyUserRequest Request { get; protected set; }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
         public void 
-        GenerateAndSend(
-            string                     from,
-            string                     to,
-            IDictionary<string,string> parameters)
+        Notify(VerificationNotice notice)
         {
+            IDictionary<string,string> parameters = notice.Parameters;
+
             Request =
-                new FinishRegistrationRequest()
+                new VerifyUserRequest()
                 {
                     CorrelationId =
                         Guid.Parse(parameters[Constant.CORRELATION_ID_PROPERTY]),

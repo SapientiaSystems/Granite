@@ -1,25 +1,24 @@
 ﻿//  ##########################################################################
-//  # File Name: IEmailSender.cs
+//  # File Name: VerificationNotice.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using System;
 using System.Collections.Generic;
 
 namespace Granite.Common.Utility
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     public
-    interface IEmailSender
+    class VerificationNotice
     {
-        void
-        GenerateAndSend(
-            string                     from,
-            string                     to,
-            IDictionary<string,string> parameters);
+        public MessageKind                MessageType { get; set; }
+        public string                     To { get; set; }
+        public string                     From { get; set; }
+        public IDictionary<string,string> Parameters { get; set; }
     }
 }
 

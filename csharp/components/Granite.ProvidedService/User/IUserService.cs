@@ -17,24 +17,24 @@ namespace Granite.ProvidedService.User
     interface IUserService
     {
         [OperationContract]
-        StartRegistrationReply
-        StartRegistration(StartRegistrationRequest request);
+        CreateUserReply
+        CreateUser(CreateUserRequest request);
 
         [OperationContract]
-        FinishRegistrationReply
-        FinishRegistration(FinishRegistrationRequest request);
+        VerifyUserReply
+        VerifyUser(VerifyUserRequest request);
 
         [OperationContract]
-        UpdateReply
-        Update(UpdateRequest request);
+        UpdateUserReply
+        UpdateUser(UpdateUserRequest request);
 
         [OperationContract]
-        RemoveReply
-        Remove(RemoveRequest request);
+        DeleteUserReply
+        DeleteUser(DeleteUserRequest request);
 
         [OperationContract]
-        GetCurrentReply
-        GetCurrent();
+        GetUserReply
+        GetUser();
     }
 }
 

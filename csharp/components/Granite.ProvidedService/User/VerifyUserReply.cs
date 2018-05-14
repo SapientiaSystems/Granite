@@ -1,10 +1,10 @@
 ﻿//  ##########################################################################
-//  # File Name: StartRegistrationRequest.cs
+//  # File Name: VerifyUserReply.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using Granite.ProvidedService.Shared;
-using Strata.Foundation.Value;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User
@@ -16,23 +16,13 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class StartRegistrationRequest:
-        GraniteRequest
+    class VerifyUserReply:
+        GraniteReply
     {
         [DataMember]
-        public string        UserName { get; set; }
+        public Guid   UserIdVerified { get; set; }
         [DataMember]
-        public string        Password { get; set; }
-        [DataMember]
-        public EmailAddress  Email { get; set; }
-        [DataMember]
-        public PersonName    Name { get; set; }
-        [DataMember]
-        public string        JobTitle { get; set; }
-        [DataMember]
-        public PostalAddress Address { get; set; }
-        [DataMember]
-        public PhoneNumber   Phone { get; set; }
+        public string SuccessMessage { get; set; }
     }
 }
 

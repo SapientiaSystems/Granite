@@ -1,8 +1,9 @@
 ﻿//  ##########################################################################
-//  # File Name: UpdateRequest.cs
+//  # File Name: VerifyUserRequest.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Shared;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User
@@ -14,8 +15,13 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class UpdateRequest
+    class VerifyUserRequest:
+        GraniteRequest
     {
+        [DataMember]
+        public string UserNameToVerify { get; set; }
+        [DataMember]
+        public string VerificationCode { get; set; }
     }
 }
 

@@ -65,9 +65,9 @@ namespace Granite.ServerPlatform.Bootstrap
         public void
         TestGetInstanceForApplication()
         {
-            Assert.NotNull(itsContainer.GetInstance<IEmailGenerator>());
+            Assert.NotNull(itsContainer.GetInstance<IVerificationMessageGenerator>());
             Assert.NotNull(itsContainer.GetInstance<IVerificationCodeGenerator>());
-            Assert.NotNull(itsContainer.GetInstance<IEmailSender>());
+            Assert.NotNull(itsContainer.GetInstance<IVerificationNotifier>());
             Assert.NotNull(itsContainer.GetInstance<IUserProcessor>());
             Assert.NotNull(itsContainer.GetInstance<IUserService>());
 

@@ -1,5 +1,5 @@
 ﻿//  ##########################################################################
-//  # File Name: GetCurrentReply.cs
+//  # File Name: UpdateUserReply.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
@@ -14,7 +14,7 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class GetCurrentReply
+    class UpdateUserReply
     {
     }
 }

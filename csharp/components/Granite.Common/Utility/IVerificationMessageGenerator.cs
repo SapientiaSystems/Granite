@@ -1,5 +1,5 @@
 ﻿//  ##########################################################################
-//  # File Name: IEmailGenerator.cs
+//  # File Name: IVerificationMessageGenerator.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
@@ -11,14 +11,24 @@ namespace Granite.Common.Utility
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     public
-    interface IEmailGenerator
+    interface IVerificationMessageGenerator
     {
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         string
-        Generate(IDictionary<string,string> parameters);
+        GenerateForNewUserEmail(IDictionary<string,string> parameters);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        string
+        GenerateForUpdatedUserEmail(IDictionary<string,string> parameters);
     }
 }
 

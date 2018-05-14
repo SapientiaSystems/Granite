@@ -1,10 +1,10 @@
 ﻿//  ##########################################################################
-//  # File Name: RemoveReply.cs
+//  # File Name: CreateUserReply.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using Granite.ProvidedService.Shared;
-using System;
+using Strata.Foundation.Value;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User
@@ -16,11 +16,17 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class RemoveReply:
+    class CreateUserReply:
         GraniteReply
     {
         [DataMember]
-        public Guid UserIdRemoved { get; set; }
+        public string       UserName { get; set; }
+        [DataMember]
+        public EmailAddress Email { get; set; }
+        [DataMember]
+        public string       JobTitle { get; set; }
+        [DataMember]
+        public string       SuccessMessage { get; set; }
     }
 }
 

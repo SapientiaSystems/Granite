@@ -1,5 +1,5 @@
 ﻿//  ##########################################################################
-//  # File Name: FinishRegistrationReply.cs
+//  # File Name: DeleteUserReply.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
@@ -16,13 +16,11 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class FinishRegistrationReply:
+    class DeleteUserReply:
         GraniteReply
     {
         [DataMember]
-        public Guid   UserIdVerified { get; set; }
-        [DataMember]
-        public string SuccessMessage { get; set; }
+        public Guid UserIdDeleted { get; set; }
     }
 }
 

@@ -96,16 +96,17 @@
     <Compile Include="Session\LoginRequest.cs" />
     <Compile Include="Shared\GraniteReply.cs" />
     <Compile Include="Shared\GraniteRequest.cs" />
-    <Compile Include="User\GetCurrentReply.cs" />
-    <Compile Include="User\RemoveReply.cs" />
-    <Compile Include="User\UpdateReply.cs" />
+    <Compile Include="User\GetUserRequest.cs" />
+    <Compile Include="User\GetUserReply.cs" />
+    <Compile Include="User\DeleteUserReply.cs" />
+    <Compile Include="User\UpdateUserReply.cs" />
     <Compile Include="User\IUserService.cs" />
-    <Compile Include="User\FinishRegistrationReply.cs" />
-    <Compile Include="User\StartRegistrationReply.cs" />
-    <Compile Include="User\FinishRegistrationRequest.cs" />
-    <Compile Include="User\RemoveRequest.cs" />
-    <Compile Include="User\UpdateRequest.cs" />
-    <Compile Include="User\StartRegistrationRequest.cs" />
+    <Compile Include="User\VerifyUserReply.cs" />
+    <Compile Include="User\CreateUserReply.cs" />
+    <Compile Include="User\VerifyUserRequest.cs" />
+    <Compile Include="User\DeleteUserRequest.cs" />
+    <Compile Include="User\UpdateUserRequest.cs" />
+    <Compile Include="User\CreateUserRequest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Granite.Common\Granite.Common.csproj">

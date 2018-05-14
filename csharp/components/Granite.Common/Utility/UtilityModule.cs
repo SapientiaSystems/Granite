@@ -34,12 +34,12 @@ namespace Granite.Common.Utility
         public override void
         Initialize()
         {
-            Bind<IEmailSession>()
+            Bind<SmtpClient>()
                 .ToProvider(
-                    new FuncBasedProvider<IEmailSession>(
+                    new FuncBasedProvider<SmtpClient>(
                         () => 
                         {
-                            SmtpClient client =
+                            return
                                 new SmtpClient()
                                 {
                                     Host = "smtp.gmail.com",
@@ -54,15 +54,13 @@ namespace Granite.Common.Utility
                                             ConfigurationManager.AppSettings["GmailUser"],
                                             ConfigurationManager.AppSettings["GmailPassword"])
                                 };
-
-                            return new SmtpEmailSession(client);
                         } ) )
                 .WithScope(DefaultScope);
-            Bind<IEmailGenerator>()
-                .ToType<HtmlEmailGenerator>()
+            Bind<IVerificationMessageGenerator>()
+                .ToType<HtmlVerificationMessageGenerator>()
                 .WithScope(DefaultScope);
-            Bind<IEmailSender>()
-                .ToType<EmailSender>()
+            Bind<IVerificationNotifier>()
+                .ToType<EmailVerificationNotifier>()
                 .WithScope(DefaultScope);
             Bind<IVerificationCodeGenerator>()
                 .ToType<VerificationCodeGenerator>()

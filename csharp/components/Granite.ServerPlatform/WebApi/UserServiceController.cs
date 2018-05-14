@@ -41,15 +41,15 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("start-registration")]
+        [System.Web.Http.Route("create")]
         [RequireHttps]
-        public StartRegistrationReply 
-        StartRegistration(StartRegistrationRequest request)
+        public CreateUserReply 
+        CreateUser(CreateUserRequest request)
         {
-            StartRegistrationReply reply = null;
+            CreateUserReply reply = null;
 
             request.ReceivedTimestamp = DateTime.UtcNow.Ticks/10000;
-            reply = itsImp.StartRegistration(request);
+            reply = itsImp.CreateUser(request);
 
             return reply;
         }
@@ -57,42 +57,42 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("finish-registration")]
+        [System.Web.Http.Route("verify")]
         [RequireHttps]
-        public FinishRegistrationReply 
-        FinishRegistration(FinishRegistrationRequest request)
+        public VerifyUserReply 
+        VerifyUser(VerifyUserRequest request)
         {
-            return itsImp.FinishRegistration(request);
+            return itsImp.VerifyUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
         [System.Web.Http.Route("update")]
-        public UpdateReply 
-        Update(UpdateRequest request)
+        public UpdateUserReply 
+        UpdateUser(UpdateUserRequest request)
         {
-            return itsImp.Update(request);
+            return itsImp.UpdateUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("remove")]
-        public RemoveReply
-        Remove(RemoveRequest request)
+        [System.Web.Http.Route("delete")]
+        public DeleteUserReply
+        DeleteUser(DeleteUserRequest request)
         {
-            return itsImp.Remove(request);
+            return itsImp.DeleteUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("current")]
-        public GetCurrentReply 
-        GetCurrent()
+        [System.Web.Http.Route("get")]
+        public GetUserReply 
+        GetUser()
         {
-            return itsImp.GetCurrent();
+            return itsImp.GetUser();
         }
     }
 }

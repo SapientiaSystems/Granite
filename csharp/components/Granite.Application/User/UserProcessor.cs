@@ -29,7 +29,7 @@ namespace Granite.Application.User
         private IExternalUserService       itsService;
         private IUserRepository            itsRepository;
         private IVerificationCodeGenerator itsGenerator;
-        private IEmailSender               itsSender;
+        private IVerificationNotifier      itsNotifier;
         private ILogger                    itsLogger;
 
         //////////////////////////////////////////////////////////////////////
@@ -43,22 +43,22 @@ namespace Granite.Application.User
             IExternalUserService       service,
             IUserRepository            repository,
             IVerificationCodeGenerator generator,
-            IEmailSender               sender,
+            IVerificationNotifier      notifier,
             ILogger                    logger):
             base(provider)
         {
             itsService = service;
             itsRepository = repository;
             itsGenerator = generator;
-            itsSender = sender;
+            itsNotifier = notifier;
             itsLogger = logger;
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public StartRegistrationReply 
-        StartRegistration(StartRegistrationRequest request)
+        public CreateUserReply 
+        StartRegistration(CreateUserRequest request)
         {
             CreateExternalUserReply createdUser = null;
             IUser                   user = null;
@@ -67,7 +67,7 @@ namespace Granite.Application.User
 
             if (!createdUser.IsSuccessful)
                 return
-                    new StartRegistrationReply()
+                    new CreateUserReply()
                     {
                         IsSuccessful = false,
                         FailureMessage = 
@@ -88,19 +88,24 @@ namespace Granite.Application.User
                         Status           = UserStatus.PENDING
                     } );
 
-            itsSender.GenerateAndSend(
-                "registration@ezvaluator.com",
-                request.Email.ToString(),
-                new Dictionary<string,string>()
+            itsNotifier.Notify(
+                new VerificationNotice()
                 {
-                    {Constant.CORRELATION_ID_PROPERTY,request.CorrelationId.ToString()},
-                    {Constant.USER_ID_PROPERTY,user.UserId.ToString()},
-                    {Constant.USER_NAME_PROPERTY,user.UserName},
-                    {Constant.VERIFICATION_CODE_PROPERTY,user.VerificationCode}
+                    MessageType = MessageKind.CONFIRM_NEW_USER_EMAIL,
+                    From = "verification@ezvaluator.com",
+                    To = request.Email.ToString(),
+                    Parameters = 
+                        new Dictionary<string,string>()
+                        {
+                            {Constant.CORRELATION_ID_PROPERTY,request.CorrelationId.ToString()},
+                            {Constant.USER_ID_PROPERTY,user.UserId.ToString()},
+                            {Constant.USER_NAME_PROPERTY,user.UserName},
+                            {Constant.VERIFICATION_CODE_PROPERTY,user.VerificationCode}
+                        }
                 } );
 
             return
-                new StartRegistrationReply()
+                new CreateUserReply()
                 {
                     UserId = user.UserId,
                     UserName = createdUser.UserName,
@@ -120,8 +125,8 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public FinishRegistrationReply
-        FinishRegistration(FinishRegistrationRequest request)
+        public VerifyUserReply
+        FinishRegistration(VerifyUserRequest request)
         {
             IUser user = 
                 itsRepository.GetUniqueWithUserName(request.UserNameToVerify);
@@ -136,7 +141,7 @@ namespace Granite.Application.User
             user = itsRepository.Update(user);
 
             return
-                new FinishRegistrationReply()
+                new VerifyUserReply()
                 {
                     UserIdVerified = user.UserId,
                     IsSuccessful = true,
@@ -150,15 +155,15 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public RemoveReply 
-        Remove(RemoveRequest request)
+        public DeleteUserReply 
+        Remove(DeleteUserRequest request)
         {
             IUser                   user = GetUserToRemove(request);
             DeleteExternalUserReply deleted = null;
 
             if (user == null)
                 return
-                    new RemoveReply()
+                    new DeleteUserReply()
                     {
                         UserId = request.UserId,
                         SessionId = request.SessionId,
@@ -175,7 +180,7 @@ namespace Granite.Application.User
 
             if (!deleted.IsSuccessful)
                 return
-                    new RemoveReply()
+                    new DeleteUserReply()
                     {
                         UserId = request.UserId,
                         SessionId = request.SessionId,
@@ -187,12 +192,12 @@ namespace Granite.Application.User
             itsRepository.Remove(user);
 
             return
-                new RemoveReply()
+                new DeleteUserReply()
                 {
                     UserId = request.UserId,
                     SessionId = request.SessionId,
                     IsSuccessful = true,
-                    UserIdRemoved = user.UserId
+                    UserIdDeleted = user.UserId
                 };
         }
 
@@ -201,7 +206,7 @@ namespace Granite.Application.User
         /// </summary>
         ///  
         protected CreateExternalUserReply
-        CreateExternalUser(StartRegistrationRequest request)
+        CreateExternalUser(CreateUserRequest request)
         {
             CreateExternalUserReply created = 
                 itsService.CreateExternalUser(
@@ -239,14 +244,14 @@ namespace Granite.Application.User
         /// </summary>
         ///  
         protected IUser
-        GetUserToRemove(RemoveRequest request)
+        GetUserToRemove(DeleteUserRequest request)
         {
-            if (request.UserIdToRemove != null)
-                return itsRepository.GetUnique(request.UserIdToRemove);
-            else if (!string.IsNullOrEmpty(request.UserNameToRemove))
+            if (request.UserIdToDelete != null)
+                return itsRepository.GetUnique(request.UserIdToDelete);
+            else if (!string.IsNullOrEmpty(request.UserNameToDelete))
                 return 
                     itsRepository.GetUniqueWithUserName(
-                        request.UserNameToRemove);
+                        request.UserNameToDelete);
 
             return null;
         }

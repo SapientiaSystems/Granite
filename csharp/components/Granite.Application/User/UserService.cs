@@ -42,12 +42,12 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public StartRegistrationReply 
-        StartRegistration(StartRegistrationRequest request)
+        public CreateUserReply 
+        CreateUser(CreateUserRequest request)
         {
             return
                 Execute(
-                    (StartRegistrationRequest r) =>
+                    (CreateUserRequest r) =>
                         { return itsProcessor.StartRegistration(r); },
                     request );
         }
@@ -55,12 +55,12 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public FinishRegistrationReply 
-        FinishRegistration(FinishRegistrationRequest request)
+        public VerifyUserReply 
+        VerifyUser(VerifyUserRequest request)
         {
             return
                 Execute(
-                    (FinishRegistrationRequest r) =>
+                    (VerifyUserRequest r) =>
                         { return itsProcessor.FinishRegistration(r); },
                     request);
         }
@@ -68,8 +68,8 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public UpdateReply 
-        Update(UpdateRequest request)
+        public UpdateUserReply 
+        UpdateUser(UpdateUserRequest request)
         {
             throw new NotImplementedException();
         }
@@ -77,12 +77,12 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public RemoveReply
-        Remove(RemoveRequest request)
+        public DeleteUserReply
+        DeleteUser(DeleteUserRequest request)
         {
             return
                 Execute(
-                    (RemoveRequest r) =>
+                    (DeleteUserRequest r) =>
                         { return itsProcessor.Remove(r); },
                     request);
         }
@@ -90,8 +90,8 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public GetCurrentReply 
-        GetCurrent()
+        public GetUserReply 
+        GetUser()
         {
             throw new NotImplementedException();
         }

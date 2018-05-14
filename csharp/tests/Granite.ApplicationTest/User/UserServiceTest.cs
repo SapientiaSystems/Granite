@@ -25,7 +25,7 @@ namespace Granite.Application.User
     {
         private IUserService        itsTarget;
         private FakeEmailSender     itsSender;
-        private ISet<RemoveRequest> itsRemovals;
+        private ISet<DeleteUserRequest> itsRemovals;
 
         [SetUp]
         public virtual void
@@ -34,17 +34,17 @@ namespace Granite.Application.User
             IContainer container = CreateContainer();
 
             itsTarget = container.GetInstance<IUserService>();
-            itsSender = (FakeEmailSender)container.GetInstance<IEmailSender>();
-            itsRemovals = new HashSet<RemoveRequest>();
+            itsSender = (FakeEmailSender)container.GetInstance<IVerificationNotifier>();
+            itsRemovals = new HashSet<DeleteUserRequest>();
         }
 
         [TearDown]
         public virtual void
         TearDown()
         {
-            foreach (RemoveRequest request in itsRemovals)
+            foreach (DeleteUserRequest request in itsRemovals)
             {
-                RemoveReply reply = itsTarget.Remove(request);
+                DeleteUserReply reply = itsTarget.DeleteUser(request);
 
                 if (!reply.IsSuccessful)
                     throw new Exception(reply.FailureMessage);
@@ -55,7 +55,7 @@ namespace Granite.Application.User
 
         static public object[] StartRegistrationTestCases =
         {
-            new StartRegistrationRequest()
+            new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
                 UserName = "adamsmith",
@@ -73,7 +73,7 @@ namespace Granite.Application.User
                     },
                 Phone = new PhoneNumber("310.555.1234")
             },
-            new StartRegistrationRequest()
+            new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
                 UserName = "jeremy.bentham",
@@ -91,7 +91,7 @@ namespace Granite.Application.User
                     },
                 Phone = new PhoneNumber("310.555.1234")
             },
-            new StartRegistrationRequest()
+            new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
                 UserName = null,
@@ -102,7 +102,7 @@ namespace Granite.Application.User
                 Address = null,
                 Phone = new PhoneNumber("213-555-2222")
             },
-            new StartRegistrationRequest()
+            new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
                 UserName = "sjevons",
@@ -123,10 +123,10 @@ namespace Granite.Application.User
         };
         [TestCaseSource("StartRegistrationTestCases")]
         public virtual void
-        TestStartRegistration(StartRegistrationRequest request)
+        TestStartRegistration(CreateUserRequest request)
         {
-            StartRegistrationReply reply =
-                itsTarget.StartRegistration(request);
+            CreateUserReply reply =
+                itsTarget.CreateUser(request);
             string expectedMessage =
                 string.Format(
                     "Registration for user '{0}' has started. " +
@@ -139,10 +139,10 @@ namespace Granite.Application.User
             Assert.IsTrue(reply.IsSuccessful);
 
             itsRemovals.Add(
-                new RemoveRequest()
+                new DeleteUserRequest()
                 {
                     UserId = reply.UserId,
-                    UserIdToRemove = reply.UserId
+                    UserIdToDelete = reply.UserId
                 } );
 
             Assert.AreEqual(request.CorrelationId,reply.CorrelationId);
@@ -162,15 +162,15 @@ namespace Granite.Application.User
 
         [TestCaseSource("StartRegistrationTestCases")]
         public virtual void
-        TestFinishRegistration(StartRegistrationRequest request)
+        TestFinishRegistration(CreateUserRequest request)
         {
-            FinishRegistrationReply reply = null;
+            VerifyUserReply reply = null;
             TestStartRegistration(request);
 
             Assert.NotNull(itsSender.Request);
             Assert.AreEqual(request.CorrelationId,itsSender.Request.CorrelationId);
 
-            reply = itsTarget.FinishRegistration(itsSender.Request);
+            reply = itsTarget.VerifyUser(itsSender.Request);
             Assert.AreEqual(itsSender.Request.CorrelationId,reply.CorrelationId);
             Assert.IsTrue(reply.IsSuccessful);
         }

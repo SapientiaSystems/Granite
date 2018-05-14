@@ -1,27 +1,19 @@
 ﻿//  ##########################################################################
-//  # File Name: FinishRegistrationRequest.cs
+//  # File Name: MessageKind.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.ProvidedService.Shared;
-using System.Runtime.Serialization;
-
-namespace Granite.ProvidedService.User
+namespace Granite.Common.Utility
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
-    [DataContract]
     public
-    class FinishRegistrationRequest:
-        GraniteRequest
+    enum MessageKind
     {
-        [DataMember]
-        public string UserNameToVerify { get; set; }
-        [DataMember]
-        public string VerificationCode { get; set; }
+        CONFIRM_NEW_USER_EMAIL,
+        CONFIRM_UPDATED_USER_EMAIL
     }
 }
 

@@ -30,7 +30,7 @@ namespace Granite.Common.Utility
         public override void
         Initialize()
         {
-            Bind<IEmailSender>()
+            Bind<IVerificationNotifier>()
                 .ToType<FakeEmailSender>()
                 .WithScope(DefaultScope);
             Bind<IVerificationCodeGenerator>()

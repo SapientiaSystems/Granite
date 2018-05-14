@@ -65,14 +65,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utility\EmailSender.cs" />
-    <Compile Include="Utility\HtmlEmailGenerator.cs" />
-    <Compile Include="Utility\IEmailGenerator.cs" />
-    <Compile Include="Utility\IEmailSender.cs" />
+    <Compile Include="Utility\EmailVerificationNotifier.cs" />
+    <Compile Include="Utility\HtmlVerificationMessageGenerator.cs" />
+    <Compile Include="Utility\IVerificationMessageGenerator.cs" />
+    <Compile Include="Utility\IVerificationNotifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\IVerificationCodeGenerator.cs" />
+    <Compile Include="Utility\MessageKind.cs" />
     <Compile Include="Utility\UtilityModule.cs" />
     <Compile Include="Utility\VerificationCodeGenerator.cs" />
+    <Compile Include="Utility\VerificationNotice.cs" />
     <Compile Include="Validation\ValidationFailedException.cs" />
     <Compile Include="Value\Constant.cs" />
   </ItemGroup>
