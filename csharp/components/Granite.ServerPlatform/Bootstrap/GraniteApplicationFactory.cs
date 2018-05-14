@@ -6,7 +6,7 @@
 using Granite.Application.Payment;
 using Granite.Application.Session;
 using Granite.Application.User;
-using Granite.Common.Utility;
+using Granite.Common.Verification;
 using Granite.Domain.User;
 using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;
@@ -48,7 +48,7 @@ namespace Granite.ServerPlatform.Bootstrap
 
             modules.Add(new NhibernateModule());
             modules.Add(new ActiveDirectoryModule());
-            modules.Add(new UtilityModule());
+            modules.Add(new GraniteVerificationModule());
             modules.Add(new UserDomainModule());
             modules.Add(new UserApplicationModule());
             modules.Add(new SessionApplicationModule());
@@ -95,12 +95,14 @@ namespace Granite.ServerPlatform.Bootstrap
                                 .Add(
                                     new LoggingRule(
                                         "*",
-                                        NLog.LogLevel.Debug,
+                                        NLog.LogLevel.Info,
                                         logfile));
 
                             NLog.LogManager.Configuration = config;
 
-                            return new NlogLogger(NLog.LogManager.GetLogger("Logger"));
+                            return 
+                                new NlogLogger(
+                                    NLog.LogManager.GetLogger("Logger"));
                         } ),
                     AbstractModule.DefaultScope);
         }

@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Utility;
+using Granite.Common.Verification;
 using Granite.Common.Value;
 using Granite.Domain.Shared;
 using Granite.Domain.User;

@@ -1,9 +1,8 @@
 ﻿//  ##########################################################################
-//  # File Name: UtilityModule.cs
+//  # File Name: UserApplicationModule.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Utility;
 using Granite.ProvidedService.User;
 using Strata.Foundation.Injection;
 
@@ -24,7 +23,7 @@ namespace Granite.Application.User
         /// 
         public
         UserApplicationModule():
-            base("UtilityModule") {}
+            base("UserApplicationModule") {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>

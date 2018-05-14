@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>

@@ -1,22 +1,19 @@
 ﻿//  ##########################################################################
-//  # File Name: IVerificationCodeGenerator.cs
+//  # File Name: MessageKind.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using System;
-
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     public
-    interface IVerificationCodeGenerator
+    enum MessageKind
     {
-        string
-        Generate();
+        CONFIRM_NEW_USER_EMAIL,
+        CONFIRM_UPDATED_USER_EMAIL
     }
 }
 

@@ -4,7 +4,7 @@
 //  ##########################################################################
 
 using Granite.Application.User;
-using Granite.Common.Utility;
+using Granite.Common.Verification;
 using Granite.Domain.User;
 using Granite.ProvidedService.User;
 using Granite.RequiredService.User;

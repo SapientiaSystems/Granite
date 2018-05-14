@@ -6,7 +6,7 @@
 using Granite.Application.Payment;
 using Granite.Application.Session;
 using Granite.Application.User;
-using Granite.Common.Utility;
+using Granite.Common.Verification;
 using Granite.Domain.User;
 using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;

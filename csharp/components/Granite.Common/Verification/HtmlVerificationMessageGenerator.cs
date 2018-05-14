@@ -7,7 +7,7 @@ using Granite.Common.Value;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>

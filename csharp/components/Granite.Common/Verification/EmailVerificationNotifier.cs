@@ -9,7 +9,7 @@ using System.Net.Mime;
 using System.Reflection;
 using SystemEx.Injection;
 
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>

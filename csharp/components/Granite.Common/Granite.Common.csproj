@@ -65,16 +65,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utility\EmailVerificationNotifier.cs" />
-    <Compile Include="Utility\HtmlVerificationMessageGenerator.cs" />
-    <Compile Include="Utility\IVerificationMessageGenerator.cs" />
-    <Compile Include="Utility\IVerificationNotifier.cs" />
+    <Compile Include="Verification\EmailVerificationNotifier.cs" />
+    <Compile Include="Verification\HtmlVerificationMessageGenerator.cs" />
+    <Compile Include="Verification\IVerificationMessageGenerator.cs" />
+    <Compile Include="Verification\IVerificationNotifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utility\IVerificationCodeGenerator.cs" />
-    <Compile Include="Utility\MessageKind.cs" />
-    <Compile Include="Utility\UtilityModule.cs" />
-    <Compile Include="Utility\VerificationCodeGenerator.cs" />
-    <Compile Include="Utility\VerificationNotice.cs" />
+    <Compile Include="Verification\IVerificationCodeGenerator.cs" />
+    <Compile Include="Verification\MessageKind.cs" />
+    <Compile Include="Verification\VerificationModule.cs" />
+    <Compile Include="Verification\GraniteVerificationModule.cs" />
+    <Compile Include="Verification\VerificationCodeGenerator.cs" />
+    <Compile Include="Verification\VerificationNotice.cs" />
     <Compile Include="Validation\ValidationFailedException.cs" />
     <Compile Include="Value\Constant.cs" />
   </ItemGroup>
@@ -85,7 +86,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Logo.gif" />
     <Content Include="Resources\Logo.png" />
-    <Content Include="Utility\FinishRegistration.html" />
+    <Content Include="Verification\FinishRegistration.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\packages\StyleCop.MSBuild.5.0.0\build\StyleCop.MSBuild.targets" Condition="Exists('..\..\packages\StyleCop.MSBuild.5.0.0\build\StyleCop.MSBuild.targets')" />

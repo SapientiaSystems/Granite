@@ -7,7 +7,7 @@
 using Strata.Foundation.Email;
 using System.Collections.Generic;
 
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>

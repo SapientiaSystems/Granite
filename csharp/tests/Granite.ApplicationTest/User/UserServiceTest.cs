@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Utility;
+using Granite.Common.Verification;
 using Granite.ProvidedService.User;
 using NUnit.Framework;
 using Strata.Foundation.Injection;

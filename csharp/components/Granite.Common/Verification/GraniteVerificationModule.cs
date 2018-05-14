@@ -1,11 +1,15 @@
 ﻿//  ##########################################################################
-//  # File Name: FakeUtilityModule.cs
+//  # File Name: GraniteVerificationModule.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using Strata.Foundation.Injection;
+using System.Configuration;
+using System.Net;
+using System.Net.Mail;
+using SystemEx.Injection;
 
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
@@ -13,29 +17,26 @@ namespace Granite.Common.Utility
     /// </summary>
     ///  
     public
-    class FakeUtilityModule:
-        AbstractModule
+    class GraniteVerificationModule:
+        VerificationModule
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         /// 
         public
-        FakeUtilityModule():
-            base("FakeUtilityModule") {}
+        GraniteVerificationModule():
+            base("GraniteVerificationModule") {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public override void
-        Initialize()
+        protected override IProvider<IVerificationMessageGenerator> 
+        GetVerificationMessageGeneratorProvider()
         {
-            Bind<IVerificationNotifier>()
-                .ToType<FakeEmailSender>()
-                .WithScope(DefaultScope);
-            Bind<IVerificationCodeGenerator>()
-                .ToType<VerificationCodeGenerator>()
-                .WithScope(DefaultScope);
+            return
+                new FuncBasedProvider<IVerificationMessageGenerator>(
+                    () => {return new HtmlVerificationMessageGenerator();});
         }
     }
 }

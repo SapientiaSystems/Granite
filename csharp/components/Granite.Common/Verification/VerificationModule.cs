@@ -1,23 +1,23 @@
 ﻿//  ##########################################################################
-//  # File Name: UtilityModule.cs
+//  # File Name: VerificationModule.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Email;
 using Strata.Foundation.Injection;
 using System.Configuration;
 using System.Net;
 using System.Net.Mail;
+using SystemEx.Injection;
 
-namespace Granite.Common.Utility
+namespace Granite.Common.Verification
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 
     /// </summary>
     ///  
-    public
-    class UtilityModule:
+    public abstract
+    class VerificationModule:
         AbstractModule
     {
         //////////////////////////////////////////////////////////////////////
@@ -25,8 +25,8 @@ namespace Granite.Common.Utility
         /// </summary>
         /// 
         public
-        UtilityModule():
-            base("GraniteUtilityModule") {}
+        VerificationModule(string name):
+            base(name) {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
@@ -57,7 +57,7 @@ namespace Granite.Common.Utility
                         } ) )
                 .WithScope(DefaultScope);
             Bind<IVerificationMessageGenerator>()
-                .ToType<HtmlVerificationMessageGenerator>()
+                .ToProvider(GetVerificationMessageGeneratorProvider())
                 .WithScope(DefaultScope);
             Bind<IVerificationNotifier>()
                 .ToType<EmailVerificationNotifier>()
@@ -66,6 +66,13 @@ namespace Granite.Common.Utility
                 .ToType<VerificationCodeGenerator>()
                 .WithScope(DefaultScope);
         }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        /// 
+        protected abstract IProvider<IVerificationMessageGenerator>
+        GetVerificationMessageGeneratorProvider();
     }
 }
 
