@@ -21,7 +21,7 @@ namespace Granite.Common.Utility
         Generate(IDictionary<string,string> parameters)
         {
             StringBuilder builder = new StringBuilder();
-
+            
             CheckParameters(
                 parameters,
                 Constant.USER_NAME_PROPERTY,
@@ -29,14 +29,42 @@ namespace Granite.Common.Utility
 
             builder
                 .Append("<html>")
-                .Append("To complete user identity setup request for user name: ")
+                .Append(
+                @"
+                <div 
+                    style =
+                       ""background-color: lightgray;
+                        height: 60px;
+                        vertical-align: middle;
+                        padding: 10px;"">
+                    <img
+                        style=
+                          ""display: inline-block;
+                            height: 60px;
+                            width: 60px;
+                            vertical-align: middle;""
+                        src=""cid:logo""/>
+                    <div
+                        style=
+                          ""display: inline-block;
+                            height: 60px;
+                            line-height: 60px;
+                            color: white;
+                            vertical-align: middle;
+                            font-size: 32pt;
+                            padding-left: 5px;"">EzValuator</div> 
+                </div>")
+                .Append("")
+                .Append("<span style=\"font-size: 18pt;color: #242424;\">To complete EzValuator registration for user '")
                 .Append(parameters[Constant.USER_NAME_PROPERTY])
-                .Append(" please confirm email address with verification code: ")
+                .Append("' please confirm email address by clicking on the link: </span>")
+                .Append("<a style=\"font-size: 18pt;\" href=\"https://ezvaluatorweb.azurewebsites.net/#/finish-registration?userId=")
+                .Append(parameters[Constant.USER_ID_PROPERTY])
+                .Append("&userName=")
+                .Append(parameters[Constant.USER_NAME_PROPERTY])
+                .Append("&confirmationCode=")
                 .Append(parameters[Constant.VERIFICATION_CODE_PROPERTY])
-                .Append(".")
-                .Append("<p/>")
-                .Append("<p/>")
-                .Append("<a href=\"en.wikipedia.org\">Confirm Email Address</a>")
+                .Append("\">Confirm Email Address</a>")
                 .Append("</html>");
 
             return builder.ToString();

@@ -49,7 +49,7 @@ namespace Granite.Application.User
                 if (!reply.IsSuccessful)
                     throw new Exception(reply.FailureMessage);
             }
-
+            
             itsTarget = null;
         }
 
