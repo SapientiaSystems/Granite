@@ -57,8 +57,8 @@ namespace Granite.ServerPlatform.ActiveDirectory
                         new AuthenticateReply()
                         {
                             AccessToken = result.AccessToken,
-                            AccessTokenType = result.AccessTokenType
-                        };
+                            AccessTokenType = result.AccessTokenType,
+                            RefreshToken = result.RefreshToken                        };
                 }
                 catch (AdalException e)
                 {

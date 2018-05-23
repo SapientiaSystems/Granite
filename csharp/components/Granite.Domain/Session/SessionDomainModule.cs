@@ -1,42 +1,37 @@
 ﻿//  ##########################################################################
-//  # File Name: GraniteVerificationModule.cs
+//  # File Name: SessionDomainModule.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
 using Strata.Foundation.Injection;
-using System.Configuration;
-using System.Net;
-using System.Net.Mail;
-using SystemEx.Injection;
 
-namespace Granite.Common.Verification
+namespace Granite.Domain.Session
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     public
-    class GraniteVerificationModule:
-        VerificationModule
+    class SessionDomainModule:
+        AbstractModule
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
-        /// 
+        ///  
         public
-        GraniteVerificationModule():
-            base("GraniteVerificationModule") {}
+        SessionDomainModule() :
+            base("SessionDomainModule") {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        /// 
-        protected override IProvider<IVerificationMessageGenerator> 
-        GetVerificationMessageGeneratorProvider()
+        ///  
+        public override void 
+        Initialize()
         {
-            return
-                new FuncBasedProvider<IVerificationMessageGenerator>(
-                    () => {return new HtmlVerificationMessageGenerator();});
+            Bind<ISessionRepository>()
+                .ToType<SessionRepository>()
+                .WithScope(DefaultScope);
         }
     }
 }

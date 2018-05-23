@@ -4,6 +4,10 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.Session;
+using Strata.Foundation.Logging;
+using Strata.Persistence.UnitOfWork;
+using Strata.Service.Core;
+using SystemEx.Injection;
 
 namespace Granite.Application.Session
 {
@@ -14,16 +18,24 @@ namespace Granite.Application.Session
     ///  
     public
     class SessionService:
+        AbstractService,
         ISessionService
     {
+        private ISessionProcessor itsProcessor;
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         /// 
+        [Inject]
         public
-        SessionService()
+        SessionService(
+            IUnitOfWorkProvider provider,
+            ILogger             logger,
+            ISessionProcessor   processor):
+            base(provider,logger)
         {
-
+            itsProcessor = processor;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -32,9 +44,10 @@ namespace Granite.Application.Session
         public LoginReply 
         Login(LoginRequest request)
         {
-            LoginReply reply = new LoginReply();
-
-            return reply;
+            return
+                Execute(
+                    (LoginRequest r) => { return itsProcessor.Login(r); },
+                    request );
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -43,9 +56,23 @@ namespace Granite.Application.Session
         public LogoutReply 
         Logout(LogoutRequest request)
         {
-            LogoutReply reply = new LogoutReply();
+            return
+                Execute(
+                    (LogoutRequest r) => { return itsProcessor.Logout(r); },
+                    request);
+        }
 
-            return reply;
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public KeepAliveReply 
+        KeepAlive(KeepAliveRequest request)
+        {
+            return
+                Execute(
+                    (KeepAliveRequest r) => 
+                        { return itsProcessor.KeepAlive(r); },
+                    request);
         }
     }
 }

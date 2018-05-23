@@ -3,19 +3,24 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Shared;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Session
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     [DataContract]
     public
-    class LoginRequest
+    class LoginRequest:
+        GraniteRequest
     {
+        [DataMember]
+        public string UserName { get; set; }
+        [DataMember]
+        public string Password { get; set; }
     }
 }
 

@@ -4,6 +4,8 @@
 //  ##########################################################################
 
 using Strata.Foundation.Injection;
+using System.Collections.Generic;
+using SystemEx.Injection;
 
 namespace Granite.Domain.User
 {
@@ -12,8 +14,9 @@ namespace Granite.Domain.User
     /// </summary>
     ///  
     public
-    class UserDomainModule:
+    class UserDomainModule<T>:
         AbstractModule
+        where T: IProvider<IList<IRole>>
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -29,6 +32,14 @@ namespace Granite.Domain.User
         public override void 
         Initialize()
         {
+            Bind<IProvider<IList<IRole>>>()
+                .ToType<T>()
+                .WithScope<SingletonScope>();
+
+            Bind<IRoleRepository>()
+                .ToType<RoleRepository>()
+                .WithScope<SingletonScope>();
+
             Bind<IUserRepository>()
                 .ToType<UserRepository>()
                 .WithScope(DefaultScope);

@@ -15,6 +15,7 @@ namespace Granite.Server.App_Start
     using Ninject;
     using Ninject.Web.Common;
     using Ninject.Web.Common.WebHost;
+    using Strata.Foundation.Bootstrap;
     using Strata.Ninject.Injection;
     using System;
     using System.Web;
@@ -49,6 +50,10 @@ namespace Granite.Server.App_Start
             DynamicModuleUtility.RegisterModule(typeof(NinjectHttpModule));
      
             bootstrapper.Initialize(CreateKernel);
+            bootstrap
+                .Container
+                .GetInstance<IStartStopController>()
+                .StartApplication();
         }
 
         //////////////////////////////////////////////////////////////////////

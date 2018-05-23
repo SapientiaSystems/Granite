@@ -16,17 +16,18 @@ namespace Granite.Common.Verification
     /// 
     /// </summary>
     ///  
-    public abstract
-    class VerificationModule:
+    public
+    class VerificationModule<T>:
         AbstractModule
+        where T:IVerificationMessageGenerator
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         /// 
         public
-        VerificationModule(string name):
-            base(name) {}
+        VerificationModule():
+            base("VerificationModule") {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
@@ -57,7 +58,7 @@ namespace Granite.Common.Verification
                         } ) )
                 .WithScope(DefaultScope);
             Bind<IVerificationMessageGenerator>()
-                .ToProvider(GetVerificationMessageGeneratorProvider())
+                .ToType<T>()
                 .WithScope(DefaultScope);
             Bind<IVerificationNotifier>()
                 .ToType<EmailVerificationNotifier>()
@@ -66,13 +67,6 @@ namespace Granite.Common.Verification
                 .ToType<VerificationCodeGenerator>()
                 .WithScope(DefaultScope);
         }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        /// 
-        protected abstract IProvider<IVerificationMessageGenerator>
-        GetVerificationMessageGeneratorProvider();
     }
 }
 

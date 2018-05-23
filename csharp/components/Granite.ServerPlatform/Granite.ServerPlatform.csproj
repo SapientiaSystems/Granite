@@ -114,22 +114,22 @@
       <HintPath>..\..\packages\RestSharp.106.2.2\lib\net452\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="Strata.EntityFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.EntityFramework.0.4.0\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
+      <HintPath>..\..\packages\Strata.EntityFramework.0.4.2\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.3.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.3.2\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Nhibernate, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Nhibernate.0.4.0\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Nhibernate.0.4.2\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Ninject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Ninject.0.3.0\lib\net45\Debug\Strata.Ninject.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Ninject.0.3.2\lib\net45\Debug\Strata.Ninject.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Persistence.0.4.0\lib\net45\Debug\Strata.Persistence.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Persistence.0.4.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Service.0.5.0\lib\net45\Debug\Strata.Service.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Service.0.7.0\lib\net45\Debug\Strata.Service.dll</HintPath>
     </Reference>
     <Reference Include="Stripe.net, Version=12.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Stripe.net.12.1.0\lib\net45\Stripe.net.dll</HintPath>
@@ -216,11 +216,14 @@
     <Compile Include="ActiveDirectory\ActiveDirectoryUserService.cs" />
     <Compile Include="ActiveDirectory\Globals.cs" />
     <Compile Include="Bootstrap\GraniteApplicationFactory.cs" />
+    <Compile Include="Bootstrap\GraniteStartStopController.cs" />
     <Compile Include="InMemory\UserNameEqualsPredicate.cs" />
     <Compile Include="InMemory\ExternalUserIdEqualsPredicate.cs" />
     <Compile Include="InMemory\InMemoryModule.cs" />
     <Compile Include="Nhibernate\EmailAddressType.cs" />
+    <Compile Include="Nhibernate\MappableSetType.cs" />
     <Compile Include="Nhibernate\NhibernateModule.cs" />
+    <Compile Include="Nhibernate\RoleSetType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stripe\IStripeContext.cs" />
     <Compile Include="Stripe\StripeContext.cs" />
@@ -266,6 +269,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nhibernate\User.hbm.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Nhibernate\Session.hbm.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

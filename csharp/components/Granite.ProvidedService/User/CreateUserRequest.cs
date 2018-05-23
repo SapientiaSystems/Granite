@@ -30,6 +30,8 @@ namespace Granite.ProvidedService.User
         [DataMember]
         public string        JobTitle { get; set; }
         [DataMember]
+        public string[]      AuthorizedRoles { get; set; }
+        [DataMember]
         public PostalAddress Address { get; set; }
         [DataMember]
         public PhoneNumber   Phone { get; set; }

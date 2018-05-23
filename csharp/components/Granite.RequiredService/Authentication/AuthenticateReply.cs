@@ -20,8 +20,12 @@ namespace Granite.RequiredService.Authentication
         public string Username { get; set; }
         [DataMember]
         public string Password { get; set; }
+        [DataMember]
         public string AccessToken { get; set; }
+        [DataMember]
         public string AccessTokenType { get; set; }
+        [DataMember]
+        public string RefreshToken { get; set; }
     }
 }
 

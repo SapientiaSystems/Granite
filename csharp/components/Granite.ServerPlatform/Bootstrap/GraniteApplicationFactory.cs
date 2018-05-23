@@ -7,6 +7,7 @@ using Granite.Application.Payment;
 using Granite.Application.Session;
 using Granite.Application.User;
 using Granite.Common.Verification;
+using Granite.Domain.Session;
 using Granite.Domain.User;
 using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;
@@ -40,21 +41,16 @@ namespace Granite.ServerPlatform.Bootstrap
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        ///  
-        protected override IList<IModule> 
-        CreateModules()
+        /// 
+        public override IBinder<IStartStopController>
+        CreateControllerBinder(ISourceBindingBuilder<IStartStopController> builder)
         {
-            IList<IModule> modules = new List<IModule>();
-
-            modules.Add(new NhibernateModule());
-            modules.Add(new ActiveDirectoryModule());
-            modules.Add(new GraniteVerificationModule());
-            modules.Add(new UserDomainModule());
-            modules.Add(new UserApplicationModule());
-            modules.Add(new SessionApplicationModule());
-            modules.Add(new PaymentApplicationModule());
-
-            return modules;
+            return
+                new TargetBasedBinder<
+                    IStartStopController,
+                    GraniteStartStopController>(
+                        builder,
+                        AbstractModule.DefaultScope);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -105,6 +101,26 @@ namespace Granite.ServerPlatform.Bootstrap
                                     NLog.LogManager.GetLogger("Logger"));
                         } ),
                     AbstractModule.DefaultScope);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        protected override IList<IModule>
+        CreateModules()
+        {
+            IList<IModule> modules = new List<IModule>();
+
+            modules.Add(new NhibernateModule());
+            modules.Add(new ActiveDirectoryModule());
+            modules.Add(new VerificationModule<HtmlVerificationMessageGenerator>());
+            modules.Add(new UserDomainModule<GraniteRolesProvider>());
+            modules.Add(new SessionDomainModule());
+            modules.Add(new UserApplicationModule());
+            modules.Add(new SessionApplicationModule());
+            modules.Add(new PaymentApplicationModule());
+
+            return modules;
         }
 
         //////////////////////////////////////////////////////////////////////

@@ -59,6 +59,16 @@ namespace Granite.ServerPlatform.WebApi
             return itsImp.Logout(request);
         }
 
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        [System.Web.Http.Route("keep-alive")]
+        [RequireHttps]
+        public KeepAliveReply 
+        KeepAlive(KeepAliveRequest request)
+        {
+            return itsImp.KeepAlive(request);
+        }
     }
 }
 

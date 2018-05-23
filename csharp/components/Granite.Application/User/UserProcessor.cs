@@ -14,6 +14,8 @@ using Strata.Persistence.UnitOfWork;
 using Strata.Service.Core;
 using System.Collections.Generic;
 using SystemEx.Injection;
+using System;
+using Strata.Persistence.NamedQuery;
 
 namespace Granite.Application.User
 {
@@ -27,10 +29,10 @@ namespace Granite.Application.User
         IUserProcessor
     {
         private IExternalUserService       itsService;
-        private IUserRepository            itsRepository;
+        private IUserRepository            itsUserRepository;
+        private IRoleRepository            itsRoleRepository;
         private IVerificationCodeGenerator itsGenerator;
         private IVerificationNotifier      itsNotifier;
-        private ILogger                    itsLogger;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -41,27 +43,30 @@ namespace Granite.Application.User
         UserProcessor(
             IUnitOfWorkProvider        provider,
             IExternalUserService       service,
-            IUserRepository            repository,
+            IUserRepository            userRepository,
+            IRoleRepository            roleRepository,
             IVerificationCodeGenerator generator,
             IVerificationNotifier      notifier,
             ILogger                    logger):
-            base(provider)
+            base(provider,logger)
         {
             itsService = service;
-            itsRepository = repository;
+            itsUserRepository = userRepository;
+            itsRoleRepository = roleRepository;
             itsGenerator = generator;
             itsNotifier = notifier;
-            itsLogger = logger;
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
         public CreateUserReply 
-        StartRegistration(CreateUserRequest request)
+        CreateUser(CreateUserRequest request)
         {
             CreateExternalUserReply createdUser = null;
             IUser                   user = null;
+
+            ValidateRequest(request);
 
             createdUser = CreateExternalUser(request);
 
@@ -77,17 +82,20 @@ namespace Granite.Application.User
                     };
 
             user =
-                itsRepository.Insert(
-                    new StandardUser()
-                    {
-                        ExternalUserId   = createdUser.ExternalUserId,
-                        UserName         = createdUser.UserName,
-                        Email            = createdUser.Email,
-                        JobTitle         = createdUser.JobTitle,
-                        VerificationCode = itsGenerator.Generate(),
-                        Status           = UserStatus.PENDING
-                    } );
-
+                new StandardUser()
+                {
+                    ExternalUserId = createdUser.ExternalUserId,
+                    UserName = createdUser.UserName,
+                    Email = createdUser.Email,
+                    JobTitle = createdUser.JobTitle,
+                    VerificationCode = itsGenerator.Generate(),
+                    Status = UserStatus.PENDING,
+                    Created = DateTime.Now,
+                    LastModified = DateTime.Now,
+                };
+            user = SetRoles(user,request.AuthorizedRoles);
+            user = itsUserRepository.Insert(user);
+                    
             itsNotifier.Notify(
                 new VerificationNotice()
                 {
@@ -115,8 +123,8 @@ namespace Granite.Application.User
                          string.Format(
                             "Registration for user '{0}' has started. " +
                             "A confirmation email was sent to '{1}'. " +
-                            "Please following the instructions in this " +
-                            "email to finish user registration. Thank you.",
+                            "Please follow the instructions in this " +
+                            "email to verify the user. Thank you.",
                             createdUser.UserName,
                             createdUser.Email.ToString())
                         };
@@ -126,10 +134,10 @@ namespace Granite.Application.User
         /// <inheritDoc/>
         ///  
         public VerifyUserReply
-        FinishRegistration(VerifyUserRequest request)
+        VerifyUser(VerifyUserRequest request)
         {
             IUser user = 
-                itsRepository.GetUniqueWithUserName(request.UserNameToVerify);
+                itsUserRepository.GetUniqueWithUserName(request.UserNameToVerify);
 
             if (user == null)
                 throw 
@@ -138,7 +146,7 @@ namespace Granite.Application.User
                         request.UserNameToVerify);
 
             user = VerifyUser(user,request.VerificationCode);
-            user = itsRepository.Update(user);
+            user = itsUserRepository.Update(user);
 
             return
                 new VerifyUserReply()
@@ -156,7 +164,7 @@ namespace Granite.Application.User
         /// <inheritDoc/>
         ///  
         public DeleteUserReply 
-        Remove(DeleteUserRequest request)
+        DeleteUser(DeleteUserRequest request)
         {
             IUser                   user = GetUserToRemove(request);
             DeleteExternalUserReply deleted = null;
@@ -189,7 +197,7 @@ namespace Granite.Application.User
                         StackTrace = deleted.StackTrace
                     };
 
-            itsRepository.Remove(user);
+            itsUserRepository.Remove(user);
 
             return
                 new DeleteUserReply()
@@ -199,6 +207,44 @@ namespace Granite.Application.User
                     IsSuccessful = true,
                     UserIdDeleted = user.UserId
                 };
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected void
+        ValidateRequest(CreateUserRequest request)
+        {
+            IRole       graniteUser = 
+                            itsRoleRepository.GetRole("GraniteUser");
+            bool        isGraniteUser = false;
+            ISet<IRole> roles = 
+                            itsRoleRepository.GetRoles(
+                                request.AuthorizedRoles);
+            IEnumerator<IRole> enumerator = roles.GetEnumerator();
+
+            if (itsUserRepository.HasUniqueWithUserName(request.UserName))
+                throw
+                    new NotUniqueException(
+                        string.Format(
+                            "Username '{0} has already been used. " +
+                            "Please select another username. Thank you.",
+                            request.UserName));
+
+            while (!isGraniteUser &&  enumerator.MoveNext())
+            {
+                IRole role = enumerator.Current;
+
+                if (role.Includes(graniteUser))
+                    isGraniteUser = true;
+            }
+
+            if (!isGraniteUser)
+                throw 
+                    new InvalidOperationException(
+                        "Specified roles do not include GraniteUser");
+
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -247,10 +293,10 @@ namespace Granite.Application.User
         GetUserToRemove(DeleteUserRequest request)
         {
             if (request.UserIdToDelete != null)
-                return itsRepository.GetUnique(request.UserIdToDelete);
+                return itsUserRepository.GetUnique(request.UserIdToDelete);
             else if (!string.IsNullOrEmpty(request.UserNameToDelete))
                 return 
-                    itsRepository.GetUniqueWithUserName(
+                    itsUserRepository.GetUniqueWithUserName(
                         request.UserNameToDelete);
 
             return null;
@@ -275,6 +321,16 @@ namespace Granite.Application.User
             return user;
         }
 
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected IUser
+        SetRoles(IUser user,string[] roleNames)
+        {
+            user.SetRoles(itsRoleRepository.GetRoles(roleNames));
+            return user;
+        }
     }
 }
 

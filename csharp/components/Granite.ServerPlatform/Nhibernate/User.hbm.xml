@@ -14,8 +14,8 @@
         <discriminator column="UserType" type="String"/>
         <version name="Version" column="Version"/>
 
-        <property name="ExternalUserId" column="ExternalUserId" not-null="true"/>
-        <property name="UserName" column="UserName" not-null="true"/>
+        <property name="ExternalUserId" column="ExternalUserId" unique-key="ExternalUserId" not-null="true"/>
+        <property name="UserName" column="UserName" unique-key="UserName" not-null="true"/>
         <property
             name="Email"
             type="Strata.Nhibernate.Mapping.EmailAddressType, Strata.Nhibernate">
@@ -33,7 +33,14 @@
 
         <subclass
             name="StandardUser"
-            discriminator-value="StandardUser"/>
+            discriminator-value="StandardUser">
+            <property
+                name="RoleNames"
+                type="Granite.ServerPlatform.Nhibernate.RoleSetType, Granite.ServerPlatform"
+                not-null="false">
+                <column name="RoleNames"/>
+            </property>
+        </subclass>
             
     </class>
 

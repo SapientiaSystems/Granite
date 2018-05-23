@@ -4,7 +4,6 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.User;
-using System;
 
 namespace Granite.Application.User
 {
@@ -20,21 +19,21 @@ namespace Granite.Application.User
         /// </summary>
         ///  
         CreateUserReply
-        StartRegistration(CreateUserRequest request);
+        CreateUser(CreateUserRequest request);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         VerifyUserReply
-        FinishRegistration(VerifyUserRequest request);
+        VerifyUser(VerifyUserRequest request);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         DeleteUserReply
-        Remove(DeleteUserRequest request);
+        DeleteUser(DeleteUserRequest request);
 
     }
 }

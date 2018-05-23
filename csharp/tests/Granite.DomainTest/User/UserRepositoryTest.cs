@@ -3,9 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Domain.Shared;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
-using Strata.Foundation.Value;
 using Strata.Ninject.Injection;
 using Strata.Persistence.UnitOfWork;
 using System;
@@ -22,8 +22,9 @@ namespace Granite.Domain.User
     public abstract
     class UserRepositoryTest
     {
-        private IUserRepository itsTarget;
-        private ISet<Guid>      itsIds;
+        private IUserRepository    itsTarget;
+        private ISet<Guid>         itsIds;
+        private ITestUserGenerator itsGenerator;
 
         [SetUp]
         public virtual void
@@ -32,10 +33,11 @@ namespace Granite.Domain.User
             IContainer container = 
                 new NinjectContainer(
                     GetPersistenceModule(),
-                    new UserDomainModule());
+                    new UserDomainModule<GraniteRolesProvider>());
 
             itsTarget = container.GetInstance<IUserRepository>();
             itsIds = new HashSet<Guid>();
+            itsGenerator = new TestUserGenerator();
         }
 
         [TearDown]
@@ -66,23 +68,12 @@ namespace Granite.Domain.User
                     .Provider
                     .GetUnitOfWork();
 
-            IUser expected =
-                new StandardUser()
-                {
-                    ExternalUserId = "12345",
-                    UserName = "adamsmith",
-                    //Email = new EmailAddress("adamsmith@wealthofnations.com"),
-                    VerificationCode = "112233",
-                    Status = UserStatus.PENDING,
-                    Created = DateTime.Now,
-                    LastModified = DateTime.Now
-                };
-            IUser actual =
-                itsTarget.Insert(expected);
+            IUser expected = itsGenerator.GenerateUser();
+            IUser actual = itsTarget.Insert(expected);
 
             unitOfWork.Commit();
 
-            //itsIds.Add(actual.UserId);
+            itsIds.Add(actual.UserId);
 
             Assert.NotNull(actual);
             Assert.AreNotEqual(Guid.Empty,actual.UserId);
@@ -101,18 +92,8 @@ namespace Granite.Domain.User
                     .Provider
                     .GetUnitOfWork();
 
-            IUser expected =
-                new StandardUser()
-                {
-                    ExternalUserId = "12345",
-                    UserName = "adamsmith",
-                    VerificationCode = "112233",
-                    Status = UserStatus.PENDING,
-                    Created = DateTime.Now,
-                    LastModified = DateTime.Now
-                };
-            IUser actual =
-                itsTarget.Insert(expected);
+            IUser expected = itsGenerator.GenerateUser();
+            IUser actual = itsTarget.Insert(expected);
 
             unitOfWork.Commit();
             unitOfWork = itsTarget.Provider.GetUnitOfWork();
@@ -120,7 +101,7 @@ namespace Granite.Domain.User
             itsIds.Add(actual.UserId);
 
             expected = actual;
-            expected.Email = new EmailAddress("adam.smith@wealthofnations.com");
+            expected.Email = itsGenerator.GenerateEmail();
 
             actual = itsTarget.Update(expected);
             unitOfWork.Commit();

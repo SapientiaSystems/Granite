@@ -23,8 +23,8 @@ namespace Granite.Application.User
     public abstract
     class UserServiceTest
     {
-        private IUserService        itsTarget;
-        private FakeEmailSender     itsSender;
+        private IUserService            itsTarget;
+        private FakeEmailSender         itsSender;
         private ISet<DeleteUserRequest> itsRemovals;
 
         [SetUp]
@@ -53,7 +53,7 @@ namespace Granite.Application.User
             itsTarget = null;
         }
 
-        static public object[] StartRegistrationTestCases =
+        static public object[] CreateUserTestCases =
         {
             new CreateUserRequest()
             {
@@ -121,9 +121,9 @@ namespace Granite.Application.User
                 Phone = null
             }
         };
-        [TestCaseSource("StartRegistrationTestCases")]
+        [TestCaseSource("CreateUserTestCases")]
         public virtual void
-        TestStartRegistration(CreateUserRequest request)
+        TestCreateUser(CreateUserRequest request)
         {
             CreateUserReply reply =
                 itsTarget.CreateUser(request);
@@ -131,8 +131,8 @@ namespace Granite.Application.User
                 string.Format(
                     "Registration for user '{0}' has started. " +
                     "A confirmation email was sent to '{1}'. " +
-                    "Please following the instructions in this email to finish user registration. " +
-                    "Thank you.",
+                    "Please follow the instructions in this " +
+                    "email to verify the user. Thank you.",
                     request.UserName != null ? request.UserName : request.Email.ToString(),
                     request.Email.ToString());
 
@@ -160,12 +160,12 @@ namespace Granite.Application.User
             Assert.AreEqual(expectedMessage,reply.SuccessMessage);
         }
 
-        [TestCaseSource("StartRegistrationTestCases")]
+        [TestCaseSource("CreateUserTestCases")]
         public virtual void
-        TestFinishRegistration(CreateUserRequest request)
+        TestVerifyUser(CreateUserRequest request)
         {
             VerifyUserReply reply = null;
-            TestStartRegistration(request);
+            TestCreateUser(request);
 
             Assert.NotNull(itsSender.Request);
             Assert.AreEqual(request.CorrelationId,itsSender.Request.CorrelationId);

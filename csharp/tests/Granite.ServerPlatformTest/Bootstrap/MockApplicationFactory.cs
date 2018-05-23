@@ -49,7 +49,7 @@ namespace Granite.ServerPlatform.Bootstrap
             modules.Add(new NhibernateModule());
             modules.Add(new ActiveDirectoryModule());
             modules.Add(new FakeUtilityModule());
-            modules.Add(new UserDomainModule());
+            modules.Add(new UserDomainModule<GraniteRolesProvider>());
             modules.Add(new UserApplicationModule());
             modules.Add(new SessionApplicationModule());
             modules.Add(new PaymentApplicationModule());

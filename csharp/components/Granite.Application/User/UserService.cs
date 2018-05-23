@@ -48,7 +48,7 @@ namespace Granite.Application.User
             return
                 Execute(
                     (CreateUserRequest r) =>
-                        { return itsProcessor.StartRegistration(r); },
+                        { return itsProcessor.CreateUser(r); },
                     request );
         }
 
@@ -61,7 +61,7 @@ namespace Granite.Application.User
             return
                 Execute(
                     (VerifyUserRequest r) =>
-                        { return itsProcessor.FinishRegistration(r); },
+                        { return itsProcessor.VerifyUser(r); },
                     request);
         }
 
@@ -83,7 +83,7 @@ namespace Granite.Application.User
             return
                 Execute(
                     (DeleteUserRequest r) =>
-                        { return itsProcessor.Remove(r); },
+                        { return itsProcessor.DeleteUser(r); },
                     request);
         }
 

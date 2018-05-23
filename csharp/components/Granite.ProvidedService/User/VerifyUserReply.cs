@@ -21,8 +21,6 @@ namespace Granite.ProvidedService.User
     {
         [DataMember]
         public Guid   UserIdVerified { get; set; }
-        [DataMember]
-        public string SuccessMessage { get; set; }
     }
 }
 

@@ -26,7 +26,7 @@ namespace Granite.ProvidedService.User
         [DataMember]
         public string       JobTitle { get; set; }
         [DataMember]
-        public string       SuccessMessage { get; set; }
+        public string[]     AuthorizedRoles { get; set; }
     }
 }
 

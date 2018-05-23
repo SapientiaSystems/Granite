@@ -51,20 +51,26 @@
       <HintPath>..\..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.3.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.3.2\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Ninject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Ninject.0.3.0\lib\net45\Debug\Strata.Ninject.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Ninject.0.3.2\lib\net45\Debug\Strata.Ninject.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Persistence.0.4.0\lib\net45\Debug\Strata.Persistence.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Persistence.0.4.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="System">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
-    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.Serialization">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
@@ -73,7 +79,9 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="SystemEx.Injection, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SystemEx.Injection.1.0.0\lib\net45\Debug\SystemEx.Injection.dll</HintPath>
@@ -82,12 +90,23 @@
   <ItemGroup>
     <Compile Include="Persistence\PersistenceModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Session\ISession.cs" />
+    <Compile Include="Session\ISessionRepository.cs" />
+    <Compile Include="Session\SessionDomainModule.cs" />
+    <Compile Include="Shared\RoleSet.cs" />
+    <Compile Include="Session\SessionRepository.cs" />
+    <Compile Include="Session\StandardSession.cs" />
     <Compile Include="Shared\NoSuchEntityException.cs" />
     <Compile Include="User\IUser.cs" />
     <Compile Include="User\IUserRepository.cs" />
+    <Compile Include="User\IRole.cs" />
+    <Compile Include="User\IRoleRepository.cs" />
+    <Compile Include="User\GraniteRolesProvider.cs" />
+    <Compile Include="User\StandardRole.cs" />
     <Compile Include="User\UserDomainModule.cs" />
     <Compile Include="User\StandardUser.cs" />
     <Compile Include="User\UserRepository.cs" />
+    <Compile Include="User\RoleRepository.cs" />
     <Compile Include="User\UserStatus.cs" />
   </ItemGroup>
   <ItemGroup>

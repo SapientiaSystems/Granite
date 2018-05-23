@@ -7,6 +7,8 @@ using Strata.Persistence.NamedQuery;
 using Strata.Persistence.Repository;
 using Strata.Persistence.UnitOfWork;
 using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using SystemEx.Injection;
 
 namespace Granite.Domain.User
@@ -20,14 +22,79 @@ namespace Granite.Domain.User
         AbstractRepository<Guid,IUser>,
         IUserRepository
     {
+        private IRoleRepository itsRoleRepository;
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         [Inject]
         public
-        UserRepository(IUnitOfWorkProvider provider) :
-            base(provider) {}
+        UserRepository(
+            IUnitOfWorkProvider provider,
+            IRoleRepository     roleRepository):
+            base(provider)
+        {
+            itsRoleRepository = roleRepository;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override IUser
+        GetUnique(Guid userId)
+        {
+            IUser result = base.GetUnique(userId);
+
+            if (result != null)
+                result.InitializeRoles(itsRoleRepository);
+
+            return result;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override IUser
+        GetUnique(Expression<Func<IUser,bool>> predicate)
+        {
+            IUser result = base.GetUnique(predicate);
+
+            if (result != null)
+                result.InitializeRoles(itsRoleRepository);
+
+            return result;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override IList<IUser>
+        GetAll()
+        {
+            IList<IUser> results = base.GetAll();
+
+            foreach (IUser result in results)
+                if (result != null)
+                    result.InitializeRoles(itsRoleRepository);
+
+            return results;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override IList<IUser>
+        GetAll(Expression<Func<IUser,bool>> predicate)
+        {
+            IList<IUser> results = base.GetAll(predicate);
+
+            foreach (IUser result in results)
+                if (result != null)
+                    result.InitializeRoles(itsRoleRepository);
+
+            return results;
+        }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
@@ -37,9 +104,15 @@ namespace Granite.Domain.User
         {
             INamedQuery<IUser> query = 
                 GetNamedQuery("User.GetUniqueWithExternalUserId");
+            IUser result = null;
 
             query.SetInput("externalUserId",externalUserId);
-            return query.GetUnique();
+            result = query.GetUnique();
+
+            if (result != null)
+                result.InitializeRoles(itsRoleRepository);
+
+            return result;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -50,9 +123,15 @@ namespace Granite.Domain.User
         {
             INamedQuery<IUser> query =
                 GetNamedQuery("User.GetUniqueWithUserName");
+            IUser result = null;
 
             query.SetInput("userName",userName);
-            return query.GetUnique();
+            result = query.GetUnique();
+
+            if (result != null)
+                result.InitializeRoles(itsRoleRepository);
+
+            return result;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -75,7 +154,7 @@ namespace Granite.Domain.User
         HasUniqueWithUserName(string userName)
         {
             INamedQuery<IUser> query =
-                GetNamedQuery("User.GetUniqueWithUserName");
+                GetNamedQuery("User.HasUniqueWithUserName");
 
             query.SetInput("userName",userName);
             return query.HasUnique();
