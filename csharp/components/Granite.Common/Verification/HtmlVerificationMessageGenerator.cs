@@ -54,7 +54,7 @@ namespace Granite.Common.Verification
                             font-size: 32pt;
                             padding-left: 5px;"">EzValuator</div> 
                 </div>")
-                .Append("")
+                .Append(string.Empty)
                 .Append("<span style=\"font-size: 18pt;color: #242424;\">To complete EzValuator registration for user '")
                 .Append(parameters[Constant.USER_NAME_PROPERTY])
                 .Append("' please confirm email address by clicking on the link: </span>")
@@ -107,7 +107,7 @@ namespace Granite.Common.Verification
                             font-size: 32pt;
                             padding-left: 5px;"">EzValuator</div> 
                 </div>")
-                .Append("")
+                .Append(string.Empty)
                 .Append("<span style=\"font-size: 18pt;color: #242424;\">The email address for user '")
                 .Append(parameters[Constant.USER_NAME_PROPERTY])
                 .Append("' was changed. Please confirm email address by clicking on the link: </span>")

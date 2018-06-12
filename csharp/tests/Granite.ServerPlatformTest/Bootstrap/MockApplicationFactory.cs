@@ -3,16 +3,22 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Application.Payment;
-using Granite.Application.Session;
-using Granite.Application.User;
+using Granite.Application.Configuration;
+using Granite.Application.Decoration;
 using Granite.Common.Verification;
+using Granite.Domain.Configuration;
+using Granite.Domain.Constraint;
+using Granite.Domain.Role;
 using Granite.Domain.User;
+using Granite.ProvidedService.Payment;
+using Granite.ProvidedService.Profile;
+using Granite.ProvidedService.Registration;
+using Granite.ProvidedService.Session;
+using Granite.ProvidedService.User;
 using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;
-using NLog.Config;
-using NLog.Targets;
 using Strata.Foundation.Bootstrap;
+using Strata.Foundation.Decoration;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Logging;
 using Strata.Ninject.Injection;
@@ -49,12 +55,28 @@ namespace Granite.ServerPlatform.Bootstrap
             modules.Add(new NhibernateModule());
             modules.Add(new ActiveDirectoryModule());
             modules.Add(new FakeUtilityModule());
-            modules.Add(new UserDomainModule<GraniteRolesProvider>());
-            modules.Add(new UserApplicationModule());
-            modules.Add(new SessionApplicationModule());
-            modules.Add(new PaymentApplicationModule());
+            modules.Add(
+                new GraniteDomainModule<
+                    GraniteRolesProvider,
+                    GraniteConstraintsProvider,
+                    GraniteUserFactory>());
+            modules.Add(new GraniteApplicationModule());
 
             return modules;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public override IBinder<IStartStopController> 
+        CreateControllerBinder(ISourceBindingBuilder<IStartStopController> builder)
+        {
+            return 
+                new TargetBasedBinder<
+                    IStartStopController,
+                    GraniteTestStartStopController>(
+                        builder,
+                        AbstractModule.DefaultScope);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -64,44 +86,8 @@ namespace Granite.ServerPlatform.Bootstrap
         CreateLoggerBinder(ISourceBindingBuilder<ILogger> builder)
         {
             return
-                new ProviderBasedBinder<ILogger>(
+                new TargetBasedBinder<ILogger,ConsoleLogger>(
                     builder,
-                    new FuncBasedProvider<ILogger>(
-                        () =>
-                        {
-                            LoggingConfiguration config = 
-                                new LoggingConfiguration();
-                            FileTarget logfile = 
-                                new FileTarget()
-                                {
-                                    FileName = "GraniteServerTest.log",
-                                    Name = "logfile"
-                                };
-                            ConsoleTarget logconsole = 
-                                new ConsoleTarget()
-                                {
-                                    Name = "logconsole"
-                                };
-
-                            config
-                                .LoggingRules
-                                .Add(
-                                    new LoggingRule(
-                                        "*",
-                                        NLog.LogLevel.Info,
-                                        logconsole));
-                            config
-                                .LoggingRules
-                                .Add(
-                                    new LoggingRule(
-                                        "*",
-                                        NLog.LogLevel.Debug,
-                                        logfile));
-
-                            NLog.LogManager.Configuration = config;
-
-                            return new NlogLogger(NLog.LogManager.GetLogger("Logger"));
-                        } ),
                     AbstractModule.DefaultScope);
         }
 
@@ -111,7 +97,18 @@ namespace Granite.ServerPlatform.Bootstrap
         protected override IContainer 
         CreateContainer(IList<IModule> modules)
         {
-            return new NinjectContainer(modules);
+            IDecoratorFactory factory = 
+                new AuthorizedServiceDecoratorFactory(3);
+
+            return
+                new DecoratedContainer(
+                    new NinjectContainer(modules),
+                    new DecoratorMap()
+                        .InsertDecorator<ISessionService>(factory)
+                        .InsertDecorator<IUserService>(factory)
+                        .InsertDecorator<IProfileService>(factory)
+                        .InsertDecorator<IPaymentService>(factory)
+                        .InsertDecorator<IRegistrationService>(factory));
         }
     }
 }

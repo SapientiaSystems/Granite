@@ -4,9 +4,9 @@
 //  ##########################################################################
 
 using Granite.Domain.User;
-using Strata.Persistence.NamedQuery;
-using Strata.Persistence.Repository;
-using Strata.Persistence.UnitOfWork;
+using Strata.Domain.NamedQuery;
+using Strata.Domain.Repository;
+using Strata.Domain.UnitOfWork;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -20,7 +20,11 @@ namespace Granite.Domain.Session
     ///  
     public
     class SessionRepository:
-        AbstractRepository<Guid,ISession>,
+        AbstractRepository<
+            Guid,
+            ISession,
+            ISessionDomainEvent,
+            ISessionDomainEventObserver>,
         ISessionRepository
     {
         private IUserRepository itsUserRepository;
@@ -47,7 +51,9 @@ namespace Granite.Domain.Session
         {
             ISession result = base.Insert(session);
 
-            result.Initialize(itsUserRepository);
+            if (result != null)
+                result.Initialize(itsUserRepository);
+
             return result;
         }
 
@@ -59,7 +65,9 @@ namespace Granite.Domain.Session
         {
             ISession result = base.Update(session);
 
-            result.Initialize(itsUserRepository);
+            if (result != null)
+                result.Initialize(itsUserRepository);
+
             return result;
         }
 
@@ -71,7 +79,9 @@ namespace Granite.Domain.Session
         {
             ISession result = base.GetUnique(sessionId);
 
-            result.Initialize(itsUserRepository);
+            if (result != null)
+                result.Initialize(itsUserRepository);
+
             return result;
         }
 
@@ -83,7 +93,9 @@ namespace Granite.Domain.Session
         {
             ISession result = base.GetUnique(predicate);
 
-            result.Initialize(itsUserRepository);
+            if (result != null)
+                result.Initialize(itsUserRepository);
+
             return result;
         }
 
@@ -96,7 +108,9 @@ namespace Granite.Domain.Session
             IList<ISession> results = base.GetAll();
 
             foreach (ISession result in results)
-                result.Initialize(itsUserRepository);
+                if (result != null)
+                    result.Initialize(itsUserRepository);
+
 
             return results;
         }
@@ -110,9 +124,30 @@ namespace Granite.Domain.Session
             IList<ISession> results = base.GetAll(predicate);
 
             foreach (ISession result in results)
-                result.Initialize(itsUserRepository);
+                if (result != null)
+                    result.Initialize(itsUserRepository);
+
 
             return results;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public virtual ISession
+        GetUniqueWithAccessToken(string accessToken)
+        {
+            INamedQuery<ISession> query =
+                GetNamedQuery("Session.GetUniqueWithAccessToken");
+            ISession result = null;
+
+            query.SetInput("accessToken",accessToken);
+            result = query.GetUnique();
+
+            if (result != null)
+                result.Initialize(itsUserRepository);
+
+            return result;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -129,9 +164,24 @@ namespace Granite.Domain.Session
             results = query.GetAll();
 
             foreach (ISession result in results)
-                result.Initialize(itsUserRepository);
+                if (result != null)
+                    result.Initialize(itsUserRepository);
+
 
             return results;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public virtual bool
+        HasUniqueWithAccessToken(string accessToken)
+        {
+            INamedQuery<ISession> query =
+                GetNamedQuery("Session.HasUniqueWithAccessToken");
+
+            query.SetInput("accessToken",accessToken);
+            return query.HasUnique();
         }
 
         //////////////////////////////////////////////////////////////////////

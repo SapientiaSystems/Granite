@@ -40,7 +40,7 @@ namespace Granite.ServerPlatform.ActiveDirectory
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.tenantId = tenantId;
-            baseUrl = Globals.aadGraphEndpoint + tenantId;
+            baseUrl = Globals.AadGraphEndpoint + tenantId;
 
             this.authContext = 
                 new AuthenticationContext(
@@ -157,9 +157,9 @@ namespace Granite.ServerPlatform.ActiveDirectory
         {
             AuthenticationResult result =
                 authContext.AcquireToken(
-                    Globals.aadGraphResourceId,
+                    Globals.AadGraphResourceId,
                     credential);
-            string resource = api + "?" + Globals.aadGraphVersion;
+            string resource = api + "?" + Globals.AadGraphVersion;
 
             IRestClient   http     = new RestClient(baseUrl);
             IRestRequest  request  = new RestRequest(resource,Method.DELETE);
@@ -196,9 +196,9 @@ namespace Granite.ServerPlatform.ActiveDirectory
         {
             AuthenticationResult result =
                 authContext.AcquireToken(
-                    Globals.aadGraphResourceId,
+                    Globals.AadGraphResourceId,
                     credential);
-            string resource = api + "?" + Globals.aadGraphVersion;
+            string resource = api + "?" + Globals.AadGraphVersion;
 
             IRestClient   http     = new RestClient(baseUrl);
             IRestRequest  request  = new RestRequest(resource,Method.PATCH);
@@ -239,9 +239,9 @@ namespace Granite.ServerPlatform.ActiveDirectory
         {
             AuthenticationResult result =
                 authContext.AcquireToken(
-                    Globals.aadGraphResourceId,
+                    Globals.AadGraphResourceId,
                     credential);
-            string resource = api + "?" + Globals.aadGraphVersion;
+            string resource = api + "?" + Globals.AadGraphVersion;
 
             IRestClient   http     = new RestClient(baseUrl);
             IRestRequest  request  = new RestRequest(resource,Method.POST);
@@ -282,10 +282,10 @@ namespace Granite.ServerPlatform.ActiveDirectory
         {
             AuthenticationResult result =
                 authContext.AcquireToken(
-                    Globals.aadGraphResourceId,
+                    Globals.AadGraphResourceId,
                     credential);
             string resource = 
-                api + "?" + Globals.aadGraphVersion + 
+                api + "?" + Globals.AadGraphVersion + 
                 (string.IsNullOrEmpty(query) ? string.Empty : "&" + query);
 
             IRestClient   http     = new RestClient(baseUrl);

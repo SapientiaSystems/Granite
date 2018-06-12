@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Disruptor, Version=3.3.7.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Disruptor.3.3.7\lib\net45\Disruptor.dll</HintPath>
     </Reference>
@@ -48,15 +51,10 @@
       <HintPath>..\..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.3.2\lib\net45\Debug\Strata.Foundation.dll</HintPath>
-    </Reference>
-    <Reference Include="Strata.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Persistence.0.4.2\lib\net45\Debug\Strata.Persistence.dll</HintPath>
-    </Reference>
-    <Reference Include="Strata.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Service.0.7.0\lib\net45\Debug\Strata.Service.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.8.2\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />

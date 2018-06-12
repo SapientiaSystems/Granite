@@ -15,6 +15,7 @@ namespace Granite.RequiredService.User
     /// 
     /// </summary>
     ///  
+    [Category("Integration")]
     [TestFixture]
     public abstract
     class ExternalUserServiceTest
@@ -50,10 +51,12 @@ namespace Granite.RequiredService.User
             itsTarget = null;
         }
 
-        [TestCase("adamsmith","foo1bar@#$","Adam","Smith","adamsmith@yahoo.com","123.555.1111")]
+        [TestCase("adamsmith1","foo1bar@#$","Adam","Smith","adamsmith@yahoo.com","123.555.1111")]
+        /*
         [TestCase("jeremy.bentham","biz1buz@#$","Jeremy","Bentham",null,"123.555.2222")]
         [TestCase(null,"foo!baz#1","David","Ricardo","davidricardo@protonmail.com","123.555.3333")]
         [TestCase("sjevons","foo!baz#2","Stanley","Jevons","stanly.jevons@gmail.com",null)]
+        */
         public void
         TestCreateExternalUser(
             string userName,
@@ -75,13 +78,14 @@ namespace Granite.RequiredService.User
                     } );
 
             Assert.IsTrue(reply.IsSuccessful);
-
+            /*
             itsDeletes.Add(
                 new DeleteExternalUserRequest()
                 {
                     UserId = Guid.NewGuid(),
                     ExternalUserId = reply.ExternalUserId
                 });
+                */
         }
 
         [TestCase("adamsmith","foo1bar@#$","Adam","Smith","adamsmith@yahoo.com","123.555.1111","foo2bar*%@","234.555.2222")]

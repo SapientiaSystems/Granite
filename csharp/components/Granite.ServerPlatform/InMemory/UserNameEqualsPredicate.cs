@@ -4,7 +4,7 @@
 //  ##########################################################################
 
 using Granite.Domain.User;
-using Strata.Persistence.InMemory;
+using Strata.Domain.InMemory;
 using System;
 using System.Collections.Generic;
 

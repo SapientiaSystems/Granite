@@ -4,8 +4,10 @@
 //  ##########################################################################
 
 using Granite.Common.Verification;
+using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
 using NUnit.Framework;
+using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Value;
 using System;
@@ -26,16 +28,38 @@ namespace Granite.Application.User
         private IUserService            itsTarget;
         private FakeEmailSender         itsSender;
         private ISet<DeleteUserRequest> itsRemovals;
+        private ISessionService         itsSessionService;
+        private SessionData             itsSession;
 
         [SetUp]
         public virtual void
         SetUp()
         {
-            IContainer container = CreateContainer();
+            IContainer           container = CreateContainer();
+            IStartStopController starter = container.GetInstance<IStartStopController>();
+            LoginReply           reply = null;
+
+            starter.StartApplication();
 
             itsTarget = container.GetInstance<IUserService>();
+            itsSessionService = container.GetInstance<ISessionService>();
+
             itsSender = (FakeEmailSender)container.GetInstance<IVerificationNotifier>();
             itsRemovals = new HashSet<DeleteUserRequest>();
+
+            reply =
+                itsSessionService.Login(
+                    new LoginRequest()
+                    {
+                        CorrelationId = Guid.NewGuid(),
+                        UserName = "test",
+                        Password = "test"
+                    });
+
+            Assert.NotNull(reply);
+            Assert.NotNull(reply.NewSession);
+
+            itsSession = reply.NewSession;
         }
 
         [TearDown]
@@ -49,7 +73,14 @@ namespace Granite.Application.User
                 if (!reply.IsSuccessful)
                     throw new Exception(reply.FailureMessage);
             }
-            
+
+            itsSessionService.Logout(
+                new LogoutRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken
+                });
             itsTarget = null;
         }
 
@@ -58,104 +89,92 @@ namespace Granite.Application.User
             new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
-                UserName = "adamsmith",
-                Password = "foobar1!@#",
-                Email = new EmailAddress("adamsmith@wealthofnations.com"),
-                Name = new PersonName("Adam","Smith"),
-                JobTitle = "Professor, Moral Philosphy",
-                Address = new PostalAddress()
+                UserToCreate = 
+                    new CreateUserData()
                     {
-                        StreetAddress = "123 Main St.",
-                        City = "Los Angeles",
-                        State = "CA",
-                        PostalCode = "90101",
-                        CountryCode = "USA"
-                    },
-                Phone = new PhoneNumber("310.555.1234")
+                        UserName = "adamsmith",
+                        Password = "foobar1!@#",
+                        Email = new EmailAddress("adamsmith@wealthofnations.com")
+                    }
             },
             new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
-                UserName = "jeremy.bentham",
-                Password = "biz1buz@#$",
-                Email = new EmailAddress("jeremy@bentham.com"),
-                Name = new PersonName("Jeremy","Bentham"),
-                JobTitle = "Political Economist",
-                Address = new PostalAddress()
+                UserToCreate = 
+                    new CreateUserData()
                     {
-                        StreetAddress = "2222 5th Ave.",
-                        City = "San Diego",
-                        State = "CA",
-                        PostalCode = "94001",
-                            CountryCode = "USA"
-                    },
-                Phone = new PhoneNumber("310.555.1234")
+                        UserName = "jeremy.bentham",
+                        Password = "biz1buz@#$",
+                        Email = new EmailAddress("jeremy@bentham.com")
+                    }
             },
             new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
-                UserName = null,
-                Password = "foo!baz#1",
-                Email = new EmailAddress("davidricardo@protonmail.com"),
-                Name = new PersonName("David","Ricardo"),
-                JobTitle = "Political Economist",
-                Address = null,
-                Phone = new PhoneNumber("213-555-2222")
+                UserToCreate =
+                    new CreateUserData()
+                    {
+                        UserName = "davidricardo@protonmail.com",
+                        Password = "foo!baz#1",
+                        Email = new EmailAddress("davidricardo@protonmail.com")
+                    }
             },
             new CreateUserRequest()
             {
                 CorrelationId = Guid.NewGuid(),
-                UserName = "sjevons",
-                Password = "foo!baz#2",
-                Email = new EmailAddress("stanly.jevons@gmail.com"),
-                Name = null,
-                JobTitle = "Economist",
-                Address = new PostalAddress()
+                UserToCreate =
+                    new CreateUserData()
                     {
-                        StreetAddress = "2357 Grand Ave.",
-                        City = "Los Angeles",
-                        State = "CA",
-                        PostalCode = "90101",
-                        CountryCode = "USA"
-                    },
-                Phone = null
-            }
+                        UserName = "sjevons",
+                        Password = "foo!baz#2",
+                        Email = new EmailAddress("stanly.jevons@gmail.com")
+                    }
+             }
         };
         [TestCaseSource("CreateUserTestCases")]
         public virtual void
         TestCreateUser(CreateUserRequest request)
         {
-            CreateUserReply reply =
-                itsTarget.CreateUser(request);
-            string expectedMessage =
+            CreateUserReply reply = null;
+            UserData        newUser = null;
+            string          expectedMessage = null;
+
+            request.SessionId = itsSession.SessionId;
+            request.AccessToken = itsSession.AccessToken;
+
+            reply = itsTarget.CreateUser(request);
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful);
+
+            newUser = reply.NewUser;
+            Assert.NotNull(newUser);
+
+            expectedMessage =
                 string.Format(
                     "Registration for user '{0}' has started. " +
                     "A confirmation email was sent to '{1}'. " +
                     "Please follow the instructions in this " +
                     "email to verify the user. Thank you.",
-                    request.UserName != null ? request.UserName : request.Email.ToString(),
-                    request.Email.ToString());
-
-            Assert.IsTrue(reply.IsSuccessful);
+                    newUser.UserName != null ? newUser.UserName : newUser.Email.ToString(),
+                    newUser.Email.ToString());
 
             itsRemovals.Add(
                 new DeleteUserRequest()
                 {
-                    UserId = reply.UserId,
-                    UserIdToDelete = reply.UserId
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    UserIdOfUserToDelete = newUser.UserId
                 } );
 
             Assert.AreEqual(request.CorrelationId,reply.CorrelationId);
 
-            if (string.IsNullOrEmpty(request.UserName))
-                Assert.AreEqual(request.Email.ToString(),reply.UserName);
+            if (string.IsNullOrEmpty(newUser.UserName))
+                Assert.AreEqual(newUser.Email.ToString(),newUser.UserName);
             else
-                Assert.AreEqual(request.UserName,reply.UserName);
+                Assert.AreEqual(newUser.UserName,newUser.UserName);
 
-            Assert.AreEqual(request.JobTitle,reply.JobTitle);
-
-            if (request.Email != null)
-                Assert.AreEqual(request.Email.ToString(),reply.Email.ToString());
+            if (newUser.Email != null)
+                Assert.AreEqual(newUser.Email.ToString(),newUser.Email.ToString());
 
             Assert.AreEqual(expectedMessage,reply.SuccessMessage);
         }
@@ -170,9 +189,74 @@ namespace Granite.Application.User
             Assert.NotNull(itsSender.Request);
             Assert.AreEqual(request.CorrelationId,itsSender.Request.CorrelationId);
 
+            itsSender.Request.SessionId = itsSession.SessionId;
+            itsSender.Request.AccessToken = itsSession.AccessToken;
+
             reply = itsTarget.VerifyUser(itsSender.Request);
             Assert.AreEqual(itsSender.Request.CorrelationId,reply.CorrelationId);
             Assert.IsTrue(reply.IsSuccessful);
+        }
+
+        [Test]
+        public virtual void
+        TestGetUserCurrentUser()
+        {
+            GetUserReply reply =
+                itsTarget.GetUser(
+                    new GetUserRequest()
+                    {
+                        SessionId = itsSession.SessionId,
+                        AccessToken = itsSession.AccessToken,
+                        GetCurrentUser = true
+                    });
+
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful);
+            Assert.NotNull(reply.RequestedUser);
+            Assert.AreEqual("test",reply.RequestedUser.UserName);
+            Assert.AreEqual(itsSession.UserId,reply.RequestedUser.UserId);
+        }
+
+        [Test]
+        public virtual void
+        TestGetUserUserName()
+        {
+            GetUserReply reply =
+                itsTarget.GetUser(
+                    new GetUserRequest()
+                    {
+                        SessionId = itsSession.SessionId,
+                        AccessToken = itsSession.AccessToken,
+                        GetCurrentUser = false,
+                        UserNameOfUserToGet = "test"
+                    });
+
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful);
+            Assert.NotNull(reply.RequestedUser);
+            Assert.AreEqual("test",reply.RequestedUser.UserName);
+            Assert.AreEqual(itsSession.UserId,reply.RequestedUser.UserId);
+        }
+
+        [Test]
+        public virtual void
+        TestGetUserUserId()
+        {
+            GetUserReply reply =
+                itsTarget.GetUser(
+                    new GetUserRequest()
+                    {
+                        SessionId = itsSession.SessionId,
+                        AccessToken = itsSession.AccessToken,
+                        GetCurrentUser = false,
+                        UserIdOfUserToGet = itsSession.UserId
+                    });
+
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful);
+            Assert.NotNull(reply.RequestedUser);
+            Assert.AreEqual("test",reply.RequestedUser.UserName);
+            Assert.AreEqual(itsSession.UserId,reply.RequestedUser.UserId);
         }
 
         protected abstract IContainer 

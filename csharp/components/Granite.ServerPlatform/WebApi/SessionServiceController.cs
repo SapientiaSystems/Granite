@@ -3,22 +3,22 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Injection;
 using Granite.ProvidedService.Session;
 using System.Web.Http;
 using System.Web.Http.Cors;
-using System.Web.Mvc;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
 {
+    using RequireHttps = System.Web.Mvc.RequireHttpsAttribute;
+
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 
     /// </summary>
     ///  
-    [System.Web.Http.RoutePrefix("v1/session")]
-    [RequireHttps]
-    [EnableCors("*","*","*")]
+    [RoutePrefix("v1/session")]
     public
     class SessionServiceController:
         ApiController,
@@ -32,16 +32,18 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        SessionServiceController(ISessionService imp)
+        SessionServiceController()
         {
-            itsImp = imp;
+            itsImp = 
+                Global
+                    .Container
+                    .GetInstance<ISessionService>();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("login")]
-        [RequireHttps]
+        [Route("login")]
         public LoginReply 
         Login(LoginRequest request)
         {
@@ -51,8 +53,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("logout")]
-        [RequireHttps]
+        [Route("logout")]
         public LogoutReply 
         Logout(LogoutRequest request)
         {
@@ -62,8 +63,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("keep-alive")]
-        [RequireHttps]
+        [Route("keep-alive")]
         public KeepAliveReply 
         KeepAlive(KeepAliveRequest request)
         {

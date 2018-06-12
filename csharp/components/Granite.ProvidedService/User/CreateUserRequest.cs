@@ -3,8 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.ProvidedService.Shared;
+using Granite.ProvidedService.Transfer;
 using Strata.Foundation.Value;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User
@@ -20,21 +21,7 @@ namespace Granite.ProvidedService.User
         GraniteRequest
     {
         [DataMember]
-        public string        UserName { get; set; }
-        [DataMember]
-        public string        Password { get; set; }
-        [DataMember]
-        public EmailAddress  Email { get; set; }
-        [DataMember]
-        public PersonName    Name { get; set; }
-        [DataMember]
-        public string        JobTitle { get; set; }
-        [DataMember]
-        public string[]      AuthorizedRoles { get; set; }
-        [DataMember]
-        public PostalAddress Address { get; set; }
-        [DataMember]
-        public PhoneNumber   Phone { get; set; }
+        public CreateUserData UserToCreate { get; set; }
     }
 }
 

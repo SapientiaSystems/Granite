@@ -3,8 +3,10 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Persistence.Repository;
+using Granite.Domain.Shared;
+using Strata.Domain.Repository;
 using System;
+using System.Collections.Generic;
 
 namespace Granite.Domain.User
 {
@@ -17,6 +19,23 @@ namespace Granite.Domain.User
     interface IUserRepository:
         IRepository<Guid,IUser>
     {
+        ISet<IUserDomainEventObserver> Observers { get; }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Gets a unique <c>IUser</c> entity with the 
+        /// provided user id.
+        /// </summary>
+        /// 
+        /// <param name="provider">provides user id</param>
+        /// <returns>
+        /// <c>IUser</c> associated with provided user id
+        /// if it exists, otherwise null.
+        /// </returns>
+        ///  
+        IUser
+        GetUniqueFor(IUserIdProvider provider);
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Gets a unique <c>IUser</c> entity with the 

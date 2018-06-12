@@ -3,11 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Injection;
 using Granite.ProvidedService.User;
-using System;
 using System.Web.Http;
-using System.Web.Http.Cors;
-using System.Web.Mvc;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
@@ -17,9 +15,7 @@ namespace Granite.ServerPlatform.WebApi
     /// 
     /// </summary>
     ///  
-    [System.Web.Http.RoutePrefix("v1/user")]
-    [RequireHttps]
-    [EnableCors("*","*","*")]
+    [RoutePrefix("v1/user")]
     public
     class UserServiceController:
         ApiController,
@@ -33,32 +29,28 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        UserServiceController(IUserService imp)
+        UserServiceController()
         {
-            itsImp = imp;
+            itsImp =
+                Global
+                    .Container
+                    .GetInstance<IUserService>();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("create")]
-        [RequireHttps]
+        [Route("create")]
         public CreateUserReply 
         CreateUser(CreateUserRequest request)
-        {
-            CreateUserReply reply = null;
-
-            request.ReceivedTimestamp = DateTime.UtcNow.Ticks/10000;
-            reply = itsImp.CreateUser(request);
-
-            return reply;
+        { 
+            return itsImp.CreateUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("verify")]
-        [RequireHttps]
+        [Route("verify")]
         public VerifyUserReply 
         VerifyUser(VerifyUserRequest request)
         {
@@ -68,7 +60,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("update")]
+        [Route("update")]
         public UpdateUserReply 
         UpdateUser(UpdateUserRequest request)
         {
@@ -78,7 +70,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("delete")]
+        [Route("delete")]
         public DeleteUserReply
         DeleteUser(DeleteUserRequest request)
         {
@@ -88,11 +80,12 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("get")]
+        [Route("get")]
+        [HttpPost]
         public GetUserReply 
-        GetUser()
+        GetUser(GetUserRequest request)
         {
-            return itsImp.GetUser();
+            return itsImp.GetUser(request);
         }
     }
 }

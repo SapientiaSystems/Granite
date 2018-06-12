@@ -4,22 +4,16 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.User;
-using Strata.Foundation.Logging;
-using Strata.Persistence.UnitOfWork;
-using Strata.Service.Core;
-using System;
 using SystemEx.Injection;
 
 namespace Granite.Application.User
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     public
     class UserService:
-        AbstractService,
         IUserService
     {
         private IUserProcessor itsProcessor;
@@ -27,73 +21,57 @@ namespace Granite.Application.User
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
-        /// 
+        ///  
         [Inject]
-        public
-        UserService(
-            IUnitOfWorkProvider    provider,
-            ILogger                logger,
-            IUserProcessor         processor):
-            base(provider,logger)
+        public 
+        UserService(IUserProcessor processor)
         {
             itsProcessor = processor;
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        /// 
+        ///  
         public CreateUserReply 
         CreateUser(CreateUserRequest request)
         {
-            return
-                Execute(
-                    (CreateUserRequest r) =>
-                        { return itsProcessor.CreateUser(r); },
-                    request );
+            return itsProcessor.CreateUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        /// 
-        public VerifyUserReply 
+        ///  
+        public VerifyUserReply
         VerifyUser(VerifyUserRequest request)
         {
-            return
-                Execute(
-                    (VerifyUserRequest r) =>
-                        { return itsProcessor.VerifyUser(r); },
-                    request);
+            return itsProcessor.VerifyUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        /// 
-        public UpdateUserReply 
+        ///  
+        public UpdateUserReply
         UpdateUser(UpdateUserRequest request)
         {
-            throw new NotImplementedException();
+            return itsProcessor.UpdateUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        /// 
-        public DeleteUserReply
+        ///  
+        public DeleteUserReply 
         DeleteUser(DeleteUserRequest request)
         {
-            return
-                Execute(
-                    (DeleteUserRequest r) =>
-                        { return itsProcessor.DeleteUser(r); },
-                    request);
+            return itsProcessor.DeleteUser(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
-        /// 
-        public GetUserReply 
-        GetUser()
+        ///  
+        public GetUserReply
+        GetUser(GetUserRequest request)
         {
-            throw new NotImplementedException();
+            return itsProcessor.GetUser(request);
         }
     }
 }

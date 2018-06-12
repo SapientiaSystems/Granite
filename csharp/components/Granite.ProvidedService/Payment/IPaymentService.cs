@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Access;
 using System.ServiceModel;
 
 namespace Granite.ProvidedService.Payment
@@ -20,6 +21,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteGuest")]
         CreateAccountReply
         CreateAccount(CreateAccountRequest request);
 
@@ -28,6 +30,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         UpdateAccountReply
         UpdateAccount(UpdateAccountRequest request);
 
@@ -36,6 +39,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         DeleteAccountReply
         DeleteAccount(DeleteAccountRequest request);
 
@@ -44,6 +48,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteGuest")]
         CreateSubscriptionReply
         CreateSubscription(CreateSubscriptionRequest request);
 
@@ -52,6 +57,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         UpdateSubscriptionReply
         UpdateSubscription(UpdateSubscriptionRequest request);
 
@@ -60,6 +66,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         DeleteSubscriptionReply
         DeleteSubscription(DeleteSubscriptionRequest request);
 
@@ -68,6 +75,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         MakePaymentReply
         MakePayment(MakePaymentRequest request);
 
@@ -76,6 +84,7 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteAdministrator")]
         MakeRefundReply
         MakeRefund(MakeRefundRequest request);
     }

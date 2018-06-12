@@ -17,7 +17,7 @@ namespace Granite.RequiredService.Authentication
     class AuthenticateReply
     {
         [DataMember]
-        public string Username { get; set; }
+        public string UserName { get; set; }
         [DataMember]
         public string Password { get; set; }
         [DataMember]
@@ -25,7 +25,7 @@ namespace Granite.RequiredService.Authentication
         [DataMember]
         public string AccessTokenType { get; set; }
         [DataMember]
-        public string RefreshToken { get; set; }
+        public bool   IsAuthenticated { get; set; }
     }
 }
 

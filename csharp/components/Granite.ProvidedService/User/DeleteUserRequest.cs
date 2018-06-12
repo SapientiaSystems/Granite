@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.ProvidedService.Shared;
+using Granite.ProvidedService.Transfer;
 using System;
 using System.Runtime.Serialization;
 
@@ -20,9 +20,9 @@ namespace Granite.ProvidedService.User
         GraniteRequest
     {
         [DataMember]
-        public Guid   UserIdToDelete { get; set; }
+        public Guid   UserIdOfUserToDelete { get; set; }
         [DataMember]
-        public string UserNameToDelete { get; set; }
+        public string UserNameOfUserToDelete { get; set; }
     }
 }
 

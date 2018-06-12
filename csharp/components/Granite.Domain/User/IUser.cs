@@ -3,7 +3,12 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Domain.Constraint;
+using Granite.Domain.Group;
+using Granite.Domain.Role;
 using Granite.Domain.Shared;
+using Granite.Domain.Tenant;
+using Strata.Domain.Shared;
 using Strata.Foundation.Value;
 using System;
 using System.Collections.Generic;
@@ -16,36 +21,92 @@ namespace Granite.Domain.User
     /// </summary>
     ///  
     public
-    interface IUser
+    interface IUser:
+        IEntity<Guid>,
+        IUserIdProvider,
+        ITenantIdProvider,
+        IDomainEventSource<
+            IUser,
+            IUserDomainEvent,
+            IUserDomainEventObserver>
     {
-        Guid                       UserId { get; set; }
-        int                        Version { get; set; }
+        new Guid                    UserId { get; set; }
+        new Guid                    TenantId { get; set; }
 
-        string                     ExternalUserId { get; set; }
-        string                     UserName { get; set; }
-        EmailAddress               Email { get; set; }
-        string                     JobTitle { get; set; }
-        IReadOnlyCollection<IRole> Roles { get; }
+        bool                        IsTenantValid { get; }
+        ITenant                     Tenant { get; }
 
-        UserStatus                 Status { get; set; }
-        string                     VerificationCode { get; set; }
+        string                      UserName { get; set; }
+        HashedString                Password { get; set; }
 
-        DateTime                   Created { get; set; }
-        DateTime                   LastModified { get; set; }
+        EmailAddress                Email { get; set; }
+        string                      ExternalUserId { get; set; }
+
+        UserStatus                  Status { get; set; }
+        string                      VerificationCode { get; set; }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        IUser
+        AttachRole(IRole role);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        IUser
+        AttachRoles(ISet<IRole> roles);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        IUser
+        SetConstraint(IRole role,IConstraint constraint);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        ICollection<IGroup>
+        GetGroups();
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        ICollection<IRole>
+        GetRoles();
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        IConstraint
+        GetConstraint(IRole role);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         void
-        SetRoles(ISet<IRole> roles);
+        ActivateTenant();
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         void
-        InitializeRoles(IRoleRepository roleRepository);
+        DeactivateTenant();
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        bool
+        Verify(string verificationCode);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -53,6 +114,38 @@ namespace Granite.Domain.User
         ///  
         bool
         IsInRole(IRole role);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        bool
+        IsInRole(string roleId);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        bool
+        IsInRole(IGroup group,IRole role);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        bool
+        IsInGroup(IGroup group);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        void
+        Initialize(
+            ITenantRepository tenants,
+            IGroupRepository groups,
+            IRoleRepository roles,
+            IConstraintRepository constraints);
     }
 }
 

@@ -33,8 +33,6 @@ namespace Granite.Common.Verification
                 {
                     CorrelationId =
                         Guid.Parse(parameters[Constant.CORRELATION_ID_PROPERTY]),
-                    UserId = 
-                        Guid.Parse(parameters[Constant.USER_ID_PROPERTY]),
                     UserNameToVerify =
                         parameters[Constant.USER_NAME_PROPERTY],
                     VerificationCode = 

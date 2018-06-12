@@ -12,7 +12,14 @@ using Granite.ServerPlatform.ActiveDirectory;
 using NUnit.Framework;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
-using Strata.Persistence.UnitOfWork;
+using Strata.Domain.UnitOfWork;
+using Granite.ProvidedService.Session;
+using Granite.ProvidedService.Payment;
+using Granite.Domain.Tenant;
+using Granite.Domain.Session;
+using Granite.Domain.Role;
+using Granite.Domain.Group;
+using Granite.Domain.Constraint;
 
 namespace Granite.ServerPlatform.Bootstrap
 {
@@ -50,14 +57,19 @@ namespace Granite.ServerPlatform.Bootstrap
         TestGetInstanceForServerPlatform()
         {
             Assert.NotNull(itsContainer.GetInstance<IUnitOfWorkProvider>());
-            Assert.NotNull(itsContainer.GetInstance<ActiveDirectoryGraphClient>());
-            Assert.NotNull(itsContainer.GetInstance<IExternalUserService>());
+            //Assert.NotNull(itsContainer.GetInstance<ActiveDirectoryGraphClient>());
+            //Assert.NotNull(itsContainer.GetInstance<IExternalUserService>());
         }
 
         [Test]
         public void
         TestGetInstanceForDomain()
         {
+            Assert.NotNull(itsContainer.GetInstance<ITenantRepository>());
+            Assert.NotNull(itsContainer.GetInstance<ISessionRepository>());
+            Assert.NotNull(itsContainer.GetInstance<IRoleRepository>());
+            Assert.NotNull(itsContainer.GetInstance<IGroupRepository>());
+            Assert.NotNull(itsContainer.GetInstance<IConstraintRepository>());
             Assert.NotNull(itsContainer.GetInstance<IUserRepository>());
         }
 
@@ -68,8 +80,9 @@ namespace Granite.ServerPlatform.Bootstrap
             Assert.NotNull(itsContainer.GetInstance<IVerificationMessageGenerator>());
             Assert.NotNull(itsContainer.GetInstance<IVerificationCodeGenerator>());
             Assert.NotNull(itsContainer.GetInstance<IVerificationNotifier>());
-            Assert.NotNull(itsContainer.GetInstance<IUserProcessor>());
+            Assert.NotNull(itsContainer.GetInstance<ISessionService>());
             Assert.NotNull(itsContainer.GetInstance<IUserService>());
+            Assert.NotNull(itsContainer.GetInstance<IPaymentService>());
 
         }
     }

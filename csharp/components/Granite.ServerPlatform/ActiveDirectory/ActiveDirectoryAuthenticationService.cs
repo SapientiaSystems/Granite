@@ -27,9 +27,13 @@ namespace Granite.ServerPlatform.ActiveDirectory
         /// </summary>
         ///  
         public
-        ActiveDirectoryAuthenticationService(string authority)
+        ActiveDirectoryAuthenticationService(string clientId,string tenantId)
         {
-            itsContext = new AuthenticationContext(authority);
+            itsContext =
+                new AuthenticationContext(
+                    "https://login.microsoftonline.com/" + tenantId);
+            itsResource = Globals.AadGraphResourceId;
+            itsClientId = clientId;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -49,7 +53,7 @@ namespace Granite.ServerPlatform.ActiveDirectory
                             itsResource,
                             itsClientId,
                             new UserCredential(
-                                request.Username,
+                                request.UserName,
                                 request.Password));
 
 
@@ -58,14 +62,14 @@ namespace Granite.ServerPlatform.ActiveDirectory
                         {
                             AccessToken = result.AccessToken,
                             AccessTokenType = result.AccessTokenType,
-                            RefreshToken = result.RefreshToken                        };
+                        };
                 }
                 catch (AdalException e)
                 {
                     if (MustThrow(attempt,e))
                         throw;
 
-                        Thread.Sleep(3000);
+                    Thread.Sleep(1000);
                 }
             }
 

@@ -6,7 +6,7 @@
 using Granite.Domain.Persistence;
 using Strata.Foundation.Injection;
 using Strata.Nhibernate.UnitOfWork;
-using Strata.Persistence.UnitOfWork;
+using Strata.Domain.UnitOfWork;
 using System;
 using SystemEx.Injection;
 

@@ -3,17 +3,24 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Application.Payment;
-using Granite.Application.Session;
-using Granite.Application.User;
+using Granite.Application.Configuration;
+using Granite.Application.Decoration;
 using Granite.Common.Verification;
-using Granite.Domain.Session;
+using Granite.Domain.Configuration;
+using Granite.Domain.Constraint;
+using Granite.Domain.Role;
 using Granite.Domain.User;
+using Granite.ProvidedService.Payment;
+using Granite.ProvidedService.Profile;
+using Granite.ProvidedService.Registration;
+using Granite.ProvidedService.Session;
+using Granite.ProvidedService.User;
 using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;
 using NLog.Config;
 using NLog.Targets;
 using Strata.Foundation.Bootstrap;
+using Strata.Foundation.Decoration;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Logging;
 using Strata.Ninject.Injection;
@@ -113,12 +120,14 @@ namespace Granite.ServerPlatform.Bootstrap
 
             modules.Add(new NhibernateModule());
             modules.Add(new ActiveDirectoryModule());
-            modules.Add(new VerificationModule<HtmlVerificationMessageGenerator>());
-            modules.Add(new UserDomainModule<GraniteRolesProvider>());
-            modules.Add(new SessionDomainModule());
-            modules.Add(new UserApplicationModule());
-            modules.Add(new SessionApplicationModule());
-            modules.Add(new PaymentApplicationModule());
+            modules.Add(
+                new VerificationModule<HtmlVerificationMessageGenerator>());
+            modules.Add(
+                new GraniteDomainModule<
+                        GraniteRolesProvider,
+                        GraniteConstraintsProvider,
+                        GraniteUserFactory>());
+            modules.Add(new GraniteApplicationModule());
 
             return modules;
         }
@@ -129,7 +138,18 @@ namespace Granite.ServerPlatform.Bootstrap
         protected override IContainer 
         CreateContainer(IList<IModule> modules)
         {
-            return new NinjectContainer(modules);
+            IDecoratorFactory factory =
+                new AuthorizedServiceDecoratorFactory(3);
+
+            return 
+                new NinjectDecoratedContainer(
+                    new DecoratorMap()
+                        .InsertDecorator<ISessionService>(factory)
+                        .InsertDecorator<IUserService>(factory)
+                        .InsertDecorator<IProfileService>(factory)
+                        .InsertDecorator<IPaymentService>(factory)
+                        .InsertDecorator<IRegistrationService>(factory),
+                    modules);
         }
     }
 }

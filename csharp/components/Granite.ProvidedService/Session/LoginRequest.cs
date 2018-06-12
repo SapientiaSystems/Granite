@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.ProvidedService.Shared;
+using Strata.Foundation.Transfer;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Session
@@ -15,7 +15,7 @@ namespace Granite.ProvidedService.Session
     [DataContract]
     public
     class LoginRequest:
-        GraniteRequest
+        ServiceRequest
     {
         [DataMember]
         public string UserName { get; set; }

@@ -17,7 +17,7 @@ namespace Granite.RequiredService.Authentication
     class AuthenticateRequest
     {
         [DataMember]
-        public string Username { get; set; }
+        public string UserName { get; set; }
         [DataMember]
         public string Password { get; set; }
     }

@@ -6,8 +6,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Granite.Domain.Role;
+using Granite.Domain.Tenant;
 using Granite.Domain.User;
 using Strata.Foundation.Value;
+using SystemEx.Injection;
 
 namespace Granite.Domain.Shared
 {
@@ -28,9 +31,13 @@ namespace Granite.Domain.Shared
         private IList<string>                      itsStreets;
         private IList<Tuple<string,string,string>> itsCities;
         private IList<string>                      itsAreaCodes;
+        private IUserFactory                       itsFactory;
+        private ITenantRepository                  itsTenants;
+        private IRoleRepository                    itsRoles;
 
+        [Inject]
         public
-        TestUserGenerator()
+        TestUserGenerator(IUserFactory factory,ITenantRepository tenants,IRoleRepository roles)
         {
             itsRandom = new Random();
             itsFirstNames =
@@ -138,6 +145,9 @@ namespace Granite.Domain.Shared
                     "303",
                     "719"
                 };
+            itsFactory = factory;
+            itsTenants = tenants;
+            itsRoles = roles;
         }
 
         public string 
@@ -145,7 +155,7 @@ namespace Granite.Domain.Shared
         {
             string first = itsFirstNames[itsRandom.Next(0,itsFirstNames.Count)];
             string last = itsLastNames[itsRandom.Next(0,itsLastNames.Count)];
-            string separator = itsRandom.Next(0,2) == 0 ? "" : ".";
+            string separator = itsRandom.Next(0,2) == 0 ? string.Empty : ".";
 
             return first + separator + last;
         }
@@ -224,20 +234,22 @@ namespace Granite.Domain.Shared
         {
             string first = itsFirstNames[itsRandom.Next(0,itsFirstNames.Count)];
             string last = itsLastNames[itsRandom.Next(0,itsLastNames.Count)];
-            string separator = itsRandom.Next(0,2) == 0 ? "" : ".";
+            string separator = itsRandom.Next(0,2) == 0 ? string.Empty : ".";
             string userName = first + separator + last;
+            string password = GeneratePassword();
+            string email = userName + itsEmailServers[itsRandom.Next(0,itsEmailServers.Count)];
+            HashedString hashed = new HashedString(password);
 
-            IUser user = 
-                new StandardUser()
-                {
-                    UserName = userName,
-                    Email = new EmailAddress(userName+itsEmailServers[itsRandom.Next(0,itsEmailServers.Count)]),
-                    ExternalUserId = GenerateExternalUserId(),
-                    Status = UserStatus.PENDING,
-                    VerificationCode = itsRandom.Next(100000,999999).ToString(),
-                    Created = DateTime.Now,
-                    LastModified = DateTime.Now
-                };
+            ITenant tenant = itsTenants.Insert(new StandardTenant(userName,hashed));
+            IUser user =
+                itsFactory.CreateUser(
+                    tenant,
+                    userName,
+                    hashed,
+                    new EmailAddress(email),
+                    itsRoles.GetRoles(new string[] { "GraniteGuest" }));
+
+            ((StandardUser)user).PlainTextPassword = password;
             return user;
         }
     }

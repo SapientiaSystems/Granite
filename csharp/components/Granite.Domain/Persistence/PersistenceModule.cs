@@ -4,7 +4,7 @@
 //  ##########################################################################
 
 using Strata.Foundation.Injection;
-using Strata.Persistence.UnitOfWork;
+using Strata.Domain.UnitOfWork;
 using SystemEx.Injection;
 
 namespace Granite.Domain.Persistence

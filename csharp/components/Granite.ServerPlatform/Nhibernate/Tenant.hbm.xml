@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping
+    xmlns="urn:nhibernate-mapping-2.2"
+    assembly="Granite.Domain"
+    namespace="Granite.Domain.Tenant">
+
+    <class
+        name="ITenant"
+        table="dbo.Tenant"
+        batch-size="50">
+        <cache usage="read-write" region="Tenant"/>
+
+        <id name="PrimaryId" column="TenantId" generator="guid.comb"/>
+        <discriminator column="TenantType" type="String"/>
+        <version name="Version" column="Version"/>
+        <property name="Created" column="Created" not-null="false"/>
+        <property name="LastModified" column="LastModified" not-null="false"/>
+
+        <property name="TenantName" column="TenantName" unique-key="TenantName" not-null="true"/>
+        <property
+            name="SecretKey"
+            type="Strata.Nhibernate.Mapping.HashedStringType, Strata.Nhibernate"
+            not-null="true">
+            <column name="SecretKeyHash"/>
+            <column name="SecretKeySalt"/>
+        </property>
+
+        <subclass
+            name="StandardTenant"
+            discriminator-value="StandardTenant"/>
+            
+    </class>
+
+    <query
+        name="Tenant.GetUniqueWithTenantName">
+        <![CDATA[
+            select distinct t
+            from ITenant t
+            where t.TenantName = :tenantName]]>
+    </query>
+    <query
+        name="Tenant.HasUniqueWithTenantName"
+        cacheable="true">
+        <![CDATA[
+            select count(t.TenantName)
+            from ITenant t
+            where t.TenantName = :tenantName]]>
+    </query>
+
+</hibernate-mapping>

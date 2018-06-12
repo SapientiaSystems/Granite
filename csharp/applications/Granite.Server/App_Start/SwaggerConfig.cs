@@ -55,11 +55,11 @@ namespace Granite.Server
                         // according to your specific authorization implementation
                         //
                         //c.BasicAuth("basic")
-                        //    .Description("Basic HTTP Authentication");
+                        //    .Description("Basic HTTP Authenticate");
                         //
 						// NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
                         //c.ApiKey("apiKey")
-                        //    .Description("API Key Authentication")
+                        //    .Description("API Key Authenticate")
                         //    .Name("apiKey")
                         //    .In("header");
                         //

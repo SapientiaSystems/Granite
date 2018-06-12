@@ -13,6 +13,7 @@ namespace Granite.ServerPlatform.ActiveDirectory
     /// <summary>
     /// </summary>
     ///  
+    [Ignore("deprecated")]
     [TestFixture]
     public
     class ActiveDirectoryUserServiceTest:

@@ -10,12 +10,14 @@
 
 namespace Granite.Server.App_Start
 {
+    using Granite.Common.Injection;
     using Granite.ServerPlatform.Bootstrap;
     using Microsoft.Web.Infrastructure.DynamicModuleHelper;
     using Ninject;
     using Ninject.Web.Common;
     using Ninject.Web.Common.WebHost;
     using Strata.Foundation.Bootstrap;
+    using Strata.Foundation.Injection;
     using Strata.Ninject.Injection;
     using System;
     using System.Web;
@@ -50,7 +52,8 @@ namespace Granite.Server.App_Start
             DynamicModuleUtility.RegisterModule(typeof(NinjectHttpModule));
      
             bootstrapper.Initialize(CreateKernel);
-            bootstrap
+            Global.Container = bootstrap.Container;
+            Global
                 .Container
                 .GetInstance<IStartStopController>()
                 .StartApplication();
@@ -78,7 +81,7 @@ namespace Granite.Server.App_Start
         {
             bootstrap.Run(new GraniteApplicationFactory());
 
-            IKernel kernel = ((NinjectContainer)bootstrap.Container).Kernel;
+            IKernel kernel = GetKernel(bootstrap);
 
             try
             {
@@ -100,6 +103,28 @@ namespace Granite.Server.App_Start
                 kernel.Dispose();
                 throw;
             }
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Load your modules or register your services here!
+        /// </summary>
+        /// <param name="kernel">The kernel.</param>
+        /// 
+        private static IKernel
+        GetKernel(IBootstrapper bootstrapper)
+        {
+            IContainer container = bootstrapper.Container;
+
+            if (container is NinjectDecoratedContainer)
+                return (IKernel)container;
+
+            if (container is NinjectContainer)
+                return ((NinjectContainer)container).Kernel;
+
+            throw 
+                new InvalidCastException(
+                    "Could not cast to an appropriate container");
         }
 
         //////////////////////////////////////////////////////////////////////

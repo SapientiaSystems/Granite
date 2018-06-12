@@ -3,13 +3,15 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Domain.Configuration;
+using Granite.Domain.Constraint;
+using Granite.Domain.Role;
 using Granite.Domain.Shared;
 using Granite.Domain.User;
 using NUnit.Framework;
+using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Injection;
-using Strata.Foundation.Value;
 using Strata.Ninject.Injection;
-using Strata.Persistence.UnitOfWork;
 using System;
 using System.Collections.Generic;
 
@@ -38,17 +40,22 @@ namespace Granite.Domain.Session
         public virtual void
         SetUp()
         {
+            AbstractModule.DefaultScope = typeof(ThreadScope);
+
             IContainer container = 
                 new NinjectContainer(
                     GetPersistenceModule(),
-                    new UserDomainModule<GraniteRolesProvider>(),
-                    new SessionDomainModule());
+                    new GraniteDomainModule<
+                        GraniteRolesProvider,
+                        GraniteConstraintsProvider,
+                        GraniteUserFactory>(),
+                    new TestGeneratorModule());
 
             itsTarget = container.GetInstance<ISessionRepository>();
             itsUserRepository = container.GetInstance<IUserRepository>();
+            itsGenerator = container.GetInstance<ITestUserGenerator>();
             itsSessionIds = new HashSet<Guid>();
             itsUserIds = new HashSet<Guid>();
-            itsGenerator = new TestUserGenerator();
             InsertUsers();
         }
 
@@ -66,9 +73,9 @@ namespace Granite.Domain.Session
                 if (itsTarget.HasUnique(id))
                     itsTarget.Remove(itsTarget.GetUnique(id));
             }
+            unitOfWork.Commit();
 
             RemoveUsers();
-            unitOfWork.Commit();
             itsTarget = null;
         }
 
@@ -94,10 +101,10 @@ namespace Granite.Domain.Session
 
             unitOfWork.Commit();
 
-            //itsSessionIds.Add(actual.SessionId);
+            itsSessionIds.Add(actual.PrimaryId);
 
             Assert.NotNull(actual);
-            Assert.AreNotEqual(Guid.Empty,actual.SessionId);
+            Assert.AreNotEqual(Guid.Empty,actual.PrimaryId);
             Assert.AreNotEqual(Guid.Empty,actual.UserId);
             Assert.NotNull(actual.User);
             Assert.IsTrue(actual.IsUserValid);
@@ -128,7 +135,7 @@ namespace Granite.Domain.Session
 
             unitOfWork.Commit();
 
-            itsSessionIds.Add(actual.SessionId);
+            itsSessionIds.Add(actual.PrimaryId);
 
             unitOfWork = itsTarget.Provider.GetUnitOfWork();
 
@@ -138,7 +145,7 @@ namespace Granite.Domain.Session
             actual = itsTarget.Update(expected);
             unitOfWork.Commit();
             Assert.NotNull(actual);
-            Assert.AreNotEqual(Guid.Empty,actual.SessionId);
+            Assert.AreNotEqual(Guid.Empty,actual.PrimaryId);
             Assert.AreNotEqual(Guid.Empty,actual.UserId);
             Assert.NotNull(actual.User);
             Assert.IsTrue(actual.IsUserValid);
@@ -173,12 +180,23 @@ namespace Granite.Domain.Session
         protected void
         RemoveUsers()
         {
+            IUnitOfWork unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+
             foreach (Guid id in itsUserIds)
             {
                 if (itsUserRepository.HasUnique(id))
                     itsUserRepository.Remove(
                         itsUserRepository.GetUnique(id));
+                else
+                    Assert.Warn(
+                        string.Format(
+                            "User {0} not found - cannot delete.",id));
             }
+
+            unitOfWork.Commit();
 
         }
 

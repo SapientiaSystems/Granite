@@ -6,8 +6,8 @@
 using Granite.Domain.Persistence;
 using Granite.Domain.User;
 using Strata.Foundation.Injection;
-using Strata.Persistence.InMemory;
-using Strata.Persistence.UnitOfWork;
+using Strata.Domain.InMemory;
+using Strata.Domain.UnitOfWork;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.InMemory
@@ -45,22 +45,22 @@ namespace Granite.ServerPlatform.InMemory
                             .InsertNamedQuery(
                                 new InMemoryNamedQuery<IUser>(
                                     provider,
-                                    "User.GetUniqueWithExternalUserId",
+                                    "NewUser.GetUniqueWithExternalUserId",
                                     new ExternalUserIdEqualsPredicate()))
                             .InsertNamedQuery(
                                 new InMemoryNamedQuery<IUser>(
                                     provider,
-                                    "User.GetUniqueWithUserName",
+                                    "NewUser.GetUniqueWithUserName",
                                     new UserNameEqualsPredicate()))
                             .InsertNamedQuery(
                                 new InMemoryNamedQuery<IUser>(
                                     provider,
-                                    "User.HasUniqueWithExternalUserId",
+                                    "NewUser.HasUniqueWithExternalUserId",
                                     new ExternalUserIdEqualsPredicate()))
                             .InsertNamedQuery(
                                 new InMemoryNamedQuery<IUser>(
                                     provider,
-                                    "User.HasUniqueWithUserName",
+                                    "NewUser.HasUniqueWithUserName",
                                     new UserNameEqualsPredicate() ) );
 
                         return provider;

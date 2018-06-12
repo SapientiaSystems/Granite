@@ -32,9 +32,22 @@ namespace Granite.Application.User
         /// <summary>
         /// </summary>
         ///  
+        UpdateUserReply
+        UpdateUser(UpdateUserRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         DeleteUserReply
         DeleteUser(DeleteUserRequest request);
 
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        GetUserReply
+        GetUser(GetUserRequest request);
     }
 }
 

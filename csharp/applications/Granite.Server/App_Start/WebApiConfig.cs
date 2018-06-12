@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Granite.ServerPlatform.WebApi;
 using System.Web.Http;
 using System.Web.Http.Cors;
 
@@ -10,10 +8,13 @@ namespace Granite.Server
     {
         public static void Register(HttpConfiguration config)
         {
-            // Web API configuration and services
-            config.EnableCors(new EnableCorsAttribute("http://localhost:60679","*","*") { SupportsCredentials = true });
+            config.EnableCors(
+                new EnableCorsAttribute("*","*","*")
+                    { SupportsCredentials = true });
+            config
+                .Filters
+                .Add(new RequireHttps());
 
-            // Web API routes
             config.MapHttpAttributeRoutes();
 
             config.Routes.MapHttpRoute(

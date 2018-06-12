@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.User;
 using System;
 using System.Runtime.Serialization;
 
@@ -21,11 +22,9 @@ namespace Granite.ProvidedService.Session
         [DataMember]
         public Guid     UserId { get; set; }
         [DataMember]
-        public string[] AuthorizedRoles { get; set; }
-        [DataMember]
         public string   AccessToken { get; set; }
         [DataMember]
-        public string   AccessTokenType { get; set; }
+        public UserData User { get; set; }
     }
 }
 

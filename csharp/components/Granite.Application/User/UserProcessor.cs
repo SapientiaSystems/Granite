@@ -3,19 +3,28 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Verification;
+using Granite.Application.Service;
+using Granite.Application.Shared;
+using Granite.Common.Access;
 using Granite.Common.Value;
+using Granite.Common.Verification;
+using Granite.Domain.Group;
+using Granite.Domain.Role;
+using Granite.Domain.Session;
 using Granite.Domain.Shared;
+using Granite.Domain.Tenant;
 using Granite.Domain.User;
+using Granite.ProvidedService.Transfer;
 using Granite.ProvidedService.User;
-using Granite.RequiredService.User;
+using Strata.Application.Service;
+using Strata.Domain.NamedQuery;
+using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
-using Strata.Persistence.UnitOfWork;
-using Strata.Service.Core;
-using System.Collections.Generic;
-using SystemEx.Injection;
+using Strata.Foundation.Value;
 using System;
-using Strata.Persistence.NamedQuery;
+using System.Collections.Generic;
+using System.Linq;
+using SystemEx.Injection;
 
 namespace Granite.Application.User
 {
@@ -25,36 +34,53 @@ namespace Granite.Application.User
     ///  
     public
     class UserProcessor:
-        AbstractProcessor,
-        IUserProcessor
+        AuthorizedService,
+        IUserProcessor,
+        IUserDomainEventObserver,
+        ITenantDomainEventObserver
     {
-        private IExternalUserService       itsService;
+        private IUserFactory               itsUserFactory;
+        private ITenantRepository          itsTenantRepository;
         private IUserRepository            itsUserRepository;
         private IRoleRepository            itsRoleRepository;
+        private ISessionRepository         itsSessionRepository;
         private IVerificationCodeGenerator itsGenerator;
         private IVerificationNotifier      itsNotifier;
+        private IUserMapper                itsMapper;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         [Inject]
-        public 
+        public
         UserProcessor(
             IUnitOfWorkProvider        provider,
-            IExternalUserService       service,
+            IUserFactory               userFactory,
+            ITenantRepository          tenantRepository,
             IUserRepository            userRepository,
             IRoleRepository            roleRepository,
+            ISessionRepository         sessionRepository,
             IVerificationCodeGenerator generator,
             IVerificationNotifier      notifier,
             ILogger                    logger):
-            base(provider,logger)
+            base(provider,logger,sessionRepository)
         {
-            itsService = service;
-            itsUserRepository = userRepository;
-            itsRoleRepository = roleRepository;
-            itsGenerator = generator;
-            itsNotifier = notifier;
+            itsUserFactory       = userFactory;
+            itsTenantRepository  = tenantRepository;
+            itsUserRepository    = userRepository;
+            itsRoleRepository    = roleRepository;
+            itsSessionRepository = sessionRepository;
+            itsGenerator         = generator;
+            itsNotifier          = notifier;
+            itsMapper            = new UserMapper();
+
+            itsUserRepository
+                .Observers
+                .Add(this);
+            itsTenantRepository
+                .Observers
+                .Add(this);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -63,71 +89,53 @@ namespace Granite.Application.User
         public CreateUserReply 
         CreateUser(CreateUserRequest request)
         {
-            CreateExternalUserReply createdUser = null;
-            IUser                   user = null;
+            ITenant tenant = null;
+            IUser   user = null;
 
-            ValidateRequest(request);
+            try
+            {
+                ValidateRequest(request);
 
-            createdUser = CreateExternalUser(request);
+                tenant = DoGetOrCreateTenant(request);
+                user = DoCreateUser(request,tenant);
 
-            if (!createdUser.IsSuccessful)
-                return
-                    new CreateUserReply()
+                user.ActivateTenant();
+
+                itsNotifier.Notify(
+                    new VerificationNotice()
                     {
-                        IsSuccessful = false,
-                        FailureMessage = 
-                            "CreateExternalUser() failed: " + 
-                            createdUser.FailureMessage,
-                        StackTrace = createdUser.StackTrace
-                    };
-
-            user =
-                new StandardUser()
-                {
-                    ExternalUserId = createdUser.ExternalUserId,
-                    UserName = createdUser.UserName,
-                    Email = createdUser.Email,
-                    JobTitle = createdUser.JobTitle,
-                    VerificationCode = itsGenerator.Generate(),
-                    Status = UserStatus.PENDING,
-                    Created = DateTime.Now,
-                    LastModified = DateTime.Now,
-                };
-            user = SetRoles(user,request.AuthorizedRoles);
-            user = itsUserRepository.Insert(user);
-                    
-            itsNotifier.Notify(
-                new VerificationNotice()
-                {
-                    MessageType = MessageKind.CONFIRM_NEW_USER_EMAIL,
-                    From = "verification@ezvaluator.com",
-                    To = request.Email.ToString(),
-                    Parameters = 
-                        new Dictionary<string,string>()
-                        {
+                        MessageType = MessageKind.CONFIRM_NEW_USER_EMAIL,
+                        From = "verification@ezvaluator.com",
+                        To = request.UserToCreate.Email.ToString(),
+                        Parameters =
+                            new Dictionary<string,string>()
+                            {
                             {Constant.CORRELATION_ID_PROPERTY,request.CorrelationId.ToString()},
                             {Constant.USER_ID_PROPERTY,user.UserId.ToString()},
                             {Constant.USER_NAME_PROPERTY,user.UserName},
                             {Constant.VERIFICATION_CODE_PROPERTY,user.VerificationCode}
-                        }
-                } );
+                            }
+                    });
 
-            return
-                new CreateUserReply()
-                {
-                    UserId = user.UserId,
-                    UserName = createdUser.UserName,
-                    Email = createdUser.Email,
-                    JobTitle = createdUser.JobTitle,
-                    SuccessMessage =
-                         string.Format(
-                            "Registration for user '{0}' has started. " +
-                            "A confirmation email was sent to '{1}'. " +
-                            "Please follow the instructions in this " +
-                            "email to verify the user. Thank you.",
-                            createdUser.UserName,
-                            createdUser.Email.ToString())
-                        };
+                return
+                    new CreateUserReply()
+                    {
+                        NewUser = itsMapper.Map(user),
+                        SuccessMessage =
+                             string.Format(
+                                "Registration for user '{0}' has started. " +
+                                "A confirmation email was sent to '{1}'. " +
+                                "Please follow the instructions in this " +
+                                "email to verify the user. Thank you.",
+                                user.UserName,
+                                user.Email.ToString())
+                    };
+            }
+            finally
+            {
+                if (user != null)
+                    user.DeactivateTenant();
+            }
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -155,9 +163,18 @@ namespace Granite.Application.User
                     IsSuccessful = true,
                     SuccessMessage =
                         string.Format(
-                            "User '{0}' has been verified.",
+                            "NewUser '{0}' has been verified.",
                             user.UserName)
                 };
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public UpdateUserReply
+        UpdateUser(UpdateUserRequest request)
+        {
+            throw new InvalidOperationException();
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -166,47 +183,92 @@ namespace Granite.Application.User
         public DeleteUserReply 
         DeleteUser(DeleteUserRequest request)
         {
-            IUser                   user = GetUserToRemove(request);
-            DeleteExternalUserReply deleted = null;
+            IUser   user   = GetUserToRemove(request);
+            ITenant tenant = null;
+            bool    deletedTenant = false;
 
             if (user == null)
                 return
                     new DeleteUserReply()
                     {
-                        UserId = request.UserId,
-                        SessionId = request.SessionId,
-                        IsSuccessful = true
+                        IsSuccessful = true,
+                        SuccessMessage = 
+                            string.Format(
+                                "NewUser {0} does not exist or " +
+                                "has already been deleted.",
+                                user.UserId)
                     };
 
-            deleted =
-                itsService.DeleteExternalUser(
-                    new DeleteExternalUserRequest()
-                    {
-                        UserId = request.UserId,
-                        ExternalUserId = user.ExternalUserId
-                    } );
-
-            if (!deleted.IsSuccessful)
-                return
-                    new DeleteUserReply()
-                    {
-                        UserId = request.UserId,
-                        SessionId = request.SessionId,
-                        IsSuccessful = false,
-                        FailureMessage = deleted.FailureMessage,
-                        StackTrace = deleted.StackTrace
-                    };
-
+            tenant = user.Tenant;
             itsUserRepository.Remove(user);
+
+            if (tenant.TenantName.Equals(user.UserName))
+            {
+                itsTenantRepository.Remove(tenant);
+                deletedTenant = true;
+            }
 
             return
                 new DeleteUserReply()
                 {
-                    UserId = request.UserId,
-                    SessionId = request.SessionId,
-                    IsSuccessful = true,
-                    UserIdDeleted = user.UserId
+                    IsSuccessful  = true,
+                    DeletedUserId = user.UserId,
+                    HasAlsoDeletedTenant = deletedTenant,
+                    DeletedTenantId = 
+                        deletedTenant ? tenant.TenantId : Guid.Empty
                 };
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public GetUserReply
+        GetUser(GetUserRequest request)
+        {
+            IUser user = null;
+
+            CheckPermission(request);
+            user = GetUserToReturn(request);
+
+            if (user == null)
+                return
+                    new GetUserReply()
+                    {
+                        IsSuccessful = false,
+                        FailureMessage = GetFailureMessage(request)
+                    };
+
+            return
+                new GetUserReply()
+                {
+                    IsSuccessful = true,
+                    RequestedUser = itsMapper.Map(user)
+                };
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public void
+        OnEvent(IUserDomainEvent evnt)
+        {
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public void
+        OnEvent(ITenantDomainEvent evnt)
+        {
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public void
+        OnException(Exception exception)
+        {
+            throw exception;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -216,73 +278,83 @@ namespace Granite.Application.User
         protected void
         ValidateRequest(CreateUserRequest request)
         {
-            IRole       graniteUser = 
-                            itsRoleRepository.GetRole("GraniteUser");
-            bool        isGraniteUser = false;
-            ISet<IRole> roles = 
-                            itsRoleRepository.GetRoles(
-                                request.AuthorizedRoles);
-            IEnumerator<IRole> enumerator = roles.GetEnumerator();
+            CreateUserData userToCreate = request.UserToCreate;
 
-            if (itsUserRepository.HasUniqueWithUserName(request.UserName))
+            if (itsUserRepository.HasUniqueWithUserName(userToCreate.UserName))
                 throw
                     new NotUniqueException(
                         string.Format(
-                            "Username '{0} has already been used. " +
+                            "UserName '{0} has already been used. " +
                             "Please select another username. Thank you.",
-                            request.UserName));
-
-            while (!isGraniteUser &&  enumerator.MoveNext())
-            {
-                IRole role = enumerator.Current;
-
-                if (role.Includes(graniteUser))
-                    isGraniteUser = true;
-            }
-
-            if (!isGraniteUser)
-                throw 
-                    new InvalidOperationException(
-                        "Specified roles do not include GraniteUser");
-
+                            userToCreate.UserName));
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
-        protected CreateExternalUserReply
-        CreateExternalUser(CreateUserRequest request)
+        protected virtual ITenant
+        DoGetOrCreateTenant(CreateUserRequest request)
         {
-            CreateExternalUserReply created = 
-                itsService.CreateExternalUser(
-                    new CreateExternalUserRequest()
-                    {
-                        UserName = request.UserName,
-                        Password = request.Password,
-                        Name = request.Name,
-                        Email = request.Email,
-                        JobTitle = request.JobTitle,
-                        Phone = request.Phone,
-                        Address = request.Address
-                    });
-            PushRollbackAction(
-                () =>
-                {
-                    DeleteExternalUserReply deleted = 
-                        itsService.DeleteExternalUser(
-                            new DeleteExternalUserRequest()
-                            {
-                                ExternalUserId = created.ExternalUserId
-                            });
+            CreateUserData userToCreate = request.UserToCreate;
 
-                    if (!deleted.IsSuccessful)
-                        throw
-                            new RollbackFailedException(
-                                deleted.FailureMessage);
-                });
+            if (userToCreate.UseExistingTenant)
+            {
+                if (itsTenantRepository.HasUnique(userToCreate.TenantId))
+                    return 
+                        itsTenantRepository.GetUnique(userToCreate.TenantId);
 
-            return created;
+                throw 
+                    new NoSuchEntityException(
+                        typeof(ITenant),
+                        userToCreate.TenantId);
+            }
+
+            if (
+                itsTenantRepository.HasUniqueWithTenantName(
+                    userToCreate.UserName))
+                throw
+                    new InvalidOperationException(
+                        string.Format(
+                            "Cannot create new tenant '{0}' " +
+                            "because it already exists.",
+                            userToCreate.UserName));
+
+            return
+                itsTenantRepository.Insert(
+                    new StandardTenant(
+                        userToCreate.UserName,
+                        new HashedString(userToCreate.Password)));
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected virtual IUser 
+        DoCreateUser(CreateUserRequest request,ITenant tenant)
+        {
+            CreateUserData userToCreate = request.UserToCreate;
+
+            if (userToCreate.HasSubscriptionType)
+                return
+                    itsUserRepository.Insert(
+                        itsUserFactory.CreateUser(
+                            tenant,
+                            userToCreate.UserName,
+                            new HashedString(userToCreate.Password),
+                            userToCreate.Email,
+                            userToCreate.SubscriptionType));
+
+            return
+                itsUserRepository.Insert(
+                    itsUserFactory.CreateUser(
+                            tenant,
+                            userToCreate.UserName,
+                            new HashedString(userToCreate.Password),
+                            userToCreate.Email,
+                            itsRoleRepository.GetRoles(
+                                new string[] { "GraniteUser" })));
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -292,12 +364,12 @@ namespace Granite.Application.User
         protected IUser
         GetUserToRemove(DeleteUserRequest request)
         {
-            if (request.UserIdToDelete != null)
-                return itsUserRepository.GetUnique(request.UserIdToDelete);
-            else if (!string.IsNullOrEmpty(request.UserNameToDelete))
+            if (request.UserIdOfUserToDelete != null)
+                return itsUserRepository.GetUnique(request.UserIdOfUserToDelete);
+            else if (!string.IsNullOrEmpty(request.UserNameOfUserToDelete))
                 return 
                     itsUserRepository.GetUniqueWithUserName(
-                        request.UserNameToDelete);
+                        request.UserNameOfUserToDelete);
 
             return null;
         }
@@ -309,9 +381,7 @@ namespace Granite.Application.User
         protected IUser 
         VerifyUser(IUser user,string verificationCode)
         {
-            if (user.VerificationCode.Equals(verificationCode))
-                user.Status = UserStatus.VERIFIED;
-            else
+            if (!user.Verify(verificationCode))
                 throw
                     new VerificationFailedException(
                         user.UserId,
@@ -325,11 +395,100 @@ namespace Granite.Application.User
         /// <summary>
         /// </summary>
         ///  
-        protected IUser
-        SetRoles(IUser user,string[] roleNames)
+        protected void
+        CheckPermission(GetUserRequest request)
         {
-            user.SetRoles(itsRoleRepository.GetRoles(roleNames));
-            return user;
+            IUser user = GetUserFrom(request);
+
+            if (user == null)
+                throw
+                    new AuthorizationException(
+                        "Invalid user: could find user from request");
+
+            if (request.GetCurrentUser)
+            {
+                if (!user.IsInRole("GraniteGuest"))
+                    throw
+                        new AuthorizationException(
+                            "User is not in permissable role: GraniteGuest");
+
+                return;
+            }
+            
+            if (!user.IsInRole("GraniteAdministrator"))
+                throw
+                    new AuthorizationException(
+                        "User is not in permissable role: " +
+                        "GraniteAdministrator");
+
+
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected IUser
+        GetUserToReturn(GetUserRequest request)
+        {
+            if (request.GetCurrentUser)
+                return GetCurrentUser(request);
+
+            if (request.UserIdOfUserToGet != Guid.Empty)
+                return itsUserRepository.GetUnique(request.UserIdOfUserToGet);
+            else if (!string.IsNullOrEmpty(request.UserNameOfUserToGet))
+                return
+                    itsUserRepository.GetUniqueWithUserName(
+                        request.UserNameOfUserToGet);
+
+            return null;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected IUser
+        GetCurrentUser(GraniteRequest request)
+        {
+            ISession session =
+                itsSessionRepository.GetUniqueWithAccessToken(
+                    request.AccessToken);
+
+            return session.User;
+        }
+
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected string
+        GetFailureMessage(GetUserRequest request)
+        {
+            if (request.GetCurrentUser)
+            {
+                IUser user = GetCurrentUser(request);
+
+                return
+                    string.Format(
+                        "User '{0}' not found.",
+                        request.UserNameOfUserToGet);
+            }
+
+            if (request.UserIdOfUserToGet != Guid.Empty)
+                return
+                    string.Format(
+                        "User '{0}' not found.",
+                        request.UserIdOfUserToGet);
+
+            if (!string.IsNullOrEmpty(request.UserNameOfUserToGet))
+                return
+                    string.Format(
+                        "User '{0}' not found.",
+                        request.UserNameOfUserToGet);
+
+            return "User not found";
         }
     }
 }

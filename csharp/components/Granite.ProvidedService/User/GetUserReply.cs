@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Transfer;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User
@@ -14,8 +15,11 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class GetUserReply
+    class GetUserReply:
+        GraniteReply
     {
+        [DataMember]
+        public UserData RequestedUser { get; set; }
     }
 }
 

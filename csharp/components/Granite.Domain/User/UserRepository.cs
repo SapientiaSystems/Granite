@@ -3,9 +3,14 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Persistence.NamedQuery;
-using Strata.Persistence.Repository;
-using Strata.Persistence.UnitOfWork;
+using Granite.Domain.Constraint;
+using Granite.Domain.Group;
+using Granite.Domain.Role;
+using Granite.Domain.Shared;
+using Granite.Domain.Tenant;
+using Strata.Domain.NamedQuery;
+using Strata.Domain.Repository;
+using Strata.Domain.UnitOfWork;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -22,7 +27,13 @@ namespace Granite.Domain.User
         AbstractRepository<Guid,IUser>,
         IUserRepository
     {
-        private IRoleRepository itsRoleRepository;
+        public ISet<IUserDomainEventObserver> 
+        Observers { get; protected set; }
+
+        private ITenantRepository     itsTenantRepository;
+        private IGroupRepository      itsGroupRepository;
+        private IRoleRepository       itsRoleRepository;
+        private IConstraintRepository itsConstraintRepository;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -31,11 +42,61 @@ namespace Granite.Domain.User
         [Inject]
         public
         UserRepository(
-            IUnitOfWorkProvider provider,
-            IRoleRepository     roleRepository):
+            IUnitOfWorkProvider   provider,
+            ITenantRepository     tenantRepository,
+            IGroupRepository      groupRepository,
+            IRoleRepository       roleRepository,
+            IConstraintRepository constraintRepository):
             base(provider)
         {
-            itsRoleRepository = roleRepository;
+            Observers = new HashSet<IUserDomainEventObserver>();
+
+            itsTenantRepository     = tenantRepository;
+            itsGroupRepository      = groupRepository;
+            itsRoleRepository       = roleRepository;
+            itsConstraintRepository = constraintRepository;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override IUser
+        Insert(IUser user)
+        {
+            IUser result = base.Insert(user);
+
+            if (result != null)
+            {
+                result.Initialize(
+                    itsTenantRepository,
+                    itsGroupRepository,
+                    itsRoleRepository,
+                    itsConstraintRepository);
+                result.Attach(Observers);
+            }
+
+            return result;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override IUser
+        Update(IUser user)
+        {
+            IUser result = base.Update(user);
+
+            if (result != null)
+            {
+                result.Initialize(
+                    itsTenantRepository,
+                    itsGroupRepository,
+                    itsRoleRepository,
+                    itsConstraintRepository);
+                result.Attach(Observers);
+            }
+
+            return result;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -47,7 +108,14 @@ namespace Granite.Domain.User
             IUser result = base.GetUnique(userId);
 
             if (result != null)
-                result.InitializeRoles(itsRoleRepository);
+            {
+                result.Initialize(
+                    itsTenantRepository,
+                    itsGroupRepository,
+                    itsRoleRepository,
+                    itsConstraintRepository);
+                result.Attach(Observers);
+            }
 
             return result;
         }
@@ -61,7 +129,14 @@ namespace Granite.Domain.User
             IUser result = base.GetUnique(predicate);
 
             if (result != null)
-                result.InitializeRoles(itsRoleRepository);
+            {
+                result.Initialize(
+                    itsTenantRepository,
+                    itsGroupRepository,
+                    itsRoleRepository,
+                    itsConstraintRepository);
+                result.Attach(Observers);
+            }
 
             return result;
         }
@@ -76,7 +151,14 @@ namespace Granite.Domain.User
 
             foreach (IUser result in results)
                 if (result != null)
-                    result.InitializeRoles(itsRoleRepository);
+                {
+                    result.Initialize(
+                        itsTenantRepository,
+                        itsGroupRepository,
+                        itsRoleRepository,
+                        itsConstraintRepository);
+                    result.Attach(Observers);
+                }
 
             return results;
         }
@@ -91,9 +173,28 @@ namespace Granite.Domain.User
 
             foreach (IUser result in results)
                 if (result != null)
-                    result.InitializeRoles(itsRoleRepository);
+                {
+                    result.Initialize(
+                        itsTenantRepository,
+                        itsGroupRepository,
+                        itsRoleRepository,
+                        itsConstraintRepository);
+                    result.Attach(Observers);
+                }
 
             return results;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public IUser
+        GetUniqueFor(IUserIdProvider provider)
+        {
+            if (provider != null)
+                return GetUnique(provider.UserId);
+
+            return null;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -110,7 +211,14 @@ namespace Granite.Domain.User
             result = query.GetUnique();
 
             if (result != null)
-                result.InitializeRoles(itsRoleRepository);
+            {
+                result.Initialize(
+                    itsTenantRepository,
+                    itsGroupRepository,
+                    itsRoleRepository,
+                    itsConstraintRepository);
+                result.Attach(Observers);
+            }
 
             return result;
         }
@@ -129,7 +237,14 @@ namespace Granite.Domain.User
             result = query.GetUnique();
 
             if (result != null)
-                result.InitializeRoles(itsRoleRepository);
+            {
+                result.Initialize(
+                    itsTenantRepository,
+                    itsGroupRepository,
+                    itsRoleRepository,
+                    itsConstraintRepository);
+                result.Attach(Observers);
+            }
 
             return result;
         }

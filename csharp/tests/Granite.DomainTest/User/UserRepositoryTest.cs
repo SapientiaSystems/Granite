@@ -7,9 +7,12 @@ using Granite.Domain.Shared;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
 using Strata.Ninject.Injection;
-using Strata.Persistence.UnitOfWork;
+using Strata.Domain.UnitOfWork;
 using System;
 using System.Collections.Generic;
+using Granite.Domain.Role;
+using Granite.Domain.Configuration;
+using Granite.Domain.Constraint;
 
 namespace Granite.Domain.User
 {
@@ -30,14 +33,20 @@ namespace Granite.Domain.User
         public virtual void
         SetUp()
         {
+            AbstractModule.DefaultScope = typeof(ThreadScope);
+
             IContainer container = 
                 new NinjectContainer(
                     GetPersistenceModule(),
-                    new UserDomainModule<GraniteRolesProvider>());
+                    new GraniteDomainModule<
+                        GraniteRolesProvider,
+                        GraniteConstraintsProvider,
+                        GraniteUserFactory>(),
+                    new TestGeneratorModule());
 
             itsTarget = container.GetInstance<IUserRepository>();
             itsIds = new HashSet<Guid>();
-            itsGenerator = new TestUserGenerator();
+            itsGenerator = container.GetInstance<ITestUserGenerator>();
         }
 
         [TearDown]
@@ -114,6 +123,41 @@ namespace Granite.Domain.User
             Assert.AreEqual(expected.VerificationCode,actual.VerificationCode);
             Assert.AreEqual(expected.Created,actual.Created);
             Assert.AreEqual(expected.LastModified,actual.LastModified);
+        }
+
+        [Test]
+        public virtual void
+        TestGetUnique()
+        {
+            IUnitOfWork unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+
+            IUser expected = itsGenerator.GenerateUser();
+            IUser actual = null;
+
+            expected = itsTarget.Insert(expected);
+
+            unitOfWork.Commit();
+            unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+
+            itsIds.Add(expected.UserId);
+            actual = itsTarget.GetUnique(expected.UserId);
+            unitOfWork.Commit();
+
+            Assert.NotNull(actual);
+            Assert.AreNotEqual(Guid.Empty,actual.UserId);
+            Assert.AreEqual(expected.UserName,actual.UserName);
+            Assert.AreEqual(expected.Password,actual.Password);
+            Assert.AreEqual(expected.ExternalUserId,actual.ExternalUserId);
+            Assert.AreEqual(expected.VerificationCode,actual.VerificationCode);
+            Assert.AreEqual(expected.Created,actual.Created);
+            Assert.AreEqual(expected.LastModified,actual.LastModified);
+            Assert.IsTrue(actual.Password.Matches(((StandardUser)expected).PlainTextPassword));
         }
 
         protected abstract IModule

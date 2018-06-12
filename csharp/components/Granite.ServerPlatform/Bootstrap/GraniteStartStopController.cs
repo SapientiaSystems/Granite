@@ -3,10 +3,16 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Injection;
+using Granite.Domain.Constraint;
+using Granite.Domain.Group;
+using Granite.Domain.Role;
+using Granite.Domain.Tenant;
 using Granite.Domain.User;
-using Granite.ProvidedService.User;
+using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
+using Strata.Foundation.Value;
 using System;
 using SystemEx.Injection;
 
@@ -36,40 +42,66 @@ namespace Granite.ServerPlatform.Bootstrap
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public void 
+        public virtual void 
         StartApplication()
         {
-            IUserRepository userRepository =
-                Container.GetInstance<IUserRepository>();
-            IRoleRepository roleRepository =
-                Container.GetInstance<IRoleRepository>();
-            IUser guest = null;
-
-            if (userRepository.HasUniqueWithUserName("guest"))
-                return;
-
-            guest =
-                new StandardUser()
-                {
-                    ExternalUserId = "guest",
-                    UserName = "guest",
-                    Status = UserStatus.VERIFIED,
-                    Created = DateTime.Now,
-                    LastModified = DateTime.Now
-                };
-            guest.SetRoles(
-                roleRepository.GetRoles(new string[] { "GraniteUser" }));
-
-            userRepository.Insert(guest);
-
+            Global.Container = Container;
+            CreateGuestUserIfNeeded();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public void 
+        public virtual void 
         StopApplication()
         {
+        }
+
+        protected virtual void
+        CreateGuestUserIfNeeded()
+        {
+            ITenantRepository tenants =
+                Container.GetInstance<ITenantRepository>();
+            IUserRepository users =
+                Container.GetInstance<IUserRepository>();
+            IGroupRepository groups =
+                Container.GetInstance<IGroupRepository>();
+            IRoleRepository roles =
+                Container.GetInstance<IRoleRepository>();
+            IConstraintRepository constraints =
+                Container.GetInstance<IConstraintRepository>();
+            IUnitOfWorkProvider provider =
+                Container.GetInstance<IUnitOfWorkProvider>();
+            IUnitOfWork unitOfWork = null; ;
+            ITenant tenant = null;
+
+            unitOfWork = provider.GetUnitOfWork();
+
+            if (!tenants.HasUniqueWithTenantName("guest"))
+                tenant = tenants.Insert(
+                    new StandardTenant("guest",new HashedString("guest")));
+            else
+                tenant = tenants.GetUniqueWithTenantName("guest");
+            
+            if (!users.HasUniqueWithUserName("guest"))
+            {
+                IUser guest =
+                    new StandardUser(tenant,tenants,groups,roles,constraints)
+                    {
+                        TenantId = tenant.TenantId,
+                        UserName = "guest",
+                        Password = new HashedString("guest"),
+                        Status = UserStatus.VERIFIED,
+                        Created = DateTime.Now,
+                        LastModified = DateTime.Now
+                    };
+                guest.AttachRole(
+                    roles.GetRole("GraniteGuest"));
+
+                users.Insert(guest);
+            }
+
+            unitOfWork.Commit();
         }
     }
 }

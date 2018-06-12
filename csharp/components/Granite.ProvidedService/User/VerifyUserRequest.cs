@@ -3,7 +3,8 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.ProvidedService.Shared;
+using Granite.ProvidedService.Transfer;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.User

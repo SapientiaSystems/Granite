@@ -3,10 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Injection;
 using Granite.ProvidedService.Payment;
 using System.Web.Http;
-using System.Web.Http.Cors;
-using System.Web.Mvc;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
@@ -15,9 +14,7 @@ namespace Granite.ServerPlatform.WebApi
     /// <summary>
     /// </summary>
     ///  
-    [System.Web.Http.RoutePrefix("v1/payment")]
-    [RequireHttps]
-    [EnableCors("*","*","*")]
+    [RoutePrefix("v1/payment")]
     public
     class PaymentServiceController:
         ApiController,
@@ -31,16 +28,18 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        PaymentServiceController(IPaymentService imp)
+        PaymentServiceController()
         {
-            itsImp = imp;
+            itsImp = 
+                Global
+                    .Container
+                    .GetInstance<IPaymentService>();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("create-account")]
-        [RequireHttps]
+        [Route("create-account")]
         public CreateAccountReply 
         CreateAccount(CreateAccountRequest request)
         {
@@ -50,8 +49,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("update-account")]
-        [RequireHttps]
+        [Route("update-account")]
         public UpdateAccountReply 
         UpdateAccount(UpdateAccountRequest request)
         {
@@ -61,8 +59,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("delete-account")]
-        [RequireHttps]
+        [Route("delete-account")]
         public DeleteAccountReply 
         DeleteAccount(DeleteAccountRequest request)
         {
@@ -72,8 +69,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("create-subscription")]
-        [RequireHttps]
+        [Route("create-subscription")]
         public CreateSubscriptionReply 
         CreateSubscription(CreateSubscriptionRequest request)
         {
@@ -83,8 +79,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("update-subscription")]
-        [RequireHttps]
+        [Route("update-subscription")]
         public UpdateSubscriptionReply 
         UpdateSubscription(UpdateSubscriptionRequest request)
         {
@@ -94,8 +89,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("delete-subscription")]
-        [RequireHttps]
+        [Route("delete-subscription")]
         public DeleteSubscriptionReply 
         DeleteSubscription(DeleteSubscriptionRequest request)
         {
@@ -105,8 +99,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("make-payment")]
-        [RequireHttps]
+        [Route("make-payment")]
         public MakePaymentReply 
         MakePayment(MakePaymentRequest request)
         {
@@ -116,8 +109,7 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        [System.Web.Http.Route("make-refund")]
-        [RequireHttps]
+        [Route("make-refund")]
         public MakeRefundReply 
         MakeRefund(MakeRefundRequest request)
         {

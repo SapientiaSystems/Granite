@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.ProvidedService.Shared;
+using Granite.ProvidedService.Transfer;
 using System;
 using System.Runtime.Serialization;
 
@@ -20,7 +20,11 @@ namespace Granite.ProvidedService.User
         GraniteReply
     {
         [DataMember]
-        public Guid UserIdDeleted { get; set; }
+        public Guid DeletedUserId { get; set; }
+        [DataMember]
+        public bool HasAlsoDeletedTenant { get; set; }
+        [DataMember]
+        public Guid DeletedTenantId { get; set; }
     }
 }
 

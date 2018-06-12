@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Access;
 using System.ServiceModel;
 
 namespace Granite.ProvidedService.Session
@@ -28,6 +29,7 @@ namespace Granite.ProvidedService.Session
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles="GraniteGuest")]
         LogoutReply
         Logout(LogoutRequest request);
 
@@ -36,6 +38,7 @@ namespace Granite.ProvidedService.Session
         /// </summary>
         ///  
         [OperationContract]
+        [Authorize(Roles = "GraniteGuest")]
         KeepAliveReply
         KeepAlive(KeepAliveRequest request);
     }

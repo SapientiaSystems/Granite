@@ -3,25 +3,41 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Application.Shared;
+using Granite.Common.Access;
+using Granite.Domain.Group;
+using Granite.Domain.Role;
+using Granite.Domain.Session;
+using Granite.Domain.Shared;
+using Granite.Domain.Tenant;
+using Granite.Domain.User;
 using Granite.ProvidedService.Session;
+using Granite.ProvidedService.User;
+using Strata.Application.Service;
+using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
-using Strata.Persistence.UnitOfWork;
-using Strata.Service.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using SystemEx.Injection;
 
 namespace Granite.Application.Session
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 
     /// </summary>
     ///  
     public
     class SessionService:
         AbstractService,
-        ISessionService
+        ISessionService,
+        ISessionDomainEventObserver
     {
-        private ISessionProcessor itsProcessor;
+        private IAuthenticator     itsAuthenticator;
+        private ITenantRepository  itsTenantRepository;
+        private ISessionRepository itsSessionRepository;
+        private IUserRepository    itsUserRepository;
+        private IUserMapper        itsMapper;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -31,11 +47,22 @@ namespace Granite.Application.Session
         public
         SessionService(
             IUnitOfWorkProvider provider,
-            ILogger             logger,
-            ISessionProcessor   processor):
+            IAuthenticator      authenticator,
+            ITenantRepository   tenantRepository,
+            ISessionRepository  sessionRepository,
+            IUserRepository     userRepository,
+            ILogger             logger):
             base(provider,logger)
         {
-            itsProcessor = processor;
+            itsAuthenticator     = authenticator;
+            itsTenantRepository  = tenantRepository;
+            itsSessionRepository = sessionRepository;
+            itsUserRepository    = userRepository;
+            itsMapper            = new UserMapper();
+
+            itsSessionRepository
+                .Observers
+                .Add(this);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -44,10 +71,49 @@ namespace Granite.Application.Session
         public LoginReply 
         Login(LoginRequest request)
         {
-            return
-                Execute(
-                    (LoginRequest r) => { return itsProcessor.Login(r); },
-                    request );
+            IUser    user = null;
+            ISession session = null;
+
+            try
+            {
+                itsAuthenticator.AuthenticateUser(
+                        request.UserName,
+                        request.Password);
+
+                user =
+                    itsUserRepository.GetUniqueWithUserName(request.UserName);
+
+                if (user == null)
+                    throw
+                        new NoSuchEntityException(
+                            typeof(IUser),
+                            request.UserName);
+
+                user.ActivateTenant();
+
+                session = new StandardSession(user);
+                session.Open();
+                session = itsSessionRepository.Insert(session);
+
+                return
+                    new LoginReply()
+                    {
+                        IsSuccessful = true,
+                        NewSession =
+                            new SessionData()
+                            {
+                                SessionId = session.PrimaryId,
+                                UserId = session.UserId,
+                                AccessToken = session.AccessToken,
+                                User = itsMapper.Map(session.User)
+                            }
+                    };
+            }
+            finally
+            {
+                if (user != null)
+                    user.DeactivateTenant();
+            }
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -56,10 +122,27 @@ namespace Granite.Application.Session
         public LogoutReply 
         Logout(LogoutRequest request)
         {
+            ISession session = 
+                itsSessionRepository.GetUniqueWithAccessToken(
+                    request.AccessToken);
+
+            if (session == null)
+                return
+                    new LogoutReply()
+                    {
+                        IsSuccessful = false,
+                        FailureMessage = "Session not found"
+                    };
+
+            session.Close();
+            session = itsSessionRepository.Update(session);
+
             return
-                Execute(
-                    (LogoutRequest r) => { return itsProcessor.Logout(r); },
-                    request);
+                new LogoutReply()
+                {
+                    SessionId = session.PrimaryId,
+                    IsSuccessful = true
+                };
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -68,11 +151,23 @@ namespace Granite.Application.Session
         public KeepAliveReply 
         KeepAlive(KeepAliveRequest request)
         {
-            return
-                Execute(
-                    (KeepAliveRequest r) => 
-                        { return itsProcessor.KeepAlive(r); },
-                    request);
+            throw new NotImplementedException();
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public void 
+        OnEvent(ISessionDomainEvent evnt)
+        {
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public void 
+        OnException(Exception exception)
+        {
         }
     }
 }

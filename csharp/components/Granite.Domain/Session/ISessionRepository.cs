@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Persistence.Repository;
+using Strata.Domain.Repository;
 using System;
 using System.Collections.Generic;
 
@@ -15,14 +15,32 @@ namespace Granite.Domain.Session
     ///  
     public
     interface ISessionRepository:
-        IRepository<Guid,ISession>
+        IRepository<
+            Guid,
+            ISession,
+            ISessionDomainEvent,
+            ISessionDomainEventObserver>
     {
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        ISession
+        GetUniqueWithAccessToken(string accessToken);
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         ICollection<ISession>
         GetAllWithUserId(Guid userId);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        bool
+        HasUniqueWithAccessToken(string accessToken);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>

@@ -4,10 +4,9 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.Payment;
+using Strata.Application.Service;
+using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
-using Strata.Persistence.UnitOfWork;
-using Strata.Service.Core;
-using System;
 using SystemEx.Injection;
 
 namespace Granite.Application.Payment
