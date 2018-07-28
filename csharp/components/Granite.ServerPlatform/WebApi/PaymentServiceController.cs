@@ -39,6 +39,26 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [Route("create-plan")]
+        public CreatePlanReply
+        CreatePlan(CreatePlanRequest request)
+        {
+            return itsImp.CreatePlan(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        [Route("delete-plan")]
+        public DeletePlanReply
+        DeletePlan(DeletePlanRequest request)
+        {
+            return itsImp.DeletePlan(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
         [Route("create-account")]
         public CreateAccountReply 
         CreateAccount(CreateAccountRequest request)
@@ -60,10 +80,20 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete-account")]
-        public DeleteAccountReply 
+        public DeleteAccountReply
         DeleteAccount(DeleteAccountRequest request)
         {
             return itsImp.DeleteAccount(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        [Route("get-account")]
+        public GetAccountReply 
+        GetAccount(GetAccountRequest request)
+        {
+            return itsImp.GetAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -90,10 +120,20 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete-subscription")]
-        public DeleteSubscriptionReply 
+        public DeleteSubscriptionReply
         DeleteSubscription(DeleteSubscriptionRequest request)
         {
             return itsImp.DeleteSubscription(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        [Route("get-subscription")]
+        public GetSubscriptionReply 
+        GetSubscription(GetSubscriptionRequest request)
+        {
+            return itsImp.GetSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////

@@ -29,6 +29,9 @@ namespace Granite.Domain.Session
         bool     IsUserValid { get; }
         bool     IsOpen { get; }
 
+        string   ClientIpAddress { get; set; }
+        bool     HasClientIpAddress { get; }
+
         string   AccessToken { get; set; }
 
         DateTime LastRefresh { get; set; }

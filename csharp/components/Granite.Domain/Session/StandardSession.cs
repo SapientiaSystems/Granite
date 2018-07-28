@@ -25,6 +25,11 @@ namespace Granite.Domain.Session
     {
         public virtual Guid     UserId { get; set; }
 
+        public virtual string   ClientIpAddress { get; set; }
+        public virtual bool     
+        HasClientIpAddress
+            { get { return !string.IsNullOrEmpty(ClientIpAddress); } }
+
         public virtual IUser    User { get; protected set; }
         public virtual bool     IsUserValid { get { return User != null; } }
         public virtual bool     IsOpen { get; set; }

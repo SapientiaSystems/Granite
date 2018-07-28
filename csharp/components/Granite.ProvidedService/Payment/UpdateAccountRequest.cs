@@ -17,6 +17,8 @@ namespace Granite.ProvidedService.Payment
     class UpdateAccountRequest:
         GraniteRequest
     {
+        [DataMember]
+        public UpdateAccountData AccountToUpdate { get; set; }
     }
 }
 

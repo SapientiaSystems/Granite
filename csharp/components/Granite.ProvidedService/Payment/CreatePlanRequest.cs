@@ -1,21 +1,24 @@
 ﻿//  ##########################################################################
-//  # File Name: PaymentIntervalKind.cs
+//  # File Name: CreatePlanRequest.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-namespace Granite.Domain.Payment
+using Granite.ProvidedService.Transfer;
+using System.Runtime.Serialization;
+
+namespace Granite.ProvidedService.Payment
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// </summary>
     ///  
+    [DataContract]
     public
-    enum PaymentIntervalKind
+    class CreatePlanRequest:
+        GraniteRequest
     {
-        DAY,
-        WEEK,
-        MONTH,
-        YEAR
+        [DataMember]
+        public CreatePlanData PlanToCreate { get; set; }
     }
 }
 

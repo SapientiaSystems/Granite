@@ -173,6 +173,16 @@ namespace Granite.Domain.Tenant
             query.SetInput("tenantName",tenantName);
             return query.HasUnique();
         }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        public static Guid
+        GetKey(ITenant tenant)
+        {
+            return tenant.PrimaryId;
+        }
     }
 }
 

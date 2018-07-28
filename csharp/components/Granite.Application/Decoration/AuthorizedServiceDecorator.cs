@@ -7,6 +7,7 @@ using Castle.DynamicProxy;
 using Granite.Application.Shared;
 using Granite.Application.Tenant;
 using Granite.Common.Access;
+using Granite.Common.Injection;
 using Granite.ProvidedService.Transfer;
 using Strata.Application.Decoration;
 using Strata.Domain.UnitOfWork;
@@ -23,8 +24,9 @@ namespace Granite.Application.Decoration
     class AuthorizedServiceDecorator:
         ServiceDecorator
     {
-        private ITenantManager        itsManager;
-        private IAccessTokenRefresher itsRefresher;
+        private ITenantManager           itsManager;
+        private IAccessTokenRefresher    itsRefresher;
+        private IClientIpAddressRecorder itsRecorder;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -39,15 +41,17 @@ namespace Granite.Application.Decoration
         ///
         public
         AuthorizedServiceDecorator(
-            IUnitOfWorkProvider   provider,
-            ILogger               logger,
-            ITenantManager        manager,
-            IAccessTokenRefresher refresher,
-            int                   maxRetries):
+            IUnitOfWorkProvider      provider,
+            ILogger                  logger,
+            ITenantManager           manager,
+            IAccessTokenRefresher    refresher,
+            IClientIpAddressRecorder recorder,
+            int                      maxRetries):
             base(provider,logger,maxRetries)
         {
             itsManager   = manager;
             itsRefresher = refresher;
+            itsRecorder  = recorder;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -64,6 +68,7 @@ namespace Granite.Application.Decoration
             tokenProvider = invocation.GetAccessTokenProvider();
             idProvider    = invocation.GetSessionIdProvider();
 
+            itsRecorder.RecordClientIpAddress();
             itsManager.ActivateTenant(tokenProvider,idProvider);
 
             if (CanAuthorize(authorizer,tokenProvider))

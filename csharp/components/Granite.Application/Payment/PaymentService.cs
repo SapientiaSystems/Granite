@@ -4,9 +4,6 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.Payment;
-using Strata.Application.Service;
-using Strata.Domain.UnitOfWork;
-using Strata.Foundation.Logging;
 using SystemEx.Injection;
 
 namespace Granite.Application.Payment
@@ -17,17 +14,38 @@ namespace Granite.Application.Payment
     ///  
     public
     class PaymentService:
-        AbstractService,
         IPaymentService
     {
+        private IPaymentProcessor itsProcessor;
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         /// 
         [Inject]
         public
-        PaymentService(IUnitOfWorkProvider provider,ILogger logger) :
-            base(provider,logger) {}
+        PaymentService(IPaymentProcessor processor)
+        {
+            itsProcessor = processor;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public CreatePlanReply
+        CreatePlan(CreatePlanRequest request)
+        {
+            return itsProcessor.CreatePlan(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public DeletePlanReply
+        DeletePlan(DeletePlanRequest request)
+        {
+            return itsProcessor.DeletePlan(request);
+        }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
@@ -35,7 +53,7 @@ namespace Granite.Application.Payment
         public CreateAccountReply 
         CreateAccount(CreateAccountRequest request)
         {
-            return new CreateAccountReply();
+            return itsProcessor.CreateAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -44,16 +62,25 @@ namespace Granite.Application.Payment
         public UpdateAccountReply 
         UpdateAccount(UpdateAccountRequest request)
         {
-            return new UpdateAccountReply();
+            return itsProcessor.UpdateAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public DeleteAccountReply 
+        public DeleteAccountReply
         DeleteAccount(DeleteAccountRequest request)
         {
-            return new DeleteAccountReply();
+            return itsProcessor.DeleteAccount(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public GetAccountReply 
+        GetAccount(GetAccountRequest request)
+        {
+            return itsProcessor.GetAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -62,7 +89,7 @@ namespace Granite.Application.Payment
         public CreateSubscriptionReply 
         CreateSubscription(CreateSubscriptionRequest request)
         {
-            return new CreateSubscriptionReply();
+            return itsProcessor.CreateSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -71,16 +98,25 @@ namespace Granite.Application.Payment
         public UpdateSubscriptionReply 
         UpdateSubscription(UpdateSubscriptionRequest request)
         {
-            return new UpdateSubscriptionReply();
+            return itsProcessor.UpdateSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public DeleteSubscriptionReply 
+        public DeleteSubscriptionReply
         DeleteSubscription(DeleteSubscriptionRequest request)
         {
-            return new DeleteSubscriptionReply();
+            return itsProcessor.DeleteSubscription(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public GetSubscriptionReply 
+        GetSubscription(GetSubscriptionRequest request)
+        {
+            return itsProcessor.GetSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -89,7 +125,7 @@ namespace Granite.Application.Payment
         public MakePaymentReply 
         MakePayment(MakePaymentRequest request)
         {
-            return new MakePaymentReply();
+            return itsProcessor.MakePayment(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -98,7 +134,7 @@ namespace Granite.Application.Payment
         public MakeRefundReply 
         MakeRefund(MakeRefundRequest request)
         {
-            return new MakeRefundReply();
+            return itsProcessor.MakeRefund(request);
         }
     }
 }

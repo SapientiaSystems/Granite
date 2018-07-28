@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Strata.Foundation.Transfer;
 using System.Runtime.Serialization;
 
 namespace Granite.RequiredService.Payment
@@ -13,8 +14,11 @@ namespace Granite.RequiredService.Payment
     ///  
     [DataContract]
     public
-    class DeleteExternalAccountRequest
+    class DeleteExternalAccountRequest:
+        ServiceRequest
     {
+        [DataMember]
+        public string ExternalAccountId { get; set; }
     }
 }
 

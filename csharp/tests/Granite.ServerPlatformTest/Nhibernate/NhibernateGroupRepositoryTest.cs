@@ -22,7 +22,7 @@ namespace Granite.ServerPlatform.Nhibernate
         protected override IModule 
         GetPersistenceModule()
         {
-            return new NhibernateModule();
+            return new GraniteServerPlatformModule();
         }
 
     }

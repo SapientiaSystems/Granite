@@ -20,17 +20,17 @@ namespace Granite.ProvidedService.Profile
         GraniteRequest
     {
         [DataMember]
-        public bool ProfileOfCurrentUser { get; set; }
+        public bool GetProfileOfCurrentUser { get; set; }
         [DataMember]
-        public Guid ProfileIdToGet { get; set; }
+        public Guid ProfileIdOfProfileToGet { get; set; }
         [DataMember]
         public Guid UserIdOfProfileToGet { get; set; }
 
         public
         GetProfileRequest()
         {
-            ProfileOfCurrentUser = false;
-            ProfileIdToGet = Guid.Empty;
+            GetProfileOfCurrentUser = false;
+            ProfileIdOfProfileToGet = Guid.Empty;
             UserIdOfProfileToGet = Guid.Empty;
         }
     }

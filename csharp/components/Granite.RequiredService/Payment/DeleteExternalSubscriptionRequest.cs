@@ -15,6 +15,7 @@ namespace Granite.RequiredService.Payment
     public
     class DeleteExternalSubscriptionRequest
     {
+        public string ExternalSubscriptionId { get; set; }
     }
 }
 

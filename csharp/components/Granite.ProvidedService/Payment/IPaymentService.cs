@@ -16,12 +16,31 @@ namespace Granite.ProvidedService.Payment
     public
     interface IPaymentService
     {
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
         [OperationContract]
-        [Authorize(Roles = "GraniteGuest")]
+        [Authorize(Roles = "GraniteAdministrator")]
+        CreatePlanReply
+        CreatePlan(CreatePlanRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        [Authorize(Roles = "GraniteAdministrator")]
+        DeletePlanReply
+        DeletePlan(DeletePlanRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         CreateAccountReply
         CreateAccount(CreateAccountRequest request);
 
@@ -48,7 +67,16 @@ namespace Granite.ProvidedService.Payment
         /// </summary>
         ///  
         [OperationContract]
-        [Authorize(Roles = "GraniteGuest")]
+        [Authorize(Roles = "GraniteUser")]
+        GetAccountReply
+        GetAccount(GetAccountRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
         CreateSubscriptionReply
         CreateSubscription(CreateSubscriptionRequest request);
 
@@ -69,6 +97,15 @@ namespace Granite.ProvidedService.Payment
         [Authorize(Roles = "GraniteUser")]
         DeleteSubscriptionReply
         DeleteSubscription(DeleteSubscriptionRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        [Authorize(Roles = "GraniteUser")]
+        GetSubscriptionReply
+        GetSubscription(GetSubscriptionRequest request);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>

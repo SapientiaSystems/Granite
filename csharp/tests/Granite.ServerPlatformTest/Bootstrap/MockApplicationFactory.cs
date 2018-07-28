@@ -9,6 +9,7 @@ using Granite.Common.Verification;
 using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
 using Granite.Domain.Role;
+using Granite.Domain.Shared;
 using Granite.Domain.User;
 using Granite.ProvidedService.Payment;
 using Granite.ProvidedService.Profile;
@@ -52,8 +53,7 @@ namespace Granite.ServerPlatform.Bootstrap
         {
             IList<IModule> modules = new List<IModule>();
 
-            modules.Add(new NhibernateModule());
-            modules.Add(new ActiveDirectoryModule());
+            modules.Add(new GraniteServerPlatformModule());
             modules.Add(new FakeUtilityModule());
             modules.Add(
                 new GraniteDomainModule<
@@ -61,6 +61,7 @@ namespace Granite.ServerPlatform.Bootstrap
                     GraniteConstraintsProvider,
                     GraniteUserFactory>());
             modules.Add(new GraniteApplicationModule());
+            modules.Add(new TestGeneratorModule());
 
             return modules;
         }

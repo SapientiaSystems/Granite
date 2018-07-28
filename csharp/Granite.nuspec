@@ -23,6 +23,7 @@
 			<dependency id="Ninject.Web.WebApi" version="3.3.0.0"/>
 			<dependency id="WebApiContrib.IoC.Ninject" version="0.9.3"/>
 			<dependency id="Swashbuckle.Core" version="5.6.0"/>
+			<dependency id="AutoMapper" version="7.0.0"/>
 
 			<dependency id="Microsoft.AspNet.WebApi" version="5.2.3"/>           
 			<dependency id="Microsoft.AspNet.WebApi.Core" version="5.2.3"/>           

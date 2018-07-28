@@ -28,12 +28,26 @@ namespace Granite.Domain.Payment
             set { PrimaryId = value; }
         }
 
-        public virtual Guid        TenantId { get; set; }
+        public virtual Guid        AccountId { get; set; }
+        public virtual Guid        PlanId { get; set; }
         public virtual Guid        UserId { get; set; }
 
         public virtual string      ExternalSubscriptionId { get; set; }
-        public virtual string      SubscriptionType { get; set; }
-        public virtual PaymentPlan Plan { get; set; }
+        public virtual string      ExternalPlanId { get; set; }
+
+        public virtual DateTime    InitialPaymentDate { get; set; }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        public
+        StandardSubscription()
+        {
+            ExternalSubscriptionId = null;
+            ExternalPlanId = null;
+            InitialPaymentDate = DateTime.Now;
+        }
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>

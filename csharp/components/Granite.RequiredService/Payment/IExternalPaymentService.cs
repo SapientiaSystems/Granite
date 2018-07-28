@@ -15,6 +15,23 @@ namespace Granite.RequiredService.Payment
     public
     interface IExternalPaymentService
     {
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        CreateExternalPlanReply
+        CreateExternalPlan(CreateExternalPlanRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        DeleteExternalPlanReply
+        DeleteExternalPlan(DeleteExternalPlanRequest request);
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
@@ -38,6 +55,14 @@ namespace Granite.RequiredService.Payment
         [OperationContract]
         DeleteExternalAccountReply
         DeleteExternalAccount(DeleteExternalAccountRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
+        GetExternalAccountReply
+        GetExternalAccount(GetExternalAccountRequest request);
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>

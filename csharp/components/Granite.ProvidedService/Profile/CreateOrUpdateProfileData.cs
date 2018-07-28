@@ -21,6 +21,8 @@ namespace Granite.ProvidedService.Profile
         [DataMember]
         public Guid          UserId { get; set; }
         [DataMember]
+        public string        UserName { get; set; }
+        [DataMember]
         public PersonName    Name { get; set; }
         [DataMember]
         public string        JobTitle { get; set; }

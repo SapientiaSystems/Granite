@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.Transfer;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Payment
@@ -17,6 +18,7 @@ namespace Granite.ProvidedService.Payment
     class DeleteAccountReply:
         GraniteReply
     {
+        public Guid DeletedAccountId { get; set; }
     }
 }
 

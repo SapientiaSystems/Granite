@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 
+using Strata.Foundation.Utility;
 using System.Collections.Generic;
 
 namespace Granite.Domain.Role
@@ -34,11 +35,31 @@ namespace Granite.Domain.Role
         /// <summary>
         /// </summary>
         ///  
+        internal
+        StandardRole(StandardRole other)
+        {
+            RoleName = other.RoleName;
+            IncludedRoles = new HashSet<IRole>(other.IncludedRoles);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         public
         StandardRole(string roleName,params IRole[] includedRoles)
         {
             RoleName      = roleName;
             IncludedRoles = new HashSet<IRole>(includedRoles);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public ICopyable
+        MakeCopy()
+        {
+            return new StandardRole(this);
         }
 
         //////////////////////////////////////////////////////////////////////

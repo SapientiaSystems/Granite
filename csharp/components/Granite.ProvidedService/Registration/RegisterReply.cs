@@ -7,7 +7,6 @@ using Granite.ProvidedService.Payment;
 using Granite.ProvidedService.Profile;
 using Granite.ProvidedService.Transfer;
 using Granite.ProvidedService.User;
-using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Registration
@@ -27,6 +26,8 @@ namespace Granite.ProvidedService.Registration
         public UserData         NewUser { get; set; }
         [DataMember]
         public ProfileData      NewProfile { get; set; }
+        [DataMember]
+        public AccountData      NewAccount { get; set; }
         [DataMember]
         public SubscriptionData NewSubscription { get; set; }
     }

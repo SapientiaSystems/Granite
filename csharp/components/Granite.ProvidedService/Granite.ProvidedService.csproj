@@ -69,6 +69,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Payment\AccountData.cs" />
+    <Compile Include="Payment\CreatePlanData.cs" />
+    <Compile Include="Payment\CreatePlanRequest.cs" />
+    <Compile Include="Payment\CreatePlanReply.cs" />
+    <Compile Include="Payment\DeletePlanRequest.cs" />
+    <Compile Include="Payment\DeletePlanReply.cs" />
+    <Compile Include="Payment\GetAccountReply.cs" />
+    <Compile Include="Payment\GetSubscriptionReply.cs" />
+    <Compile Include="Payment\GetSubscriptionRequest.cs" />
+    <Compile Include="Payment\GetAccountRequest.cs" />
+    <Compile Include="Payment\UpdateCreditCardData.cs" />
+    <Compile Include="Payment\CreateCreditCardData.cs" />
+    <Compile Include="Payment\UpdateAccountData.cs" />
+    <Compile Include="Payment\CreateAccountData.cs" />
     <Compile Include="Payment\CreateSubscriptionData.cs" />
     <Compile Include="Payment\MakeRefundReply.cs" />
     <Compile Include="Payment\MakePaymentReply.cs" />
@@ -80,6 +94,7 @@
     <Compile Include="Payment\DeleteAccountReply.cs" />
     <Compile Include="Payment\DeleteSubscriptionRequest.cs" />
     <Compile Include="Payment\DeleteAccountRequest.cs" />
+    <Compile Include="Payment\PlanData.cs" />
     <Compile Include="Payment\SubscriptionData.cs" />
     <Compile Include="Payment\UpdateSubscriptionReply.cs" />
     <Compile Include="Payment\UpdateAccountReply.cs" />

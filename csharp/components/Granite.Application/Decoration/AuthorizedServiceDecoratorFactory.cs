@@ -5,6 +5,7 @@
 
 using Granite.Application.Shared;
 using Granite.Application.Tenant;
+using Granite.Common.Access;
 using Strata.Application.Decoration;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
@@ -44,6 +45,7 @@ namespace Granite.Application.Decoration
                     Container.GetInstance<ILogger>(),
                     Container.GetInstance<ITenantManager>(),
                     Container.GetInstance<IAccessTokenRefresher>(),
+                    Container.GetInstance<IClientIpAddressRecorder>(),
                     MaxRetries);
         }
     }

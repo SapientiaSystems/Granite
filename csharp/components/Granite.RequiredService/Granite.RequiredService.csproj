@@ -74,12 +74,18 @@
     <Compile Include="Authentication\IAuthenticationService.cs" />
     <Compile Include="Payment\CreateExternalAccountReply.cs" />
     <Compile Include="Payment\CreateExternalAccountRequest.cs" />
+    <Compile Include="Payment\CreateExternalPlanReply.cs" />
     <Compile Include="Payment\CreateExternalSubscriptionReply.cs" />
+    <Compile Include="Payment\CreateExternalPlanRequest.cs" />
     <Compile Include="Payment\CreateExternalSubscriptionRequest.cs" />
     <Compile Include="Payment\DeleteExternalAccountReply.cs" />
     <Compile Include="Payment\DeleteExternalAccountRequest.cs" />
+    <Compile Include="Payment\DeleteExternalPlanReply.cs" />
     <Compile Include="Payment\DeleteExternalSubscriptionReply.cs" />
+    <Compile Include="Payment\DeleteExternalPlanRequest.cs" />
     <Compile Include="Payment\DeleteExternalSubscriptionRequest.cs" />
+    <Compile Include="Payment\GetExternalAccountReply.cs" />
+    <Compile Include="Payment\GetExternalAccountRequest.cs" />
     <Compile Include="Payment\IExternalPaymentService.cs" />
     <Compile Include="Payment\MakeExternalPaymentReply.cs" />
     <Compile Include="Payment\MakeExternalPaymentRequest.cs" />
@@ -105,6 +111,10 @@
     <ProjectReference Include="..\Granite.Common\Granite.Common.csproj">
       <Project>{333f6f67-bd77-4c3e-98f3-4aa6ae0724ed}</Project>
       <Name>Granite.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Granite.ProvidedService\Granite.ProvidedService.csproj">
+      <Project>{976F265B-93C1-44EC-BD95-081C7FFC7B78}</Project>
+      <Name>Granite.ProvidedService</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

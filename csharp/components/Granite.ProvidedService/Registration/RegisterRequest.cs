@@ -29,6 +29,8 @@ namespace Granite.ProvidedService.Registration
         public CreateOrUpdateProfileData      
                                       ProfileToCreate { get; set; }
         [DataMember]
+        public CreateAccountData      AccountToCreate { get; set; }
+        [DataMember]
         public CreateSubscriptionData SubscriptionToCreate { get; set; }
     }
 }

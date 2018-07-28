@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoMapper, Version=7.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\AutoMapper.7.0.0\lib\net45\AutoMapper.dll</HintPath>
+    </Reference>
     <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
@@ -81,17 +84,25 @@
     <Compile Include="Access\Authorizer.cs" />
     <Compile Include="Decoration\InvocationExtension.cs" />
     <Compile Include="Configuration\GraniteApplicationModule.cs" />
+    <Compile Include="Mapper\MapperProvider.cs" />
+    <Compile Include="Mapper\MessageAppender.cs" />
+    <Compile Include="Mapper\UserConverter.cs" />
+    <Compile Include="Payment\IPaymentProcessor.cs" />
+    <Compile Include="Payment\PaymentProcessor.cs" />
     <Compile Include="Payment\PaymentService.cs" />
     <Compile Include="Profile\IProfileProcessor.cs" />
     <Compile Include="Profile\ProfileProcessor.cs" />
     <Compile Include="Profile\ProfileService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registration\IRegistrationProcessor.cs" />
+    <Compile Include="Registration\RegistrationProcessor.cs" />
+    <Compile Include="Registration\RegistrationService.cs" />
     <Compile Include="Service\AuthorizedService.cs" />
+    <Compile Include="Session\ISessionProcessor.cs" />
+    <Compile Include="Session\SessionProcessor.cs" />
     <Compile Include="Session\SessionService.cs" />
     <Compile Include="Shared\AccessTokenRefresher.cs" />
     <Compile Include="Shared\IAccessTokenRefresher.cs" />
-    <Compile Include="Shared\IUserMapper.cs" />
-    <Compile Include="Shared\UserMapper.cs" />
     <Compile Include="Tenant\ITenantManager.cs" />
     <Compile Include="Tenant\TenantManager.cs" />
     <Compile Include="User\IUserProcessor.cs" />

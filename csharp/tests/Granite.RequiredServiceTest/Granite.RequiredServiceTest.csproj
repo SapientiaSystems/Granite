@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\AuthenticationServiceTest.cs" />
+    <Compile Include="Payment\ExternalPaymentServiceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="User\ExternalUserServiceTest.cs" />
   </ItemGroup>
@@ -81,9 +82,17 @@
       <Project>{333f6f67-bd77-4c3e-98f3-4aa6ae0724ed}</Project>
       <Name>Granite.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\components\Granite.ProvidedService\Granite.ProvidedService.csproj">
+      <Project>{976F265B-93C1-44EC-BD95-081C7FFC7B78}</Project>
+      <Name>Granite.ProvidedService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\components\Granite.RequiredService\Granite.RequiredService.csproj">
       <Project>{cc2004ee-4c4d-4d81-9efd-1e2dbb7ba32a}</Project>
       <Name>Granite.RequiredService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Granite.DomainTest\Granite.DomainTest.csproj">
+      <Project>{12915EBD-6E45-400D-AFAC-17E8D72C9AA2}</Project>
+      <Name>Granite.DomainTest</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

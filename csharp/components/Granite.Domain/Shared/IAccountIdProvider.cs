@@ -1,27 +1,20 @@
 ﻿//  ##########################################################################
-//  # File Name: IUserMapper.cs
+//  # File Name: IAccountIdProvider.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Domain.User;
-using Granite.ProvidedService.User;
 using System;
 
-namespace Granite.Application.Shared
+namespace Granite.Domain.Shared
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// </summary>
     ///  
     public
-    interface IUserMapper
+    interface IAccountIdProvider
     {
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        UserData
-        Map(IUser user);
+        Guid AccountId { get; }
     }
 }
 

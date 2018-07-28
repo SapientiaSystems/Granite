@@ -6,6 +6,7 @@
 using Granite.Domain.Shared;
 using Granite.Domain.User;
 using Strata.Domain.Shared;
+using Strata.Foundation.Utility;
 using Strata.Foundation.Value;
 using System;
 
@@ -17,6 +18,7 @@ namespace Granite.Domain.Tenant
     ///  
     public
     interface ITenant:
+        ICopyable,
         IEntity<Guid>,
         ITenantIdProvider,
         IDomainEventSource<

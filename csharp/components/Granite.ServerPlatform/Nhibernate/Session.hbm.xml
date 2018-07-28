@@ -17,6 +17,7 @@
         <property name="LastModified" column="LastModified" not-null="false"/>
 
         <property name="UserId" column="UserId" index="UserId" not-null="true"/>
+        <property name="ClientIpAddress" column="ClientIpAddress" not-null="false"/>
         <property name="AccessToken" column="AccessToken" index="AccessToken" not-null="false"/>
         
         <property name="LastRefresh" column="LastRefresh" not-null="false"/>

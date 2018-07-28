@@ -3,6 +3,8 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Payment;
+using Strata.Foundation.Transfer;
 using System.Runtime.Serialization;
 
 namespace Granite.RequiredService.Payment
@@ -13,25 +15,13 @@ namespace Granite.RequiredService.Payment
     ///  
     [DataContract]
     public
-    class CreateExternalAccountRequest
+    class CreateExternalAccountRequest:
+        ServiceRequest
     {
         [DataMember]
-        public string Email { get; set;  }
-
+        public string            Description { get; set; }
         [DataMember]
-        public string Description { get; set; }
-
-        [DataMember]
-        public string CreditCardNumber { get; set; }
-
-        [DataMember]
-        public int ExpirationYear { get; set; }
-
-        [DataMember]
-        public int ExpirationMonth { get; set; }
-
-        [DataMember]
-        public string SecurityCode { get; set; }
+        public CreateAccountData AccountToCreate { get; set; }
     }
 }
 

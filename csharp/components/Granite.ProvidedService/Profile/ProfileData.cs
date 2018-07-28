@@ -17,6 +17,8 @@ namespace Granite.ProvidedService.Profile
     class ProfileData
     {
         [DataMember]
+        public Guid ProfileId { get; set; }
+        [DataMember]
         public Guid UserId { get; set; }
     }
 }

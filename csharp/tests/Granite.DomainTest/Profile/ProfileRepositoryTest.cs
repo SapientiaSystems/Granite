@@ -41,14 +41,7 @@ namespace Granite.Domain.Profile
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = 
-                new NinjectContainer(
-                    GetPersistenceModule(),
-                    new GraniteDomainModule<
-                        GraniteRolesProvider,
-                        GraniteConstraintsProvider,
-                        GraniteUserFactory>(),
-                    new TestGeneratorModule());
+            IContainer container = CreateContainer();
 
             itsTarget = container.GetInstance<IProfileRepository>();
             itsUserRepository = container.GetInstance<IUserRepository>();
@@ -205,11 +198,8 @@ namespace Granite.Domain.Profile
 
         }
 
-
-        protected abstract IModule
-        GetPersistenceModule();
-
-
+        protected abstract IContainer
+        CreateContainer();
     }
 }
 

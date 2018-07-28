@@ -44,14 +44,7 @@ namespace Granite.Domain.User
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = 
-                new NinjectContainer(
-                    GetPersistenceModule(),
-                    new GraniteDomainModule<
-                        GraniteRolesProvider,
-                        GraniteConstraintsProvider,
-                        GraniteUserFactory>(),
-                    new TestGeneratorModule());
+            IContainer container = CreateContainer();
             IUnitOfWork unitOfWork = null;
 
             itsProvider = container.GetInstance<IUnitOfWorkProvider>();
@@ -113,8 +106,8 @@ namespace Granite.Domain.User
             Assert.AreEqual(2,roles3.Count);
         }
 
-        protected abstract IModule
-        GetPersistenceModule();
+        protected abstract IContainer
+        CreateContainer();
 
 
     }

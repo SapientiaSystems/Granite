@@ -1,0 +1,66 @@
+{
+  "RegistrationType": 2,
+  "UserToCreate": {
+    "UserName": "johnlieb",
+    "Password": "foobar!",
+    "Email": {
+      "email": "johnliebenau@gmail.com"
+    },
+    "UseExistingTenant": false,
+    "TenantId": "00000000-0000-0000-0000-000000000000",
+    "HasSubscriptionType": true,
+    "SubscriptionType": "Level 1"
+  },
+  "ProfileToCreate": {
+    "UserId": "00000000-0000-0000-0000-000000000000",
+    "UserName": "johnlieb",
+    "Name": {
+      "FirstName": "John",
+      "MiddleName": "Friedrich",
+      "LastName": "Liebenau"
+    },
+    "JobTitle": "Chief Software Architect",
+    "Email": {
+      "email": "johnliebenau@gmail.com"
+    },
+    "Address": {
+      "StreetAddress": "22616 Fern Ave",
+      "City": "Torrance",
+      "State": "CA",
+      "PostalCode": "90501",
+      "CountryCode": "USA"
+    },
+    "Phone": {
+      "phone": "310.534.2561"
+    }
+  },
+  "AccountToCreate": {
+    "UserIdOfAccountToCreate": "00000000-0000-0000-0000-000000000000",
+    "Email": "johnliebenau@gmail.com",
+    "Description": "Test Account",
+    "CreditCardToCreate": {
+      "CardHolderName": "John Liebenau",
+      "BillingAddress": {
+      "StreetAddress": "22616 Fern Ave",
+      "City": "Torrance",
+      "State": "CA",
+      "PostalCode": "90501",
+      "CountryCode": "USA"
+      },
+      "CardNumber": "4242424242424242",
+      "ExpirationMonth": 7,
+      "ExpirationYear": 2021,
+      "SecurityCode": "123"
+    }
+  },
+  "SubscriptionToCreate": {
+    "SubscriptionType": "Level 1",
+    "UserId": "00000000-0000-0000-0000-000000000000",
+    "AccountId": "00000000-0000-0000-0000-000000000000"
+  },
+    "SessionId": "fa0d05f1-c8b5-4d9f-9c13-a92b00f24728",
+    "AccessToken": "EWRUwtr9PIaTJuozLS5xQ4t0RYApRTEa",
+  "CorrelationId": "00000000-1111-0000-0000-000000000000",
+  "SentTimestamp": 0,
+  "ReceivedTimestamp": 0
+}

@@ -3,6 +3,8 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Payment;
+using Strata.Foundation.Transfer;
 using System;
 using System.Runtime.Serialization;
 
@@ -14,24 +16,23 @@ namespace Granite.RequiredService.Payment
     ///  
     [DataContract]
     public
-    class UpdateExternalAccountRequest
+    class UpdateExternalAccountRequest:
+        ServiceRequest
     {
         [DataMember]
-        public string        AccountId { get; set; }
+        public string               ExternalAccountId { get; set; }
         [DataMember]
-        public string        PaymentMethodId { get; set; }
+        public string               ExternalPaymentMethodId { get; set; }
         [DataMember]
-        public string        Email { get; set; }
+        public string               Email { get; set; }
         [DataMember]
-        public string        Description { get; set; }
+        public string               Description { get; set; }
         [DataMember]
-        public string        CreditCardNumber { get; set; }
+        public bool                 ReplaceCreditCard { get; set; }
         [DataMember]
-        public Nullable<int> ExpirationYear { get; set; }
+        public CreateCreditCardData CreditCardToCreate { get; set; }
         [DataMember]
-        public Nullable<int> ExpirationMonth { get; set; }
-        [DataMember]
-        public string        SecurityCode { get; set; }
+        public UpdateCreditCardData CreditCardToUpdate { get; set; }
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -47,9 +48,9 @@ namespace Granite.RequiredService.Payment
         /// </summary>
         ///  
         public bool
-        HasAccountId()
+        HasExternalAccountId()
         {
-            return !string.IsNullOrEmpty(AccountId);
+            return !string.IsNullOrEmpty(ExternalAccountId);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -57,9 +58,9 @@ namespace Granite.RequiredService.Payment
         /// </summary>
         ///  
         public bool
-        HasPaymentMethodId()
+        HasExternalPaymentMethodId()
         {
-            return !string.IsNullOrEmpty(PaymentMethodId);
+            return !string.IsNullOrEmpty(ExternalPaymentMethodId);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -80,46 +81,6 @@ namespace Granite.RequiredService.Payment
         HasDescription()
         {
             return !string.IsNullOrEmpty(Description);
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        public bool
-        HasCreditCardNumber()
-        {
-            return !string.IsNullOrEmpty(CreditCardNumber);
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        public bool
-        HasExpirationYear()
-        {
-            return ExpirationYear.HasValue;
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        public bool
-        HasExpirationMonth()
-        {
-            return ExpirationMonth.HasValue;
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        public bool
-        HasSecurityCode()
-        {
-            return !string.IsNullOrEmpty(SecurityCode);
         }
     }
 }

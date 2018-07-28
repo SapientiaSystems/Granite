@@ -25,10 +25,11 @@ namespace Granite.Domain.Shared
         public override void 
         Initialize()
         {
+            /*
             Bind<IVerificationCodeGenerator>()
                 .ToType<VerificationCodeGenerator>()
                 .WithScope(DefaultScope);
-
+                */
             Bind<ITestUserGenerator>()
                 .ToType<TestUserGenerator>()
                 .WithScope(DefaultScope);

@@ -118,8 +118,7 @@ namespace Granite.ServerPlatform.Bootstrap
         {
             IList<IModule> modules = new List<IModule>();
 
-            modules.Add(new NhibernateModule());
-            modules.Add(new ActiveDirectoryModule());
+            modules.Add(new GraniteServerPlatformModule());
             modules.Add(
                 new VerificationModule<HtmlVerificationMessageGenerator>());
             modules.Add(

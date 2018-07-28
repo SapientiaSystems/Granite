@@ -18,7 +18,8 @@ namespace Granite.Application.Access
     class Authorizer:
         IAuthorizer
     {
-        private ISessionRepository itsSessions;
+        private ISessionRepository       itsSessions;
+        private IClientIpAddressRecorder itsRecorder;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -26,9 +27,12 @@ namespace Granite.Application.Access
         ///  
         [Inject]
         public
-        Authorizer(ISessionRepository sessions)
+        Authorizer(
+            ISessionRepository       sessions,
+            IClientIpAddressRecorder recorder)
         {
             itsSessions = sessions;
+            itsRecorder = recorder;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -50,6 +54,8 @@ namespace Granite.Application.Access
                     new AuthorizationException(
                         "Authorization failed: session has been closed.");
 
+            ValidateClientIpAddress(session);
+
             if (roles.Length > 0)
             {
                 bool matchedRole = false;
@@ -65,6 +71,33 @@ namespace Granite.Application.Access
                             "user not in any of the specified roles: " +
                             ToString(roles));
             }
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        private void
+        ValidateClientIpAddress(ISession session)
+        {
+            if (!session.HasClientIpAddress)
+                return;
+
+            if (!itsRecorder.HasClientIpAddress)
+                throw
+                    new AuthorizationException(
+                        "Authorization failed: " +
+                        "could not obtain client ip address from request.");
+
+            if (session.ClientIpAddress != itsRecorder.ClientIpAddress)
+                throw
+                    new AuthorizationException(
+                        string.Format(
+                            "Authorization failed: " +
+                            "request's client ip address {0} " +
+                            "does not match session's client ip address {1}",
+                            itsRecorder.ClientIpAddress,
+                            session.ClientIpAddress));
         }
 
         //////////////////////////////////////////////////////////////////////

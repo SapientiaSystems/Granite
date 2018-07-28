@@ -1,8 +1,9 @@
 ﻿//  ##########################################################################
-//  # File Name: UserMapper.cs
+//  # File Name: UserConverter.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using AutoMapper;
 using Granite.Domain.Group;
 using Granite.Domain.Role;
 using Granite.Domain.User;
@@ -11,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Granite.Application.Shared
+namespace Granite.Application.Mapper
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
@@ -19,32 +20,30 @@ namespace Granite.Application.Shared
     /// </summary>
     ///  
     public
-    class UserMapper:
-        IUserMapper
+    class UserConverter:
+        ITypeConverter<IUser,UserData>
     {
+
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///
         public UserData 
-        Map(IUser user)
+        Convert(IUser source,UserData destination,ResolutionContext context)
         {
-            if (user == null)
-                throw
-                    new NullReferenceException("Cannot map a null user.");
+            if (source == null)
+                return null;
 
-            return
-                new UserData()
-                {
-                    TenantId = user.TenantId,
-                    UserId = user.UserId,
-                    UserName = user.UserName,
-                    Email = 
-                        user.Email != null 
-                            ? user.Email.ToString()
-                            : null,
-                    Roles = GetRoles(user),
-                    Groups = GetGroups(user)
-                };
+            destination.TenantId = source.TenantId;
+            destination.UserId = source.UserId;
+            destination.UserName = source.UserName;
+            destination.Email =
+                source.Email != null
+                    ? source.Email.ToString()
+                    : null;
+            destination.Roles = GetRoles(source);
+            destination.Groups = GetGroups(source);
+
+            return destination;
         }
 
         //////////////////////////////////////////////////////////////////////

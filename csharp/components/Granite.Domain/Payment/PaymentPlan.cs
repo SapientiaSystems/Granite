@@ -4,7 +4,7 @@
 //  ##########################################################################
 
 
-using Strata.Foundation.Value;
+using Granite.Common.Value;
 using System;
 
 namespace Granite.Domain.Payment

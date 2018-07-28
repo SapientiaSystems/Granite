@@ -18,10 +18,7 @@ namespace Granite.ProvidedService.Payment
         GraniteRequest
     {
         [DataMember]
-        public string Email { get; set; }
-
-        [DataMember]
-        public string Country { get; set; }
+        public CreateAccountData AccountToCreate { get; set; }
     }
 }
 

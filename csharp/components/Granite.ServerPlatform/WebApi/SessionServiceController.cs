@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Common.Access;
 using Granite.Common.Injection;
 using Granite.ProvidedService.Session;
 using System.Web.Http;
@@ -11,8 +12,6 @@ using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
 {
-    using RequireHttps = System.Web.Mvc.RequireHttpsAttribute;
-
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 
@@ -24,7 +23,8 @@ namespace Granite.ServerPlatform.WebApi
         ApiController,
         ISessionService
     {
-        private ISessionService itsImp;
+        private ISessionService          itsImp;
+        private IClientIpAddressRecorder itsRecorder;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -38,6 +38,10 @@ namespace Granite.ServerPlatform.WebApi
                 Global
                     .Container
                     .GetInstance<ISessionService>();
+            itsRecorder =
+                Global
+                    .Container
+                    .GetInstance<IClientIpAddressRecorder>();
         }
 
         //////////////////////////////////////////////////////////////////////

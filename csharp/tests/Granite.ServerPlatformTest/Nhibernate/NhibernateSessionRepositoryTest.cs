@@ -4,7 +4,9 @@
 //  ##########################################################################
 
 using Granite.Domain.Session;
+using Granite.ServerPlatform.Bootstrap;
 using NUnit.Framework;
+using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
 
 namespace Granite.ServerPlatform.Nhibernate
@@ -19,12 +21,14 @@ namespace Granite.ServerPlatform.Nhibernate
     class NhibernateSessionRepositoryTest:
         SessionRepositoryTest
     {
-        protected override IModule 
-        GetPersistenceModule()
+        protected override IContainer
+        CreateContainer()
         {
-            return new NhibernateModule();
-        }
+            IBootstrapper bootstrapper = new Bootstrapper();
 
+            bootstrapper.Run(new MockApplicationFactory());
+            return bootstrapper.Container;
+        }
     }
 }
 

@@ -37,6 +37,9 @@
     <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Antlr3.Runtime.3.5.1\lib\net40-client\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="AutoMapper, Version=7.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\AutoMapper.7.0.0\lib\net45\AutoMapper.dll</HintPath>
+    </Reference>
     <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
@@ -220,19 +223,28 @@
     <Compile Include="ActiveDirectory\Globals.cs" />
     <Compile Include="Bootstrap\GraniteApplicationFactory.cs" />
     <Compile Include="Bootstrap\GraniteStartStopController.cs" />
+    <Compile Include="Configuration\GraniteServerPlatformModule.cs" />
+    <Compile Include="InMemory\RoleReplicator.cs" />
+    <Compile Include="InMemory\TenantReplicator.cs" />
+    <Compile Include="InMemory\ContainsUserIdPredicate.cs" />
     <Compile Include="InMemory\UserNameEqualsPredicate.cs" />
     <Compile Include="InMemory\ExternalUserIdEqualsPredicate.cs" />
     <Compile Include="InMemory\InMemoryModule.cs" />
     <Compile Include="Nhibernate\ConstraintIdDictionaryType.cs" />
     <Compile Include="Nhibernate\GroupIdSetType.cs" />
-    <Compile Include="Nhibernate\NhibernateModule.cs" />
     <Compile Include="Nhibernate\GuidSetType.cs" />
+    <Compile Include="Nhibernate\PaymentPlanType.cs" />
     <Compile Include="Nhibernate\StringSetType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stripe\IExternalAccountProcessor.cs" />
+    <Compile Include="Stripe\IExternalPlanProcessor.cs" />
+    <Compile Include="Stripe\IExternalSubscriptionProcessor.cs" />
     <Compile Include="Stripe\IStripeContext.cs" />
+    <Compile Include="Stripe\StripePlanProcessor.cs" />
     <Compile Include="Stripe\StripeContext.cs" />
-    <Compile Include="Stripe\StripeAccountHelper.cs" />
+    <Compile Include="Stripe\StripeAccountProcessor.cs" />
     <Compile Include="Stripe\StripePaymentService.cs" />
+    <Compile Include="Stripe\StripeSubscriptionProcessor.cs" />
     <Compile Include="WebApi\AuthenticationFailureResult.cs" />
     <Compile Include="WebApi\ContentNegotiator.cs" />
     <Compile Include="WebApi\Authenticate.cs" />
@@ -240,8 +252,11 @@
     <Compile Include="WebApi\PaymentServiceController.cs" />
     <Compile Include="WebApi\RequireHttps.cs" />
     <Compile Include="WebApi\ResponseFilter.cs" />
+    <Compile Include="WebApi\RegistrationServiceController.cs" />
     <Compile Include="WebApi\SessionServiceController.cs" />
+    <Compile Include="WebApi\ProfileServiceController.cs" />
     <Compile Include="WebApi\UserServiceController.cs" />
+    <Compile Include="WebApi\WebHostedClientIpAddressRecorder.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Granite.Application\Granite.Application.csproj">
@@ -290,6 +305,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nhibernate\Profile.hbm.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Nhibernate\Account.hbm.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Nhibernate\Subscription.hbm.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Nhibernate\Plan.hbm.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

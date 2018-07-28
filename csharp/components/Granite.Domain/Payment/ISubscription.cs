@@ -18,7 +18,8 @@ namespace Granite.Domain.Payment
     interface ISubscription:
         IEntity<Guid>,
         ISubscriptionIdProvider,
-        ITenantIdProvider,
+        IAccountIdProvider,
+        IPlanIdProvider,
         IUserIdProvider,
         IDomainEventSource<
             ISubscription,
@@ -26,13 +27,14 @@ namespace Granite.Domain.Payment
             ISubscriptionDomainEventObserver>
     {
         new Guid    SubscriptionId { get; set; }
-        new Guid    TenantId { get; set; }
+        new Guid    AccountId { get; set; }
+        new Guid    PlanId { get; set; }
         new Guid    UserId { get; set; }
 
         string      ExternalSubscriptionId { get; set; }
-        string      SubscriptionType { get; set; }
+        string      ExternalPlanId { get; set; }
 
-        PaymentPlan Plan { get; set; }     
+        DateTime    InitialPaymentDate { get; set; }
     }
 }
 

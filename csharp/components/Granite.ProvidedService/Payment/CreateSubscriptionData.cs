@@ -16,6 +16,12 @@ namespace Granite.ProvidedService.Payment
     public
     class CreateSubscriptionData
     {
+        [DataMember]
+        public string            SubscriptionType { get; set; }
+        [DataMember]
+        public Guid              UserId { get; set; }
+        [DataMember]
+        public Guid              AccountId { get; set; }
     }
 }
 

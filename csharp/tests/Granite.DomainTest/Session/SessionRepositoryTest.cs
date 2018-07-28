@@ -42,14 +42,7 @@ namespace Granite.Domain.Session
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = 
-                new NinjectContainer(
-                    GetPersistenceModule(),
-                    new GraniteDomainModule<
-                        GraniteRolesProvider,
-                        GraniteConstraintsProvider,
-                        GraniteUserFactory>(),
-                    new TestGeneratorModule());
+            IContainer container = CreateContainer();
 
             itsTarget = container.GetInstance<ISessionRepository>();
             itsUserRepository = container.GetInstance<IUserRepository>();
@@ -201,9 +194,8 @@ namespace Granite.Domain.Session
         }
 
 
-        protected abstract IModule
-        GetPersistenceModule();
-
+        protected abstract IContainer
+        CreateContainer();
 
     }
 }

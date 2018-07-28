@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 using System;
+using Granite.Common.Access;
 using Granite.Domain.Session;
 using Granite.ProvidedService.Transfer;
 using SystemEx.Injection;
@@ -34,12 +35,15 @@ namespace Granite.Application.Shared
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public void 
+        public void
         RefreshIfNeeded(GraniteReply reply)
         {
             ISession session = null;
 
             if (reply.SessionId == Guid.Empty)
+                return;
+
+            if (NotAuthorized(reply))
                 return;
 
             session = itsSessions.GetUnique(reply.SessionId);
@@ -58,7 +62,19 @@ namespace Granite.Application.Shared
         /// <summary>
         /// </summary>
         ///  
-        private bool 
+        private bool
+        NotAuthorized(GraniteReply reply)
+        {
+            return
+                !reply.IsSuccessful &&
+                reply.ExceptionType == typeof(AuthorizationException).Name;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        private bool
         MustRefresh(ISession session)
         {
             return

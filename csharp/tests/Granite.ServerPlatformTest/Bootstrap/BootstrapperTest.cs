@@ -20,6 +20,9 @@ using Granite.Domain.Session;
 using Granite.Domain.Role;
 using Granite.Domain.Group;
 using Granite.Domain.Constraint;
+using Granite.Domain.Payment;
+using Granite.Domain.Profile;
+using Granite.ProvidedService.Registration;
 
 namespace Granite.ServerPlatform.Bootstrap
 {
@@ -71,6 +74,10 @@ namespace Granite.ServerPlatform.Bootstrap
             Assert.NotNull(itsContainer.GetInstance<IGroupRepository>());
             Assert.NotNull(itsContainer.GetInstance<IConstraintRepository>());
             Assert.NotNull(itsContainer.GetInstance<IUserRepository>());
+            Assert.NotNull(itsContainer.GetInstance<IPlanRepository>());
+            Assert.NotNull(itsContainer.GetInstance<IAccountRepository>());
+            Assert.NotNull(itsContainer.GetInstance<ISubscriptionRepository>());
+            Assert.NotNull(itsContainer.GetInstance<IProfileRepository>());
         }
 
         [Test]
@@ -83,7 +90,7 @@ namespace Granite.ServerPlatform.Bootstrap
             Assert.NotNull(itsContainer.GetInstance<ISessionService>());
             Assert.NotNull(itsContainer.GetInstance<IUserService>());
             Assert.NotNull(itsContainer.GetInstance<IPaymentService>());
-
+            Assert.NotNull(itsContainer.GetInstance<IRegistrationService>());
         }
     }
 }

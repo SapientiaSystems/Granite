@@ -4,8 +4,10 @@
 //  ##########################################################################
 
 using Strata.Domain.Shared;
+using Strata.Foundation.Utility;
 using Strata.Foundation.Value;
 using System;
+using System.Collections.Generic;
 
 namespace Granite.Domain.Tenant
 {
@@ -38,10 +40,38 @@ namespace Granite.Domain.Tenant
         /// </summary>
         ///  
         public
+        StandardTenant(StandardTenant other)
+        {
+            Observers = 
+                new HashSet<ITenantDomainEventObserver>(other.Observers);
+
+            PrimaryId = other.PrimaryId;
+            Version = other.Version;
+            Created = other.Created;
+            LastModified = other.LastModified;
+
+            TenantName = other.TenantName;
+            SecretKey = other.SecretKey;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        public
         StandardTenant(string name,HashedString key)
         {
             TenantName = name;
             SecretKey  = key;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public virtual ICopyable
+        MakeCopy()
+        {
+            return new StandardTenant(this);
         }
 
         //////////////////////////////////////////////////////////////////////

@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using AutoMapper;
 using Granite.Application.Service;
 using Granite.Application.Shared;
 using Granite.Common.Access;
@@ -46,7 +47,7 @@ namespace Granite.Application.User
         private ISessionRepository         itsSessionRepository;
         private IVerificationCodeGenerator itsGenerator;
         private IVerificationNotifier      itsNotifier;
-        private IUserMapper                itsMapper;
+        private IMapper                    itsMapper;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -63,7 +64,8 @@ namespace Granite.Application.User
             ISessionRepository         sessionRepository,
             IVerificationCodeGenerator generator,
             IVerificationNotifier      notifier,
-            ILogger                    logger):
+            ILogger                    logger,
+            IMapper                    mapper):
             base(provider,logger,sessionRepository)
         {
             itsUserFactory       = userFactory;
@@ -73,7 +75,7 @@ namespace Granite.Application.User
             itsSessionRepository = sessionRepository;
             itsGenerator         = generator;
             itsNotifier          = notifier;
-            itsMapper            = new UserMapper();
+            itsMapper            = mapper;
 
             itsUserRepository
                 .Observers
@@ -120,7 +122,7 @@ namespace Granite.Application.User
                 return
                     new CreateUserReply()
                     {
-                        NewUser = itsMapper.Map(user),
+                        NewUser = itsMapper.Map(user,new UserData()),
                         SuccessMessage =
                              string.Format(
                                 "Registration for user '{0}' has started. " +
@@ -242,7 +244,7 @@ namespace Granite.Application.User
                 new GetUserReply()
                 {
                     IsSuccessful = true,
-                    RequestedUser = itsMapper.Map(user)
+                    RequestedUser = itsMapper.Map(user,new UserData())
                 };
         }
 
@@ -403,7 +405,7 @@ namespace Granite.Application.User
             if (user == null)
                 throw
                     new AuthorizationException(
-                        "Invalid user: could find user from request");
+                        "Invalid user: could not find user from request");
 
             if (request.GetCurrentUser)
             {

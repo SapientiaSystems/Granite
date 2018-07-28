@@ -4,7 +4,6 @@
 //  ##########################################################################
 
 using Granite.RequiredService.Payment;
-using Stripe;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.Stripe
@@ -17,7 +16,9 @@ namespace Granite.ServerPlatform.Stripe
     class StripePaymentService:
         IExternalPaymentService
     {
-        private StripeAccountHelper itsAccountHelper;
+        private IExternalPlanProcessor         itsPlanProcessor;
+        private IExternalAccountProcessor      itsAccountProcessor;
+        private IExternalSubscriptionProcessor itsSubscriptionProcessor;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -25,12 +26,36 @@ namespace Granite.ServerPlatform.Stripe
         ///  
         [Inject]
         public
-        StripePaymentService(IStripeContext context)
+        StripePaymentService(
+            IStripeContext                 context,
+            IExternalPlanProcessor         planProcessor,
+            IExternalAccountProcessor      accountProcessor,
+            IExternalSubscriptionProcessor subscriptionProcessor)
         {
             if (!context.IsAuthenticated)
                 context.Authenticate();
 
-            itsAccountHelper = new StripeAccountHelper();
+            itsPlanProcessor         = planProcessor;
+            itsAccountProcessor      = accountProcessor;
+            itsSubscriptionProcessor = subscriptionProcessor;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public CreateExternalPlanReply
+        CreateExternalPlan(CreateExternalPlanRequest request)
+        {
+            return itsPlanProcessor.CreateExternalPlan(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public DeleteExternalPlanReply
+        DeleteExternalPlan(DeleteExternalPlanRequest request)
+        {
+            return itsPlanProcessor.DeleteExternalPlan(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -39,10 +64,7 @@ namespace Granite.ServerPlatform.Stripe
         public CreateExternalAccountReply
         CreateExternalAccount(CreateExternalAccountRequest request)
         {
-            CreateExternalAccountReply reply =
-                new CreateExternalAccountReply();
-
-            return itsAccountHelper.CreateExternalAccount(reply,request);
+            return itsAccountProcessor.CreateExternalAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -51,16 +73,7 @@ namespace Granite.ServerPlatform.Stripe
         public UpdateExternalAccountReply
         UpdateExternalAccount(UpdateExternalAccountRequest request)
         {
-            UpdateExternalAccountReply reply = 
-                new UpdateExternalAccountReply();
-
-            if (itsAccountHelper.MustUpdateCustomer(request))
-                reply = itsAccountHelper.UpdateCustomer(reply,request);
-
-            if (itsAccountHelper.MustUpdateCard(request))
-                reply = itsAccountHelper.UpdateCard(reply,request);
-
-            return reply;
+            return itsAccountProcessor.UpdateExternalAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -69,7 +82,16 @@ namespace Granite.ServerPlatform.Stripe
         public DeleteExternalAccountReply
         DeleteExternalAccount(DeleteExternalAccountRequest request)
         {
-            return new DeleteExternalAccountReply();
+            return itsAccountProcessor.DeleteExternalAccount(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public GetExternalAccountReply
+        GetExternalAccount(GetExternalAccountRequest request)
+        {
+            return itsAccountProcessor.GetExternalAccount(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -78,7 +100,8 @@ namespace Granite.ServerPlatform.Stripe
         public CreateExternalSubscriptionReply
         CreateExternalSubscription(CreateExternalSubscriptionRequest request)
         {
-            return new CreateExternalSubscriptionReply();
+            return 
+                itsSubscriptionProcessor.CreateExternalSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -87,7 +110,8 @@ namespace Granite.ServerPlatform.Stripe
         public UpdateExternalSubscriptionReply
         UpdateExternalSubscription(UpdateExternalSubscriptionRequest request)
         {
-            return new UpdateExternalSubscriptionReply();
+            return
+                itsSubscriptionProcessor.UpdateExternalSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -96,7 +120,8 @@ namespace Granite.ServerPlatform.Stripe
         public DeleteExternalSubscriptionReply
         DeleteExternalSubscription(DeleteExternalSubscriptionRequest request)
         {
-            return new DeleteExternalSubscriptionReply();
+            return
+                itsSubscriptionProcessor.DeleteExternalSubscription(request);
         }
 
         //////////////////////////////////////////////////////////////////////

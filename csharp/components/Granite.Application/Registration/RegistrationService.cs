@@ -1,43 +1,41 @@
 ﻿//  ##########################################################################
-//  # File Name: NhibernateModule.cs
+//  # File Name: RegistrationService.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Domain.Persistence;
-using Strata.Foundation.Injection;
-using Strata.Nhibernate.UnitOfWork;
-using Strata.Domain.UnitOfWork;
-using System;
+using Granite.ProvidedService.Registration;
 using SystemEx.Injection;
 
-namespace Granite.ServerPlatform.Nhibernate
+namespace Granite.Application.Registration
 {
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// </summary>
     ///  
     public
-    class NhibernateModule:
-        PersistenceModule
+    class RegistrationService:
+        IRegistrationService
     {
+        private IRegistrationProcessor itsProcessor;
+
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
+        [Inject]
         public
-        NhibernateModule():
-            base("NhibernateModule") {}
+        RegistrationService(IRegistrationProcessor processor)
+        {
+            itsProcessor = processor;
+        }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        protected override IProvider<IUnitOfWorkProvider> 
-        GetUnitOfWorkProviderProvider()
+        public RegisterReply 
+        Register(RegisterRequest request)
         {
-            return
-                new FuncBasedProvider<IUnitOfWorkProvider>(
-                    () => new NhibernateUnitOfWorkProvider(
-                        new string[] {"Granite.ServerPlatform"} ) );
+            return itsProcessor.Register(request);
         }
     }
 }

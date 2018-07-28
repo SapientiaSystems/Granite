@@ -5,6 +5,7 @@
 
 using Granite.Domain.Constraint;
 using Granite.Domain.Group;
+using Granite.Domain.Payment;
 using Granite.Domain.Profile;
 using Granite.Domain.Role;
 using Granite.Domain.Session;
@@ -79,6 +80,18 @@ namespace Granite.Domain.Configuration
 
             Bind<ISessionRepository>()
                 .ToType<SessionRepository>()
+                .WithScope(DefaultScope);
+
+            Bind<IPlanRepository>()
+                .ToType<PlanRepository>()
+                .WithScope(DefaultScope);
+
+            Bind<IAccountRepository>()
+                .ToType<AccountRepository>()
+                .WithScope(DefaultScope);
+
+            Bind<ISubscriptionRepository>()
+                .ToType<SubscriptionRepository>()
                 .WithScope(DefaultScope);
         }
     }

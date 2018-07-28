@@ -81,10 +81,12 @@
     <Compile Include="Access\IAuthenticator.cs" />
     <Compile Include="Access\IAuthorizer.cs" />
     <Compile Include="Access\AuthorizationException.cs" />
+    <Compile Include="Access\IClientIpAddressRecorder.cs" />
     <Compile Include="Access\ISessionIdProvider.cs" />
     <Compile Include="Injection\Global.cs" />
     <Compile Include="Utility\IRandomValueGenerator{T}.cs" />
     <Compile Include="Utility\RandomStringGenerator.cs" />
+    <Compile Include="Value\PaymentIntervalKind.cs" />
     <Compile Include="Verification\EmailVerificationNotifier.cs" />
     <Compile Include="Verification\HtmlVerificationMessageGenerator.cs" />
     <Compile Include="Verification\IVerificationMessageGenerator.cs" />

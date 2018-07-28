@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Strata.Foundation.Transfer;
 using System.Runtime.Serialization;
 
 namespace Granite.RequiredService.Payment
@@ -13,12 +14,13 @@ namespace Granite.RequiredService.Payment
     ///  
     [DataContract]
     public
-    class UpdateExternalAccountReply
+    class UpdateExternalAccountReply:
+        ServiceReply
     {
-        public string AccountId { get; set; }
+        public string ExternalAccountId { get; set; }
+        public string ExternalPaymentMethodId { get; set; }
         public string Email { get; set; }
         public string Description { get; set; }
-        public string PaymentMethodId { get; set; }
     }
 }
 

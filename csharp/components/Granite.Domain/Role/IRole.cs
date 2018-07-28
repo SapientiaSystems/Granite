@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Strata.Foundation.Utility;
 using System.Collections.Generic;
 
 namespace Granite.Domain.Role
@@ -12,7 +13,8 @@ namespace Granite.Domain.Role
     /// </summary>
     ///  
     public
-    interface IRole
+    interface IRole:
+        ICopyable
     {
         string                     RoleName { get; }
         IReadOnlyCollection<IRole> IncludedRoles { get; }

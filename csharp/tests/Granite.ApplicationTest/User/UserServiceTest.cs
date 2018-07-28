@@ -84,7 +84,7 @@ namespace Granite.Application.User
             itsTarget = null;
         }
 
-        static public object[] CreateUserTestCases =
+        public static object[] CreateUserTestCases =
         {
             new CreateUserRequest()
             {

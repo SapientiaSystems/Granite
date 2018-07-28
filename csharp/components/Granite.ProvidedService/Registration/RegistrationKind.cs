@@ -13,8 +13,8 @@ namespace Granite.ProvidedService.Registration
     enum RegistrationKind
     {
         USER_PROFILE,
-        USER_SUBSCRIPTION,
-        USER_PROFILE_SUBSCRIPTION
+        USER_PROFILE_ACCOUNT,
+        USER_PROFILE_ACCOUNT_SUBSCRIPTION
     }
 }
 

@@ -17,6 +17,8 @@ namespace Granite.ProvidedService.Payment
     class CreateAccountReply:
         GraniteReply
     {
+        [DataMember]
+        public AccountData NewAccount { get; set; }
     }
 }
 

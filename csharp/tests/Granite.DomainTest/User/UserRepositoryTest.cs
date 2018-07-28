@@ -35,14 +35,7 @@ namespace Granite.Domain.User
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = 
-                new NinjectContainer(
-                    GetPersistenceModule(),
-                    new GraniteDomainModule<
-                        GraniteRolesProvider,
-                        GraniteConstraintsProvider,
-                        GraniteUserFactory>(),
-                    new TestGeneratorModule());
+            IContainer container = CreateContainer();
 
             itsTarget = container.GetInstance<IUserRepository>();
             itsIds = new HashSet<Guid>();
@@ -160,8 +153,8 @@ namespace Granite.Domain.User
             Assert.IsTrue(actual.Password.Matches(((StandardUser)expected).PlainTextPassword));
         }
 
-        protected abstract IModule
-        GetPersistenceModule();
+        protected abstract IContainer
+        CreateContainer();
 
 
     }
