@@ -5,8 +5,6 @@
 
 using Granite.Domain.Shared;
 using Granite.Domain.Tenant;
-using Strata.Domain.Repository;
-using System;
 using System.Collections.Generic;
 
 namespace Granite.Domain.Group

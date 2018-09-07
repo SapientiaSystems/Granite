@@ -14,6 +14,7 @@ using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Value;
 using System;
+using System.Web;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.Bootstrap
@@ -46,7 +47,14 @@ namespace Granite.ServerPlatform.Bootstrap
         StartApplication()
         {
             Global.Container = Container;
-            CreateGuestUserIfNeeded();
+            HttpContext.Current =
+                new HttpContext(
+                    new HttpRequest(null,"https://ezvaluator.com",null),
+                    new HttpResponse(null));
+
+            Container
+                .GetInstance<IApplicationInitializer>()
+                .Initialize();
         }
 
         //////////////////////////////////////////////////////////////////////

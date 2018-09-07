@@ -14,10 +14,12 @@ namespace Granite.Domain.Constraint
     public
     interface IConstraintResult
     {
-        bool   IsSatisfied { get; }
+        IConstraint Source { get; }
 
-        string SuccessMessage { get; }
-        string FailureMessage { get; }
+        bool        IsSatisfied { get; }
+
+        string      SuccessMessage { get; }
+        string      FailureMessage { get; }
     }
 }
 

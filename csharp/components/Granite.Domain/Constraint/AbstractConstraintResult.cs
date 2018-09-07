@@ -15,10 +15,12 @@ namespace Granite.Domain.Constraint
     class AbstractConstraintResult:
         IConstraintResult
     {
-        public bool   IsSatisfied { get; protected set; }
+        public IConstraint Source { get; protected set; }
 
-        public string SuccessMessage { get; protected set; }
-        public string FailureMessage { get; protected set; }
+        public bool        IsSatisfied { get; protected set; }
+
+        public string      SuccessMessage { get; protected set; }
+        public string      FailureMessage { get; protected set; }
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>

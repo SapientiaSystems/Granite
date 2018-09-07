@@ -35,7 +35,7 @@ namespace Granite.Domain.Constraint
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public IConstraintResult 
+        public virtual IConstraintResult 
         ApplyTo(IUserIdProvider user)
         {
             IConstraintDomainEvent evnt = DoApplyTo(user);

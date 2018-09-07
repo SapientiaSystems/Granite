@@ -6,6 +6,7 @@
 using Granite.Common.Access;
 using Granite.Domain.Persistence;
 using Granite.RequiredService.Payment;
+using Granite.ServerPlatform.Bootstrap;
 using Granite.ServerPlatform.Stripe;
 using Granite.ServerPlatform.WebApi;
 using Strata.Domain.UnitOfWork;
@@ -20,8 +21,9 @@ namespace Granite.ServerPlatform.Nhibernate
     /// </summary>
     ///  
     public
-    class GraniteServerPlatformModule:
+    class GraniteServerPlatformModule<T>:
         PersistenceModule
+        where T: IApplicationInitializer
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -58,6 +60,10 @@ namespace Granite.ServerPlatform.Nhibernate
 
             Bind<IExternalPaymentService>()
                 .ToType<StripePaymentService>()
+                .WithScope(DefaultScope);
+
+            Bind<IApplicationInitializer>()
+                .ToType<T>()
                 .WithScope(DefaultScope);
         }
         

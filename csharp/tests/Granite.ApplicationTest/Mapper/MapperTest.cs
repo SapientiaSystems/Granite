@@ -58,7 +58,7 @@ namespace Granite.Application.Mapper
                         GraniteRolesProvider,
                         GraniteConstraintsProvider,
                         GraniteUserFactory>(),
-                    new GraniteApplicationModule(),
+                    new GraniteApplicationModule<GraniteMapperProvider>(),
                     new TestGeneratorModule());
             itsTarget = itsContainer.GetInstance<IMapper>();
             itsRoles = itsContainer.GetInstance<IRoleRepository>();

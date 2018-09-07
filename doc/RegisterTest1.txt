@@ -1,7 +1,7 @@
 {
   "RegistrationType": 2,
   "UserToCreate": {
-    "UserName": "johnlieb",
+    "UserName": "lieb",
     "Password": "foobar!",
     "Email": {
       "email": "johnliebenau@gmail.com"
@@ -9,11 +9,11 @@
     "UseExistingTenant": false,
     "TenantId": "00000000-0000-0000-0000-000000000000",
     "HasSubscriptionType": true,
-    "SubscriptionType": "Level 1"
+    "SubscriptionType": "Enterprise"
   },
   "ProfileToCreate": {
     "UserId": "00000000-0000-0000-0000-000000000000",
-    "UserName": "johnlieb",
+    "UserName": "lieb",
     "Name": {
       "FirstName": "John",
       "MiddleName": "Friedrich",
@@ -54,12 +54,12 @@
     }
   },
   "SubscriptionToCreate": {
-    "SubscriptionType": "Level 1",
+    "SubscriptionType": "Enterprise",
     "UserId": "00000000-0000-0000-0000-000000000000",
     "AccountId": "00000000-0000-0000-0000-000000000000"
   },
-    "SessionId": "fa0d05f1-c8b5-4d9f-9c13-a92b00f24728",
-    "AccessToken": "EWRUwtr9PIaTJuozLS5xQ4t0RYApRTEa",
+    "SessionId": "04751610-e3b9-420b-9b4e-a92b00fa19d5",
+    "AccessToken": "DYI0Fsn4pcE1MnJep9F0sjy2LKeKOTPs",
   "CorrelationId": "00000000-1111-0000-0000-000000000000",
   "SentTimestamp": 0,
   "ReceivedTimestamp": 0

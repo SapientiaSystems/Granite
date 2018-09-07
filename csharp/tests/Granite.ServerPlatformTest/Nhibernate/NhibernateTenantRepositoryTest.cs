@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 using Granite.Domain.Tenant;
+using Granite.ServerPlatform.Bootstrap;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
 
@@ -22,7 +23,8 @@ namespace Granite.ServerPlatform.Nhibernate
         protected override IModule 
         GetPersistenceModule()
         {
-            return new GraniteServerPlatformModule();
+            return 
+                new GraniteServerPlatformModule<GraniteInitializer>();
         }
 
     }

@@ -5,6 +5,7 @@
 
 using Granite.Application.Configuration;
 using Granite.Application.Decoration;
+using Granite.Application.Mapper;
 using Granite.Common.Verification;
 using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
@@ -53,14 +54,15 @@ namespace Granite.ServerPlatform.Bootstrap
         {
             IList<IModule> modules = new List<IModule>();
 
-            modules.Add(new GraniteServerPlatformModule());
+            modules.Add(
+                new GraniteServerPlatformModule<GraniteInitializer>());
             modules.Add(new FakeUtilityModule());
             modules.Add(
                 new GraniteDomainModule<
                     GraniteRolesProvider,
                     GraniteConstraintsProvider,
                     GraniteUserFactory>());
-            modules.Add(new GraniteApplicationModule());
+            modules.Add(new GraniteApplicationModule<GraniteMapperProvider>());
             modules.Add(new TestGeneratorModule());
 
             return modules;

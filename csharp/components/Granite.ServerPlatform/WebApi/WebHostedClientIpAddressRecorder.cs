@@ -5,6 +5,7 @@
 
 using Granite.Common.Access;
 using System.Linq;
+using System.Net;
 using System.Web;
 
 namespace Granite.ServerPlatform.WebApi
@@ -58,20 +59,30 @@ namespace Granite.ServerPlatform.WebApi
                     .Request
                     .ServerVariables["HTTP_X_FORWARDED_FOR"];
 
-
             if (!string.IsNullOrEmpty(sourceIpAddress))
-                return
+                sourceIpAddress =
                     sourceIpAddress
                         .Split(',')
                         .Last()
                         .Trim();
+            else
+                sourceIpAddress =
+                    HttpContext
+                        .Current
+                        .Request
+                        .ServerVariables["REMOTE_ADDR"];
+
+            if (string.IsNullOrEmpty(sourceIpAddress))
+                return null;
+
+            if (sourceIpAddress.Equals("::1"))
+                sourceIpAddress = "127.0.0.1";
 
             return
-                HttpContext
-                    .Current
-                    .Request
-                    .ServerVariables["REMOTE_ADDR"];
-
+                sourceIpAddress
+                    .Split(':')
+                    .First()
+                    .Trim();
         }
     }
 }

@@ -14,13 +14,13 @@ using Granite.Application.Shared;
 using Granite.Application.Tenant;
 using Granite.Application.User;
 using Granite.Common.Access;
-using Granite.Domain.Profile;
 using Granite.ProvidedService.Payment;
 using Granite.ProvidedService.Profile;
 using Granite.ProvidedService.Registration;
 using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
 using Strata.Foundation.Injection;
+using SystemEx.Injection;
 
 namespace Granite.Application.Configuration
 {
@@ -30,8 +30,9 @@ namespace Granite.Application.Configuration
     /// </summary>
     ///  
     public
-    class GraniteApplicationModule:
+    class GraniteApplicationModule<M>:
         AbstractModule
+        where M: IProvider<IMapper>,new()
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -48,7 +49,7 @@ namespace Granite.Application.Configuration
         Initialize()
         {
             Bind<IMapper>()
-                .ToProvider<MapperProvider>()
+                .ToProvider<M>()
                 .WithScope(DefaultScope);
 
             Bind<IAuthenticator>()

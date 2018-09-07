@@ -32,8 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AutoMapper, Version=7.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AutoMapper.7.0.0\lib\net45\AutoMapper.dll</HintPath>
+    <Reference Include="AutoMapper, Version=7.0.1.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\AutoMapper.7.0.1\lib\net45\AutoMapper.dll</HintPath>
     </Reference>
     <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
@@ -54,18 +54,21 @@
       <HintPath>..\..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Application, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Application.0.5.2\lib\net45\Debug\Strata.Application.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Application.0.6.0\lib\net45\Debug\Strata.Application.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Domain, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Domain.0.9.2\lib\net45\Debug\Strata.Domain.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Domain.0.10.0\lib\net45\Debug\Strata.Domain.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.8.2\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.9.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -84,9 +87,17 @@
     <Compile Include="Access\Authorizer.cs" />
     <Compile Include="Decoration\InvocationExtension.cs" />
     <Compile Include="Configuration\GraniteApplicationModule.cs" />
-    <Compile Include="Mapper\MapperProvider.cs" />
+    <Compile Include="Mapper\RegistrationMapperProfile.cs" />
+    <Compile Include="Mapper\SubscriptionMapperProfile.cs" />
+    <Compile Include="Mapper\GraniteMapperProvider.cs" />
     <Compile Include="Mapper\MessageAppender.cs" />
+    <Compile Include="Mapper\AccountMapperProfile.cs" />
+    <Compile Include="Mapper\ProfileMapperProfile.cs" />
+    <Compile Include="Mapper\PlanMapperProfile.cs" />
     <Compile Include="Mapper\UserConverter.cs" />
+    <Compile Include="Mapper\SessionMapperProfile.cs" />
+    <Compile Include="Mapper\UserMapperProfile.cs" />
+    <Compile Include="Mapper\ValueMapperProfile.cs" />
     <Compile Include="Payment\IPaymentProcessor.cs" />
     <Compile Include="Payment\PaymentProcessor.cs" />
     <Compile Include="Payment\PaymentService.cs" />

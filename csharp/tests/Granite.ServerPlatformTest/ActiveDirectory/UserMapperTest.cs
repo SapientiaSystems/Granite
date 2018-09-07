@@ -17,6 +17,7 @@ namespace Granite.ServerPlatform.ActiveDirectory
     /// <summary>
     /// </summary>
     ///  
+    [Ignore("Obsolete")]
     [TestFixture]
     public
     class UserMapperTest
