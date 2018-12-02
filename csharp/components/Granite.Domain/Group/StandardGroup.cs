@@ -26,7 +26,7 @@ namespace Granite.Domain.Group
                                         {get {return MultiTenantPrimaryId;}}
         public virtual Guid         TenantId {get {return GetTenantId();}}
 
-        public virtual GuidSet      MemberUserIds { get; set; }
+        public virtual ISet<Guid>   MemberUserIds { get; set; }
         public virtual ISet<IGroup> IncludedGroups { get; set; }
 
         public virtual StringSet    RoleIds { get; set; }
@@ -64,7 +64,7 @@ namespace Granite.Domain.Group
         StandardGroup(string groupName,params IGroup[] includedGroups)
         {
             PrimaryId = groupName;
-            MemberUserIds = new GuidSet();
+            MemberUserIds = new HashSet<Guid>();
             IncludedGroups = new HashSet<IGroup>(includedGroups);
         }
 

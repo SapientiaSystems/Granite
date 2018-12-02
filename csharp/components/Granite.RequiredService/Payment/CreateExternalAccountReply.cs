@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Payment;
 using Strata.Foundation.Transfer;
 using System;
 using System.Runtime.Serialization;
@@ -19,12 +20,15 @@ namespace Granite.RequiredService.Payment
         ServiceReply
     {
         [DataMember]
-        public string ExternalAccountId { get; set; }
+        public string         ExternalAccountId { get; set; }
         [DataMember]
-        public string ExternalPaymentMethodId { get; set; }
+        public string         ExternalPaymentMethodId { get; set; }
         [DataMember]
-        public string Email { get; set; }
-        public Guid UserId { get; set; }
+        public string         Email { get; set; }
+        [DataMember]
+        public Guid           UserId { get; set; }
+        [DataMember]
+        public CreditCardData CreditCard { get; set; }
     }
 }
 

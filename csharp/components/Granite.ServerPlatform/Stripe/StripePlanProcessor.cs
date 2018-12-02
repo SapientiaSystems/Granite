@@ -45,7 +45,7 @@ namespace Granite.ServerPlatform.Stripe
         {
             StripePlanService  service = new StripePlanService();
             StripePlan         plan = null;
-            CreatePlanData     planData = request.PlanToCreate;
+            InitialPlanData     planData = request.PlanToCreate;
 
             plan =
                 service.Create(

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Granite.Domain.Role;
 using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
+using Granite.Domain.Group;
 
 namespace Granite.Domain.User
 {
@@ -26,6 +27,7 @@ namespace Granite.Domain.User
     class UserRepositoryTest
     {
         private IUserRepository    itsTarget;
+        private IGroupRepository   itsGroups;
         private ISet<Guid>         itsIds;
         private ITestUserGenerator itsGenerator;
 
@@ -38,6 +40,7 @@ namespace Granite.Domain.User
             IContainer container = CreateContainer();
 
             itsTarget = container.GetInstance<IUserRepository>();
+            itsGroups = container.GetInstance<IGroupRepository>();
             itsIds = new HashSet<Guid>();
             itsGenerator = container.GetInstance<ITestUserGenerator>();
         }
@@ -140,6 +143,46 @@ namespace Granite.Domain.User
 
             itsIds.Add(expected.UserId);
             actual = itsTarget.GetUnique(expected.UserId);
+            unitOfWork.Commit();
+
+            Assert.NotNull(actual);
+            Assert.AreNotEqual(Guid.Empty,actual.UserId);
+            Assert.AreEqual(expected.UserName,actual.UserName);
+            Assert.AreEqual(expected.Password,actual.Password);
+            Assert.AreEqual(expected.ExternalUserId,actual.ExternalUserId);
+            Assert.AreEqual(expected.VerificationCode,actual.VerificationCode);
+            Assert.AreEqual(expected.Created,actual.Created);
+            Assert.AreEqual(expected.LastModified,actual.LastModified);
+            Assert.IsTrue(actual.Password.Matches(((StandardUser)expected).PlainTextPassword));
+        }
+
+        [Test]
+        public virtual void
+        TestGetGroups()
+        {
+            IUnitOfWork unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+
+            IUser expected = itsGenerator.GenerateUser();
+            IUser actual = null;
+            IGroup foo = new StandardGroup("Foo");
+            
+            expected = itsTarget.Insert(expected);
+            expected.ActivateTenant();
+            foo.MakeMember(expected);
+            foo = itsGroups.Insert(foo);
+       
+            unitOfWork.Commit();
+            unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+
+            itsIds.Add(expected.UserId);
+            actual = itsTarget.GetUnique(expected.UserId);
+            Assert.True(actual.GetGroups().Count > 0);
             unitOfWork.Commit();
 
             Assert.NotNull(actual);

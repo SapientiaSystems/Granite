@@ -1,9 +1,8 @@
 ﻿//  ##########################################################################
-//  # File Name: CreateAccountData.cs
+//  # File Name: InitialSubscriptionData.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Value;
 using System;
 using System.Runtime.Serialization;
 
@@ -15,16 +14,14 @@ namespace Granite.ProvidedService.Payment
     ///  
     [DataContract]
     public
-    class CreateAccountData
+    class InitialSubscriptionData
     {
         [DataMember]
-        public Guid                 UserIdOfAccountToCreate { get; set; }
+        public string            SubscriptionType { get; set; }
         [DataMember]
-        public string               Email { get; set; }
+        public Guid              UserId { get; set; }
         [DataMember]
-        public string               Description { get; set; }
-        [DataMember]
-        public CreateCreditCardData CreditCardToCreate { get; set; }
+        public Guid              AccountId { get; set; }
     }
 }
 

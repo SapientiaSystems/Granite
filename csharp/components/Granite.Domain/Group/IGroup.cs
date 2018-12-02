@@ -23,7 +23,7 @@ namespace Granite.Domain.Group
         IUserIdSetProvider,
         IEquatable<IGroup>
     {
-        GuidSet      MemberUserIds { get; set; }
+        ISet<Guid>   MemberUserIds { get; set; }
         ISet<IGroup> IncludedGroups { get; set; }
 
         //////////////////////////////////////////////////////////////////////

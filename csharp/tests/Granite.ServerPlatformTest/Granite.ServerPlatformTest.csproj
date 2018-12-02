@@ -84,8 +84,8 @@
     <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms, Version=2.29.0.1078, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.2.29.0\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate, Version=5.1.0.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NHibernate.5.1.2\lib\net461\NHibernate.dll</HintPath>
@@ -112,22 +112,22 @@
       <HintPath>..\..\packages\Remotion.Linq.EagerFetching.2.1.0\lib\net45\Remotion.Linq.EagerFetching.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Application, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Application.0.6.0\lib\net45\Debug\Strata.Application.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Application.0.6.2\lib\net45\Debug\Strata.Application.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Domain, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Domain.0.10.0\lib\net45\Debug\Strata.Domain.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Domain.0.10.2\lib\net45\Debug\Strata.Domain.dll</HintPath>
     </Reference>
     <Reference Include="Strata.EntityFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.EntityFramework.0.10.0\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
+      <HintPath>..\..\packages\Strata.EntityFramework.0.10.2\lib\net45\Debug\Strata.EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.9.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.9.3\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Nhibernate, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Nhibernate.0.10.0\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Nhibernate.0.10.2\lib\net45\Debug\Strata.Nhibernate.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Ninject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Ninject.0.9.0\lib\net45\Debug\Strata.Ninject.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Ninject.0.9.2\lib\net45\Debug\Strata.Ninject.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />

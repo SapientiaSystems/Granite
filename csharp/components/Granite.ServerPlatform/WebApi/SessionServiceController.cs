@@ -7,7 +7,6 @@ using Granite.Common.Access;
 using Granite.Common.Injection;
 using Granite.ProvidedService.Session;
 using System.Web.Http;
-using System.Web.Http.Cors;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
@@ -48,6 +47,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("login")]
+        [HttpPost]
         public LoginReply 
         Login(LoginRequest request)
         {
@@ -58,6 +58,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("logout")]
+        [HttpPost]
         public LogoutReply 
         Logout(LogoutRequest request)
         {
@@ -67,7 +68,19 @@ namespace Granite.ServerPlatform.WebApi
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        [Route("get-or-login")]
+        [HttpPost]
+        public GetOrLoginReply
+        GetOrLogin(GetOrLoginRequest request)
+        {
+            return itsImp.GetOrLogin(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
         [Route("keep-alive")]
+        [HttpPut]
         public KeepAliveReply 
         KeepAlive(KeepAliveRequest request)
         {

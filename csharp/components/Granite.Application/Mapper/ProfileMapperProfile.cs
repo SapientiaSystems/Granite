@@ -31,6 +31,8 @@ namespace Granite.Application.Mapper
                 .ReverseMap();
 
             CreateMap<IUser,IProfile>();
+
+            CreateMap<IProfile,ProfileData>();
         }
     }
 }

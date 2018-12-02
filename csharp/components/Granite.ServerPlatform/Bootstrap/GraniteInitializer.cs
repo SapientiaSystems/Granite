@@ -118,7 +118,7 @@ namespace Granite.ServerPlatform.Bootstrap
         protected virtual void
         CreatePlansIfNeeded()
         {
-            foreach (CreatePlanData plan in GetPlansToCreate())
+            foreach (InitialPlanData plan in GetPlansToCreate())
             {
                 if (!Plans.HasUniqueWithPlanName(plan.PlanName))
                 {
@@ -140,13 +140,13 @@ namespace Granite.ServerPlatform.Bootstrap
         /// Gets the plans to create.
         /// </summary>
         ///
-        protected virtual ICollection<CreatePlanData>
+        protected virtual ICollection<InitialPlanData>
         GetPlansToCreate()
         {
             return
-                new List<CreatePlanData>()
+                new List<InitialPlanData>()
                 {
-                    new CreatePlanData()
+                    new InitialPlanData()
                     {
                         PlanName = "Test",
                         IntervalType = PaymentIntervalKind.MONTH,

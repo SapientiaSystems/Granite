@@ -8,6 +8,7 @@ using Granite.Application.Service;
 using Granite.Common.Access;
 using Granite.Domain.Payment;
 using Granite.Domain.Session;
+using Granite.Domain.Shared;
 using Granite.Domain.User;
 using Granite.ProvidedService.Payment;
 using Granite.RequiredService.Payment;
@@ -148,7 +149,7 @@ namespace Granite.Application.Payment
                     itsMapper.Map<CreateExternalAccountRequest>(request));
             IAccount                   account = null;
             AccountData                accountData = null;
-            CreateCreditCardData       card = null;
+            InitialCreditCardData      card = null;
 
             if (!reply.IsSuccessful)
                 return
@@ -170,10 +171,7 @@ namespace Granite.Application.Payment
 
             accountData = itsMapper.Map<AccountData>(account);
             card = request.AccountToCreate.CreditCardToCreate;
-            accountData.ObfuscatedCardNumber = 
-                ObfuscateCardNumber(card.CardNumber);
-            accountData.ExpirationMonth = card.ExpirationMonth;
-            accountData.ExpirationYear = card.ExpirationYear;
+            accountData.CreditCard = reply.CreditCard;
             accountData.PaymentMethod = "Credit Card";
 
             return
@@ -193,6 +191,7 @@ namespace Granite.Application.Payment
         {
             IAccount                   account = GetAccountToUpdate(request);
             UpdateExternalAccountReply externalReply = null;
+            AccountData                accountData = new AccountData();
 
             if (account == null)
                 return
@@ -214,13 +213,15 @@ namespace Granite.Application.Payment
 
             itsMapper.Map(account,externalReply);
             account = itsAccountRepository.Update(account);
+            accountData = itsMapper.Map<AccountData>(account);
+            accountData.CreditCard = externalReply.CreditCard;
 
             return
                 new UpdateAccountReply()
                 {
                     IsSuccessful = true,
                     SuccessMessage = externalReply.SuccessMessage,
-                    CurrentAccount = itsMapper.Map<AccountData>(account)
+                    CurrentAccount = accountData
                 };  
         }
 
@@ -258,7 +259,7 @@ namespace Granite.Application.Payment
                 {
                     IsSuccessful = true,
                     DeletedAccountId = account.PrimaryId,
-                    SuccessMessage = "profile has been deleted"
+                    SuccessMessage = "account has been deleted"
                 };
         }
 
@@ -268,7 +269,9 @@ namespace Granite.Application.Payment
         public GetAccountReply 
         GetAccount(GetAccountRequest request)
         {
-            IAccount account = null;
+            IAccount                account = null;
+            GetExternalAccountReply externalReply = null;
+            AccountData             accountData = new AccountData();
 
             CheckPermission(request);
             account = GetAccountToReturn(request);
@@ -278,15 +281,25 @@ namespace Granite.Application.Payment
                     new GetAccountReply()
                     {
                         IsSuccessful = false,
-                        FailureMessage = "profile not found"
+                        FailureMessage = "account not found"
                     };
+
+            externalReply =
+                itsService.GetExternalAccount(
+                    itsMapper.Map(
+                        account,
+                        itsMapper.Map<GetExternalAccountRequest>(
+                            request)));
+
+            accountData = itsMapper.Map<AccountData>(account);
+            accountData.CreditCard = externalReply.CreditCard;
 
             return
                 new GetAccountReply()
                 {
                     IsSuccessful = true,
-                    RequestedAccount = itsMapper.Map<AccountData>(account),
-                    SuccessMessage = "returned requested profile"
+                    RequestedAccount = accountData,
+                    SuccessMessage = "returned requested account"
                 };
         }
 
@@ -301,7 +314,7 @@ namespace Granite.Application.Payment
             IAccount                          account = GetAccount(request);
             ISubscription                     subscription = null;
             IPlan                             plan = null;
-            CreateSubscriptionData            input = null;
+            InitialSubscriptionData           input = null;
             SubscriptionData                  output = null;
 
             input = request.SubscriptionToCreate;
@@ -361,7 +374,54 @@ namespace Granite.Application.Payment
         public UpdateSubscriptionReply 
         UpdateSubscription(UpdateSubscriptionRequest request)
         {
-            throw new NotImplementedException();
+            ISubscription                     subscription = null;
+            IPlan                             plan = null;
+            UpdateExternalSubscriptionRequest externalRequest = null;
+            UpdateExternalSubscriptionReply   externalReply = null;
+            SubscriptionData                  updated = null;
+
+            subscription = 
+                itsSubscriptionRepository.GetUnique(
+                    request
+                        .CurrentSubscription
+                        .SubscriptionId);
+
+            if (subscription == null)
+                return
+                    new UpdateSubscriptionReply()
+                    {
+                        IsSuccessful = false,
+                        FailureMessage = "Subscription not found"
+                    };
+
+            plan = itsPlanRepository.GetUnique(subscription.PlanId);
+
+            if (plan == null)
+                return
+                    new UpdateSubscriptionReply()
+                    {
+                        IsSuccessful = false,
+                        FailureMessage = "Plan not found"
+                    };
+
+            externalRequest =
+                itsMapper.Map<UpdateExternalSubscriptionRequest>(request);
+            externalReply = 
+                itsService.UpdateExternalSubscription(externalRequest);
+            subscription =
+                itsMapper.Map(externalReply,subscription);
+
+            updated = itsMapper.Map<SubscriptionData>(subscription);
+            updated.PlanName = plan.PlanName;
+
+            return
+                new UpdateSubscriptionReply()
+                {
+                    IsSuccessful = true,
+                    SuccessMessage = "Subscription updated",
+                    UpdatedSubscription = updated
+                };
+
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -370,7 +430,30 @@ namespace Granite.Application.Payment
         public DeleteSubscriptionReply
         DeleteSubscription(DeleteSubscriptionRequest request)
         {
-            throw new NotImplementedException();
+            ISubscription                     subscription = null;
+            DeleteExternalSubscriptionRequest externalRequest = null;
+            DeleteExternalSubscriptionReply   externalReply = null;
+
+            subscription =
+                itsSubscriptionRepository.GetUnique(
+                    request.SubscriptionIdOfSubscriptionToDelete);
+
+            if (subscription == null)
+                return
+                    new DeleteSubscriptionReply()
+                    {
+                        IsSuccessful = true,
+                        SuccessMessage = "Subscription does not exist"
+                    };
+
+            externalRequest =
+                itsMapper.Map(
+                    subscription,
+                    itsMapper.Map<
+                        DeleteExternalSubscriptionRequest>(request));
+
+            return
+                itsMapper.Map<DeleteSubscriptionReply>(externalRequest);
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -379,7 +462,26 @@ namespace Granite.Application.Payment
         public GetSubscriptionReply 
         GetSubscription(GetSubscriptionRequest request)
         {
-            throw new NotImplementedException();
+            ISubscription subscription = GetSubscriptionToReturn(request);
+            IPlan         plan         = null;
+
+            if (subscription == null)
+                return
+                    new GetSubscriptionReply()
+                    {
+                        IsSuccessful = false,
+                        FailureMessage = "Requested subscription not found"
+                    };
+
+            plan = itsPlanRepository.GetUnique(subscription.PlanId);
+
+            if (plan == null)
+                return itsMapper.Map<GetSubscriptionReply>(subscription);
+
+            return
+                itsMapper.Map(
+                    plan,
+                    itsMapper.Map<GetSubscriptionReply>(subscription));
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -547,6 +649,58 @@ namespace Granite.Application.Payment
             IUser user = GetUserFrom(request);
 
             return itsAccountRepository.GetUniqueFor(user);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected ISubscription
+        GetSubscriptionToReturn(GetSubscriptionRequest request)
+        {
+            if (request.GetSubscriptionOfCurrentUser)
+            {
+                IUser user = GetUserFrom(request);
+
+                if (user != null)
+                    return 
+                        itsSubscriptionRepository
+                            .GetAllFor(user)
+                            .FirstOrDefault();
+            }
+
+            if (request.AccountIdOfSubscriptionToGet != Guid.Empty)
+            {
+                IAccount account = 
+                    itsAccountRepository.GetUnique(
+                        request.AccountIdOfSubscriptionToGet);
+
+                if (account != null)
+                    return
+                        itsSubscriptionRepository
+                            .GetAllFor((IAccountIdProvider)account)
+                            .FirstOrDefault();
+            }
+
+            if (request.UserIdOfSubscriptionToGet != Guid.Empty)
+            {
+                IUser user =
+                    itsUserRepository.GetUnique(
+                        request.UserIdOfSubscriptionToGet);
+
+                if (user != null)
+                    return 
+                        itsSubscriptionRepository
+                            .GetAllFor(user)
+                            .FirstOrDefault();
+            }
+
+            if (request.SubscriptionIdOfSubscriptionToGet != Guid.Empty)
+                return
+                    itsSubscriptionRepository.GetUnique(
+                        request.SubscriptionIdOfSubscriptionToGet);
+
+            return null;
         }
 
         //////////////////////////////////////////////////////////////////////

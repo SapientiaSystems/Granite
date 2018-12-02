@@ -98,12 +98,7 @@ namespace Granite.Application.Profile
                 {
                     IsSuccessful = true,
                     SuccessMessage = "Profile has been created.",
-                    NewProfile =
-                        new ProfileData()
-                        {
-                            ProfileId = profile.PrimaryId,
-                            UserId = profile.UserId
-                        }
+                    NewProfile = itsMapper.Map(profile,new ProfileData())
                 };
         }
 
@@ -159,6 +154,7 @@ namespace Granite.Application.Profile
                 {
                     IsSuccessful = true,
                     SuccessMessage = "Profile has been updated.",
+                    UpdatedProfile = itsMapper.Map(profile,new ProfileData())
                 };
         }
 

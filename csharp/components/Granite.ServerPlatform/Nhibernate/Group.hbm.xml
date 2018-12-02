@@ -21,13 +21,14 @@
         <property name="Created" column="Created" not-null="true"/>
         <property name="LastModified" column="LastModified" not-null="true"/>
 
-        <property
-            name="MemberUserIds"
-            type="Granite.ServerPlatform.Nhibernate.GuidSetType, Granite.ServerPlatform"
-            not-null="false">
-            <column name="MemberUserIds" sql-type="varchar(max)"/>
-        </property>
-        
+        <set name="MemberUserIds" table="MemberUserIds" lazy="false">
+            <key>
+                <column name="TenantId"/>
+                <column name="GroupId"/>
+            </key>
+            <element column="UserId" type="Guid"/>
+        </set>
+
         <set name="IncludedGroups" table="IncludedGroups" lazy="false">
             <key>
                 <column name="SuperTenantId"/>
@@ -58,7 +59,7 @@
         <![CDATA[
             select distinct g
             from IGroup g
-            where :userId in g.MemberUserIds]]>
+            where :userId in elements(g.MemberUserIds)]]>
     </query>
     
     <!--

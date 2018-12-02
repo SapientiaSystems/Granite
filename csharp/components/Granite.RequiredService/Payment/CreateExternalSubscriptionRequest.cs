@@ -21,7 +21,7 @@ namespace Granite.RequiredService.Payment
         [DataMember]
         public string                 ExternalAccountId { get; set; }
         [DataMember]
-        public CreateSubscriptionData SubscriptionToCreate { get; set; }
+        public InitialSubscriptionData SubscriptionToCreate { get; set; }
     }
 }
 

@@ -19,9 +19,9 @@ namespace Granite.RequiredService.Payment
         ServiceRequest
     {
         [DataMember]
-        public string            Description { get; set; }
+        public string             Description { get; set; }
         [DataMember]
-        public CreateAccountData AccountToCreate { get; set; }
+        public InitialAccountData AccountToCreate { get; set; }
     }
 }
 

@@ -100,7 +100,7 @@ namespace Granite.RequiredService.Payment
                     new CreateExternalPlanRequest()
                     {
                         PlanToCreate = 
-                            new CreatePlanData()
+                            new InitialPlanData()
                             {
                                 PlanName = planName,
                                 IntervalType = PaymentIntervalKind.MONTH,
@@ -130,13 +130,13 @@ namespace Granite.RequiredService.Payment
                     new CreateExternalAccountRequest()
                     {
                         AccountToCreate = 
-                            new CreateAccountData()
+                            new InitialAccountData()
                             {
                                 Description = "XYZ payment account",
                                 Email = email,
                                 UserIdOfAccountToCreate = Guid.NewGuid(),
                                 CreditCardToCreate = 
-                                    new CreateCreditCardData()
+                                    new InitialCreditCardData()
                                     {
                                         BillingAddress = itsGenerator.GenerateAddress(),
                                         CardHolderName = name,
@@ -166,7 +166,7 @@ namespace Granite.RequiredService.Payment
                     new CreateExternalPlanRequest()
                     {
                         PlanToCreate =
-                            new CreatePlanData()
+                            new InitialPlanData()
                             {
                                 PlanName = "Enterprise",
                                 IntervalType = PaymentIntervalKind.MONTH,
@@ -190,13 +190,13 @@ namespace Granite.RequiredService.Payment
                     new CreateExternalAccountRequest()
                     {
                         AccountToCreate =
-                            new CreateAccountData()
+                            new InitialAccountData()
                             {
                                 Description = "XYZ payment account",
                                 Email = "herbert.simon@email.com",
                                 UserIdOfAccountToCreate = Guid.NewGuid(),
                                 CreditCardToCreate =
-                                    new CreateCreditCardData()
+                                    new InitialCreditCardData()
                                     {
                                         BillingAddress = itsGenerator.GenerateAddress(),
                                         CardHolderName = "Herbert Simon",
@@ -221,7 +221,7 @@ namespace Granite.RequiredService.Payment
                     {
                         ExternalAccountId = accountReply.ExternalAccountId,
                         SubscriptionToCreate = 
-                            new CreateSubscriptionData()
+                            new InitialSubscriptionData()
                             {
                                 SubscriptionType = planReply.ExternalPlanId
                             }

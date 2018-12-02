@@ -3,6 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.ProvidedService.Transfer;
 using Strata.Foundation.Value;
 using System;
 using System.Runtime.Serialization;
@@ -16,7 +17,8 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class UpdateUserRequest
+    class UpdateUserRequest:
+        GraniteRequest
     {
         [DataMember]
         public UpdateUserData UserToUpdate { get; set; }

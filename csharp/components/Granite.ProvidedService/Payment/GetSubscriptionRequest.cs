@@ -16,7 +16,7 @@ namespace Granite.ProvidedService.Payment
     [DataContract]
     public
     class GetSubscriptionRequest:
-        GraniteReply
+        GraniteRequest
     {
         [DataMember]
         public bool   GetSubscriptionOfCurrentUser { get; set; }

@@ -30,7 +30,7 @@ namespace Granite.RequiredService.Payment
         [DataMember]
         public bool                 ReplaceCreditCard { get; set; }
         [DataMember]
-        public CreateCreditCardData CreditCardToCreate { get; set; }
+        public InitialCreditCardData CreditCardToCreate { get; set; }
         [DataMember]
         public UpdateCreditCardData CreditCardToUpdate { get; set; }
 

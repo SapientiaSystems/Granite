@@ -19,7 +19,7 @@ namespace Granite.RequiredService.Payment
         ServiceRequest
     {
         [DataMember]
-        public CreatePlanData PlanToCreate { get; set; }
+        public InitialPlanData PlanToCreate { get; set; }
     }
 }
 

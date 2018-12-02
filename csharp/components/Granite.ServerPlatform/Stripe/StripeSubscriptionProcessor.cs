@@ -42,7 +42,7 @@ namespace Granite.ServerPlatform.Stripe
             StripeSubscriptionService service =
                 new StripeSubscriptionService();
             StripeSubscription        subscription = null;
-            CreateSubscriptionData    subscriptionData = 
+            InitialSubscriptionData    subscriptionData = 
                                           request.SubscriptionToCreate;
 
             subscription =
@@ -64,7 +64,7 @@ namespace Granite.ServerPlatform.Stripe
                 {
                     ExternalSubscriptionId = subscription.Id,
                     IsSuccessful = true,
-                    SuccessMessage = "Subscription created."
+                    SuccessMessage = "External subscription created."
                 };
         }
 
@@ -74,7 +74,26 @@ namespace Granite.ServerPlatform.Stripe
         public UpdateExternalSubscriptionReply 
         UpdateExternalSubscription(UpdateExternalSubscriptionRequest request)
         {
-            throw new NotImplementedException();
+            StripeSubscriptionService service =
+                new StripeSubscriptionService();
+            StripeSubscription subscription = null;
+
+            subscription =
+                service.Update(
+                    request.ExternalSubscriptionId,
+                    new StripeSubscriptionUpdateOptions()
+                    {
+                        PlanId = request.ExternalPlanId
+                    });
+
+            return
+                new UpdateExternalSubscriptionReply()
+                {
+                    IsSuccessful = true,
+                    SuccessMessage = "External subscription updated",
+                    ExternalSubscriptionId = subscription.Id,
+                    ExternalPlanId = subscription.StripePlan.Id
+                };
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -92,7 +111,7 @@ namespace Granite.ServerPlatform.Stripe
                 new DeleteExternalSubscriptionReply()
                 {
                     IsSuccessful = true,
-                    SuccessMessage = "Subscription is deleted"
+                    SuccessMessage = "External subscription deleted"
                 };
         }
     }

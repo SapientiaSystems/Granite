@@ -41,6 +41,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("create")]
+        [HttpPost]
         public CreateUserReply 
         CreateUser(CreateUserRequest request)
         { 
@@ -51,6 +52,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("verify")]
+        [HttpPost]
         public VerifyUserReply 
         VerifyUser(VerifyUserRequest request)
         {
@@ -61,6 +63,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("update")]
+        [HttpPut]
         public UpdateUserReply 
         UpdateUser(UpdateUserRequest request)
         {
@@ -71,6 +74,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete")]
+        [HttpDelete]
         public DeleteUserReply
         DeleteUser(DeleteUserRequest request)
         {

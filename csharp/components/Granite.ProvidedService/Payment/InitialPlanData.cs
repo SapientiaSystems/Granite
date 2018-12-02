@@ -1,10 +1,9 @@
 ﻿//  ##########################################################################
-//  # File Name: CreateCreditCardData.cs
+//  # File Name: InitialPlanData.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Value;
-using System;
+using Granite.Common.Value;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Payment
@@ -15,20 +14,18 @@ namespace Granite.ProvidedService.Payment
     ///  
     [DataContract]
     public
-    class CreateCreditCardData
+    class InitialPlanData
     {
         [DataMember]
-        public string        CardHolderName { get; set; }
+        public string              PlanName { get; set; }
         [DataMember]
-        public PostalAddress BillingAddress { get; set; }
+        public PaymentIntervalKind IntervalType { get; set; }
         [DataMember]
-        public string        CardNumber { get; set; }
+        public int                 IntervalCount { get; set; }
         [DataMember]
-        public int           ExpirationMonth { get; set; }
+        public string              Currency { get; set; }
         [DataMember]
-        public int           ExpirationYear { get; set; }
-        [DataMember]
-        public string        SecurityCode { get; set; }
+        public decimal             Amount { get; set; }
     }
 }
 

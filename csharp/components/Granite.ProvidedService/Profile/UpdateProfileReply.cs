@@ -18,7 +18,7 @@ namespace Granite.ProvidedService.Profile
         GraniteReply
     {
         [DataMember]
-        public ProfileData CurrentProfile { get; set; }
+        public ProfileData UpdatedProfile { get; set; }
     }
 }
 

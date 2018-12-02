@@ -18,7 +18,7 @@ namespace Granite.ProvidedService.Payment
         GraniteRequest
     {
         [DataMember]
-        public CreateSubscriptionData SubscriptionToCreate { get; set; }
+        public InitialSubscriptionData SubscriptionToCreate { get; set; }
     }
 }
 

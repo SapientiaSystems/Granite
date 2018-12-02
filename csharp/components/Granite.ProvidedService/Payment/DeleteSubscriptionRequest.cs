@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 using Granite.ProvidedService.Transfer;
+using System;
 using System.Runtime.Serialization;
 
 namespace Granite.ProvidedService.Payment
@@ -17,6 +18,8 @@ namespace Granite.ProvidedService.Payment
     class DeleteSubscriptionRequest:
         GraniteRequest
     {
+        [DataMember]
+        public Guid SubscriptionIdOfSubscriptionToDelete { get; set; }
     }
 }
 

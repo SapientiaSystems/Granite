@@ -41,6 +41,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("create")]
+        [HttpPost]
         public CreateProfileReply 
         CreateProfile(CreateProfileRequest request)
         { 
@@ -51,6 +52,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("update")]
+        [HttpPut]
         public UpdateProfileReply 
         UpdateProfile(UpdateProfileRequest request)
         {
@@ -61,6 +63,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete")]
+        [HttpDelete]
         public DeleteProfileReply
         DeleteProfile(DeleteProfileRequest request)
         {

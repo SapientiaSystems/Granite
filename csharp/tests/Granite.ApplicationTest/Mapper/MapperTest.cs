@@ -512,7 +512,7 @@ namespace Granite.Application.Mapper
                 {
                     CorrelationId = Guid.NewGuid(),
                     PlanToCreate = 
-                        new CreatePlanData()
+                        new InitialPlanData()
                         {
                             PlanName = "Enterprise License",
                             IntervalType = PaymentIntervalKind.MONTH,

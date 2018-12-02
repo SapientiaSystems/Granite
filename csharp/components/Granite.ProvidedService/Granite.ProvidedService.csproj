@@ -38,8 +38,8 @@
     <Reference Include="Disruptor, Version=3.3.7.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Disruptor.3.3.7\lib\net45\Disruptor.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.3.4.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Ninject.3.3.4\lib\net45\Ninject.dll</HintPath>
@@ -51,7 +51,7 @@
       <HintPath>..\..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Strata.Foundation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Strata.Foundation.0.9.0\lib\net45\Debug\Strata.Foundation.dll</HintPath>
+      <HintPath>..\..\packages\Strata.Foundation.0.9.3\lib\net45\Debug\Strata.Foundation.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -70,9 +70,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Payment\AccountData.cs" />
-    <Compile Include="Payment\CreatePlanData.cs" />
+    <Compile Include="Payment\InitialPlanData.cs" />
     <Compile Include="Payment\CreatePlanRequest.cs" />
     <Compile Include="Payment\CreatePlanReply.cs" />
+    <Compile Include="Payment\CreditCardData.cs" />
     <Compile Include="Payment\DeletePlanRequest.cs" />
     <Compile Include="Payment\DeletePlanReply.cs" />
     <Compile Include="Payment\GetAccountReply.cs" />
@@ -80,10 +81,10 @@
     <Compile Include="Payment\GetSubscriptionRequest.cs" />
     <Compile Include="Payment\GetAccountRequest.cs" />
     <Compile Include="Payment\UpdateCreditCardData.cs" />
-    <Compile Include="Payment\CreateCreditCardData.cs" />
+    <Compile Include="Payment\InitialCreditCardData.cs" />
     <Compile Include="Payment\UpdateAccountData.cs" />
-    <Compile Include="Payment\CreateAccountData.cs" />
-    <Compile Include="Payment\CreateSubscriptionData.cs" />
+    <Compile Include="Payment\InitialAccountData.cs" />
+    <Compile Include="Payment\InitialSubscriptionData.cs" />
     <Compile Include="Payment\MakeRefundReply.cs" />
     <Compile Include="Payment\MakePaymentReply.cs" />
     <Compile Include="Payment\MakeRefundRequest.cs" />
@@ -122,6 +123,8 @@
     <Compile Include="Session\ISessionService.cs" />
     <Compile Include="Session\KeepAliveReply.cs" />
     <Compile Include="Session\KeepAliveRequest.cs" />
+    <Compile Include="Session\GetOrLoginReply.cs" />
+    <Compile Include="Session\GetOrLoginRequest.cs" />
     <Compile Include="Session\LogoutReply.cs" />
     <Compile Include="Session\LoginReply.cs" />
     <Compile Include="Session\LogoutRequest.cs" />

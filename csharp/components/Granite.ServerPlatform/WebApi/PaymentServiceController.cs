@@ -40,6 +40,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("create-plan")]
+        [HttpPost]
         public CreatePlanReply
         CreatePlan(CreatePlanRequest request)
         {
@@ -50,6 +51,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete-plan")]
+        [HttpDelete]
         public DeletePlanReply
         DeletePlan(DeletePlanRequest request)
         {
@@ -60,6 +62,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("create-account")]
+        [HttpPost]
         public CreateAccountReply 
         CreateAccount(CreateAccountRequest request)
         {
@@ -70,6 +73,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("update-account")]
+        [HttpPut]
         public UpdateAccountReply 
         UpdateAccount(UpdateAccountRequest request)
         {
@@ -80,6 +84,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete-account")]
+        [HttpDelete]
         public DeleteAccountReply
         DeleteAccount(DeleteAccountRequest request)
         {
@@ -90,6 +95,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("get-account")]
+        [HttpPost]
         public GetAccountReply 
         GetAccount(GetAccountRequest request)
         {
@@ -100,6 +106,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("create-subscription")]
+        [HttpPost]
         public CreateSubscriptionReply 
         CreateSubscription(CreateSubscriptionRequest request)
         {
@@ -110,6 +117,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("update-subscription")]
+        [HttpPut]
         public UpdateSubscriptionReply 
         UpdateSubscription(UpdateSubscriptionRequest request)
         {
@@ -120,6 +128,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("delete-subscription")]
+        [HttpDelete]
         public DeleteSubscriptionReply
         DeleteSubscription(DeleteSubscriptionRequest request)
         {
@@ -130,6 +139,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("get-subscription")]
+        [HttpPost]
         public GetSubscriptionReply 
         GetSubscription(GetSubscriptionRequest request)
         {
@@ -140,6 +150,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("make-payment")]
+        [HttpPost]
         public MakePaymentReply 
         MakePayment(MakePaymentRequest request)
         {
@@ -150,6 +161,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("make-refund")]
+        [HttpPost]
         public MakeRefundReply 
         MakeRefund(MakeRefundRequest request)
         {

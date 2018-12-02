@@ -47,8 +47,8 @@ namespace Granite.ServerPlatform.Stripe
                                       new StripeCardService();
             StripeCustomer        customer = null;
             StripeCard            card = null;
-            CreateAccountData     account = request.AccountToCreate;
-            CreateCreditCardData  cardData = account.CreditCardToCreate;
+            InitialAccountData    account = request.AccountToCreate;
+            InitialCreditCardData cardData = account.CreditCardToCreate;
             PostalAddress         billing = cardData.BillingAddress;
 
             customer =
@@ -92,7 +92,25 @@ namespace Granite.ServerPlatform.Stripe
                     UserId = account.UserIdOfAccountToCreate,
                     ExternalAccountId = customer.Id,
                     Email = customer.Email,
-                    ExternalPaymentMethodId = card.Id
+                    ExternalPaymentMethodId = card.Id,
+                    CreditCard = 
+                        new CreditCardData()
+                        {
+                            CardHolderName = card.Name,
+                            BillingAddress = 
+                                new PostalAddress()
+                                {
+                                    StreetAddress = card.AddressLine1,
+                                    City = card.AddressCity,
+                                    State = card.AddressState,
+                                    PostalCode = card.AddressZip,
+                                    CountryCode = card.AddressCountry
+                                },
+                            CardType = card.Brand,
+                            ObfuscatedCardNumber = "************" + card.Last4,
+                            ExpirationMonth = card.ExpirationMonth,
+                            ExpirationYear = card.ExpirationYear
+                        }
                 };
         }
 
@@ -125,8 +143,8 @@ namespace Granite.ServerPlatform.Stripe
         DeleteExternalAccount(DeleteExternalAccountRequest request)
         {
             StripeCustomerService service = new StripeCustomerService();
-            StripeCustomer snapshot = null;
-            StripeDeleted deleted = null;
+            StripeCustomer        snapshot = null;
+            StripeDeleted         deleted = null;
 
             snapshot = service.Get(request.ExternalAccountId);
             deleted = service.Delete(request.ExternalAccountId);
@@ -153,7 +171,43 @@ namespace Granite.ServerPlatform.Stripe
         public GetExternalAccountReply 
         GetExternalAccount(GetExternalAccountRequest request)
         {
-            throw new System.NotImplementedException();
+            StripeCustomerService customerService =
+                                      new StripeCustomerService();
+            StripeCardService     cardService =
+                                      new StripeCardService();
+            StripeCustomer        customer = null;
+            StripeCard            card = null;
+
+            customer = customerService.Get(request.ExternalAccountId);
+            card =
+                cardService.Get(
+                    request.ExternalAccountId,
+                    request.ExternalPaymentMethodId);
+
+            return
+                new GetExternalAccountReply()
+                {
+                    ExternalAccountId = customer.Id,
+                    Email = customer.Email,
+                    CreditCard =
+                        new CreditCardData()
+                        {
+                            CardHolderName = card.Name,
+                            BillingAddress =
+                                new PostalAddress()
+                                {
+                                    StreetAddress = card.AddressLine1,
+                                    City = card.AddressCity,
+                                    State = card.AddressState,
+                                    PostalCode = card.AddressZip,
+                                    CountryCode = card.AddressCountry
+                                },
+                            CardType = card.Brand,
+                            ObfuscatedCardNumber = "************" + card.Last4,
+                            ExpirationMonth = card.ExpirationMonth,
+                            ExpirationYear = card.ExpirationYear
+                        }
+                };
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -175,19 +229,27 @@ namespace Granite.ServerPlatform.Stripe
             UpdateExternalAccountReply   reply,
             UpdateExternalAccountRequest request)
         {
-            StripeCustomerService service = new StripeCustomerService();
+            StripeCustomerService customerService = 
+                                      new StripeCustomerService();
+            StripeCardService     cardService =
+                                      new StripeCardService();
             StripeCustomer        snapshot = null; 
             StripeCustomer        customer = null;
+            StripeCard            card = null;
 
-            snapshot = service.Get(request.ExternalAccountId);
+            snapshot = customerService.Get(request.ExternalAccountId);
+            card = 
+                cardService.Get(
+                    request.ExternalAccountId,
+                    request.ExternalPaymentMethodId);
             customer =
-                service.Update(
+                customerService.Update(
                     request.ExternalAccountId,
                     ToCustomerUpdateOptions(request));
 
             PushRollbackAction(
                 () => {
-                    service.Update(
+                    customerService.Update(
                         snapshot.Id,
                         new StripeCustomerUpdateOptions()
                         {
@@ -198,6 +260,24 @@ namespace Granite.ServerPlatform.Stripe
             reply.ExternalAccountId = customer.Id;
             reply.Email = customer.Email;
             reply.Description = customer.Description;
+            reply.CreditCard =
+                new CreditCardData()
+                {
+                    CardHolderName = card.Name,
+                    BillingAddress =
+                        new PostalAddress()
+                        {
+                            StreetAddress = card.AddressLine1,
+                            City = card.AddressCity,
+                            State = card.AddressState,
+                            PostalCode = card.AddressZip,
+                            CountryCode = card.AddressCountry
+                        },
+                    CardType = card.Brand,
+                    ObfuscatedCardNumber = "************" + card.Last4,
+                    ExpirationMonth = card.ExpirationMonth,
+                    ExpirationYear = card.ExpirationYear
+                };
             return reply;
         }
 
@@ -245,7 +325,7 @@ namespace Granite.ServerPlatform.Stripe
             StripeCardService    service  = new StripeCardService();
             StripeCard           snapshot = null;
             StripeCard           card     = null;
-            CreateCreditCardData cardData = request.CreditCardToCreate;
+            InitialCreditCardData cardData = request.CreditCardToCreate;
             PostalAddress        billing  = cardData.BillingAddress;
 
             snapshot =
@@ -280,6 +360,24 @@ namespace Granite.ServerPlatform.Stripe
                 () => { service.Delete(request.ExternalAccountId,card.Id); });
 
             reply.ExternalPaymentMethodId = card.Id;
+            reply.CreditCard =
+                new CreditCardData()
+                {
+                    CardHolderName = card.Name,
+                    BillingAddress =
+                        new PostalAddress()
+                        {
+                            StreetAddress = card.AddressLine1,
+                            City = card.AddressCity,
+                            State = card.AddressState,
+                            PostalCode = card.AddressZip,
+                            CountryCode = card.AddressCountry
+                        },
+                    CardType = card.Brand,
+                    ObfuscatedCardNumber = "************" + card.Last4,
+                    ExpirationMonth = card.ExpirationMonth,
+                    ExpirationYear = card.ExpirationYear
+                };
             return reply;
         }
 
@@ -337,6 +435,24 @@ namespace Granite.ServerPlatform.Stripe
                         });});
 
             reply.ExternalPaymentMethodId = card.Id;
+            reply.CreditCard =
+                new CreditCardData()
+                {
+                    CardHolderName = card.Name,
+                    BillingAddress =
+                        new PostalAddress()
+                        {
+                            StreetAddress = card.AddressLine1,
+                            City = card.AddressCity,
+                            State = card.AddressState,
+                            PostalCode = card.AddressZip,
+                            CountryCode = card.AddressCountry
+                        },
+                    CardType = card.Brand,
+                    ObfuscatedCardNumber = "************" + card.Last4,
+                    ExpirationMonth = card.ExpirationMonth,
+                    ExpirationYear = card.ExpirationYear
+                };
             return reply;
         }
 

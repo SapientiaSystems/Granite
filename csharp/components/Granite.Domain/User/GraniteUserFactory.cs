@@ -3,14 +3,13 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using System;
-using System.Collections.Generic;
 using Granite.Common.Verification;
 using Granite.Domain.Constraint;
 using Granite.Domain.Group;
 using Granite.Domain.Role;
 using Granite.Domain.Tenant;
 using Strata.Foundation.Value;
+using System.Collections.Generic;
 using SystemEx.Injection;
 
 namespace Granite.Domain.User
@@ -52,7 +51,7 @@ namespace Granite.Domain.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public IUser 
+        public virtual IUser 
         CreateUser(
             ITenant      tenant,
             string       userName,
@@ -78,7 +77,7 @@ namespace Granite.Domain.User
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public IUser 
+        public virtual IUser 
         CreateUser(
             ITenant      tenant,
             string       userName,

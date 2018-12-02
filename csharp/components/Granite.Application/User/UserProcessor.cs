@@ -5,11 +5,9 @@
 
 using AutoMapper;
 using Granite.Application.Service;
-using Granite.Application.Shared;
 using Granite.Common.Access;
 using Granite.Common.Value;
 using Granite.Common.Verification;
-using Granite.Domain.Group;
 using Granite.Domain.Role;
 using Granite.Domain.Session;
 using Granite.Domain.Shared;
@@ -17,14 +15,12 @@ using Granite.Domain.Tenant;
 using Granite.Domain.User;
 using Granite.ProvidedService.Transfer;
 using Granite.ProvidedService.User;
-using Strata.Application.Service;
 using Strata.Domain.NamedQuery;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
 using Strata.Foundation.Value;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using SystemEx.Injection;
 
 namespace Granite.Application.User
@@ -122,6 +118,7 @@ namespace Granite.Application.User
                 return
                     new CreateUserReply()
                     {
+                        IsSuccessful = true,
                         NewUser = itsMapper.Map(user,new UserData()),
                         SuccessMessage =
                              string.Format(
@@ -176,7 +173,51 @@ namespace Granite.Application.User
         public UpdateUserReply
         UpdateUser(UpdateUserRequest request)
         {
-            throw new InvalidOperationException();
+            IUser user = GetUserToUpdate(request);
+
+            if (user == null)
+                return
+                    new UpdateUserReply()
+                    {
+                        IsSuccessful = false,
+                        FailureMessage =
+                            string.Format(
+                                "User {0} does not exist.",
+                                GetUserIdentifier(request))
+                    };
+
+            user = DoUpdateUser(user,request);
+
+            if (request.UserToUpdate.Operation == UserUpdateKind.CHANGE_EMAIL)
+            {
+                itsNotifier.Notify(
+                    new VerificationNotice()
+                    {
+                        MessageType = MessageKind.CONFIRM_UPDATED_USER_EMAIL,
+                        From = "verification@ezvaluator.com",
+                        To = request.UserToUpdate.NewEmail.ToString(),
+                        Parameters =
+                            new Dictionary<string,string>()
+                            {
+                            {Constant.CORRELATION_ID_PROPERTY,request.CorrelationId.ToString()},
+                            {Constant.USER_ID_PROPERTY,user.UserId.ToString()},
+                            {Constant.USER_NAME_PROPERTY,user.UserName},
+                            {Constant.VERIFICATION_CODE_PROPERTY,user.VerificationCode}
+                            }
+                    });
+            }
+
+            return
+                new UpdateUserReply()
+                {
+                    IsSuccessful = true,
+                    SuccessMessage =
+                            string.Format(
+                                "User {0} has been updated.",
+                                user.UserName),
+                    UpdatedUser = itsMapper.Map(user,new UserData())
+                };
+
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -196,7 +237,7 @@ namespace Granite.Application.User
                         IsSuccessful = true,
                         SuccessMessage = 
                             string.Format(
-                                "NewUser {0} does not exist or " +
+                                "User {0} does not exist or " +
                                 "has already been deleted.",
                                 user.UserId)
                     };
@@ -357,6 +398,79 @@ namespace Granite.Application.User
                             userToCreate.Email,
                             itsRoleRepository.GetRoles(
                                 new string[] { "GraniteUser" })));
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected IUser
+        GetUserToUpdate(UpdateUserRequest request)
+        {
+            UpdateUserData target = request.UserToUpdate;
+
+            if (target == null)
+                return null;
+
+            if (target.CurrentUser)
+                return GetCurrentUser(request);
+
+            if (target.UserIdOfUserToUpdate != null)
+                return itsUserRepository.GetUnique(target.UserIdOfUserToUpdate);
+
+            if (!string.IsNullOrEmpty(target.UserNameOfUserToUpdate))
+                return
+                    itsUserRepository.GetUniqueWithUserName(
+                        target.UserNameOfUserToUpdate);
+
+            return null;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected string
+        GetUserIdentifier(UpdateUserRequest request)
+        {
+            UpdateUserData target = request.UserToUpdate;
+
+            if (target == null)
+                return "<no user>";
+
+            if (target.UserIdOfUserToUpdate != null)
+                return target.UserIdOfUserToUpdate.ToString();
+            else if (!string.IsNullOrEmpty(target.UserNameOfUserToUpdate))
+                return target.UserNameOfUserToUpdate;
+
+            return "<no user>";
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        protected virtual IUser
+        DoUpdateUser(IUser user,UpdateUserRequest request)
+        {
+            UpdateUserData userToUpdate = request.UserToUpdate;
+
+            if (userToUpdate.Operation == UserUpdateKind.CHANGE_PASSWORD)
+            {
+                if (!user.Password.Matches(userToUpdate.CurrentPassword))
+                    throw 
+                        new AuthenticationException(
+                            "current password is incorrect.");
+
+                user.Password = new HashedString(userToUpdate.NewPassword);
+            }           
+            else if (userToUpdate.Operation == UserUpdateKind.CHANGE_EMAIL)
+            { 
+                user.Email = userToUpdate.NewEmail;
+
+            }
+
+            return itsUserRepository.Update(user);
         }
 
         //////////////////////////////////////////////////////////////////////

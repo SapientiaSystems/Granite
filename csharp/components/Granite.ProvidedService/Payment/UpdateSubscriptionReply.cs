@@ -17,6 +17,8 @@ namespace Granite.ProvidedService.Payment
     class UpdateSubscriptionReply:
         GraniteReply
     {
+        [DataMember]
+        public SubscriptionData UpdatedSubscription { get; set; }
     }
 }
 

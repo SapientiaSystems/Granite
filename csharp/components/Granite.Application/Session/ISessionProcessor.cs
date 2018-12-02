@@ -33,6 +33,13 @@ namespace Granite.Application.Session
         /// <summary>
         /// </summary>
         ///  
+        GetOrLoginReply
+        GetOrLogin(GetOrLoginRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         KeepAliveReply
         KeepAlive(KeepAliveRequest request);
     }

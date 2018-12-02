@@ -50,6 +50,15 @@ namespace Granite.Application.Session
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
+        public GetOrLoginReply
+        GetOrLogin(GetOrLoginRequest request)
+        {
+            return itsProcessor.GetOrLogin(request);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
         public KeepAliveReply 
         KeepAlive(KeepAliveRequest request)
         {

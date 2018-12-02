@@ -153,6 +153,28 @@ namespace Granite.Application.Session
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
+        public GetOrLoginReply
+        GetOrLogin(GetOrLoginRequest request)
+        {
+            ISession session = GetSession(request);
+
+            if (IsValid(session,request))
+                return
+                    new GetOrLoginReply()
+                    {
+                        IsSuccessful = true,
+                        Session = itsMapper.Map(session,new SessionData())
+                    };
+
+            return
+                itsMapper.Map(
+                    Login(itsMapper.Map(request,new LoginRequest())),
+                    new GetOrLoginReply());
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
         public KeepAliveReply 
         KeepAlive(KeepAliveRequest request)
         {
@@ -173,6 +195,30 @@ namespace Granite.Application.Session
         public void 
         OnException(Exception exception)
         {
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        /// 
+        protected ISession
+        GetSession(GetOrLoginRequest request)
+        {
+            return 
+                itsSessionRepository.GetUniqueWithAccessToken(
+                    request.AccessToken);
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        /// 
+        protected bool 
+        IsValid(ISession session,GetOrLoginRequest request)
+        {
+            return
+                session != null &&
+                session.IsOpen;
         }
     }
 }

@@ -41,6 +41,7 @@ namespace Granite.ServerPlatform.WebApi
         /// <inheritDoc/>
         /// 
         [Route("register")]
+        [HttpPost]
         public RegisterReply 
         Register(RegisterRequest request)
         {

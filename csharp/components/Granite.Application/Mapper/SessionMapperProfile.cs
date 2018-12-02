@@ -26,10 +26,17 @@ namespace Granite.Application.Mapper
         public
         SessionMapperProfile()
         {
-             CreateMap<ISession,SessionData>()
+            CreateMap<ISession,SessionData>()
                 .ForMember(
                     dest => dest.SessionId,
                     opt => opt.MapFrom(src => src.PrimaryId));
+
+            CreateMap<GetOrLoginRequest,LoginRequest>();
+
+            CreateMap<LoginReply,GetOrLoginReply>()
+                .ForMember(
+                    dest => dest.Session,
+                    opt => opt.MapFrom(src => src.NewSession));
         }
     }
 }

@@ -17,6 +17,10 @@ namespace Granite.ProvidedService.Payment
     class UpdateSubscriptionRequest:
         GraniteRequest
     {
+        [DataMember]
+        public SubscriptionData        CurrentSubscription { get; set; }
+        [DataMember]
+        public InitialSubscriptionData NewSubscription { get; set; }
     }
 }
 

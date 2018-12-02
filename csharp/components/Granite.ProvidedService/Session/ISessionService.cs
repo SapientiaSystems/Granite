@@ -38,6 +38,14 @@ namespace Granite.ProvidedService.Session
         /// </summary>
         ///  
         [OperationContract]
+        GetOrLoginReply
+        GetOrLogin(GetOrLoginRequest request);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        [OperationContract]
         [Authorize(Roles = "GraniteGuest")]
         KeepAliveReply
         KeepAlive(KeepAliveRequest request);
