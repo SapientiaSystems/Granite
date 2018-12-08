@@ -1,5 +1,5 @@
 ﻿//  ##########################################################################
-//  # File Name: CreateUserData.cs
+//  # File Name: InitialUserData.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
@@ -16,7 +16,7 @@ namespace Granite.ProvidedService.User
     ///  
     [DataContract]
     public
-    class CreateUserData
+    class InitialUserData
     {
         [DataMember]
         public string       UserName { get; set; }

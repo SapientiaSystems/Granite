@@ -59,9 +59,6 @@ namespace Granite.ServerPlatform.Stripe
                         Description = request.Description
                     });
 
-            PushRollbackAction(
-                () => { customerService.Delete(customer.Id); });
-
             card =
                 cardService.Create(
                     customer.Id,
@@ -84,7 +81,11 @@ namespace Granite.ServerPlatform.Stripe
                     });
 
             PushRollbackAction(
-                () => { cardService.Delete(customer.Id,card.Id); });
+                () => 
+                {
+                    cardService.Delete(customer.Id,card.Id);
+                    customerService.Delete(customer.Id);
+                });
 
             return
                 new CreateExternalAccountReply()
@@ -322,19 +323,21 @@ namespace Granite.ServerPlatform.Stripe
             UpdateExternalAccountReply   reply,
             UpdateExternalAccountRequest request)
         {
-            StripeCardService    service  = new StripeCardService();
-            StripeCard           snapshot = null;
-            StripeCard           card     = null;
+            StripeCardService     cardService  = new StripeCardService();
+            StripeCustomerService customerService = new StripeCustomerService();
+            StripeCard            snapshot = null;
+            StripeCard            card     = null;
+            StripeCustomer        customer = null;
             InitialCreditCardData cardData = request.CreditCardToCreate;
-            PostalAddress        billing  = cardData.BillingAddress;
+            PostalAddress         billing  = cardData.BillingAddress;
 
             snapshot =
-                service.Get(
+                cardService.Get(
                     request.ExternalAccountId,
                     request.ExternalPaymentMethodId);
 
             card =
-                service.Create(
+                cardService.Create(
                     request.ExternalAccountId,
                     new StripeCardCreateOptions()
                     {
@@ -354,10 +357,26 @@ namespace Granite.ServerPlatform.Stripe
                             }
                     });
 
-            service.Delete(request.ExternalAccountId,snapshot.Id);
+            customer = 
+                customerService.Update(
+                    request.ExternalAccountId,
+                    new StripeCustomerUpdateOptions()
+                    {
+                        DefaultSource = card.Id
+                    });
 
             PushRollbackAction(
-                () => { service.Delete(request.ExternalAccountId,card.Id); });
+                () => 
+                {
+                    customerService.Update(
+                        customer.Id,
+                        new StripeCustomerUpdateOptions()
+                        {
+                            DefaultSource = snapshot.Id
+                        });
+                    cardService.Delete(request.ExternalAccountId,card.Id);
+                });
+
 
             reply.ExternalPaymentMethodId = card.Id;
             reply.CreditCard =

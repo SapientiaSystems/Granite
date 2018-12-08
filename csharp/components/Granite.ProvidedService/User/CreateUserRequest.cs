@@ -21,7 +21,7 @@ namespace Granite.ProvidedService.User
         GraniteRequest
     {
         [DataMember]
-        public CreateUserData UserToCreate { get; set; }
+        public InitialUserData UserToCreate { get; set; }
     }
 }
 

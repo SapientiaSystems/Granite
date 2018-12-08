@@ -27,11 +27,49 @@ namespace Granite.Application.Mapper
         public
         SubscriptionMapperProfile()
         {
+            // Create
             CreateMap<
                 CreateSubscriptionRequest,
                 CreateExternalSubscriptionRequest>();
-            CreateMap<CreateExternalSubscriptionReply,ISubscription>();
+            CreateMap<
+                CreateExternalSubscriptionReply,
+                CreateSubscriptionReply>();
+            CreateMap<CreateExternalSubscriptionReply,ISubscription>()
+                .As<StandardSubscription>();
+            CreateMap<ISubscription,CreateSubscriptionReply>()
+                .ForMember(
+                    dest => dest.NewSubscription,
+                    opt => opt.MapFrom(src => src));
+            CreateMap<IAccount,CreateExternalSubscriptionRequest>();
+
+            // Update
+            CreateMap<
+                UpdateSubscriptionRequest,
+                UpdateExternalSubscriptionRequest>();
+            CreateMap<ISubscription,UpdateExternalSubscriptionRequest>();
+            CreateMap<
+                UpdateExternalSubscriptionReply,
+                UpdateSubscriptionReply>();
+            CreateMap<UpdateExternalSubscriptionReply,ISubscription>()
+                .As<StandardSubscription>();
+            CreateMap<ISubscription,UpdateSubscriptionReply>()
+                .ForMember(
+                    dest => dest.UpdatedSubscription,
+                    opt => opt.MapFrom(src => src));
+
+            // Delete
+            CreateMap<
+                DeleteSubscriptionRequest,
+                DeleteExternalSubscriptionRequest>();
+            CreateMap<
+                DeleteExternalSubscriptionReply,
+                DeleteSubscriptionReply>();
+
+            // Common
+            CreateMap<InitialSubscriptionData,ISubscription>()
+                .As<StandardSubscription>();
             CreateMap<ISubscription,SubscriptionData>();
+
         }
     }
 }

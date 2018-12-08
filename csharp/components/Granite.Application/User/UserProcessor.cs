@@ -321,7 +321,7 @@ namespace Granite.Application.User
         protected void
         ValidateRequest(CreateUserRequest request)
         {
-            CreateUserData userToCreate = request.UserToCreate;
+            InitialUserData userToCreate = request.UserToCreate;
 
             if (itsUserRepository.HasUniqueWithUserName(userToCreate.UserName))
                 throw
@@ -339,7 +339,7 @@ namespace Granite.Application.User
         protected virtual ITenant
         DoGetOrCreateTenant(CreateUserRequest request)
         {
-            CreateUserData userToCreate = request.UserToCreate;
+            InitialUserData userToCreate = request.UserToCreate;
 
             if (userToCreate.UseExistingTenant)
             {
@@ -377,7 +377,7 @@ namespace Granite.Application.User
         protected virtual IUser 
         DoCreateUser(CreateUserRequest request,ITenant tenant)
         {
-            CreateUserData userToCreate = request.UserToCreate;
+            InitialUserData userToCreate = request.UserToCreate;
 
             if (userToCreate.HasSubscriptionType)
                 return

@@ -132,7 +132,7 @@
     <Compile Include="Session\SessionData.cs" />
     <Compile Include="Transfer\GraniteReply.cs" />
     <Compile Include="Transfer\GraniteRequest.cs" />
-    <Compile Include="User\CreateUserData.cs" />
+    <Compile Include="User\InitialUserData.cs" />
     <Compile Include="User\GetUserRequest.cs" />
     <Compile Include="User\GetUserReply.cs" />
     <Compile Include="User\DeleteUserReply.cs" />

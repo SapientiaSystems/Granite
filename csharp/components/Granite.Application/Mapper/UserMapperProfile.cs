@@ -26,7 +26,7 @@ namespace Granite.Application.Mapper
         public
         UserMapperProfile()
         {
-            CreateMap<CreateUserData,IUser>();
+            CreateMap<InitialUserData,IUser>();
 
             CreateMap<IUser,UserData>()
                 .ConvertUsing<UserConverter>();

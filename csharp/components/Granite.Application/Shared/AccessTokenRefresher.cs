@@ -53,6 +53,7 @@ namespace Granite.Application.Shared
                 if (MustRefresh(session))
                 {
                     session.Refresh();
+                    session = itsSessions.Update(session);
                     reply.RefreshedAccessToken = session.AccessToken;
                 }
             }

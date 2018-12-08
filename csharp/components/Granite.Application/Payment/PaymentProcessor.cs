@@ -211,7 +211,7 @@ namespace Granite.Application.Payment
             if (!externalReply.IsSuccessful)
                 return itsMapper.Map<UpdateAccountReply>(externalReply);
 
-            itsMapper.Map(account,externalReply);
+            account = itsMapper.Map(externalReply,account);
             account = itsAccountRepository.Update(account);
             accountData = itsMapper.Map<AccountData>(account);
             accountData.CreditCard = externalReply.CreditCard;
@@ -221,7 +221,7 @@ namespace Granite.Application.Payment
                 {
                     IsSuccessful = true,
                     SuccessMessage = externalReply.SuccessMessage,
-                    CurrentAccount = accountData
+                    UpdatedAccount = accountData
                 };  
         }
 
@@ -394,7 +394,11 @@ namespace Granite.Application.Payment
                         FailureMessage = "Subscription not found"
                     };
 
-            plan = itsPlanRepository.GetUnique(subscription.PlanId);
+            plan = 
+                itsPlanRepository.GetUniqueWithPlanName(
+                    request
+                        .NewSubscription
+                        .SubscriptionType);
 
             if (plan == null)
                 return
@@ -404,8 +408,13 @@ namespace Granite.Application.Payment
                         FailureMessage = "Plan not found"
                     };
 
-            externalRequest =
-                itsMapper.Map<UpdateExternalSubscriptionRequest>(request);
+            subscription.PlanId = plan.PlanId;
+            subscription.ExternalPlanId = plan.ExternalPlanId;
+
+            externalRequest =               
+                itsMapper.Map(
+                    subscription,
+                    itsMapper.Map<UpdateExternalSubscriptionRequest>(request));
             externalReply = 
                 itsService.UpdateExternalSubscription(externalRequest);
             subscription =

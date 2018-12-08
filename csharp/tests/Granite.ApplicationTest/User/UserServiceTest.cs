@@ -90,7 +90,7 @@ namespace Granite.Application.User
             {
                 CorrelationId = Guid.NewGuid(),
                 UserToCreate = 
-                    new CreateUserData()
+                    new InitialUserData()
                     {
                         UserName = "adamsmith",
                         Password = "foobar1!@#",
@@ -101,7 +101,7 @@ namespace Granite.Application.User
             {
                 CorrelationId = Guid.NewGuid(),
                 UserToCreate = 
-                    new CreateUserData()
+                    new InitialUserData()
                     {
                         UserName = "jeremy.bentham",
                         Password = "biz1buz@#$",
@@ -112,7 +112,7 @@ namespace Granite.Application.User
             {
                 CorrelationId = Guid.NewGuid(),
                 UserToCreate =
-                    new CreateUserData()
+                    new InitialUserData()
                     {
                         UserName = "davidricardo@protonmail.com",
                         Password = "foo!baz#1",
@@ -123,7 +123,7 @@ namespace Granite.Application.User
             {
                 CorrelationId = Guid.NewGuid(),
                 UserToCreate =
-                    new CreateUserData()
+                    new InitialUserData()
                     {
                         UserName = "sjevons",
                         Password = "foo!baz#2",

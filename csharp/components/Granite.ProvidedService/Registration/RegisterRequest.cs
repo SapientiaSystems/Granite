@@ -24,7 +24,7 @@ namespace Granite.ProvidedService.Registration
         [DataMember]
         public RegistrationKind       RegistrationType { get; set; }
         [DataMember]
-        public CreateUserData         UserToCreate { get; set; }
+        public InitialUserData         UserToCreate { get; set; }
         [DataMember]
         public CreateOrUpdateProfileData      
                                       ProfileToCreate { get; set; }

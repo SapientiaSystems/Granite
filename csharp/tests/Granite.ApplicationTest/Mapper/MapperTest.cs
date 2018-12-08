@@ -10,6 +10,7 @@ using Granite.Common.Verification;
 using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
 using Granite.Domain.Group;
+using Granite.Domain.Payment;
 using Granite.Domain.Profile;
 using Granite.Domain.Role;
 using Granite.Domain.Session;
@@ -171,8 +172,8 @@ namespace Granite.Application.Mapper
         public void
         TestMapCreateUserDataToUser()
         {
-            CreateUserData source =
-                new CreateUserData()
+            InitialUserData source =
+                new InitialUserData()
                 {
                     TenantId = Guid.NewGuid(),
                     UseExistingTenant = true,
@@ -241,7 +242,7 @@ namespace Granite.Application.Mapper
                     CorrelationId = Guid.NewGuid(),
                     RegistrationType = RegistrationKind.USER_PROFILE,
                     UserToCreate =
-                        new CreateUserData()
+                        new InitialUserData()
                         {
                             TenantId = Guid.NewGuid(),
                             UseExistingTenant = true,
@@ -287,7 +288,7 @@ namespace Granite.Application.Mapper
                     CorrelationId = Guid.NewGuid(),
                     RegistrationType = RegistrationKind.USER_PROFILE,
                     UserToCreate =
-                        new CreateUserData()
+                        new InitialUserData()
                         {
                             TenantId = Guid.NewGuid(),
                             UseExistingTenant = true,
@@ -561,6 +562,428 @@ namespace Granite.Application.Mapper
             Assert.AreEqual(source.NewPlan.IntervalCount,destination.NewPlan.IntervalCount);
             Assert.AreEqual(source.NewPlan.Currency,destination.NewPlan.Currency);
             Assert.AreEqual(source.NewPlan.Amount,destination.NewPlan.Amount);
+        }
+
+        [Test]
+        public void
+        TestMapCreateAccountRequestToCreateExternalAccountRequest()
+        {
+            CreateAccountRequest source =
+                new CreateAccountRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    AccountToCreate =
+                        new InitialAccountData()
+                        {
+                            UserIdOfAccountToCreate = Guid.NewGuid(),
+                            Description = "EzValuator Payment Account",
+                            Email = "user@xyz.com",
+                            CreditCardToCreate =
+                                new InitialCreditCardData()
+                                {
+                                    CardHolderName = "Adam Smith",
+                                    BillingAddress =
+                                        new PostalAddress()
+                                        {
+                                            StreetAddress = "123 Main St",
+                                            City = "Los Angeles",
+                                            State = "CA",
+                                            PostalCode = "90017",
+                                            CountryCode = "US"
+                                        },
+                                    CardNumber = "4242123412341234",
+                                    ExpirationMonth = 7,
+                                    ExpirationYear = 2021,
+                                    SecurityCode = "123"
+                                }
+                        }
+                };
+            CreateExternalAccountRequest destination = itsTarget.Map<CreateExternalAccountRequest>(source);
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+            Assert.AreEqual(
+                source.AccountToCreate.UserIdOfAccountToCreate,
+                destination.AccountToCreate.UserIdOfAccountToCreate);
+            Assert.AreEqual(
+                source.AccountToCreate.Description,
+                destination.AccountToCreate.Description);
+            Assert.AreEqual(
+                source.AccountToCreate.Email,
+                destination.AccountToCreate.Email);
+            Assert.AreEqual(
+                source.AccountToCreate.CreditCardToCreate.CardHolderName,
+                destination.AccountToCreate.CreditCardToCreate.CardHolderName);
+            Assert.AreEqual(
+                source.AccountToCreate.CreditCardToCreate.BillingAddress,
+                destination.AccountToCreate.CreditCardToCreate.BillingAddress);
+            Assert.AreEqual(
+                source.AccountToCreate.CreditCardToCreate.CardNumber,
+                destination.AccountToCreate.CreditCardToCreate.CardNumber);
+            Assert.AreEqual(
+                source.AccountToCreate.CreditCardToCreate.ExpirationMonth,
+                destination.AccountToCreate.CreditCardToCreate.ExpirationMonth);
+            Assert.AreEqual(
+                source.AccountToCreate.CreditCardToCreate.ExpirationYear,
+                destination.AccountToCreate.CreditCardToCreate.ExpirationYear);
+            Assert.AreEqual(
+                source.AccountToCreate.CreditCardToCreate.SecurityCode,
+                destination.AccountToCreate.CreditCardToCreate.SecurityCode);
+        }
+
+        [Test]
+        public void
+        TestMapCreateExternalAccountReplyToCreateAccountReply()
+        {
+            CreateExternalAccountReply source =
+                new CreateExternalAccountReply()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    IsSuccessful = true,
+                    SuccessMessage = "success blah blah blah",
+                    ExternalAccountId = "acct_123456789",
+                    ExternalPaymentMethodId = "card_123456789",
+                    Email = "user@emailaddress.com",
+                    CreditCard =
+                        new CreditCardData()
+                        {
+                            CardHolderName = "Adam Smith",
+                            BillingAddress =
+                                        new PostalAddress()
+                                        {
+                                            StreetAddress = "123 Main St",
+                                            City = "Los Angeles",
+                                            State = "CA",
+                                            PostalCode = "90017",
+                                            CountryCode = "US"
+                                        },
+                            ObfuscatedCardNumber = "************1234",
+                            ExpirationMonth = 7,
+                            ExpirationYear = 2021,
+                            SecurityCode = null
+
+                        }
+                };
+            IAccount account = itsTarget.Map<IAccount>(source);
+            CreateAccountReply destination =
+                itsTarget.Map(account,itsTarget.Map<CreateAccountReply>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+
+            Assert.AreEqual(
+                source.ExternalAccountId,
+                account.ExternalAccountId);
+            Assert.AreEqual(
+                source.ExternalPaymentMethodId,
+                account.ExternalPaymentMethodId);
+
+            Assert.AreEqual(
+                source.CreditCard,
+                destination.NewAccount.CreditCard);
+        }
+
+        [Test]
+        public void
+        TestMapUpdateAccountRequestToUpdateExternalAccountRequest()
+        {
+            UpdateAccountRequest source =
+                new UpdateAccountRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    AccountToUpdate =
+                        new UpdateAccountData()
+                        {
+                            UserIdOfAccountToUpdate = Guid.NewGuid(),
+                            AccountIdOfAccountToUpdate = Guid.NewGuid(),
+                            Description = "EzValuator Payment Account",
+                            Email = "user@xyz.com",
+                            ReplaceCreditCard = true,
+                            CreditCardToCreate =
+                                new InitialCreditCardData()
+                                {
+                                    CardHolderName = "Adam Smith",
+                                    BillingAddress =
+                                        new PostalAddress()
+                                        {
+                                            StreetAddress = "123 Main St",
+                                            City = "Los Angeles",
+                                            State = "CA",
+                                            PostalCode = "90017",
+                                            CountryCode = "US"
+                                        },
+                                    CardNumber = "4242123412341234",
+                                    ExpirationMonth = 7,
+                                    ExpirationYear = 2021,
+                                    SecurityCode = "123"
+                                }
+                        }
+                };
+            IAccount account =
+                new StandardAccount()
+                {
+                    AccountId = Guid.NewGuid(),
+                    UserId = Guid.NewGuid(),
+                    ExternalAccountId = "acct_123456789",
+                    ExternalPaymentMethodId = "card_987654321"
+                };
+            UpdateExternalAccountRequest destination = 
+                itsTarget.Map(account,itsTarget.Map<UpdateExternalAccountRequest>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+            Assert.AreEqual(
+               source.AccountToUpdate.ReplaceCreditCard,
+               destination.ReplaceCreditCard);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate,
+                destination.CreditCardToCreate);
+            Assert.AreEqual(
+                source.AccountToUpdate.Description,
+                destination.Description);
+            Assert.AreEqual(
+                source.AccountToUpdate.Email,
+                destination.Email);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate.CardHolderName,
+                destination.CreditCardToCreate.CardHolderName);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate.BillingAddress,
+                destination.CreditCardToCreate.BillingAddress);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate.CardNumber,
+                destination.CreditCardToCreate.CardNumber);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate.ExpirationMonth,
+                destination.CreditCardToCreate.ExpirationMonth);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate.ExpirationYear,
+                destination.CreditCardToCreate.ExpirationYear);
+            Assert.AreEqual(
+                source.AccountToUpdate.CreditCardToCreate.SecurityCode,
+                destination.CreditCardToCreate.SecurityCode);
+            Assert.AreEqual(
+                account.ExternalAccountId,
+                destination.ExternalAccountId);
+            Assert.AreEqual(
+                account.ExternalPaymentMethodId,
+                destination.ExternalPaymentMethodId);
+        }
+
+        [Test]
+        public void
+        TestMapUpdateExternalAccountReplyToUpdateAccountReply()
+        {
+            UpdateExternalAccountReply source =
+                new UpdateExternalAccountReply()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    IsSuccessful = true,
+                    SuccessMessage = "success blah blah blah",
+                    ExternalAccountId = "acct_123456789",
+                    ExternalPaymentMethodId = "card_123456789",
+                    Email = "user@emailaddress.com",
+                    CreditCard =
+                        new CreditCardData()
+                        {
+                            CardHolderName = "Adam Smith",
+                            BillingAddress =
+                                        new PostalAddress()
+                                        {
+                                            StreetAddress = "123 Main St",
+                                            City = "Los Angeles",
+                                            State = "CA",
+                                            PostalCode = "90017",
+                                            CountryCode = "US"
+                                        },
+                            ObfuscatedCardNumber = "************1234",
+                            ExpirationMonth = 7,
+                            ExpirationYear = 2021,
+                            SecurityCode = null
+
+                        }
+                };
+            IAccount account = itsTarget.Map<IAccount>(source);
+            UpdateAccountReply destination =
+                itsTarget.Map(account,itsTarget.Map<UpdateAccountReply>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+
+            Assert.AreEqual(
+                source.ExternalAccountId,
+                account.ExternalAccountId);
+            Assert.AreEqual(
+                source.ExternalPaymentMethodId,
+                account.ExternalPaymentMethodId);
+
+            Assert.AreEqual(
+                source.CreditCard,
+                destination.UpdatedAccount.CreditCard);
+            Assert.AreEqual(
+                source.CreditCard.CardHolderName,
+                destination.UpdatedAccount.CreditCard.CardHolderName);
+            Assert.AreEqual(
+                source.CreditCard.ObfuscatedCardNumber,
+                destination.UpdatedAccount.CreditCard.ObfuscatedCardNumber);
+            Assert.AreEqual(
+                source.CreditCard.ExpirationMonth,
+                destination.UpdatedAccount.CreditCard.ExpirationMonth);
+            Assert.AreEqual(
+                source.CreditCard.ExpirationYear,
+                destination.UpdatedAccount.CreditCard.ExpirationYear);
+            Assert.AreEqual(
+                source.CreditCard.BillingAddress.StreetAddress,
+                destination.UpdatedAccount.CreditCard.BillingAddress.StreetAddress);
+            Assert.AreEqual(
+                source.CreditCard.BillingAddress.City,
+                destination.UpdatedAccount.CreditCard.BillingAddress.City);
+            Assert.AreEqual(
+                source.CreditCard.BillingAddress.State,
+                destination.UpdatedAccount.CreditCard.BillingAddress.State);
+            Assert.AreEqual(
+                source.CreditCard.BillingAddress.PostalCode,
+                destination.UpdatedAccount.CreditCard.BillingAddress.PostalCode);
+            Assert.AreEqual(
+                source.CreditCard.BillingAddress.CountryCode,
+                destination.UpdatedAccount.CreditCard.BillingAddress.CountryCode);
+        }
+
+        [Test]
+        public void
+        TestMapCreateSubscriptionRequestToCreateExternalSubscriptionRequest()
+        {
+            CreateSubscriptionRequest source =
+                new CreateSubscriptionRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    SubscriptionToCreate =
+                        new InitialSubscriptionData()
+                        {
+                            UserId = Guid.NewGuid(),
+                            AccountId = Guid.NewGuid(),
+                            SubscriptionType = "Elite"
+                        }
+                };
+            IAccount account = 
+                new StandardAccount()
+                {
+                    AccountId = Guid.NewGuid(),
+                    ExternalAccountId = "acct_123456789",
+                    ExternalPaymentMethodId = "card_123456789"
+                };
+            CreateExternalSubscriptionRequest destination = 
+                itsTarget.Map(
+                    account,
+                    itsTarget.Map<CreateExternalSubscriptionRequest>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+            Assert.AreEqual(
+                source.SubscriptionToCreate,
+                destination.SubscriptionToCreate);
+            Assert.AreEqual(
+                account.ExternalAccountId,
+                destination.ExternalAccountId);
+        }
+
+        [Test]
+        public void
+        TestMapCreateExternalSubscriptionReplyToCreateSubcriptionReply()
+        {
+            CreateExternalSubscriptionReply source =
+                new CreateExternalSubscriptionReply()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    IsSuccessful = true,
+                    SuccessMessage = "success blah blah blah",
+                    ExternalSubscriptionId = "sub_123456789"
+                };
+            ISubscription subscription = itsTarget.Map<ISubscription>(source);
+            CreateSubscriptionReply destination = 
+                itsTarget.Map(subscription,itsTarget.Map<CreateSubscriptionReply>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+
+            Assert.AreEqual(
+                source.ExternalSubscriptionId,
+                subscription.ExternalSubscriptionId);
+
+            Assert.AreEqual(
+                subscription.SubscriptionId,
+                destination.NewSubscription.SubscriptionId);
+        }
+
+        [Test]
+        public void
+        TestMapUpdateSubscriptionRequestToUpdateExternalSubscriptionRequest()
+        {
+            UpdateSubscriptionRequest source =
+                new UpdateSubscriptionRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    CurrentSubscription =
+                        new SubscriptionData()
+                        {
+                            SubscriptionId = Guid.NewGuid(),
+                            PlanId = Guid.NewGuid(),
+                            PlanName = "Elite"
+                        },
+                    NewSubscription =
+                        new InitialSubscriptionData()
+                        {
+                            UserId = Guid.NewGuid(),
+                            AccountId = Guid.NewGuid(),
+                            SubscriptionType = "Enterprise"
+                        },
+
+                };
+            ISubscription subscription =
+                new StandardSubscription()
+                {
+                    SubscriptionId = Guid.NewGuid(),
+                    AccountId = Guid.NewGuid(),
+                    ExternalSubscriptionId = "sub_123456789",
+                    ExternalPlanId = "plan_123456789"
+                };
+            UpdateExternalSubscriptionRequest destination =
+                itsTarget.Map(
+                    subscription,
+                    itsTarget.Map<UpdateExternalSubscriptionRequest>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+            Assert.AreEqual(
+                subscription.ExternalSubscriptionId,
+                destination.ExternalSubscriptionId);
+            Assert.AreEqual(
+                subscription.ExternalPlanId,
+                destination.ExternalPlanId);
+        }
+
+        [Test]
+        public void
+        TestMapUpdateExternalSubscriptionReplyToUpdateSubcriptionReply()
+        {
+            UpdateExternalSubscriptionReply source =
+                new UpdateExternalSubscriptionReply()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    IsSuccessful = true,
+                    SuccessMessage = "success blah blah blah",
+                    ExternalSubscriptionId = "sub_123456789",
+                    ExternalPlanId = "plan_123456789"
+                };
+            ISubscription subscription = itsTarget.Map<ISubscription>(source);
+            UpdateSubscriptionReply destination =
+                itsTarget.Map(subscription,itsTarget.Map<UpdateSubscriptionReply>(source));
+
+            Assert.AreEqual(source.CorrelationId,destination.CorrelationId);
+
+            Assert.AreEqual(
+                source.ExternalSubscriptionId,
+                subscription.ExternalSubscriptionId);
+            Assert.AreEqual(
+                source.ExternalPlanId,
+                subscription.ExternalPlanId);
+
+            Assert.AreEqual(
+                subscription.SubscriptionId,
+                destination.UpdatedSubscription.SubscriptionId);
         }
 
     }

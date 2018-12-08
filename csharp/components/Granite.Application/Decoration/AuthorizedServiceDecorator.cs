@@ -87,17 +87,17 @@ namespace Granite.Application.Decoration
             GraniteReply   reply   = null;
 
             base.DoProceed(invocation);
-            reply = invocation.GetReply<GraniteReply>(); 
+            reply = invocation.GetReply<GraniteReply>();
 
             if (reply != null)
             {
-                itsRefresher.RefreshIfNeeded(reply);
-
                 if (request != null)
                 {
                     reply.CorrelationId = request.CorrelationId;
                     reply.SessionId = request.SessionId;
                 }
+
+                itsRefresher.RefreshIfNeeded(reply);
             }
         }
 
@@ -114,12 +114,6 @@ namespace Granite.Application.Decoration
                                      invocation.GetAccessTokenProvider();
             ISessionIdProvider   idProvider =
                                      invocation.GetSessionIdProvider();
-
-            if (reply != null && request != null)
-            {
-                reply.SessionId = request.SessionId;
-                itsRefresher.RefreshIfNeeded(reply);
-            }
 
             itsManager.DeactivateTenant(tokenProvider,idProvider);
             base.DoAfter(invocation);
