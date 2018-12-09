@@ -32,19 +32,34 @@
     </class>
 
     <query
-        name="Subscription.GetUniqueFor">
+        name="Subscription.GetUniqueWithAccountId">
         <![CDATA[
-            select distinct a
-            from ISubscription a
-            where a.UserId = :userId]]>
+            select distinct s
+            from ISubscription s
+            where s.AccountId = :accountId]]>
     </query>
     <query
-        name="Subscription.HasUniqueFor"
+        name="Subscription.GetUniqueWithUserId">
+        <![CDATA[
+            select distinct s
+            from ISubscription s
+            where s.UserId = :userId]]>
+    </query>
+    <query
+        name="Subscription.HasUniqueWithAccoutId"
         cacheable="true">
         <![CDATA[
-            select count(a.UserId)
-            from ISubscription a
-            where a.UserId = :userId]]>
+            select count(s.AccountId)
+            from ISubscription s
+            where s.AccountId = :accountId]]>
+    </query>
+    <query
+        name="Subscription.HasUniqueWithUserId"
+        cacheable="true">
+        <![CDATA[
+            select count(s.UserId)
+            from ISubscription s
+            where s.UserId = :userId]]>
     </query>
 
 </hibernate-mapping>

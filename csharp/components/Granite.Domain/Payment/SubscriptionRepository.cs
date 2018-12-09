@@ -38,7 +38,7 @@ namespace Granite.Domain.Payment
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public ICollection<ISubscription> 
+        public ICollection<ISubscription>
         GetAllFor(IAccountIdProvider provider)
         {
             INamedQuery<ISubscription> query =
@@ -51,7 +51,7 @@ namespace Granite.Domain.Payment
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public ICollection<ISubscription> 
+        public ICollection<ISubscription>
         GetAllFor(IUserIdProvider provider)
         {
             INamedQuery<ISubscription> query =
@@ -59,6 +59,32 @@ namespace Granite.Domain.Payment
 
             query.SetInput("userId",provider.UserId);
             return query.GetAll();
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public ISubscription 
+        GetUniqueFor(IAccountIdProvider provider)
+        {
+            INamedQuery<ISubscription> query =
+                GetNamedQuery("Subscription.GetUniqueWithAccountId");
+
+            query.SetInput("accountId",provider.AccountId);
+            return query.GetUnique();
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public ISubscription
+        GetUniqueFor(IUserIdProvider provider)
+        {
+            INamedQuery<ISubscription> query =
+                GetNamedQuery("Subscription.GetUniqueWithUserId");
+
+            query.SetInput("userId",provider.UserId);
+            return query.GetUnique();
         }
 
         //////////////////////////////////////////////////////////////////////

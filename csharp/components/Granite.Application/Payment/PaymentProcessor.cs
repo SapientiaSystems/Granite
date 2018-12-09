@@ -311,6 +311,7 @@ namespace Granite.Application.Payment
         {
             CreateExternalSubscriptionRequest externalRequest = null;
             CreateExternalSubscriptionReply   externalReply = null;
+            IUser                             user = GetUserFrom(request);
             IAccount                          account = GetAccount(request);
             ISubscription                     subscription = null;
             IPlan                             plan = null;
@@ -349,6 +350,8 @@ namespace Granite.Application.Payment
             subscription = itsMapper.Map(externalReply,new StandardSubscription());
             subscription.ExternalPlanId = plan.ExternalPlanId;
             subscription.PlanId = plan.PlanId;
+            subscription.UserId = user.UserId;
+            subscription.AccountId = account.AccountId;
             subscription = itsSubscriptionRepository.Insert(subscription);
 
             if (subscription == null)
@@ -417,8 +420,10 @@ namespace Granite.Application.Payment
                     itsMapper.Map<UpdateExternalSubscriptionRequest>(request));
             externalReply = 
                 itsService.UpdateExternalSubscription(externalRequest);
-            subscription =
-                itsMapper.Map(externalReply,subscription);
+
+            subscription.ExternalPlanId = externalReply.ExternalPlanId;
+            subscription.ExternalSubscriptionId = externalReply.ExternalSubscriptionId;
+            subscription = itsSubscriptionRepository.Update(subscription);
 
             updated = itsMapper.Map<SubscriptionData>(subscription);
             updated.PlanName = plan.PlanName;
@@ -673,9 +678,7 @@ namespace Granite.Application.Payment
 
                 if (user != null)
                     return 
-                        itsSubscriptionRepository
-                            .GetAllFor(user)
-                            .FirstOrDefault();
+                        itsSubscriptionRepository.GetUniqueFor(user);
             }
 
             if (request.AccountIdOfSubscriptionToGet != Guid.Empty)

@@ -9,7 +9,6 @@ using Strata.Application.Service;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
 using Stripe;
-using System;
 
 namespace Granite.ServerPlatform.Stripe
 {

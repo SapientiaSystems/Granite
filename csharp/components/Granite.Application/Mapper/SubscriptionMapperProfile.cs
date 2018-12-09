@@ -65,10 +65,22 @@ namespace Granite.Application.Mapper
                 DeleteExternalSubscriptionReply,
                 DeleteSubscriptionReply>();
 
+            // Get
+            CreateMap<GetSubscriptionRequest,GetSubscriptionReply>();
+            CreateMap<ISubscription,GetSubscriptionReply>()
+                .ForMember(
+                    dest => dest.RequestedSubscription,
+                    opt => opt.MapFrom(src => src));
+            CreateMap<IPlan,GetSubscriptionReply>()
+                .ForMember(
+                    dest => dest.RequestedSubscription,
+                    opt => opt.MapFrom(src => src));
+
             // Common
             CreateMap<InitialSubscriptionData,ISubscription>()
                 .As<StandardSubscription>();
             CreateMap<ISubscription,SubscriptionData>();
+            CreateMap<IPlan,SubscriptionData>();
 
         }
     }

@@ -40,6 +40,20 @@ namespace Granite.Domain.Payment
         /// <summary>
         /// </summary>
         ///  
+        ISubscription
+        GetUniqueFor(IAccountIdProvider provider);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        ISubscription
+        GetUniqueFor(IUserIdProvider provider);
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
         bool
         HasAnyFor(IAccountIdProvider provider);
 
