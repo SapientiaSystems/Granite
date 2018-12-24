@@ -11,7 +11,7 @@ using Granite.Domain.Role;
 using Granite.Domain.Session;
 using Granite.Domain.Tenant;
 using Granite.Domain.User;
-using Strata.Foundation.Injection;
+using Strata.Ninject.Injection;
 using System.Collections.Generic;
 using SystemEx.Injection;
 
@@ -33,66 +33,65 @@ namespace Granite.Domain.Configuration
         /// </summary>
         ///  
         public
-        GraniteDomainModule() :
-            base("GraniteDomainModule") {}
+        GraniteDomainModule() {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
         public override void 
-        Initialize()
+        Load()
         {
             Bind<IProvider<IList<IRole>>>()
-                .ToType<R>()
-                .WithScope<SingletonScope>();
+                .To<R>()
+                .InSingletonScope();
 
             Bind<IProvider<IList<IConstraint>>>()
-                .ToType<C>()
-                .WithScope<SingletonScope>();
+                .To<C>()
+                .InSingletonScope();
 
             Bind<IRoleRepository>()
-                .ToType<RoleRepository>()
-                .WithScope<SingletonScope>();
+                .To<RoleRepository>()
+                .InSingletonScope();
 
             Bind<IConstraintRepository>()
-                .ToType<ConstraintRepository>()
-                .WithScope<SingletonScope>();
+                .To<ConstraintRepository>()
+                .InSingletonScope();
 
             Bind<ITenantRepository>()
-                .ToType<TenantRepository>()
-                .WithScope(DefaultScope);
+                .To<TenantRepository>()
+                .InDefaultScope();
 
             Bind<IGroupRepository>()
-                .ToType<GroupRepository>()
-                .WithScope(DefaultScope);
+                .To<GroupRepository>()
+                .InDefaultScope();
 
             Bind<IUserFactory>()
-                .ToType<F>()
-                .WithScope(DefaultScope);
+                .To<F>()
+                .InDefaultScope();
 
             Bind<IUserRepository>()
-                .ToType<UserRepository>()
-                .WithScope(DefaultScope);
+                .To<UserRepository>()
+                .InDefaultScope();
 
             Bind<IProfileRepository>()
-                .ToType<ProfileRepository>()
-                .WithScope(DefaultScope);
+                .To<ProfileRepository>()
+                .InDefaultScope();
 
             Bind<ISessionRepository>()
-                .ToType<SessionRepository>()
-                .WithScope(DefaultScope);
+                .To<SessionRepository>()
+                .InDefaultScope();
 
             Bind<IPlanRepository>()
-                .ToType<PlanRepository>()
-                .WithScope(DefaultScope);
+                .To<PlanRepository>()
+                .InDefaultScope();
 
             Bind<IAccountRepository>()
-                .ToType<AccountRepository>()
-                .WithScope(DefaultScope);
+                .To<AccountRepository>()
+                .InDefaultScope();
 
             Bind<ISubscriptionRepository>()
-                .ToType<SubscriptionRepository>()
-                .WithScope(DefaultScope);
+                .To<SubscriptionRepository>()
+                .InDefaultScope();
         }
     }
 }

@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Injection;
+using Ninject;
 
 namespace Granite.Common.Injection
 {
@@ -15,7 +15,7 @@ namespace Granite.Common.Injection
     public static
     class Global
     {
-        public static IContainer Container { get; set; }
+        public static IKernel Container { get; set; }
     }
 }
 

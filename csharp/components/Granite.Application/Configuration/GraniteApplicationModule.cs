@@ -5,6 +5,7 @@
 
 using AutoMapper;
 using Granite.Application.Access;
+using Granite.Application.Interception;
 using Granite.Application.Mapper;
 using Granite.Application.Payment;
 using Granite.Application.Profile;
@@ -19,8 +20,11 @@ using Granite.ProvidedService.Profile;
 using Granite.ProvidedService.Registration;
 using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
-using Strata.Foundation.Injection;
-using SystemEx.Injection;
+using Ninject.Activation;
+using Ninject.Extensions.Interception.Infrastructure.Language;
+using Strata.Application.Interception;
+using Strata.Application.Messaging;
+using Strata.Ninject.Injection;
 
 namespace Granite.Application.Configuration
 {
@@ -39,75 +43,87 @@ namespace Granite.Application.Configuration
         /// </summary>
         /// 
         public
-        GraniteApplicationModule(): 
-            base("GraniteApplicationModule") {}
+        GraniteApplicationModule() {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
         public override void
-        Initialize()
+        Load()
         {
+            Bind<IActionQueue>()
+                .To<StandardActionQueue>()
+                .InDefaultScope();
+
             Bind<IMapper>()
                 .ToProvider<M>()
-                .WithScope(DefaultScope);
+                .InDefaultScope();
 
             Bind<IAuthenticator>()
-                .ToType<Authenticator>()
-                .WithScope(DefaultScope);
+                .To<Authenticator>()
+                .InDefaultScope();
 
             Bind<IAuthorizer>()
-                .ToType<Authorizer>()
-                .WithScope(DefaultScope);
+                .To<Authorizer>()
+                .InDefaultScope();
 
             Bind<ITenantManager>()
-                .ToType<TenantManager>()
-                .WithScope(DefaultScope);
+                .To<TenantManager>()
+                .InDefaultScope();
 
             Bind<IAccessTokenRefresher>()
-                .ToType<AccessTokenRefresher>()
-                .WithScope(DefaultScope);
+                .To<AccessTokenRefresher>()
+                .InDefaultScope();
 
             Bind<ISessionProcessor>()
-                .ToType<SessionProcessor>()
-                .WithScope(DefaultScope);
+                .To<SessionProcessor>()
+                .InDefaultScope();
 
             Bind<ISessionService>()
-                .ToType<SessionService>()
-                .WithScope(DefaultScope);
+                .To<SessionService>()
+                .InDefaultScope()
+                .Intercept()
+                .With(new AuthorizedServiceInterceptor(3));
 
             Bind<IUserProcessor>()
-                .ToType<UserProcessor>()
-                .WithScope(DefaultScope);
+                .To<UserProcessor>()
+                .InDefaultScope();
 
             Bind<IUserService>()
-                .ToType<UserService>()
-                .WithScope(DefaultScope);
+                .To<UserService>()
+                .InDefaultScope()
+                .Intercept()
+                .With(new AuthorizedServiceInterceptor(3));
 
             Bind<IProfileProcessor>()
-                .ToType<ProfileProcessor>()
-                .WithScope(DefaultScope);
+                .To<ProfileProcessor>()
+                .InDefaultScope();
 
             Bind<IProfileService>()
-                .ToType<ProfileService>()
-                .WithScope(DefaultScope);
+                .To<ProfileService>()
+                .InDefaultScope()
+                .Intercept()
+                .With(new AuthorizedServiceInterceptor(3));
 
             Bind<IPaymentProcessor>()
-                .ToType<PaymentProcessor>()
-                .WithScope(DefaultScope);
+                .To<PaymentProcessor>()
+                .InDefaultScope();
 
             Bind<IPaymentService>()
-                .ToType<PaymentService>()
-                .WithScope(DefaultScope);
+                .To<PaymentService>()
+                .InDefaultScope()
+                .Intercept()
+                .With(new AuthorizedServiceInterceptor(3));
 
             Bind<IRegistrationProcessor>()
-                .ToType<RegistrationProcessor>()
-                .WithScope(DefaultScope);
+                .To<RegistrationProcessor>()
+                .InDefaultScope();
 
             Bind<IRegistrationService>()
-                .ToType<RegistrationService>()
-                .WithScope(DefaultScope);
-
+                .To<RegistrationService>()
+                .InDefaultScope()
+                .Intercept()
+                .With(new AuthorizedServiceInterceptor(3));
         }
     }
 }

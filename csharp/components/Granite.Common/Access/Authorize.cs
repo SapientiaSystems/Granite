@@ -4,6 +4,7 @@
 //  ##########################################################################
 
 using Granite.Common.Injection;
+using Ninject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace Granite.Common.Access
             itsAuthorizer =
                 Global
                     .Container
-                    .GetInstance<IAuthorizer>();
+                    .Get<IAuthorizer>();
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -48,6 +49,16 @@ namespace Granite.Common.Access
         AuthorizeUser(string accessToken)
         {
             itsAuthorizer.AuthorizeUser(accessToken,GetRoles());
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        public virtual IClientIpAddressRecorder
+        GetClientIdAddressRecorder()
+        {
+            return itsAuthorizer.Recorder;
         }
 
         //////////////////////////////////////////////////////////////////////

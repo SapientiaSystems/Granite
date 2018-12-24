@@ -3,13 +3,10 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Verification;
 using Granite.ProvidedService.Session;
-using Granite.ProvidedService.User;
+using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Bootstrap;
-using Strata.Foundation.Injection;
-using Strata.Foundation.Value;
 using System;
 using System.Collections.Generic;
 
@@ -32,12 +29,12 @@ namespace Granite.Application.Session
         public virtual void
         SetUp()
         {
-            IContainer           container = CreateContainer();
-            IStartStopController starter   = container.GetInstance<IStartStopController>();
+            IKernel              container = CreateContainer();
+            IStartStopController starter   = container.Get<IStartStopController>();
 
             starter.StartApplication();
 
-            itsTarget = container.GetInstance<ISessionService>();
+            itsTarget = container.Get<ISessionService>();
             itsLogouts = new HashSet<LogoutRequest>();
         }
 
@@ -98,7 +95,7 @@ namespace Granite.Application.Session
             Assert.IsNull(reply.NewSession);
         }
 
-        protected abstract IContainer 
+        protected abstract IKernel 
         CreateContainer();
     }
 }

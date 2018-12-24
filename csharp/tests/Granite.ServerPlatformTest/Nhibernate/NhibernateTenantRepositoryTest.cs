@@ -5,6 +5,7 @@
 
 using Granite.Domain.Tenant;
 using Granite.ServerPlatform.Bootstrap;
+using Ninject.Modules;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
 
@@ -20,7 +21,7 @@ namespace Granite.ServerPlatform.Nhibernate
     class NhibernateTenantRepositoryTest:
         TenantRepositoryTest
     {
-        protected override IModule 
+        protected override INinjectModule 
         GetPersistenceModule()
         {
             return 

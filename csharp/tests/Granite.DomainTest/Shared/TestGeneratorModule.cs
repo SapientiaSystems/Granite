@@ -3,9 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Verification;
-using Strata.Foundation.Injection;
-using System;
+using Strata.Ninject.Injection;
 
 namespace Granite.Domain.Shared
 {
@@ -19,11 +17,10 @@ namespace Granite.Domain.Shared
         AbstractModule
     {
         public
-        TestGeneratorModule():
-            base("TestGeneratorModule") {}
+        TestGeneratorModule() {}
 
         public override void 
-        Initialize()
+        Load()
         {
             /*
             Bind<IVerificationCodeGenerator>()
@@ -31,8 +28,8 @@ namespace Granite.Domain.Shared
                 .WithScope(DefaultScope);
                 */
             Bind<ITestUserGenerator>()
-                .ToType<TestUserGenerator>()
-                .WithScope(DefaultScope);
+                .To<TestUserGenerator>()
+                .InDefaultScope();
         }
     }
 }

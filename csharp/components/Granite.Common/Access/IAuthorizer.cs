@@ -13,6 +13,8 @@ namespace Granite.Common.Access
     public
     interface IAuthorizer
     {
+        IClientIpAddressRecorder Recorder { get; }
+
         //////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>

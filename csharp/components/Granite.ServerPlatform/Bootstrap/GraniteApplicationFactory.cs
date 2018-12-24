@@ -4,28 +4,24 @@
 //  ##########################################################################
 
 using Granite.Application.Configuration;
-using Granite.Application.Decoration;
 using Granite.Application.Mapper;
 using Granite.Common.Verification;
 using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
 using Granite.Domain.Role;
 using Granite.Domain.User;
-using Granite.ProvidedService.Payment;
-using Granite.ProvidedService.Profile;
-using Granite.ProvidedService.Registration;
-using Granite.ProvidedService.Session;
-using Granite.ProvidedService.User;
-using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;
+using Ninject.Activation;
+using Ninject.Modules;
 using NLog.Config;
 using NLog.Targets;
 using Strata.Foundation.Bootstrap;
-using Strata.Foundation.Decoration;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Logging;
+using Strata.Ninject.Bootstrap;
 using Strata.Ninject.Injection;
 using System.Collections.Generic;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
 
 namespace Granite.ServerPlatform.Bootstrap
 {
@@ -35,7 +31,7 @@ namespace Granite.ServerPlatform.Bootstrap
     ///  
     public
     class GraniteApplicationFactory:
-        AbstractApplicationFactory
+        NinjectApplicationFactory
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -50,38 +46,24 @@ namespace Granite.ServerPlatform.Bootstrap
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
-        public override IBinder<IStartStopController>
-        CreateControllerBinder(ISourceBindingBuilder<IStartStopController> builder)
+        public override void 
+        BindLogger(INinjectModule module)
         {
-            return
-                new TargetBasedBinder<
-                    IStartStopController,
-                    GraniteStartStopController>(
-                        builder,
-                        AbstractModule.DefaultScope);
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        /// 
-        public override IBinder<ILogger>
-        CreateLoggerBinder(ISourceBindingBuilder<ILogger> builder)
-        {
-            return
-                new ProviderBasedBinder<ILogger>(
-                    builder,
-                    new FuncBasedProvider<ILogger>(
-                        () =>
+            module
+                .Kernel
+                .Bind<ILogger>()
+                .ToMethod(
+                        (IContext c) =>
                         {
-                            LoggingConfiguration config = 
+                            LoggingConfiguration config =
                                 new LoggingConfiguration();
-                            FileTarget logfile = 
+                            FileTarget logfile =
                                 new FileTarget()
                                 {
                                     FileName = "GraniteServer.log",
                                     Name = "logfile"
                                 };
-                            ConsoleTarget logconsole = 
+                            ConsoleTarget logconsole =
                                 new ConsoleTarget()
                                 {
                                     Name = "logconsole"
@@ -104,20 +86,33 @@ namespace Granite.ServerPlatform.Bootstrap
 
                             NLog.LogManager.Configuration = config;
 
-                            return 
+                            return
                                 new NlogLogger(
                                     NLog.LogManager.GetLogger("Logger"));
-                        } ),
-                    AbstractModule.DefaultScope);
+                        })
+                    .InDefaultScope();
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        /// 
+        public override void 
+        BindStartStopController(INinjectModule module)
+        {
+            module
+                .Kernel
+                .Bind<IStartStopController>()
+                .To<GraniteStartStopController>()
+                .InDefaultScope();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        protected override IList<IModule>
+        protected override IList<INinjectModule>
         CreateModules()
         {
-            IList<IModule> modules = new List<IModule>();
+            IList<INinjectModule> modules = new List<INinjectModule>();
 
             modules.Add(
                 new GraniteServerPlatformModule<GraniteInitializer>());
@@ -129,28 +124,8 @@ namespace Granite.ServerPlatform.Bootstrap
                         GraniteConstraintsProvider,
                         GraniteUserFactory>());
             modules.Add(new GraniteApplicationModule<GraniteMapperProvider>());
-
+            
             return modules;
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        ///  
-        protected override IContainer 
-        CreateContainer(IList<IModule> modules)
-        {
-            IDecoratorFactory factory =
-                new AuthorizedServiceDecoratorFactory(3);
-
-            return 
-                new NinjectDecoratedContainer(
-                    new DecoratorMap()
-                        .InsertDecorator<ISessionService>(factory)
-                        .InsertDecorator<IUserService>(factory)
-                        .InsertDecorator<IProfileService>(factory)
-                        .InsertDecorator<IPaymentService>(factory)
-                        .InsertDecorator<IRegistrationService>(factory),
-                    modules);
         }
     }
 }

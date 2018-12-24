@@ -19,12 +19,15 @@ using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
 using Granite.ServerPlatform.ActiveDirectory;
 using Granite.ServerPlatform.Nhibernate;
+using Ninject.Modules;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Decoration;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Logging;
+using Strata.Ninject.Bootstrap;
 using Strata.Ninject.Injection;
 using System.Collections.Generic;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
 
 namespace Granite.ServerPlatform.Bootstrap
 {
@@ -34,7 +37,7 @@ namespace Granite.ServerPlatform.Bootstrap
     ///  
     public
     class MockApplicationFactory:
-        AbstractApplicationFactory
+        NinjectApplicationFactory
     {
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -49,10 +52,36 @@ namespace Granite.ServerPlatform.Bootstrap
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        protected override IList<IModule> 
+        public override void 
+        BindLogger(INinjectModule module)
+        {
+            module
+                .Kernel
+                .Bind<ILogger>()
+                .To<ConsoleLogger>()
+                .InDefaultScope();
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        public override void 
+        BindStartStopController(INinjectModule module)
+        {
+            module
+                .Kernel
+                .Bind<IStartStopController>()
+                .To<GraniteTestStartStopController>()
+                .InDefaultScope();
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <inheritDoc/>
+        ///  
+        protected override IList<INinjectModule> 
         CreateModules()
         {
-            IList<IModule> modules = new List<IModule>();
+            IList<INinjectModule> modules = new List<INinjectModule>();
 
             modules.Add(
                 new GraniteServerPlatformModule<GraniteInitializer>());
@@ -66,52 +95,6 @@ namespace Granite.ServerPlatform.Bootstrap
             modules.Add(new TestGeneratorModule());
 
             return modules;
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        /// 
-        public override IBinder<IStartStopController> 
-        CreateControllerBinder(ISourceBindingBuilder<IStartStopController> builder)
-        {
-            return 
-                new TargetBasedBinder<
-                    IStartStopController,
-                    GraniteTestStartStopController>(
-                        builder,
-                        AbstractModule.DefaultScope);
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        /// 
-        public override IBinder<ILogger>
-        CreateLoggerBinder(ISourceBindingBuilder<ILogger> builder)
-        {
-            return
-                new TargetBasedBinder<ILogger,ConsoleLogger>(
-                    builder,
-                    AbstractModule.DefaultScope);
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        ///  
-        protected override IContainer 
-        CreateContainer(IList<IModule> modules)
-        {
-            IDecoratorFactory factory = 
-                new AuthorizedServiceDecoratorFactory(3);
-
-            return
-                new DecoratedContainer(
-                    new NinjectContainer(modules),
-                    new DecoratorMap()
-                        .InsertDecorator<ISessionService>(factory)
-                        .InsertDecorator<IUserService>(factory)
-                        .InsertDecorator<IProfileService>(factory)
-                        .InsertDecorator<IPaymentService>(factory)
-                        .InsertDecorator<IRegistrationService>(factory));
         }
     }
 }

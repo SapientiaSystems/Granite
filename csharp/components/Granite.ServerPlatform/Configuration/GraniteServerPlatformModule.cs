@@ -9,9 +9,11 @@ using Granite.RequiredService.Payment;
 using Granite.ServerPlatform.Bootstrap;
 using Granite.ServerPlatform.Stripe;
 using Granite.ServerPlatform.WebApi;
+using Ninject.Activation;
 using Strata.Domain.UnitOfWork;
-using Strata.Foundation.Injection;
 using Strata.Nhibernate.UnitOfWork;
+using Strata.Ninject.Injection;
+using System;
 using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.Nhibernate
@@ -30,53 +32,51 @@ namespace Granite.ServerPlatform.Nhibernate
         /// </summary>
         ///  
         public
-        GraniteServerPlatformModule():
-            base("GraniteServerPlatformModule") {}
+        GraniteServerPlatformModule() {}
 
         public override void
-        Initialize()
+        Load()
         {
-            base.Initialize();
+            base.Load();
 
             Bind<IClientIpAddressRecorder>()
-                .ToType<WebHostedClientIpAddressRecorder>()
-                .WithScope(DefaultScope);
+                .To<WebHostedClientIpAddressRecorder>()
+                .InDefaultScope();
 
             Bind<IStripeContext>()
-                .ToType<StripeContext>()
-                .WithScope(DefaultScope);
+                .To<StripeContext>()
+                .InDefaultScope();
 
             Bind<IExternalPlanProcessor>()
-                .ToType<StripePlanProcessor>()
-                .WithScope(DefaultScope);
+                .To<StripePlanProcessor>()
+                .InDefaultScope();
 
             Bind<IExternalAccountProcessor>()
-                .ToType<StripeAccountProcessor>()
-                .WithScope(DefaultScope);
+                .To<StripeAccountProcessor>()
+                .InDefaultScope();
 
             Bind<IExternalSubscriptionProcessor>()
-                .ToType<StripeSubscriptionProcessor>()
-                .WithScope(DefaultScope);
+                .To<StripeSubscriptionProcessor>()
+                .InDefaultScope();
 
             Bind<IExternalPaymentService>()
-                .ToType<StripePaymentService>()
-                .WithScope(DefaultScope);
+                .To<StripePaymentService>()
+                .InDefaultScope();
 
             Bind<IApplicationInitializer>()
-                .ToType<T>()
-                .WithScope(DefaultScope);
+                .To<T>()
+                .InDefaultScope();
         }
-        
+
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        protected override IProvider<IUnitOfWorkProvider> 
+        protected override Func<IContext,IUnitOfWorkProvider> 
         GetUnitOfWorkProviderProvider()
         {
             return
-                new FuncBasedProvider<IUnitOfWorkProvider>(
-                    () => new NhibernateUnitOfWorkProvider(
-                        new string[] {"Granite.ServerPlatform"} ) );
+                (IContext context) => new NhibernateUnitOfWorkProvider(
+                    new string[] {"Granite.ServerPlatform"} );
         }
     }
 }

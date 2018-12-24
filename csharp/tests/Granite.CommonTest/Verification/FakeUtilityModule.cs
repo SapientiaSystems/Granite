@@ -3,7 +3,7 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Injection;
+using Strata.Ninject.Injection;
 
 namespace Granite.Common.Verification
 {
@@ -21,21 +21,21 @@ namespace Granite.Common.Verification
         /// </summary>
         /// 
         public
-        FakeUtilityModule():
-            base("FakeUtilityModule") {}
+        FakeUtilityModule() {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
         public override void
-        Initialize()
+        Load()
         {
             Bind<IVerificationNotifier>()
-                .ToType<FakeEmailSender>()
-                .WithScope(DefaultScope);
+                .To<FakeEmailSender>()
+                .InDefaultScope();
+
             Bind<IVerificationCodeGenerator>()
-                .ToType<VerificationCodeGenerator>()
-                .WithScope(DefaultScope);
+                .To<VerificationCodeGenerator>()
+                .InDefaultScope();
         }
     }
 }

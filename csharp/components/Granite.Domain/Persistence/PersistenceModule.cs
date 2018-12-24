@@ -3,9 +3,10 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Injection;
+using Strata.Ninject.Injection;
 using Strata.Domain.UnitOfWork;
-using SystemEx.Injection;
+using Ninject.Activation;
+using System;
 
 namespace Granite.Domain.Persistence
 {
@@ -17,30 +18,23 @@ namespace Granite.Domain.Persistence
     class PersistenceModule:
         AbstractModule
     {
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        protected
-        PersistenceModule(string name): 
-            base(name) {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
         public override void
-        Initialize()
+        Load()
         {
             Bind<IUnitOfWorkProvider>()
-                .ToProvider(GetUnitOfWorkProviderProvider())
-                .WithScope(AbstractModule.DefaultScope);
+                .ToMethod(GetUnitOfWorkProviderProvider())
+                .InDefaultScope();
         }
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
         /// </summary>
         ///  
-        protected abstract IProvider<IUnitOfWorkProvider>
+        protected abstract Func<IContext,IUnitOfWorkProvider>
         GetUnitOfWorkProviderProvider();
     }
 }

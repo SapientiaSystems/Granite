@@ -6,6 +6,7 @@
 using Granite.Common.Verification;
 using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
+using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
@@ -35,16 +36,16 @@ namespace Granite.Application.User
         public virtual void
         SetUp()
         {
-            IContainer           container = CreateContainer();
-            IStartStopController starter = container.GetInstance<IStartStopController>();
+            IKernel              container = CreateContainer();
+            IStartStopController starter = container.Get<IStartStopController>();
             LoginReply           reply = null;
 
             starter.StartApplication();
 
-            itsTarget = container.GetInstance<IUserService>();
-            itsSessionService = container.GetInstance<ISessionService>();
+            itsTarget = container.Get<IUserService>();
+            itsSessionService = container.Get<ISessionService>();
 
-            itsSender = (FakeEmailSender)container.GetInstance<IVerificationNotifier>();
+            itsSender = (FakeEmailSender)container.Get<IVerificationNotifier>();
             itsRemovals = new HashSet<DeleteUserRequest>();
 
             reply =
@@ -259,7 +260,7 @@ namespace Granite.Application.User
             Assert.AreEqual(itsSession.UserId,reply.RequestedUser.UserId);
         }
 
-        protected abstract IContainer 
+        protected abstract IKernel 
         CreateContainer();
     }
 }

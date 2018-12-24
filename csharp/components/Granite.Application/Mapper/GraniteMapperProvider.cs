@@ -4,8 +4,8 @@
 //  ##########################################################################
 
 using AutoMapper;
+using Ninject.Activation;
 using System.Collections.Generic;
-using SystemEx.Injection;
 
 namespace Granite.Application.Mapper
 {
@@ -19,13 +19,13 @@ namespace Granite.Application.Mapper
     ///  
     public
     class GraniteMapperProvider:
-        IProvider<IMapper>
+        Provider<IMapper>
     {
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public IMapper 
-        Get()
+        protected override IMapper 
+        CreateInstance(IContext context)
         {
             return
                 new MapperConfiguration(

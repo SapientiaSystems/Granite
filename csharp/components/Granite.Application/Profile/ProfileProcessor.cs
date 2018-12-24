@@ -12,7 +12,6 @@ using Granite.Domain.User;
 using Granite.ProvidedService.Profile;
 using Granite.ProvidedService.Transfer;
 using Strata.Domain.UnitOfWork;
-using Strata.Foundation.Logging;
 using System;
 using SystemEx.Injection;
 
@@ -25,7 +24,7 @@ namespace Granite.Application.Profile
     ///  
     public
     class ProfileProcessor:
-        AuthorizedService,
+        AuthorizedProcessor,
         IProfileProcessor
     {
         private IProfileRepository itsProfileRepository;
@@ -40,12 +39,11 @@ namespace Granite.Application.Profile
         public
         ProfileProcessor(
             IUnitOfWorkProvider provider,
-            ILogger             logger,
             ISessionRepository  sessionRepository,
             IProfileRepository  profileRepository,
             IUserRepository     userRepository,
             IMapper             mapper):
-            base(provider,logger,sessionRepository)
+            base(provider,sessionRepository)
         {
             itsProfileRepository = profileRepository;
             itsUserRepository    = userRepository;

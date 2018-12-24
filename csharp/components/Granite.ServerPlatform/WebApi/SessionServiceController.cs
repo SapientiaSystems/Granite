@@ -3,11 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Access;
-using Granite.Common.Injection;
 using Granite.ProvidedService.Session;
+using Ninject;
 using System.Web.Http;
-using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
 {
@@ -22,8 +20,7 @@ namespace Granite.ServerPlatform.WebApi
         ApiController,
         ISessionService
     {
-        private ISessionService          itsImp;
-        private IClientIpAddressRecorder itsRecorder;
+        private ISessionService itsImp;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -31,16 +28,9 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        SessionServiceController()
+        SessionServiceController(ISessionService imp)
         {
-            itsImp = 
-                Global
-                    .Container
-                    .GetInstance<ISessionService>();
-            itsRecorder =
-                Global
-                    .Container
-                    .GetInstance<IClientIpAddressRecorder>();
+            itsImp = imp;
         }
 
         //////////////////////////////////////////////////////////////////////

@@ -7,6 +7,8 @@ using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
 using Granite.Domain.Role;
 using Granite.Domain.User;
+using Ninject;
+using Ninject.Modules;
 using NUnit.Framework;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Injection;
@@ -14,6 +16,7 @@ using Strata.Foundation.Value;
 using Strata.Ninject.Injection;
 using System;
 using System.Collections.Generic;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
 
 namespace Granite.Domain.Tenant
 {
@@ -35,15 +38,15 @@ namespace Granite.Domain.Tenant
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = 
-                new NinjectContainer(
+            IKernel container = 
+                new StandardKernel(
                     GetPersistenceModule(),
                     new GraniteDomainModule<
                         GraniteRolesProvider,
                         GraniteConstraintsProvider,
                         GraniteUserFactory>());
 
-            itsTarget = container.GetInstance<ITenantRepository>();
+            itsTarget = container.Get<ITenantRepository>();
             itsIds = new HashSet<Guid>();
         }
 
@@ -242,7 +245,7 @@ namespace Granite.Domain.Tenant
             Assert.IsTrue(itsTarget.HasUniqueWithTenantName(expected.TenantName));
         }
 
-        protected abstract IModule
+        protected abstract INinjectModule
         GetPersistenceModule();
 
 

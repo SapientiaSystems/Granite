@@ -3,10 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Injection;
 using Granite.ProvidedService.Payment;
+using Ninject;
 using System.Web.Http;
-using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
 {
@@ -28,12 +27,9 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        PaymentServiceController()
+        PaymentServiceController(IPaymentService imp)
         {
-            itsImp = 
-                Global
-                    .Container
-                    .GetInstance<IPaymentService>();
+            itsImp = imp;
         }
 
         //////////////////////////////////////////////////////////////////////

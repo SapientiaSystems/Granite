@@ -23,8 +23,8 @@ namespace Granite.Server.App_Start
     using System.Web;
     using System.Web.Http;
     using WebApiContrib.IoC.Ninject;
-    using Bootstrapper = Strata.Foundation.Bootstrap.Bootstrapper;
-    using IBootstrapper = Strata.Foundation.Bootstrap.IBootstrapper;
+    using Bootstrapper = Strata.Ninject.Bootstrap.NinjectBootstrapper;
+    using IBootstrapper = Strata.Ninject.Bootstrap.INinjectBootstrapper;
     using NinjectBootstrapper = Ninject.Web.Common.Bootstrapper;
 
     //////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ namespace Granite.Server.App_Start
             Global.Container = bootstrap.Container;
             Global
                 .Container
-                .GetInstance<IStartStopController>()
+                .Get<IStartStopController>()
                 .StartApplication();
         }
 
@@ -114,17 +114,7 @@ namespace Granite.Server.App_Start
         private static IKernel
         GetKernel(IBootstrapper bootstrapper)
         {
-            IContainer container = bootstrapper.Container;
-
-            if (container is NinjectDecoratedContainer)
-                return (IKernel)container;
-
-            if (container is NinjectContainer)
-                return ((NinjectContainer)container).Kernel;
-
-            throw 
-                new InvalidCastException(
-                    "Could not cast to an appropriate container");
+            return bootstrapper.Container;
         }
 
         //////////////////////////////////////////////////////////////////////

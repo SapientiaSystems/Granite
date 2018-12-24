@@ -5,8 +5,8 @@
 
 using Granite.Common.Injection;
 using Granite.ProvidedService.User;
+using Ninject;
 using System.Web.Http;
-using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
 {
@@ -29,12 +29,9 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        UserServiceController()
+        UserServiceController(IUserService imp)
         {
-            itsImp =
-                Global
-                    .Container
-                    .GetInstance<IUserService>();
+            itsImp = imp;
         }
 
         //////////////////////////////////////////////////////////////////////

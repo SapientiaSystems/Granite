@@ -5,8 +5,10 @@
 
 using Granite.Application.Session;
 using Granite.ServerPlatform.Bootstrap;
+using Ninject;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
+using Strata.Ninject.Bootstrap;
 
 namespace Granite.ServerPlatform.Session
 {
@@ -19,10 +21,10 @@ namespace Granite.ServerPlatform.Session
     class NhibernateSessionServiceTest:
         SessionServiceTest
     {
-        protected override IContainer 
+        protected override IKernel 
         CreateContainer()
         {
-            IBootstrapper bootstrapper = new Bootstrapper();
+            INinjectBootstrapper bootstrapper = new NinjectBootstrapper();
                     
             bootstrapper.Run(new MockApplicationFactory());
             return bootstrapper.Container;

@@ -4,8 +4,12 @@
 //  ##########################################################################
 
 using Granite.Application.Service;
+using Granite.Application.Shared;
+using Granite.Application.Tenant;
+using Granite.Common.Access;
 using Granite.Domain.Session;
 using Granite.ProvidedService.Profile;
+using Strata.Application.Messaging;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
 using SystemEx.Injection;
@@ -18,6 +22,7 @@ namespace Granite.Application.Profile
     ///  
     public
     class ProfileService:
+        AuthorizedService,
         IProfileService
     {
         private IProfileProcessor itsProcessor;
@@ -28,7 +33,16 @@ namespace Granite.Application.Profile
         ///  
         [Inject]
         public
-        ProfileService(IProfileProcessor processor)
+        ProfileService(
+            IUnitOfWorkProvider      provider,
+            IActionQueue             queue,
+            ILogger                  logger,
+            ITenantManager           manager,
+            IAccessTokenRefresher    refresher,
+            IClientIpAddressRecorder recorder,
+            ISessionRepository       sessions,
+            IProfileProcessor        processor):
+            base(provider,queue,logger,manager,refresher,recorder,sessions)
         {
             itsProcessor = processor;
         }

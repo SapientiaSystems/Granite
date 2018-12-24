@@ -8,11 +8,11 @@ using Granite.Domain.Group;
 using Granite.Domain.Role;
 using Granite.Domain.Tenant;
 using Granite.Domain.User;
+using Ninject;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Value;
 using System;
-using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.Bootstrap
 {
@@ -30,7 +30,7 @@ namespace Granite.ServerPlatform.Bootstrap
         ///  
         [Inject]
         public
-        GraniteTestStartStopController(IContainer container):
+        GraniteTestStartStopController(IKernel container):
             base(container)
         {
 
@@ -50,17 +50,17 @@ namespace Granite.ServerPlatform.Bootstrap
         CreateAdminUserIfNeeded()
         {
             ITenantRepository tenants =
-                Container.GetInstance<ITenantRepository>();
+                Container.Get<ITenantRepository>();
             IUserRepository users =
-                Container.GetInstance<IUserRepository>();
+                Container.Get<IUserRepository>();
             IGroupRepository groups =
-                Container.GetInstance<IGroupRepository>();
+                Container.Get<IGroupRepository>();
             IRoleRepository roles =
-                Container.GetInstance<IRoleRepository>();
+                Container.Get<IRoleRepository>();
             IConstraintRepository constraints =
-                Container.GetInstance<IConstraintRepository>();
+                Container.Get<IConstraintRepository>();
             IUnitOfWorkProvider provider =
-                Container.GetInstance<IUnitOfWorkProvider>();
+                Container.Get<IUnitOfWorkProvider>();
             IUnitOfWork unitOfWork = provider.GetUnitOfWork();
             ITenant tenant = null;
 

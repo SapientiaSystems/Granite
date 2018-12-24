@@ -23,6 +23,8 @@ using Granite.Domain.Constraint;
 using Granite.Domain.Payment;
 using Granite.Domain.Profile;
 using Granite.ProvidedService.Registration;
+using Strata.Ninject.Bootstrap;
+using Ninject;
 
 namespace Granite.ServerPlatform.Bootstrap
 {
@@ -35,14 +37,14 @@ namespace Granite.ServerPlatform.Bootstrap
     public
     class BootstrapperTest
     {
-        private IBootstrapper itsTarget;
-        private IContainer    itsContainer;
+        private INinjectBootstrapper itsTarget;
+        private IKernel              itsContainer;
 
         [SetUp]
         public void
         SetUp()
         {
-            itsTarget = new Bootstrapper();
+            itsTarget = new NinjectBootstrapper();
             itsTarget.Run(new GraniteApplicationFactory());
             itsContainer = itsTarget.Container;
         }
@@ -59,7 +61,7 @@ namespace Granite.ServerPlatform.Bootstrap
         public void
         TestGetInstanceForServerPlatform()
         {
-            Assert.NotNull(itsContainer.GetInstance<IUnitOfWorkProvider>());
+            Assert.NotNull(itsContainer.Get<IUnitOfWorkProvider>());
             //Assert.NotNull(itsContainer.GetInstance<ActiveDirectoryGraphClient>());
             //Assert.NotNull(itsContainer.GetInstance<IExternalUserService>());
         }
@@ -68,29 +70,29 @@ namespace Granite.ServerPlatform.Bootstrap
         public void
         TestGetInstanceForDomain()
         {
-            Assert.NotNull(itsContainer.GetInstance<ITenantRepository>());
-            Assert.NotNull(itsContainer.GetInstance<ISessionRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IRoleRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IGroupRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IConstraintRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IUserRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IPlanRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IAccountRepository>());
-            Assert.NotNull(itsContainer.GetInstance<ISubscriptionRepository>());
-            Assert.NotNull(itsContainer.GetInstance<IProfileRepository>());
+            Assert.NotNull(itsContainer.Get<ITenantRepository>());
+            Assert.NotNull(itsContainer.Get<ISessionRepository>());
+            Assert.NotNull(itsContainer.Get<IRoleRepository>());
+            Assert.NotNull(itsContainer.Get<IGroupRepository>());
+            Assert.NotNull(itsContainer.Get<IConstraintRepository>());
+            Assert.NotNull(itsContainer.Get<IUserRepository>());
+            Assert.NotNull(itsContainer.Get<IPlanRepository>());
+            Assert.NotNull(itsContainer.Get<IAccountRepository>());
+            Assert.NotNull(itsContainer.Get<ISubscriptionRepository>());
+            Assert.NotNull(itsContainer.Get<IProfileRepository>());
         }
 
         [Test]
         public void
         TestGetInstanceForApplication()
         {
-            Assert.NotNull(itsContainer.GetInstance<IVerificationMessageGenerator>());
-            Assert.NotNull(itsContainer.GetInstance<IVerificationCodeGenerator>());
-            Assert.NotNull(itsContainer.GetInstance<IVerificationNotifier>());
-            Assert.NotNull(itsContainer.GetInstance<ISessionService>());
-            Assert.NotNull(itsContainer.GetInstance<IUserService>());
-            Assert.NotNull(itsContainer.GetInstance<IPaymentService>());
-            Assert.NotNull(itsContainer.GetInstance<IRegistrationService>());
+            Assert.NotNull(itsContainer.Get<IVerificationMessageGenerator>());
+            Assert.NotNull(itsContainer.Get<IVerificationCodeGenerator>());
+            Assert.NotNull(itsContainer.Get<IVerificationNotifier>());
+            Assert.NotNull(itsContainer.Get<ISessionService>());
+            Assert.NotNull(itsContainer.Get<IUserService>());
+            Assert.NotNull(itsContainer.Get<IPaymentService>());
+            Assert.NotNull(itsContainer.Get<IRegistrationService>());
         }
     }
 }

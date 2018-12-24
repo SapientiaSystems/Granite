@@ -5,9 +5,11 @@
 
 using Granite.Domain.User;
 using Granite.ServerPlatform.Bootstrap;
+using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
+using Strata.Ninject.Bootstrap;
 
 namespace Granite.ServerPlatform.Nhibernate
 {
@@ -21,10 +23,10 @@ namespace Granite.ServerPlatform.Nhibernate
     class NhibernateUserRepositoryTest:
         UserRepositoryTest
     {
-        protected override IContainer
+        protected override IKernel
         CreateContainer()
         {
-            IBootstrapper bootstrapper = new Bootstrapper();
+            INinjectBootstrapper bootstrapper = new NinjectBootstrapper();
 
             bootstrapper.Run(new MockApplicationFactory());
             return bootstrapper.Container;

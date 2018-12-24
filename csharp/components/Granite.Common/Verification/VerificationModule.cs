@@ -3,11 +3,11 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Strata.Foundation.Injection;
+using Ninject.Activation;
+using Strata.Ninject.Injection;
 using System.Configuration;
 using System.Net;
 using System.Net.Mail;
-using SystemEx.Injection;
 
 namespace Granite.Common.Verification
 {
@@ -26,46 +26,47 @@ namespace Granite.Common.Verification
         /// </summary>
         /// 
         public
-        VerificationModule():
-            base("VerificationModule") {}
+        VerificationModule() {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         /// 
         public override void
-        Initialize()
+        Load()
         {
             Bind<SmtpClient>()
-                .ToProvider(
-                    new FuncBasedProvider<SmtpClient>(
-                        () => 
-                        {
-                            return
-                                new SmtpClient()
-                                {
-                                    Host = "smtp.gmail.com",
-                                    Port = 587,
-                                    EnableSsl = true,
-                                    Timeout = 10000,
-                                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                                    TargetName = "STARTTLS/smtp.gmail.com",
-                                    UseDefaultCredentials = false,
-                                    Credentials = 
-                                        new NetworkCredential(
-                                            ConfigurationManager.AppSettings["GmailUser"],
-                                            ConfigurationManager.AppSettings["GmailPassword"])
-                                };
-                        } ) )
-                .WithScope(DefaultScope);
+                .ToMethod(
+                    (IContext c) =>
+                    {
+                        return
+                            new SmtpClient()
+                            {
+                                Host = "smtp.gmail.com",
+                                Port = 587,
+                                EnableSsl = true,
+                                Timeout = 10000,
+                                DeliveryMethod = SmtpDeliveryMethod.Network,
+                                TargetName = "STARTTLS/smtp.gmail.com",
+                                UseDefaultCredentials = false,
+                                Credentials =
+                                    new NetworkCredential(
+                                        ConfigurationManager.AppSettings["GmailUser"],
+                                        ConfigurationManager.AppSettings["GmailPassword"])
+                            };
+                    })
+                .InDefaultScope();
+
             Bind<IVerificationMessageGenerator>()
-                .ToType<T>()
-                .WithScope(DefaultScope);
+                .To<T>()
+                .InDefaultScope();
+
             Bind<IVerificationNotifier>()
-                .ToType<EmailVerificationNotifier>()
-                .WithScope(DefaultScope);
+                .To<EmailVerificationNotifier>()
+                .InDefaultScope();
+
             Bind<IVerificationCodeGenerator>()
-                .ToType<VerificationCodeGenerator>()
-                .WithScope(DefaultScope);
+                .To<VerificationCodeGenerator>()
+                .InDefaultScope();
         }
     }
 }

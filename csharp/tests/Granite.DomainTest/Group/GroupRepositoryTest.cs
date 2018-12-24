@@ -11,12 +11,15 @@ using Granite.Domain.Tenant;
 using Granite.Domain.User;
 using NUnit.Framework;
 using Strata.Domain.UnitOfWork;
-using Strata.Foundation.Injection;
-using Strata.Foundation.Value;
 using Strata.Ninject.Injection;
+using Strata.Foundation.Value;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ninject;
+using Strata.Foundation.Injection;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
+using Ninject.Modules;
 
 namespace Granite.Domain.Group
 {
@@ -40,17 +43,17 @@ namespace Granite.Domain.Group
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = 
-                new NinjectContainer(
+            IKernel container = 
+                new StandardKernel(
                     GetPersistenceModule(),
                     new GraniteDomainModule<
                         GraniteRolesProvider,
                         GraniteConstraintsProvider,
                         GraniteUserFactory>());
 
-            tenants = container.GetInstance<ITenantRepository>();
+            tenants = container.Get<ITenantRepository>();
             tenant = new StandardTenant("TestTenant",new HashedString("foobar"));
-            itsTarget = container.GetInstance<IGroupRepository>();
+            itsTarget = container.Get<IGroupRepository>();
             itsIds = new HashSet<MultiTenantId<string>>();
 
             tenant = tenants.Insert(tenant);
@@ -154,7 +157,7 @@ namespace Granite.Domain.Group
             Assert.AreEqual(2,actual.IncludedGroups.Count);
             Assert.IsTrue(actual.IncludedGroups.Contains(foo));
             Assert.IsTrue(actual.IncludedGroups.Contains(bar));
-           Assert.AreNotEqual(Guid.Empty,actual.PrimaryId);
+            Assert.AreNotEqual(Guid.Empty,actual.PrimaryId);
             Assert.AreEqual(expected.PrimaryId,actual.PrimaryId);
             Assert.AreEqual(expected.Created,actual.Created);
             Assert.AreEqual(expected.LastModified,actual.LastModified);
@@ -188,7 +191,7 @@ namespace Granite.Domain.Group
             Assert.AreEqual(expected.LastModified,actual.LastModified);
         }
 
-        protected abstract IModule
+        protected abstract INinjectModule
         GetPersistenceModule();
 
 

@@ -6,9 +6,11 @@
 using Granite.Domain.Profile;
 using Granite.Domain.Session;
 using Granite.ServerPlatform.Bootstrap;
+using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
+using Strata.Ninject.Bootstrap;
 
 namespace Granite.ServerPlatform.Nhibernate
 {
@@ -22,10 +24,10 @@ namespace Granite.ServerPlatform.Nhibernate
     class NhibernateProfileRepositoryTest:
         ProfileRepositoryTest
     {
-        protected override IContainer
+        protected override IKernel
         CreateContainer()
         {
-            IBootstrapper bootstrapper = new Bootstrapper();
+            INinjectBootstrapper bootstrapper = new NinjectBootstrapper();
 
             bootstrapper.Run(new MockApplicationFactory());
             return bootstrapper.Container;

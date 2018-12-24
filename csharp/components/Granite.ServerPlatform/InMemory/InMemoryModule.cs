@@ -12,6 +12,7 @@ using SystemEx.Injection;
 using Granite.Domain.Tenant;
 using System;
 using Granite.Domain.Group;
+using Ninject.Activation;
 
 namespace Granite.ServerPlatform.InMemory
 {
@@ -28,53 +29,51 @@ namespace Granite.ServerPlatform.InMemory
         /// </summary>
         ///  
         public
-        InMemoryModule(): 
-            base("InMemoryModule") {}
+        InMemoryModule() {}
 
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        protected override IProvider<IUnitOfWorkProvider> 
+        protected override Func<IContext,IUnitOfWorkProvider> 
         GetUnitOfWorkProviderProvider()
         {
             return 
-                new FuncBasedProvider<IUnitOfWorkProvider>(
-                    () =>
-                    {
-                        InMemoryUnitOfWorkProvider provider =
-                            new InMemoryUnitOfWorkProvider();
+                (IContext c) =>
+                {
+                    InMemoryUnitOfWorkProvider provider =
+                        new InMemoryUnitOfWorkProvider();
 
-                        provider
-                            .InsertReplicator(new TenantReplicator())
-                            .InsertRetriever<Guid,ITenant>(TenantRepository.GetKey)
-                            .InsertNamedQuery(
-                                new InMemoryNamedQuery<IUser>(
-                                    provider,
-                                    "User.GetUniqueWithExternalUserId",
-                                    new ExternalUserIdEqualsPredicate()))
-                            .InsertNamedQuery(
-                                new InMemoryNamedQuery<IUser>(
-                                    provider,
-                                    "User.GetUniqueWithUserName",
-                                    new UserNameEqualsPredicate()))
-                            .InsertNamedQuery(
-                                new InMemoryNamedQuery<IUser>(
-                                    provider,
-                                    "User.HasUniqueWithExternalUserId",
-                                    new ExternalUserIdEqualsPredicate()))
-                            .InsertNamedQuery(
-                                new InMemoryNamedQuery<IUser>(
-                                    provider,
-                                    "User.HasUniqueWithUserName",
-                                    new UserNameEqualsPredicate()))
-                            .InsertNamedQuery(
-                                new InMemoryNamedQuery<IGroup>(
-                                    provider,
-                                    "Group.GetGroupsFor",
-                                    new ContainsUserIdPredicate() ) );
+                    provider
+                        .InsertReplicator(new TenantReplicator())
+                        .InsertRetriever<Guid,ITenant>(TenantRepository.GetKey)
+                        .InsertNamedQuery(
+                            new InMemoryNamedQuery<IUser>(
+                                provider,
+                                "User.GetUniqueWithExternalUserId",
+                                new ExternalUserIdEqualsPredicate()))
+                        .InsertNamedQuery(
+                            new InMemoryNamedQuery<IUser>(
+                                provider,
+                                "User.GetUniqueWithUserName",
+                                new UserNameEqualsPredicate()))
+                        .InsertNamedQuery(
+                            new InMemoryNamedQuery<IUser>(
+                                provider,
+                                "User.HasUniqueWithExternalUserId",
+                                new ExternalUserIdEqualsPredicate()))
+                        .InsertNamedQuery(
+                            new InMemoryNamedQuery<IUser>(
+                                provider,
+                                "User.HasUniqueWithUserName",
+                                new UserNameEqualsPredicate()))
+                        .InsertNamedQuery(
+                            new InMemoryNamedQuery<IGroup>(
+                                provider,
+                                "Group.GetGroupsFor",
+                                new ContainsUserIdPredicate() ) );
 
-                        return provider;
-                    } );
+                    return provider;
+                };
         }
     }
 }

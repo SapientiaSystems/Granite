@@ -31,7 +31,7 @@ namespace Granite.Application.User
     ///  
     public
     class UserProcessor:
-        AuthorizedService,
+        AuthorizedProcessor,
         IUserProcessor,
         IUserDomainEventObserver,
         ITenantDomainEventObserver
@@ -62,7 +62,7 @@ namespace Granite.Application.User
             IVerificationNotifier      notifier,
             ILogger                    logger,
             IMapper                    mapper):
-            base(provider,logger,sessionRepository)
+            base(provider,sessionRepository)
         {
             itsUserFactory       = userFactory;
             itsTenantRepository  = tenantRepository;

@@ -3,19 +3,16 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Value;
-using Granite.Domain.Configuration;
-using Granite.Domain.Constraint;
-using Granite.Domain.Role;
-using Granite.Domain.Session;
 using Granite.Domain.Shared;
 using Granite.Domain.User;
+using Ninject;
 using NUnit.Framework;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Injection;
 using Strata.Ninject.Injection;
 using System;
 using System.Collections.Generic;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
 
 namespace Granite.Domain.Payment
 {
@@ -42,11 +39,11 @@ namespace Granite.Domain.Payment
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = CreateContainer();
+            IKernel container = CreateContainer();
 
-            itsTarget = container.GetInstance<ISubscriptionRepository>();
-            itsUserRepository = container.GetInstance<IUserRepository>();
-            itsGenerator = container.GetInstance<ITestUserGenerator>();
+            itsTarget = container.Get<ISubscriptionRepository>();
+            itsUserRepository = container.Get<IUserRepository>();
+            itsGenerator = container.Get<ITestUserGenerator>();
             itsSubscriptionIds = new HashSet<Guid>();
             itsUserIds = new HashSet<Guid>();
             InsertUsers();
@@ -184,7 +181,7 @@ namespace Granite.Domain.Payment
         }
 
 
-        protected abstract IContainer
+        protected abstract IKernel
         CreateContainer();
 
 

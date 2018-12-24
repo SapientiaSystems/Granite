@@ -18,8 +18,9 @@ namespace Granite.Application.Access
     class Authorizer:
         IAuthorizer
     {
-        private ISessionRepository       itsSessions;
-        private IClientIpAddressRecorder itsRecorder;
+        public IClientIpAddressRecorder Recorder { get; set; }
+
+        private ISessionRepository      itsSessions;
 
         //////////////////////////////////////////////////////////////////////
         /// <summary>
@@ -32,7 +33,7 @@ namespace Granite.Application.Access
             IClientIpAddressRecorder recorder)
         {
             itsSessions = sessions;
-            itsRecorder = recorder;
+            Recorder = recorder;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -83,20 +84,20 @@ namespace Granite.Application.Access
             if (!session.HasClientIpAddress)
                 return;
 
-            if (!itsRecorder.HasClientIpAddress)
+            if (!Recorder.HasClientIpAddress)
                 throw
                     new AuthorizationException(
                         "Authorization failed: " +
                         "could not obtain client ip address from request.");
 
-            if (session.ClientIpAddress != itsRecorder.ClientIpAddress)
+            if (session.ClientIpAddress != Recorder.ClientIpAddress)
                 throw
                     new AuthorizationException(
                         string.Format(
                             "Authorization failed: " +
                             "request's client ip address {0} " +
                             "does not match session's client ip address {1}",
-                            itsRecorder.ClientIpAddress,
+                            Recorder.ClientIpAddress,
                             session.ClientIpAddress));
         }
 

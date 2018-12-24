@@ -14,7 +14,7 @@ namespace Granite.ServerPlatform.Nhibernate
     /// 
     /// </summary>
     ///  
-    //[Ignore("use when needed regenerate schema")]
+    [Ignore("use when needed regenerate schema")]
     [TestFixture]
     public
     class SchemaGenerator

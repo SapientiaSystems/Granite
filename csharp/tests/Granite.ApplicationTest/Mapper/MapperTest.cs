@@ -24,11 +24,13 @@ using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
 using Granite.RequiredService.Payment;
 using Granite.ServerPlatform.InMemory;
+using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Value;
 using Strata.Ninject.Injection;
 using System;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
 
 namespace Granite.Application.Mapper
 {
@@ -41,7 +43,7 @@ namespace Granite.Application.Mapper
     public 
     class MapperTest
     {
-        private IContainer         itsContainer;
+        private IKernel            itsContainer;
         private IMapper            itsTarget;
         private IRoleRepository    itsRoles;
         private ITestUserGenerator itsGenerator;
@@ -52,7 +54,7 @@ namespace Granite.Application.Mapper
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
             itsContainer = 
-                new NinjectContainer(
+                new StandardKernel(
                     new InMemoryModule(),
                     new FakeUtilityModule(),
                     new GraniteDomainModule<
@@ -61,9 +63,9 @@ namespace Granite.Application.Mapper
                         GraniteUserFactory>(),
                     new GraniteApplicationModule<GraniteMapperProvider>(),
                     new TestGeneratorModule());
-            itsTarget = itsContainer.GetInstance<IMapper>();
-            itsRoles = itsContainer.GetInstance<IRoleRepository>();
-            itsGenerator = itsContainer.GetInstance<ITestUserGenerator>();
+            itsTarget = itsContainer.Get<IMapper>();
+            itsRoles = itsContainer.Get<IRoleRepository>();
+            itsGenerator = itsContainer.Get<ITestUserGenerator>();
         }
 
         [Test]
@@ -198,10 +200,10 @@ namespace Granite.Application.Mapper
         public void
         TestMapUserToUserData()
         {
-            ITenantRepository tenants = itsContainer.GetInstance<ITenantRepository>();
-            IGroupRepository groups = itsContainer.GetInstance<IGroupRepository>();
-            IRoleRepository roles = itsContainer.GetInstance<IRoleRepository>();
-            IConstraintRepository constraints = itsContainer.GetInstance<IConstraintRepository>();
+            ITenantRepository tenants = itsContainer.Get<ITenantRepository>();
+            IGroupRepository groups = itsContainer.Get<IGroupRepository>();
+            IRoleRepository roles = itsContainer.Get<IRoleRepository>();
+            IConstraintRepository constraints = itsContainer.Get<IConstraintRepository>();
             ITenant tenant = tenants.Insert(new StandardTenant("test",new HashedString("test")));
             IUser source =
                 new StandardUser(tenant,tenants,groups,roles,constraints)

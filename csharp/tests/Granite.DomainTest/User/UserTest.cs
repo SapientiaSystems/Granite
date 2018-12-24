@@ -15,6 +15,8 @@ using Granite.Domain.Configuration;
 using Granite.Domain.Constraint;
 using Granite.Domain.Group;
 using Granite.Domain.Tenant;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
+using Ninject;
 
 namespace Granite.Domain.User
 {
@@ -44,15 +46,15 @@ namespace Granite.Domain.User
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = CreateContainer();
+            IKernel container = CreateContainer();
             IUnitOfWork unitOfWork = null;
 
-            itsProvider = container.GetInstance<IUnitOfWorkProvider>();
-            itsTenants = container.GetInstance<ITenantRepository>();
-            itsUsers = container.GetInstance<IUserRepository>();
-            itsRoles = container.GetInstance<IRoleRepository>();
-            itsGroups = container.GetInstance<IGroupRepository>();
-            itsGenerator = container.GetInstance<ITestUserGenerator>();
+            itsProvider = container.Get<IUnitOfWorkProvider>();
+            itsTenants = container.Get<ITenantRepository>();
+            itsUsers = container.Get<IUserRepository>();
+            itsRoles = container.Get<IRoleRepository>();
+            itsGroups = container.Get<IGroupRepository>();
+            itsGenerator = container.Get<ITestUserGenerator>();
 
             itsIds = new HashSet<Guid>();
 
@@ -106,7 +108,7 @@ namespace Granite.Domain.User
             Assert.AreEqual(2,roles3.Count);
         }
 
-        protected abstract IContainer
+        protected abstract IKernel
         CreateContainer();
 
 

@@ -28,7 +28,7 @@ namespace Granite.Application.Registration
     ///  
     public
     class RegistrationProcessor:
-        AuthorizedService,
+        AuthorizedProcessor,
         IRegistrationProcessor
     {
         private IUserProcessor    itsUserProcessor;
@@ -45,14 +45,13 @@ namespace Granite.Application.Registration
         public
         RegistrationProcessor(
             IUnitOfWorkProvider provider,
-            ILogger             logger,
             ISessionRepository  sessions,
             IUserProcessor      userProcessor,
             ISessionProcessor   sessionProcessor,   
             IProfileProcessor   profileProcessor,
             IPaymentProcessor   paymentProcessor,
             IMapper             mapper) :
-            base(provider,logger,sessions)
+            base(provider,sessions)
         {
             itsUserProcessor    = userProcessor;
             itsSessionProcessor = sessionProcessor;

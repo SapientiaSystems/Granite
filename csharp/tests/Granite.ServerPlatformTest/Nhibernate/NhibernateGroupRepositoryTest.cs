@@ -5,6 +5,7 @@
 
 using Granite.Domain.Group;
 using Granite.ServerPlatform.Bootstrap;
+using Ninject.Modules;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
 
@@ -20,7 +21,7 @@ namespace Granite.ServerPlatform.Nhibernate
     class NhibernateGroupRepositoryTest:
         GroupRepositoryTest
     {
-        protected override IModule 
+        protected override INinjectModule 
         GetPersistenceModule()
         {
             return new GraniteServerPlatformModule<GraniteInitializer>();

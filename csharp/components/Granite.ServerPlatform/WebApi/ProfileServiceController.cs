@@ -3,10 +3,9 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
-using Granite.Common.Injection;
 using Granite.ProvidedService.Profile;
+using Ninject;
 using System.Web.Http;
-using SystemEx.Injection;
 
 namespace Granite.ServerPlatform.WebApi
 {
@@ -29,12 +28,9 @@ namespace Granite.ServerPlatform.WebApi
         /// 
         [Inject]
         public
-        ProfileServiceController()
+        ProfileServiceController(IProfileService imp)
         {
-            itsImp =
-                Global
-                    .Container
-                    .GetInstance<IProfileService>();
+            itsImp = imp;
         }
 
         //////////////////////////////////////////////////////////////////////

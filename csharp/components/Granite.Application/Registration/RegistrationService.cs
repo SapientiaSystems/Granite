@@ -3,7 +3,15 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Application.Service;
+using Granite.Application.Shared;
+using Granite.Application.Tenant;
+using Granite.Common.Access;
+using Granite.Domain.Session;
 using Granite.ProvidedService.Registration;
+using Strata.Application.Messaging;
+using Strata.Domain.UnitOfWork;
+using Strata.Foundation.Logging;
 using SystemEx.Injection;
 
 namespace Granite.Application.Registration
@@ -14,6 +22,7 @@ namespace Granite.Application.Registration
     ///  
     public
     class RegistrationService:
+        AuthorizedService,
         IRegistrationService
     {
         private IRegistrationProcessor itsProcessor;
@@ -24,7 +33,16 @@ namespace Granite.Application.Registration
         ///  
         [Inject]
         public
-        RegistrationService(IRegistrationProcessor processor)
+        RegistrationService(
+            IUnitOfWorkProvider      provider,
+            IActionQueue             queue,
+            ILogger                  logger,
+            ITenantManager           manager,
+            IAccessTokenRefresher    refresher,
+            IClientIpAddressRecorder recorder,
+            ISessionRepository       sessions,
+            IRegistrationProcessor   processor):
+            base(provider,queue,logger,manager,refresher,recorder,sessions)
         {
             itsProcessor = processor;
         }

@@ -5,8 +5,10 @@
 
 using Granite.RequiredService.Payment;
 using Granite.ServerPlatform.Bootstrap;
+using Ninject;
 using Strata.Foundation.Bootstrap;
 using Strata.Foundation.Injection;
+using Strata.Ninject.Bootstrap;
 using System;
 
 namespace Granite.ServerPlatform.Stripe
@@ -20,10 +22,10 @@ namespace Granite.ServerPlatform.Stripe
     class StripePaymentServiceTest:
         ExternalPaymentServiceTest
     {
-        protected override IContainer 
+        protected override IKernel 
         CreateContainer()
         {
-            IBootstrapper bootstrapper = new Bootstrapper();
+            INinjectBootstrapper bootstrapper = new NinjectBootstrapper();
 
             bootstrapper.Run(new MockApplicationFactory());
 

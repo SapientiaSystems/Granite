@@ -6,6 +6,7 @@
 using Granite.Common.Value;
 using Granite.Domain.Shared;
 using Granite.ProvidedService.Payment;
+using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Injection;
 using Strata.Foundation.Value;
@@ -34,12 +35,12 @@ namespace Granite.RequiredService.Payment
         public virtual void
         SetUp()
         {
-            IContainer container = CreateContainer();
-            itsTarget = container.GetInstance<IExternalPaymentService>();
+            IKernel container = CreateContainer();
+            itsTarget = container.Get<IExternalPaymentService>();
             itsPlanDeletes = new HashSet<DeleteExternalPlanRequest>();
             itsAccountDeletes = new HashSet<DeleteExternalAccountRequest>();
             itsSubscriptionDeletes = new HashSet<DeleteExternalSubscriptionRequest>();
-            itsGenerator = container.GetInstance<ITestUserGenerator>();
+            itsGenerator = container.Get<ITestUserGenerator>();
         }
 
         [TearDown]
@@ -237,7 +238,7 @@ namespace Granite.RequiredService.Payment
         }
 
 
-        protected abstract IContainer 
+        protected abstract IKernel 
         CreateContainer();
     }
 }

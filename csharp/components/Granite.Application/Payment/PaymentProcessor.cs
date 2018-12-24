@@ -26,7 +26,7 @@ namespace Granite.Application.Payment
     ///  
     public
     class PaymentProcessor:
-        AuthorizedService,
+        AuthorizedProcessor,
         IPaymentProcessor
     {
         private IExternalPaymentService     itsService;
@@ -44,7 +44,6 @@ namespace Granite.Application.Payment
         public
         PaymentProcessor(
             IUnitOfWorkProvider         provider,
-            ILogger                     logger,
             ISessionRepository          sessions,
             IExternalPaymentService     service,
             IAccountRepository          accountRepository,
@@ -52,7 +51,7 @@ namespace Granite.Application.Payment
             ISubscriptionRepository     subscriptionRepository,
             IUserRepository             userRepository,
             IMapper                     mapper):
-            base(provider,logger,sessions)
+            base(provider,sessions)
         {
             itsService                = service;
             itsAccountRepository      = accountRepository;

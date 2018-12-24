@@ -3,7 +3,15 @@
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 
+using Granite.Application.Service;
+using Granite.Application.Shared;
+using Granite.Application.Tenant;
+using Granite.Common.Access;
+using Granite.Domain.Session;
 using Granite.ProvidedService.User;
+using Strata.Application.Messaging;
+using Strata.Domain.UnitOfWork;
+using Strata.Foundation.Logging;
 using SystemEx.Injection;
 
 namespace Granite.Application.User
@@ -14,6 +22,7 @@ namespace Granite.Application.User
     ///  
     public
     class UserService:
+        AuthorizedService,
         IUserService
     {
         private IUserProcessor itsProcessor;
@@ -24,7 +33,16 @@ namespace Granite.Application.User
         ///  
         [Inject]
         public 
-        UserService(IUserProcessor processor)
+        UserService(
+            IUnitOfWorkProvider      provider,
+            IActionQueue             queue,
+            ILogger                  logger,
+            ITenantManager           manager,
+            IAccessTokenRefresher    refresher,
+            IClientIpAddressRecorder recorder,
+            ISessionRepository       sessions,
+            IUserProcessor           processor) :
+            base(provider,queue,logger,manager,refresher,recorder,sessions)
         {
             itsProcessor = processor;
         }

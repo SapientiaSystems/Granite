@@ -8,12 +8,14 @@ using Granite.Domain.Constraint;
 using Granite.Domain.Role;
 using Granite.Domain.Shared;
 using Granite.Domain.User;
+using Ninject;
 using NUnit.Framework;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Injection;
 using Strata.Ninject.Injection;
 using System;
 using System.Collections.Generic;
+using AbstractModule = Strata.Ninject.Injection.AbstractModule;
 
 namespace Granite.Domain.Session
 {
@@ -42,11 +44,11 @@ namespace Granite.Domain.Session
         {
             AbstractModule.DefaultScope = typeof(ThreadScope);
 
-            IContainer container = CreateContainer();
+            IKernel container = CreateContainer();
 
-            itsTarget = container.GetInstance<ISessionRepository>();
-            itsUserRepository = container.GetInstance<IUserRepository>();
-            itsGenerator = container.GetInstance<ITestUserGenerator>();
+            itsTarget = container.Get<ISessionRepository>();
+            itsUserRepository = container.Get<IUserRepository>();
+            itsGenerator = container.Get<ITestUserGenerator>();
             itsSessionIds = new HashSet<Guid>();
             itsUserIds = new HashSet<Guid>();
             InsertUsers();
@@ -194,7 +196,7 @@ namespace Granite.Domain.Session
         }
 
 
-        protected abstract IContainer
+        protected abstract IKernel
         CreateContainer();
 
     }

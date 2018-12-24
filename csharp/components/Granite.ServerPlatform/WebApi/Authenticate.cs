@@ -5,6 +5,7 @@
 
 using Granite.Common.Injection;
 using Granite.Domain.Session;
+using Ninject;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -109,7 +110,7 @@ namespace Granite.ServerPlatform.WebApi
             ISessionRepository sessions =
                 Global
                     .Container
-                    .GetInstance<ISessionRepository>();
+                    .Get<ISessionRepository>();
 
             return 
                 sessions.GetUniqueWithAccessToken(

@@ -13,7 +13,6 @@ using Granite.ProvidedService.Session;
 using Granite.ProvidedService.User;
 using Strata.Application.Service;
 using Strata.Domain.UnitOfWork;
-using Strata.Foundation.Logging;
 using System;
 using SystemEx.Injection;
 
@@ -25,7 +24,7 @@ namespace Granite.Application.Session
     ///  
     public
     class SessionProcessor:
-        AbstractService,
+        AbstractProcessor,
         ISessionProcessor,
         ISessionDomainEventObserver
     {
@@ -48,10 +47,9 @@ namespace Granite.Application.Session
             ITenantRepository        tenantRepository,
             ISessionRepository       sessionRepository,
             IUserRepository          userRepository,
-            ILogger                  logger,
             IClientIpAddressRecorder recorder,
             IMapper                  mapper):
-            base(provider,logger)
+            base(provider)
         {
             itsAuthenticator     = authenticator;
             itsTenantRepository  = tenantRepository;
