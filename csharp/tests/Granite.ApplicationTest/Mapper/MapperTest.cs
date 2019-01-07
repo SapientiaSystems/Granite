@@ -152,8 +152,21 @@ namespace Granite.Application.Mapper
         public void
         TestMapSessionToSessionData()
         {
+            ITenantRepository tenants = itsContainer.Get<ITenantRepository>();
+            IGroupRepository groups = itsContainer.Get<IGroupRepository>();
+            IRoleRepository roles = itsContainer.Get<IRoleRepository>();
+            IConstraintRepository constraints = itsContainer.Get<IConstraintRepository>();
+            ITenant tenant = tenants.Insert(new StandardTenant("test",new HashedString("test"))).Activate();
+            IUser user =
+                new StandardUser(tenant,tenants,groups,roles,constraints)
+                {
+                    UserId = Guid.NewGuid(),
+                    UserName = itsGenerator.GenerateUserName(),
+                    Email = itsGenerator.GenerateEmail(),
+                    RoleIds = new StringSet() { "GraniteUser" }
+                };
             ISession source =
-                new StandardSession()
+                new StandardSession(user)
                 {
                     PrimaryId = Guid.NewGuid(),
                     UserId = Guid.NewGuid(),
@@ -167,7 +180,7 @@ namespace Granite.Application.Mapper
             Assert.AreEqual(source.PrimaryId,destination.SessionId);
             Assert.AreEqual(source.UserId,destination.UserId);
             Assert.AreEqual(source.AccessToken,destination.AccessToken);
-
+            Assert.NotNull(destination.User);
         }
 
         [Test]

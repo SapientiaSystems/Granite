@@ -200,7 +200,7 @@
     <Compile Include="Nhibernate\SchemaGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Nhibernate\NhibernateUserRepositoryTest.cs" />
-    <Compile Include="Session\NhibernateUserServiceTest.cs" />
+    <Compile Include="Session\NhibernateSessionServiceTest.cs" />
     <Compile Include="Stripe\StripePaymentServiceTest.cs" />
     <Compile Include="User\NhibernateUserServiceTest.cs" />
   </ItemGroup>

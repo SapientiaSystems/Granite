@@ -25,6 +25,12 @@ namespace Granite.ProvidedService.Session
         public string   AccessToken { get; set; }
         [DataMember]
         public UserData User { get; set; }
+
+        public
+        SessionData()
+        {
+            User = new UserData();
+        }
     }
 }
 

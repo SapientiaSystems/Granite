@@ -29,7 +29,10 @@ namespace Granite.Application.Mapper
             CreateMap<ISession,SessionData>()
                 .ForMember(
                     dest => dest.SessionId,
-                    opt => opt.MapFrom(src => src.PrimaryId));
+                    opt => opt.MapFrom(src => src.PrimaryId))
+                .ForMember(
+                    dest => dest.User,
+                    opt => opt.MapFrom(src => src.User));
 
             CreateMap<GetOrLoginRequest,LoginRequest>();
 

@@ -15,7 +15,7 @@
 		<dependencies>
 			<dependency id="Strata.Foundation" version="0.10.0"/>
 			<dependency id="Strata.Domain" version="0.11.0"/>
-			<dependency id="Strata.Application" version="0.7.0"/>
+			<dependency id="Strata.Application" version="0.8.2"/>
 			<dependency id="Strata.Ninject" version="0.10.0"/>
 			<dependency id="Strata.Nhibernate" version="0.11.0"/>
 			<dependency id="Strata.EntityFramework" version="0.11.0"/>

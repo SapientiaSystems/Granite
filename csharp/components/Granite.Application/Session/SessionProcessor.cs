@@ -156,18 +156,27 @@ namespace Granite.Application.Session
         {
             ISession session = GetSession(request);
 
-            if (IsValid(session,request))
-                return
-                    new GetOrLoginReply()
-                    {
-                        IsSuccessful = true,
-                        Session = itsMapper.Map(session,new SessionData())
-                    };
+            try
+            {
+                session?.ActivateTenant();
 
-            return
-                itsMapper.Map(
-                    Login(itsMapper.Map(request,new LoginRequest())),
-                    new GetOrLoginReply());
+                if (IsValid(session,request))
+                    return
+                        new GetOrLoginReply()
+                        {
+                            IsSuccessful = true,
+                            Session = itsMapper.Map(session,new SessionData())
+                        };
+
+                return
+                    itsMapper.Map(
+                        Login(itsMapper.Map(request,new LoginRequest())),
+                        new GetOrLoginReply());
+            }
+            finally
+            {
+                session?.DeactivateTenant();
+            }
         }
 
         //////////////////////////////////////////////////////////////////////

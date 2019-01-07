@@ -95,6 +95,68 @@ namespace Granite.Application.Session
             Assert.IsNull(reply.NewSession);
         }
 
+        [Test]
+        public virtual void
+        TestGetOrLoginValidAccessToken()
+        {
+            LoginRequest loginRequest =
+                new LoginRequest()
+                {
+                    UserName = "test",
+                    Password = "test"
+                };
+            LoginReply loginReply =
+                itsTarget.Login(loginRequest);
+            GetOrLoginRequest request =
+                new GetOrLoginRequest()
+                {
+                    AccessToken = loginReply.NewSession.AccessToken,
+                    UserName = "guest",
+                    Password = "guest"
+                };
+            GetOrLoginReply reply =
+                itsTarget.GetOrLogin(request);
+
+            Assert.IsTrue(
+                reply.IsSuccessful,
+                reply.FailureMessage + "\n" + reply.StackTrace);
+            Assert.NotNull(reply.Session);
+
+            itsLogouts.Add(
+                new LogoutRequest()
+                {
+                    SessionId = loginReply.NewSession.SessionId,
+                    AccessToken = loginReply.NewSession.AccessToken
+                });
+        }
+
+        [Test]
+        public virtual void
+        TestGetOrLoginInvalidAccessToken()
+        {
+            GetOrLoginRequest request =
+                new GetOrLoginRequest()
+                {
+                    AccessToken = "Invalid-Token-XXXXXXXXXXXXXXX",
+                    UserName = "guest",
+                    Password = "guest"
+                };
+            GetOrLoginReply reply =
+                itsTarget.GetOrLogin(request);
+
+            Assert.IsTrue(
+                reply.IsSuccessful,
+                reply.FailureMessage + "\n" + reply.StackTrace);
+            Assert.NotNull(reply.Session);
+
+            itsLogouts.Add(
+                new LogoutRequest()
+                {
+                    SessionId = reply.Session.SessionId,
+                    AccessToken = reply.Session.AccessToken
+                });
+        }
+
         protected abstract IKernel 
         CreateContainer();
     }
