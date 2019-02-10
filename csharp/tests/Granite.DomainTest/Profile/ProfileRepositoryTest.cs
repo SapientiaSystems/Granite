@@ -161,6 +161,49 @@ namespace Granite.Domain.Profile
             Assert.AreEqual(expected.JobTitle,actual.JobTitle);
         }
 
+        [Test]
+        public virtual void
+        TestGetUniqueForUser()
+        {
+            IUnitOfWork unitOfWork =
+                itsTarget
+                    .Provider
+                    .GetUnitOfWork();
+            IUser user = itsUserRepository.GetUniqueWithUserName(UserName);
+            IProfile expected =
+                new StandardProfile()
+                {
+                    Created = DateTime.Now,
+                    LastModified = DateTime.Now,
+                    UserId = user.UserId,
+                    UserName = user.UserName,
+                    Name = itsGenerator.GenerateName(),
+                    Email = itsGenerator.GenerateEmail(),
+                    Phone = itsGenerator.GeneratePhone(),
+                    Address = itsGenerator.GenerateAddress(),
+                    JobTitle = "Software Engineer"
+                };
+            IProfile actual = null;
+            
+            expected = itsTarget.Insert(expected);
+            actual = itsTarget.GetUniqueFor(user);
+
+            unitOfWork.Commit();
+
+            itsProfileIds.Add(actual.PrimaryId);
+
+            Assert.NotNull(actual);
+            Assert.AreNotEqual(Guid.Empty,actual.PrimaryId);
+            Assert.AreNotEqual(Guid.Empty,actual.UserId);
+            Assert.AreEqual(expected.Created,actual.Created);
+            Assert.AreEqual(expected.LastModified,actual.LastModified);
+            Assert.AreEqual(expected.Name,actual.Name);
+            Assert.AreEqual(expected.Email,actual.Email);
+            Assert.AreEqual(expected.Phone,actual.Phone);
+            Assert.AreEqual(expected.Address,actual.Address);
+            Assert.AreEqual(expected.JobTitle,actual.JobTitle);
+        }
+
         protected void
         InsertUsers()
         {

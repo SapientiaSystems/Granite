@@ -87,8 +87,11 @@ namespace Granite.Application.Profile
                                 profileData.UserId)
                     };
 
-            profile = new StandardProfile();
-            profile = itsMapper.Map(user,itsMapper.Map(profileData,profile));            
+            profile = 
+                itsMapper.Map(
+                    user,
+                    itsMapper.Map(profileData,new StandardProfile()));
+            profile.Email = profileData.Email;
             profile = itsProfileRepository.Insert(profile);
 
             return
@@ -124,6 +127,9 @@ namespace Granite.Application.Profile
                                 "user does not exist.",
                                 profileData.UserId)
                     };
+
+            if (string.IsNullOrEmpty(profileData.UserName))
+                profileData.UserName = user.UserName;
 
             profile = itsProfileRepository.GetUniqueFor(user);
 
@@ -164,7 +170,7 @@ namespace Granite.Application.Profile
         {
             IProfile profile = GetProfileToDelete(request);
 
-            if (profile != null)
+            if (profile == null)
                 return
                     new DeleteProfileReply()
                     {

@@ -1,5 +1,5 @@
 ﻿//  ##########################################################################
-//  # File Name: NhibernateUserServiceTest.cs
+//  # File Name: NhibernatePaymentServiceTest.cs
 //  # Copyright: 2018, Sapientia Systems, LLC.
 //  ##########################################################################
 

@@ -27,12 +27,14 @@ namespace Granite.Application.Mapper
         public
         ProfileMapperProfile()
         {
-            CreateMap<CreateOrUpdateProfileData,IProfile>()
-                .ReverseMap();
+            CreateMap<CreateOrUpdateProfileData,IProfile>();
 
             CreateMap<IUser,IProfile>();
 
-            CreateMap<IProfile,ProfileData>();
+            CreateMap<IProfile,ProfileData>()
+                .ForMember(
+                    dest => dest.ProfileId,
+                    opt => opt.MapFrom(src => src.PrimaryId));
         }
     }
 }

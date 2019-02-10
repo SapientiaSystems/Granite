@@ -104,6 +104,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mapper\MapperTest.cs" />
+    <Compile Include="Payment\PaymentServiceTest.cs" />
+    <Compile Include="Profile\ProfileServiceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\SessionServiceTest.cs" />
     <Compile Include="User\UserServiceTest.cs" />

@@ -198,6 +198,8 @@
     <Compile Include="Nhibernate\NhibernateGroupRepositoryTest.cs" />
     <Compile Include="Nhibernate\NhibernateUserTest.cs" />
     <Compile Include="Nhibernate\SchemaGenerator.cs" />
+    <Compile Include="Payment\NhibernatePaymentServiceTest.cs" />
+    <Compile Include="Profile\NhibernateProfileServiceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Nhibernate\NhibernateUserRepositoryTest.cs" />
     <Compile Include="Session\NhibernateSessionServiceTest.cs" />
