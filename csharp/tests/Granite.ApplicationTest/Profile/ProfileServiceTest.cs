@@ -226,10 +226,12 @@ namespace Granite.Application.Profile
                                     new PersonName()
                                     {
                                         FirstName = "Test",
+                                        MiddleName = null,
                                         LastName = "Test"
                                     },
                                 JobTitle = "Big Boss",
-                                Address =
+                                Address = null,
+                                /*
                                     new PostalAddress()
                                     {
                                         StreetAddress = "123 Main St",
@@ -237,7 +239,7 @@ namespace Granite.Application.Profile
                                         State = "CA",
                                         PostalCode = "90017",
                                         CountryCode = "USA"
-                                    },
+                                    }, */
                                 Phone = new PhoneNumber("310.555.1234"),
                                 Email = new EmailAddress("test@test.com")
                             }
@@ -270,7 +272,7 @@ namespace Granite.Application.Profile
 
             reply = itsTarget.CreateProfile(request);
             Assert.NotNull(reply);
-            Assert.IsTrue(reply.IsSuccessful);
+            Assert.IsTrue(reply.IsSuccessful,reply.FailureMessage);
 
             newProfile = reply.NewProfile;
             Assert.NotNull(newProfile);

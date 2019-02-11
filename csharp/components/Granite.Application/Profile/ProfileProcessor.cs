@@ -12,6 +12,7 @@ using Granite.Domain.User;
 using Granite.ProvidedService.Profile;
 using Granite.ProvidedService.Transfer;
 using Strata.Domain.UnitOfWork;
+using Strata.Foundation.Value;
 using System;
 using SystemEx.Injection;
 
@@ -92,7 +93,7 @@ namespace Granite.Application.Profile
                     user,
                     itsMapper.Map(profileData,new StandardProfile()));
             profile.Email = profileData.Email;
-            profile = itsProfileRepository.Insert(profile);
+            profile = itsProfileRepository.Insert(Normalize(profile));
 
             return
                 new CreateProfileReply()
@@ -348,7 +349,28 @@ namespace Granite.Application.Profile
         /// <summary>
         /// </summary>
         ///  
-        private 
+        protected virtual IProfile
+        Normalize(IProfile profile)
+        {
+            PersonName name = profile.Name;
+
+            if (name.FirstName == null)
+                name.FirstName = string.Empty;
+
+            if (name.MiddleName == null)
+                name.MiddleName = string.Empty;
+
+            if (name.LastName == null)
+                name.LastName = string.Empty;
+
+            return profile;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// </summary>
+        ///  
+        private
         Action<IMappingOperationOptions<CreateOrUpdateProfileData,IProfile>>
         IgnoreNullProperties()
         {
