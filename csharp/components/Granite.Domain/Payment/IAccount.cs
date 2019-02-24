@@ -30,6 +30,8 @@ namespace Granite.Domain.Payment
 
         string   ExternalAccountId { get; set; }
         string   ExternalPaymentMethodId { get; set; }
+
+        bool     IsActive { get; set; }
     }
 }
 

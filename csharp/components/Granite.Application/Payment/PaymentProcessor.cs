@@ -15,6 +15,7 @@ using Granite.RequiredService.Payment;
 using Strata.Domain.UnitOfWork;
 using Strata.Foundation.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SystemEx.Injection;
 
@@ -146,6 +147,7 @@ namespace Granite.Application.Payment
             CreateExternalAccountReply reply =
                 itsService.CreateExternalAccount(
                     itsMapper.Map<CreateExternalAccountRequest>(request));
+            IAccount                   oldAccount = null;
             IAccount                   account = null;
             AccountData                accountData = null;
             InitialCreditCardData      card = null;
@@ -159,14 +161,26 @@ namespace Granite.Application.Payment
                         FailureMessage = reply.FailureMessage
                     };
 
-            account =
-                itsAccountRepository.Insert(
-                    itsMapper.Map(reply,new StandardAccount()));
+            oldAccount =
+                itsAccountRepository
+                    .GetAllFor(GetUserFrom(request))
+                    .Where(a => a.IsActive)
+                    .SingleOrDefault();
+
+            account = itsMapper.Map(reply,new StandardAccount());
+            account.IsActive = true;
+            account = itsAccountRepository.Insert(account);
 
             if (account == null)
                 throw
                     new ApplicationException(
                         "Account was not persisted correctly.");
+
+            if (oldAccount != null)
+            {
+                oldAccount.IsActive = false;
+                itsAccountRepository.Update(oldAccount);
+            }
 
             accountData = itsMapper.Map<AccountData>(account);
             card = request.AccountToCreate.CreditCardToCreate;
@@ -446,6 +460,7 @@ namespace Granite.Application.Payment
             ISubscription                     subscription = null;
             DeleteExternalSubscriptionRequest externalRequest = null;
             DeleteExternalSubscriptionReply   externalReply = null;
+            DeleteSubscriptionReply           reply = null;
 
             subscription =
                 itsSubscriptionRepository.GetUnique(
@@ -464,9 +479,20 @@ namespace Granite.Application.Payment
                     subscription,
                     itsMapper.Map<
                         DeleteExternalSubscriptionRequest>(request));
+            externalReply =
+                itsService.DeleteExternalSubscription(externalRequest);
+
+            if (!externalReply.IsSuccessful)
+                return itsMapper.Map<DeleteSubscriptionReply>(externalReply);
+                    
+            itsSubscriptionRepository.Remove(subscription);
 
             return
-                itsMapper.Map<DeleteSubscriptionReply>(externalRequest);
+                new DeleteSubscriptionReply()
+                {
+                    IsSuccessful = true,
+                    SuccessMessage = "subscription deleted"
+                };
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -555,7 +581,11 @@ namespace Granite.Application.Payment
                     itsUserRepository.GetUnique(
                         update.UserIdOfAccountToUpdate);
 
-                return itsAccountRepository.GetUniqueFor(user);
+                return 
+                    itsAccountRepository
+                        .GetAllFor(user)
+                        .Where( a => a.IsActive )
+                        .SingleOrDefault();
             }
 
             return null;
@@ -580,7 +610,11 @@ namespace Granite.Application.Payment
                     itsUserRepository.GetUnique(
                         request.UserIdOfAccountToDelete);
 
-                return itsAccountRepository.GetUniqueFor(user);
+                return 
+                    itsAccountRepository
+                        .GetAllFor(user)
+                        .Where(a => a.IsActive)
+                        .SingleOrDefault();
             }
 
             return null;
@@ -631,7 +665,11 @@ namespace Granite.Application.Payment
                 IUser user = GetUserFrom(request);
 
                 if (user != null)
-                    return itsAccountRepository.GetUniqueFor(user);
+                    return 
+                        itsAccountRepository
+                            .GetAllFor(user)
+                            .Where(a => a.IsActive)
+                            .SingleOrDefault();
             }
 
             if (request.AccountIdOfAccountToGet != Guid.Empty)
@@ -646,7 +684,11 @@ namespace Granite.Application.Payment
                         request.UserIdOfAccountToGet);
 
                 if (user != null)
-                    return itsAccountRepository.GetUniqueFor(user);
+                    return 
+                        itsAccountRepository
+                            .GetAllFor(user)
+                            .Where(a => a.IsActive)
+                            .SingleOrDefault();
             }
 
             return null;
@@ -661,7 +703,11 @@ namespace Granite.Application.Payment
         {
             IUser user = GetUserFrom(request);
 
-            return itsAccountRepository.GetUniqueFor(user);
+            return 
+                itsAccountRepository
+                    .GetAllFor(user)
+                    .Where(a => a.IsActive)
+                    .SingleOrDefault(); ;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -676,8 +722,10 @@ namespace Granite.Application.Payment
                 IUser user = GetUserFrom(request);
 
                 if (user != null)
-                    return 
-                        itsSubscriptionRepository.GetUniqueFor(user);
+                    return
+                        itsSubscriptionRepository
+                            .GetAllFor(user)
+                            .FirstOrDefault();
             }
 
             if (request.AccountIdOfSubscriptionToGet != Guid.Empty)

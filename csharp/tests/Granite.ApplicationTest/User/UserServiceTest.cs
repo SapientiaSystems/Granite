@@ -200,6 +200,69 @@ namespace Granite.Application.User
 
         [Test]
         public virtual void
+        TestUpdateUser()
+        {
+            CreateUserRequest request = null;
+            CreateUserReply reply = null;
+            UpdateUserRequest updateRequest = null;
+            UpdateUserReply updateReply = null;
+            UserData newUser = null;
+            string expectedMessage = null;
+
+            request =
+                new CreateUserRequest()
+                {
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    CorrelationId = Guid.NewGuid(),
+                    UserToCreate =
+                        new InitialUserData()
+                        {
+                            UserName = "adamsmith",
+                            Password = "foobar1!@#",
+                            Email = new EmailAddress("adamsmith@wealthofnations.com")
+                        }
+                };
+
+            reply = itsTarget.CreateUser(request);
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful);
+
+            newUser = reply.NewUser;
+            Assert.NotNull(newUser);
+
+            itsRemovals.Add(
+                new DeleteUserRequest()
+                {
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    UserIdOfUserToDelete = newUser.UserId
+                });
+
+            updateRequest =
+                new UpdateUserRequest()
+                {
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    UserToUpdate = 
+                        new UpdateUserData()
+                        {
+                            UserIdOfUserToUpdate = newUser.UserId,
+                            CurrentPassword = "foobar1!@#",
+                            NewPassword = "XXXXXXXXXX",
+                            Operation = UserUpdateKind.CHANGE_PASSWORD
+                        }
+                };
+
+            updateReply = itsTarget.UpdateUser(updateRequest);
+
+            Assert.NotNull(updateReply);
+            Assert.IsTrue(updateReply.IsSuccessful,updateReply.FailureMessage);
+
+        }
+
+        [Test]
+        public virtual void
         TestGetUserCurrentUser()
         {
             GetUserReply reply =

@@ -22,6 +22,8 @@
         <property name="ExternalAccountId" column="ExternalAccountId" index="ExternalAccountId" not-null="true"/>
         <property name="ExternalPaymentMethodId" column="ExternalPaymentMethodId" index="ExternalPaymentMethodId" not-null="false"/>
 
+        <property name="IsActive" column="IsActive" not-null="true"/>
+
         <subclass
             name="StandardAccount"
             discriminator-value="StandardAccount"/>
@@ -29,14 +31,14 @@
     </class>
 
     <query
-        name="Account.GetUniqueFor">
+        name="Account.GetAllFor">
         <![CDATA[
             select distinct a
             from IAccount a
             where a.UserId = :userId]]>
     </query>
     <query
-        name="Account.HasUniqueFor"
+        name="Account.HasAnyFor"
         cacheable="true">
         <![CDATA[
             select count(a.UserId)

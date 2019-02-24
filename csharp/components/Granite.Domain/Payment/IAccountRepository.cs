@@ -33,22 +33,8 @@ namespace Granite.Domain.Payment
         /// <summary>
         /// </summary>
         ///  
-        IAccount
-        GetUniqueFor(IUserIdProvider provider);
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
         bool
         HasAnyFor(IUserIdProvider provider);
-
-        //////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// </summary>
-        ///  
-        bool
-        HasUniqueFor(IUserIdProvider provider);
     }
 }
 

@@ -80,7 +80,7 @@ namespace Granite.Application.Shared
         {
             return
                 DateTime.Now - session.LastRefresh >
-                TimeSpan.FromMinutes(5);
+                TimeSpan.FromMinutes(1);
 
         }
     }

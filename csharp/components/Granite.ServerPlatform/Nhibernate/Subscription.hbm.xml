@@ -32,11 +32,25 @@
     </class>
 
     <query
+        name="Subscription.GetAllWithAccountId">
+        <![CDATA[
+            select distinct s
+            from ISubscription s
+            where s.AccountId = :accountId]]>
+    </query>
+    <query
         name="Subscription.GetUniqueWithAccountId">
         <![CDATA[
             select distinct s
             from ISubscription s
             where s.AccountId = :accountId]]>
+    </query>
+    <query
+        name="Subscription.GetAllWithUserId">
+        <![CDATA[
+            select distinct s
+            from ISubscription s
+            where s.UserId = :userId]]>
     </query>
     <query
         name="Subscription.GetUniqueWithUserId">
@@ -46,7 +60,7 @@
             where s.UserId = :userId]]>
     </query>
     <query
-        name="Subscription.HasUniqueWithAccoutId"
+        name="Subscription.HasAnyWithAccoutId"
         cacheable="true">
         <![CDATA[
             select count(s.AccountId)
@@ -54,7 +68,7 @@
             where s.AccountId = :accountId]]>
     </query>
     <query
-        name="Subscription.HasUniqueWithUserId"
+        name="Subscription.HasAnyWithUserId"
         cacheable="true">
         <![CDATA[
             select count(s.UserId)

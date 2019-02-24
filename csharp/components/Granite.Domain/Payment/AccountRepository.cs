@@ -51,19 +51,6 @@ namespace Granite.Domain.Payment
         //////////////////////////////////////////////////////////////////////
         /// <inheritDoc/>
         ///  
-        public IAccount 
-        GetUniqueFor(IUserIdProvider provider)
-        {
-            INamedQuery<IAccount> query =
-                GetNamedQuery("Account.GetUniqueFor");
-
-            query.SetInput("userId",provider.UserId);
-            return query.GetUnique();
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        ///  
         public bool
         HasAnyFor(IUserIdProvider provider)
         {
@@ -72,19 +59,6 @@ namespace Granite.Domain.Payment
 
             query.SetInput("userId",provider.UserId);
             return query.HasAny();
-        }
-
-        //////////////////////////////////////////////////////////////////////
-        /// <inheritDoc/>
-        ///  
-        public bool 
-        HasUniqueFor(IUserIdProvider provider)
-        {
-            INamedQuery<IAccount> query =
-                GetNamedQuery("Account.HasUniqueFor");
-
-            query.SetInput("userId",provider.UserId);
-            return query.HasUnique();
         }
     }
 }

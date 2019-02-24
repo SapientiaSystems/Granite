@@ -377,7 +377,7 @@ namespace Granite.ServerPlatform.Stripe
                     cardService.Delete(request.ExternalAccountId,card.Id);
                 });
 
-
+            reply.ExternalAccountId = request.ExternalAccountId;
             reply.ExternalPaymentMethodId = card.Id;
             reply.CreditCard =
                 new CreditCardData()
@@ -453,6 +453,7 @@ namespace Granite.ServerPlatform.Stripe
                             AddressCountry = snapshot.AddressCountry
                         });});
 
+            reply.ExternalAccountId = request.ExternalAccountId;
             reply.ExternalPaymentMethodId = card.Id;
             reply.CreditCard =
                 new CreditCardData()

@@ -6,7 +6,6 @@
 using Granite.Common.Verification;
 using Granite.ProvidedService.Payment;
 using Granite.ProvidedService.Session;
-using Granite.ProvidedService.User;
 using Ninject;
 using NUnit.Framework;
 using Strata.Foundation.Bootstrap;
@@ -150,9 +149,147 @@ namespace Granite.Application.Payment
 
         [Test]
         public virtual void
+        TestUpdateAccount()
+        {
+            UpdateAccountRequest request = null;
+            UpdateAccountReply   reply = null;
+
+            request =
+                new UpdateAccountRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    AccountToUpdate =
+                        new UpdateAccountData()
+                        {
+                            UserIdOfAccountToUpdate = itsSession.User.UserId,
+                            ReplaceCreditCard = true,
+                            CreditCardToCreate =
+                                new InitialCreditCardData()
+                                {
+                                    CardHolderName =  "John Liebenau",
+                                    BillingAddress =
+                                        new PostalAddress()
+                                        {
+                                            StreetAddress = "12407 Creekwood Ave",
+                                            City = "Cerritos",
+                                            State =  "CA",
+                                            PostalCode = "90703",
+                                            CountryCode =  "US"
+                                        },
+                                    CardNumber =  "5555555555554444",
+                                    ExpirationMonth = 10,
+                                    ExpirationYear =  2020,
+                                    SecurityCode =  "232"
+                                }
+                        }
+                };
+
+            reply = itsTarget.UpdateAccount(request);
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful,reply.FailureMessage);
+
+            itsAccount = reply.UpdatedAccount;
+            Assert.NotNull(itsAccount);
+
+        }
+
+
+        [Test]
+        public virtual void
+        TestUpdateSubscription()
+        {
+            CreateSubscriptionRequest request = null;
+            CreateSubscriptionReply reply = null;
+            SubscriptionData newSubscription = null;
+            UpdateSubscriptionRequest updateRequest = null;
+            UpdateSubscriptionReply updateReply = null;
+
+            request =
+                new CreateSubscriptionRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    SubscriptionToCreate =
+                        new InitialSubscriptionData()
+                        {
+                            UserId = itsSession.User.UserId,
+                            AccountId = itsAccount.AccountId,
+                            SubscriptionType = "Test"
+                        }
+                };
+            request.SessionId = itsSession.SessionId;
+            request.AccessToken = itsSession.AccessToken;
+
+            reply = itsTarget.CreateSubscription(request);
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful,reply.FailureMessage);
+
+            newSubscription = reply.NewSubscription;
+            Assert.NotNull(newSubscription);
+
+            itsRemovals.Add(
+                new DeleteSubscriptionRequest()
+                {
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    SubscriptionIdOfSubscriptionToDelete = newSubscription.SubscriptionId
+                });
+
+            updateRequest =
+                new UpdateSubscriptionRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    CurrentSubscription = newSubscription,
+                    NewSubscription =
+                        new InitialSubscriptionData()
+                        {
+                            UserId = itsSession.User.UserId,
+                            AccountId = itsAccount.AccountId,
+                            SubscriptionType = "Test"
+                        }
+                };
+            Assert.AreEqual(request.CorrelationId,reply.CorrelationId);
+        }
+
+        [Test]
+        public virtual void
         TestGetSubscriptionCurrentUser()
         {
-            GetSubscriptionReply reply =
+            CreateSubscriptionRequest request = null;
+            CreateSubscriptionReply reply = null;
+            GetSubscriptionReply getReply = null;
+            SubscriptionData newSubscription = null;
+
+            request =
+                new CreateSubscriptionRequest()
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    SessionId = itsSession.SessionId,
+                    AccessToken = itsSession.AccessToken,
+                    SubscriptionToCreate =
+                        new InitialSubscriptionData()
+                        {
+                            UserId = itsSession.User.UserId,
+                            AccountId = itsAccount.AccountId,
+                            SubscriptionType = "Test"
+                        }
+                };
+            request.SessionId = itsSession.SessionId;
+            request.AccessToken = itsSession.AccessToken;
+
+            reply = itsTarget.CreateSubscription(request);
+            Assert.NotNull(reply);
+            Assert.IsTrue(reply.IsSuccessful,reply.FailureMessage);
+
+            newSubscription = reply.NewSubscription;
+            Assert.NotNull(newSubscription);
+
+            getReply =
                 itsTarget.GetSubscription(
                     new GetSubscriptionRequest()
                     {
@@ -161,9 +298,9 @@ namespace Granite.Application.Payment
                         GetSubscriptionOfCurrentUser = true
                     });
 
-            Assert.NotNull(reply);
-            Assert.IsTrue(reply.IsSuccessful,reply.FailureMessage);
-            Assert.NotNull(reply.RequestedSubscription);
+            Assert.NotNull(getReply);
+            Assert.IsTrue(getReply.IsSuccessful,getReply.FailureMessage);
+            Assert.NotNull(getReply.RequestedSubscription);
         }
 
         protected CreateAccountReply 
