@@ -78,10 +78,12 @@ namespace Granite.Application.Shared
         private bool
         MustRefresh(ISession session)
         {
+            return false;
+            /*
             return
                 DateTime.Now - session.LastRefresh >
                 TimeSpan.FromMinutes(1);
-
+            */
         }
     }
 }
