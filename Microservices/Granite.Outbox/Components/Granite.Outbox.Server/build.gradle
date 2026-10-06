@@ -1,0 +1,16 @@
+plugins {
+    id 'java-library'
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/java']
+    main.resources.srcDirs = ['src/main/resources','src/main/schema']
+    test.java.srcDirs = ['src/unused']
+    test.resources.srcDirs = ['src/unused']
+}
+
+dependencies {
+    api "strata.outbox:strata-outbox-server:$strata_outbox_version"
+    api "strata.foundation:strata-foundation-kafka:$strata_foundation_version"
+    api "granite.user:granite-user-service:$version"
+}

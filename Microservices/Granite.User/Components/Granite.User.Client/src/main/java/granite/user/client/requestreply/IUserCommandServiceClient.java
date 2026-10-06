@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IUserCommandServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.user.client.requestreply;
+
+import granite.user.service.requestreply.IUserCommandService;
+
+public
+interface IUserCommandServiceClient
+    extends IUserCommandService
+{
+    IUserCommandServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

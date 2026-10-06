@@ -1,0 +1,21 @@
+plugins {
+    id 'java-library'
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/java','build/generated-java']
+    main.resources.srcDirs = ['src/main/resources','src/main/schema']
+    test.java.srcDirs = ['src/unused']
+    test.resources.srcDirs = ['src/unused']
+}
+
+dependencies {
+    api project(":Components:Granite.FrontEndController.Service")
+    api "granite.user:granite-user-client:$system_version"
+    api "strata.server:strata-server-spring:$strata_server_version"
+    api "strata.frontendcontroller:strata-frontendcontroller-server:$strata_frontendcontroller_version"
+    api "org.springframework.boot:spring-boot-starter-security:$springboot_version"
+    api "org.springframework.security:spring-security-core:$spring_security_version"
+    api "org.postgresql:postgresql:$postgresql_version"
+    api "com.h2database:h2:$h2_version"
+}

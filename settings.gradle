@@ -1,0 +1,30 @@
+rootProject.name = 'Granite'
+
+includeBuild('Microservices/Granite.FrontEndController') {
+    dependencySubstitution {
+        substitute module('granite.frontendcontroller:granite-frontendcontroller-service') using project(':Components:Granite.FrontEndController.Service')
+        substitute module('granite.frontendcontroller:granite-frontendcontroller-client') using project(':Components:Granite.FrontEndController.Client')
+        substitute module('granite.frontendcontroller:granite-frontendcontroller-server') using project(':Components:Granite.FrontEndController.Server')
+    }
+}
+
+includeBuild('Microservices/Granite.User') {
+    dependencySubstitution {
+        substitute module('granite.user:granite-user-service') using project(':Components:Granite.User.Service')
+        substitute module('granite.user:granite-user-client') using project(':Components:Granite.User.Client')
+        substitute module('granite.user:granite-user-server') using project(':Components:Granite.User.Server')
+    }
+}
+
+includeBuild('Microservices/Granite.Outbox') {
+    dependencySubstitution {
+        substitute module('granite.outbox:granite-outbox-server') using project(':Components:Granite.Outbox.Server')
+    }
+}
+
+includeBuild('Microservices/Granite.Gateway') {
+    dependencySubstitution {
+        substitute module('granite.gateway:granite-gateway-server') using project(':Components:Granite.Gateway.Server')
+    }
+}
+

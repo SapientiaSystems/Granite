@@ -1,0 +1,1 @@
+export {FakeFrontEndControllerServiceClient} from "./FakeFrontEndControllerServiceClient";

@@ -1,0 +1,19 @@
+{
+  "name": "granite.frontendcontroller.client",
+  "version": "1.0.0-snapshot.1791249491184",
+  "license": "Apache-2.0",
+  "scripts": {
+    "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",
+    "increment-major": "npm version major",
+    "increment-minor": "npm version minor",
+    "increment-patch": "npm version patch"
+  },
+  "dependencies": {
+    "granite.frontendcontroller.service": "1.0.0-snapshot",
+    "granite.user.service": "1.0.0-snapshot",
+    "strata.frontendcontroller.client": "0.0.0-snapshot",
+    "strata.frontendcontroller.service": "0.0.0-snapshot",
+    "strata.client.core": "0.0.0-snapshot",
+    "strata.foundation.core": "0.0.0-snapshot"
+  }
+}

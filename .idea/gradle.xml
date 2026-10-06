@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/Microservices/Granite.FrontEndController" name="Granite.FrontEndController">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications/Granite.FrontEndController.AdminHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications/Granite.FrontEndController.UserHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Service" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ClientTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServerTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServiceTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.TestSuite" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/Microservices/Granite.Gateway" name="Granite.Gateway">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway/Applications/Granite.Gateway.ServiceHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway/Components/Granite.Gateway.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Gateway/Tests/Granite.Gateway.ServerTest" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/Microservices/Granite.Outbox" name="Granite.Outbox">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox/Applications/Granite.Outbox.ServiceHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox/Components/Granite.Outbox.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Outbox/Tests/Granite.Outbox.ServerTest" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/Microservices/Granite.User" name="Granite.User">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Applications/Granite.User.CommandHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Applications/Granite.User.QueryHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Components/Granite.User.Client" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Components/Granite.User.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Components/Granite.User.Service" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ClientTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ServerTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ServiceTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.TestSuite" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications/Granite.FrontEndController.AdminHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications/Granite.FrontEndController.UserHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Service" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ClientTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServiceTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.TestSuite" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway/Applications/Granite.Gateway.ServiceHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway/Components/Granite.Gateway.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Gateway/Tests/Granite.Gateway.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox/Applications/Granite.Outbox.ServiceHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox/Components/Granite.Outbox.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Outbox/Tests/Granite.Outbox.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Applications/Granite.User.CommandHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Applications/Granite.User.QueryHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Components/Granite.User.Client" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Components/Granite.User.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Components/Granite.User.Service" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ClientTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ServiceTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.TestSuite" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

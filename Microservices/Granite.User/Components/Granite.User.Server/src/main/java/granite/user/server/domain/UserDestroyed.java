@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// UserDestroyed.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.user.server.domain;
+
+public
+class UserDestroyed
+    extends AbstractUserEvent
+{
+    public
+    UserDestroyed(User src)
+    {
+        super("UserDestroyed",src);
+    }
+
+    public
+    UserDestroyed(String correlId,User src)
+    {
+        super("UserDestroyed",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

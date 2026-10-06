@@ -1,0 +1,19 @@
+{
+  "name": "granite.web.user",
+  "version": "1.0.0-snapshot.1791249505917",
+  "license": "Apache-2.0",
+  "scripts": {
+    "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.17.0",
+    "@mantine/hooks": "^7.17.0",
+    "ag-grid-community": "^33.0.0",
+    "ag-grid-react": "^33.0.0",
+    "granite.user.service": "1.0.0-snapshot",
+    "react": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "strata.client.core": "0.0.0-snapshot",
+    "strata.foundation.core": "0.0.0-snapshot"
+  }
+}

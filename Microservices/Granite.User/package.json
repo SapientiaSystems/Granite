@@ -1,0 +1,28 @@
+{
+    "name": "Granite.User",
+    "private": true,
+    "scripts": {
+        "remote-registry-config": "yarn config set registry https://registry.npmjs.org/",
+        "local-registry-install": "yarn global add verdaccio",
+        "local-registry-config": "yarn config set registry http://localhost:4873/",
+        "local-registry-start": "verdaccio",
+        "local-registry-init": "yarn run local-registry-install && yarn run local-registry-start && yarn run local-registry-config",
+        "dev-init": "yarn --dev install",
+        "clean-granite-user-service": "cd Components/Granite.User.Service && yarn run clean",
+        "clean-granite-user-client": "cd Components/Granite.User.Client && yarn run clean",
+        "clean-components": "yarn run clean-granite-user-service && yarn run clean-granite-user-client",
+        "clean": "yarn run dev-init && yarn run clean-components",
+        "deep-clean-granite-user-service": "cd Components/Granite.User.Service && yarn run clean",
+        "deep-clean-granite-user-client": "cd Components/Granite.User.Client && yarn run clean",
+        "deep-clean-components": "yarn run deep-clean-granite-user-service && yarn run deep-clean-granite-user-client",
+        "deep-clean": "yarn run dev-init && yarn run deep-clean-components",
+        "build-granite-user-service": "cd Components/Granite.User.Service && yarn run publish-package",
+        "build-granite-user-client": "cd Components/Granite.User.Client && yarn run publish-package",
+        "build-components": "yarn run build-granite-user-service && yarn run build-granite-user-client",
+        "build": "yarn run dev-init && yarn run build-components",
+        "test": "yarn run build"
+    },
+    "devDependencies": {
+        "del-cli": "^5.1.0"
+    }
+}

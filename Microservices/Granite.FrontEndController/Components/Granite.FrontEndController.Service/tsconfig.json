@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2022",
+        "sourceMap": true,
+        "declaration": true,
+        "rootDir": "src/main/typescript",
+        "outDir": "build/dist",
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "src/main/typescript/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

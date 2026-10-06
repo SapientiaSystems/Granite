@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2022",
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
+        "paths": {
+            "granite.frontendcontroller.service/*": [
+                "../../Components/Granite.FrontEndController.Service/src/main/typescript/*"
+            ],
+            "strata.foundation.core/*": [
+                "../../Components/Granite.FrontEndController.Service/node_modules/strata.foundation.core/*"
+            ]
+        }
+    },
+    "include": [
+        "src/test/typescript/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

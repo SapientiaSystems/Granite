@@ -1,0 +1,49 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name "GitHub-StrataFrameworkSet-Packages"
+            url "https://maven.pkg.github.com/StrataFrameworkSet/repository"
+            credentials {
+                username = "$System.env.REPOSITORY_USER"
+                password = "$System.env.REPOSITORY_PASSWORD"
+            }
+        }
+        maven {
+            name "Confluent"
+            url "https://packages.confluent.io/maven"
+        }
+        maven {
+            name "Jabylon"
+            url "https://www.jabylon.org/maven/"
+        }
+    }
+}
+
+rootProject.name = 'Granite.FrontEndController'
+
+// Applications
+include 'Applications:Granite.FrontEndController.UserHost'
+include 'Applications:Granite.FrontEndController.AdminHost'
+
+// Components
+include 'Components:Granite.FrontEndController.Service'
+include 'Components:Granite.FrontEndController.Client'
+include 'Components:Granite.FrontEndController.Server'
+
+// Tests
+include 'Tests:Granite.FrontEndController.ServiceTest'
+include 'Tests:Granite.FrontEndController.ClientTest'
+include 'Tests:Granite.FrontEndController.ServerTest'
+include 'Tests:Granite.FrontEndController.TestSuite'
+
+

@@ -1,0 +1,41 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name "GitHub-StrataFrameworkSet-Packages"
+            url "https://maven.pkg.github.com/StrataFrameworkSet/repository"
+            credentials {
+                username = "$System.env.REPOSITORY_USER"
+                password = "$System.env.REPOSITORY_PASSWORD"
+            }
+        }
+        maven {
+            name "Confluent"
+            url "https://packages.confluent.io/maven"
+        }
+        maven {
+            name "Jabylon"
+            url "https://www.jabylon.org/maven/"
+        }
+    }
+}
+
+rootProject.name = 'Granite.Outbox'
+
+// Applications
+include 'Applications:Granite.Outbox.ServiceHost'
+
+// Components
+include 'Components:Granite.Outbox.Server'
+
+// Tests
+include 'Tests:Granite.Outbox.ServerTest'

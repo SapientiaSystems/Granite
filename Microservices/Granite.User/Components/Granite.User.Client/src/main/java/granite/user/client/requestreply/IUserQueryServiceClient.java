@@ -1,0 +1,20 @@
+/// ///////////////////////////////////////////////////////////////////////////
+// IUserQueryServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.user.client.requestreply;
+
+import granite.user.service.requestreply.IUserQueryService;
+
+public
+interface IUserQueryServiceClient
+    extends IUserQueryService
+{
+    IUserQueryServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,36 @@
+{
+    "name": "granite.web",
+    "private": true,
+    "scripts": {
+        "remote-registry-config": "yarn config set registry https://registry.npmjs.org/",
+        "local-registry-config": "yarn config set registry http://localhost:4873/",
+        "local-registry-start": "verdaccio",
+        "local-registry-init": "yarn run local-registry-start && yarn run local-registry-config",
+        "dev-init": "yarn --dev install",
+        "clean-granite-web-user": "cd Components/Granite.Web.User && yarn run clean",
+        "clean-granite-web-account": "cd Components/Granite.Web.Account && yarn run clean",
+        "clean-granite-web-navigator": "cd Components/Granite.Web.Navigator && yarn run clean",
+        "clean-components": "yarn run clean-granite-web-user && yarn run clean-granite-web-account && yarn run clean-granite-web-navigator",
+        "clean": "yarn run dev-init && yarn run clean-components",
+        "deep-clean-granite-web-user": "cd Components/Granite.Web.User && yarn run deep-clean",
+        "deep-clean-granite-web-account": "cd Components/Granite.Web.Account && yarn run deep-clean",
+        "deep-clean-granite-web-navigator": "cd Components/Granite.Web.Navigator && yarn run deep-clean",
+        "deep-clean-components": "yarn run deep-clean-granite-web-user && yarn run deep-clean-granite-web-account && yarn run deep-clean-granite-web-navigator",
+        "deep-clean": "yarn run dev-init && yarn run deep-clean-components",
+        "build-granite-web-user": "cd Components/Granite.Web.User && yarn run publish-package",
+        "build-granite-web-account": "cd Components/Granite.Web.Account && yarn run publish-package",
+        "build-granite-web-navigator": "cd Components/Granite.Web.Navigator && yarn run publish-package",
+        "build-components": "yarn run build-granite-web-user && yarn run build-granite-web-account && yarn run build-granite-web-navigator",
+        "build-granite-web-apphost": "cd Applications/Granite.Web.AppHost && yarn run build",
+        "build-applications": "yarn run build-granite-web-apphost",
+        "build": "yarn run dev-init && yarn run build-components && yarn run build-applications",
+        "start-application": "cd Applications/Granite.Web.AppHost && yarn run dev",
+        "containerize-granite-web-apphost": "node docker-auth.js from && cd Applications/Granite.Web.AppHost && docker build -t registry.gitlab.com/granite/granite.web/granite-web-apphost:latest .",
+        "push-granite-web-apphost": "node docker-auth.js to && docker push registry.gitlab.com/granite/granite.web/granite-web-apphost:latest",
+        "test": "yarn run build"
+    },
+    "devDependencies": {
+        "del-cli": "^5.1.0",
+        "verdaccio": "^6.1.0"
+    }
+}

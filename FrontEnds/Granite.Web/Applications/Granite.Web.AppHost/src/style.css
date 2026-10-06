@@ -1,0 +1,330 @@
+:root {
+    --app-bar-bg: #424242;
+    --app-bar-text: #d5d5d5;
+    --app-bar-tab-hover: rgba(255, 255, 255, 0.1);
+    --accent: #5d8abf;
+    --app-header-height: 56px;
+}
+
+[data-mantine-color-scheme="dark"] {
+    --app-bar-bg: #2e2e2e;
+}
+
+html {
+    overflow-y: hidden;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ---- App Bar Tab Links (desktop, inside Mantine AppShell.Header) ---- */
+
+.app-bar-tab {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 6px 16px 0;
+    color: var(--app-bar-text);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-bottom: 5px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+[data-mantine-color-scheme="dark"] .app-bar-tab {
+    border-bottom-width: 3px;
+}
+
+.app-bar-tab:hover {
+    background: var(--app-bar-tab-hover);
+}
+
+.app-bar-tab.active {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ---- App Bar User Menu (desktop, underline when user view active) ---- */
+
+.app-bar-user-menu {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 6px 0 0;
+    border-bottom: 5px solid transparent;
+    transition: border-color 0.15s;
+}
+
+[data-mantine-color-scheme="dark"] .app-bar-user-menu {
+    border-bottom-width: 3px;
+}
+
+.app-bar-user-menu.active {
+    border-bottom-color: var(--accent);
+}
+
+/* ---- Nav Links (mobile, inside Mantine AppShell.Navbar) ---- */
+
+.nav-link {
+    display: block;
+    padding: 12px 16px;
+    color: var(--app-bar-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.nav-link:hover {
+    background: var(--app-bar-tab-hover);
+}
+
+.nav-link.active {
+    border-left-color: var(--accent);
+    color: var(--accent);
+    background: var(--app-bar-tab-hover);
+}
+
+/* ---- Home Summary Cards ---- */
+
+.home-summary-card {
+    background-color: #f8f9fa;
+}
+
+[data-mantine-color-scheme="dark"] .home-summary-card {
+    background-color: #2c2e33;
+}
+
+/* ---- View Toolbar ---- */
+
+.view-toolbar {
+    background-color: #d6d6d6;
+    flex-shrink: 0;
+    align-items: center;
+    height: 64px;
+}
+
+[data-mantine-color-scheme="dark"] .view-toolbar {
+    background-color: #353535;
+}
+
+/* ---- View Toolbar Buttons (light theme only) ----
+ * Toolbar is #d6d6d6; make default-variant buttons slightly darker so they
+ * read as distinct controls. Icon stroke uses currentColor, so bumping the
+ * ActionIcon's color darkens the icon to crisp against the #c8c8c8 fill.
+ * Dark theme keeps Mantine's native dark-6 fill + border and is untouched.
+ */
+
+.view-toolbar .mantine-ActionIcon-root[data-variant="default"] {
+    background-color: #c0c0c0;
+    border: 1px solid #b0b0b0;
+    color: #2e2e2e;
+}
+
+.view-toolbar .mantine-ActionIcon-root[data-variant="default"]:hover {
+    background-color: #b6b6b6;
+    border-color: #a0a0a0;
+}
+
+.view-toolbar .mantine-ActionIcon-root[data-variant="default"][data-disabled] {
+    background-color: #c7c7c7;
+    border-color: #b8b8b8;
+    color: #8e8e8e;
+}
+
+/* Dark theme: restore Mantine's native dark-mode default-variant ActionIcon
+ * so the light-theme overrides above don't bleed into dark mode.
+ */
+
+[data-mantine-color-scheme="dark"] .view-toolbar .mantine-ActionIcon-root[data-variant="default"] {
+    background-color: var(--mantine-color-dark-6);
+    border: 1px solid var(--mantine-color-dark-4);
+    color: var(--mantine-color-text);
+}
+
+[data-mantine-color-scheme="dark"] .view-toolbar .mantine-ActionIcon-root[data-variant="default"]:hover {
+    background-color: var(--mantine-color-dark-5);
+    border-color: var(--mantine-color-dark-3);
+}
+
+[data-mantine-color-scheme="dark"] .view-toolbar .mantine-ActionIcon-root[data-variant="default"][data-disabled] {
+    background-color: var(--mantine-color-dark-7);
+    border-color: var(--mantine-color-dark-5);
+    color: var(--mantine-color-dark-3);
+}
+
+/* Label text beneath each toolbar button, light theme */
+.view-toolbar .mantine-Stack-root > .mantine-Text-root {
+    color: #2e2e2e;
+}
+
+.view-toolbar .mantine-Stack-root > .mantine-Text-root[data-c="dimmed"] {
+    color: #8e8e8e;
+}
+
+[data-mantine-color-scheme="dark"] .view-toolbar .mantine-Stack-root > .mantine-Text-root,
+[data-mantine-color-scheme="dark"] .view-toolbar .mantine-Stack-root > .mantine-Text-root[data-c="dimmed"] {
+    color: unset;
+}
+
+/* ---- View Container ---- */
+
+.view-container {
+    margin: calc(-1 * var(--mantine-spacing-md));
+    height: calc(100vh - var(--app-header-height));
+    display: flex;
+    flex-direction: column;
+    overflow-y: clip;
+}
+
+/* ---- AG Grid Channel Cell Colors ---- */
+
+.__entity__-channel-store     { color: #1565C0; font-weight: 600; }
+.__entity__-channel-ecommerce { color: #00897B; font-weight: 600; }
+
+[data-mantine-color-scheme="dark"] .__entity__-channel-store     { color: #64B5F6; }
+[data-mantine-color-scheme="dark"] .__entity__-channel-ecommerce { color: #4DB6AC; }
+
+.ag-row-selected .__entity__-channel-store,
+.ag-row-selected .__entity__-channel-ecommerce,
+.ag-row.__entity__-expanded-parent .__entity__-channel-store,
+.ag-row.__entity__-expanded-parent .__entity__-channel-ecommerce {
+    color: #ffffff !important;
+}
+
+/* ---- AG Grid Full-Width Row Detail ---- */
+
+.ag-full-width-row {
+    overflow: hidden;
+}
+
+.ag-full-width-row > * {
+    height: 100%;
+}
+
+/* ---- AG Grid Expanded Parent Row ---- */
+
+.ag-row.__entity__-expanded-parent,
+.ag-row.__entity__-expanded-parent.ag-row-selected,
+.ag-row.__entity__-expanded-parent.ag-row-hover,
+.ag-row.__entity__-expanded-parent.ag-row-selected.ag-row-hover {
+    --ag-selected-row-background-color: #1a3a6b;
+    --ag-row-hover-color: #1a3a6b;
+    background-color: #1a3a6b !important;
+    color: #ffffff !important;
+}
+
+[data-mantine-color-scheme="dark"] .ag-row.__entity__-expanded-parent,
+[data-mantine-color-scheme="dark"] .ag-row.__entity__-expanded-parent.ag-row-selected,
+[data-mantine-color-scheme="dark"] .ag-row.__entity__-expanded-parent.ag-row-hover,
+[data-mantine-color-scheme="dark"] .ag-row.__entity__-expanded-parent.ag-row-selected.ag-row-hover {
+    --ag-selected-row-background-color: #2a4a7a;
+    --ag-row-hover-color: #2a4a7a;
+    background-color: #2a4a7a !important;
+}
+
+.ag-row.__entity__-expanded-parent::before,
+.ag-row.__entity__-expanded-parent.ag-row-hover::before,
+.ag-row.__entity__-expanded-parent.ag-row-selected::before,
+.ag-row.__entity__-expanded-parent.ag-row-selected.ag-row-hover::before {
+    background-color: transparent !important;
+}
+
+/* ---- AG Grid Editable Cell ---- */
+
+.__entity__-editable-cell {
+    background-color: #E5F0FF;
+    color: #1a1a1a;
+}
+
+[data-mantine-color-scheme="dark"] .__entity__-editable-cell {
+    background-color: #3a4a5c;
+    color: #d4d4d4;
+}
+
+/* ---- AG Grid Master Editable + Selected Cell ---- */
+
+.__entity__-master-editable-selected-cell {
+    background-color: #5A8AD4 !important;
+    color: #ffffff;
+}
+
+[data-mantine-color-scheme="dark"] .__entity__-master-editable-selected-cell {
+    background-color: #3a5080 !important;
+    color: #ffffff;
+}
+
+/* ---- AG Grid Detail Editable + Selected Cell ---- */
+
+.__entity__-detail-editable-selected-cell {
+    background-color: #6E9EE0 !important;
+    color: #ffffff;
+}
+
+[data-mantine-color-scheme="dark"] .__entity__-detail-editable-selected-cell {
+    background-color: #45608f !important;
+    color: #ffffff;
+}
+
+/* ---- AG Grid Cell Focus Border ---- */
+
+.ag-row:not(.__entity__-editable-row) {
+    --ag-range-selection-border-color: transparent;
+}
+
+/* ---- AG Grid Editing Cell ---- */
+
+.ag-cell-inline-editing {
+    background-color: inherit !important;
+}
+
+.ag-header-center .ag-header-cell-label {
+    justify-content: center;
+}
+
+/* ---- AG Grid Light Mode ---- */
+
+.ag-theme-quartz {
+    --ag-font-size: 12px;
+    --ag-row-height: 36px;
+    --ag-header-height: 36px;
+    --ag-cell-horizontal-padding: 8px;
+    --ag-odd-row-background-color: var(--ag-background-color);
+}
+
+.ag-theme-quartz .ag-row-selected .ag-cell-value,
+.ag-theme-quartz .ag-row-selected .ag-group-value {
+    color: #ffffff;
+}
+
+/* ---- AG Grid Dark Mode ---- */
+
+[data-mantine-color-scheme="dark"] .ag-theme-quartz {
+    --ag-background-color: #3c3c3c;
+    --ag-header-background-color: #333333;
+    --ag-odd-row-background-color: #3c3c3c;
+    --ag-row-hover-color: #444444;
+    --ag-foreground-color: #d4d4d4;
+    --ag-header-foreground-color: #d4d4d4;
+    --ag-border-color: #4a4a4a;
+    --ag-row-border-color: #444444;
+}
+
+/* ---- AG Grid Selection Checkbox Centering ---- */
+
+.ag-cell-wrapper.ag-row-group {
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.ag-header-select-all {
+    justify-content: center;
+}

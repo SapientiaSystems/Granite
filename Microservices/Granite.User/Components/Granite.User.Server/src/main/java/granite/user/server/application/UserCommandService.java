@@ -1,0 +1,848 @@
+//////////////////////////////////////////////////////////////////////////////
+// UserCommandService.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.user.server.application;
+
+import granite.user.server.domain.IUserEvent;
+import granite.user.server.domain.IUserEventObserver;
+import granite.user.server.domain.IUserRepository;
+import granite.user.server.domain.User;
+import granite.user.service.event.IUserEventSender;
+import granite.user.service.event.UserEvent;
+import granite.user.service.requestreply.*;
+import granite.user.service.requestreply.UserData;
+import jakarta.inject.Inject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.modelmapper.ModelMapper;
+import strata.foundation.core.concurrent.CurrentThreadExecutor;
+import strata.foundation.core.event.EventIdentifiersData;
+import strata.foundation.core.event.StandardEventType;
+import strata.foundation.core.transfer.ExceptionData;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+
+public
+class UserCommandService
+    implements ITransactionalUserCommandService, IUserEventObserver
+{
+    private final IUserRepository  repository;
+    private final IUserEventSender sender;
+    private final ModelMapper            mapper;
+    private final Logger                 logger;
+
+    @Inject
+    public UserCommandService(IUserRepository r,IUserEventSender s,ModelMapper m)
+    {
+        repository = r;
+        sender     = s;
+        mapper     = m;
+        logger     = LogManager.getLogger(UserCommandService.class);
+    }
+
+    @Override
+    public CompletionStage<CreateUserReply>
+    createUser(CreateUserRequest request)
+    {
+        logger.debug("createUser({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(createRequest -> mapToContext(createRequest))
+                .thenApply(context -> createUser(context))
+                .thenApply(context -> saveUser(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public CompletionStage<CreateUsersReply>
+    createUsers(CreateUsersRequest request)
+    {
+        logger.debug("createUsers({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(createRequest -> mapToContext(createRequest))
+                .thenApply(context -> createUsers(context))
+                .thenApply(context -> saveUsers(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public CompletionStage<UpdateUserReply>
+    updateUser(UpdateUserRequest request)
+    {
+        logger.debug("updateUser({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(updateRequest -> mapToContext(updateRequest))
+                .thenApply(context -> findUser(context))
+                .thenApply(context -> updateUser(context))
+                .thenApply(context -> saveUser(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public CompletionStage<UpdateUsersReply>
+    updateUsers(UpdateUsersRequest request)
+    {
+        logger.debug("updateUsers({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(updateRequest -> mapToContext(updateRequest))
+                .thenApply(context -> findUsers(context))
+                .thenApply(context -> updateUsers(context))
+                .thenApply(context -> saveUsers(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+
+    @Override
+    public CompletionStage<DestroyUserReply>
+    destroyUser(DestroyUserRequest request)
+    {
+        logger.debug("destroyUser({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(destroyRequest -> mapToContext(destroyRequest))
+                .thenApply(context -> findUser(context))
+                .thenApply(context -> deleteUser(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public CompletionStage<DestroyUsersReply>
+    destroyUsers(DestroyUsersRequest request)
+    {
+        logger.debug("destroyUsers({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(destroyRequest -> mapToContext(destroyRequest))
+                .thenApply(context -> findUsers(context))
+                .thenApply(context -> deleteUsers(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public void
+    onEvent(IUserEvent event)
+    {
+        switch (event.getName())
+        {
+            case "UserCreated":
+                logger.debug("sending UserCreated event");
+                sender.send(toServiceEvent(event,StandardEventType.CREATED));
+                break;
+
+            case "UserUpdated":
+                logger.debug("sending UserUpdated event");
+                sender.send(toServiceEvent(event,StandardEventType.UPDATED));
+                break;
+
+            case "UserDestroyed":
+                logger.debug("sending UserDestroyed event");
+                sender.send(toServiceEvent(event,StandardEventType.DESTROYED));
+                break;
+
+            default:
+                logger.error("Encountered unknown event type: {}",event.getName());
+                break;
+        }
+    }
+
+    @Override
+    public void
+    onException(Exception e)
+    {
+        logger.error(
+            "Observing UserEvents and caught exception: {}",
+            e.getMessage());
+    }
+
+    /*
+    @Override
+    public CompletionStage<FindUserReply>
+    findUser(FindUserRequest request)
+    {
+        logger.debug("findUser(" + request.getRequestId() + ")");
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(findRequest -> mapToContext(findRequest))
+                .thenApply(context -> findUser(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+     */
+
+    protected CreateUserRequest
+    validate(CreateUserRequest request)
+    {
+        logger.debug("<create> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUserToCreate(),
+            "validation failed: foo was not provided");
+        return request;
+    }
+
+    protected CreateUsersRequest
+    validate(CreateUsersRequest request)
+    {
+        logger.debug("<create set> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUsersToCreate(),
+            "validation failed: usersToCreate was not provided");
+
+        if (request.getUsersToCreate().isEmpty())
+            throw new IllegalArgumentException("validation failed: usersToCreate was empty");
+
+        return request;
+    }
+
+    protected UpdateUserRequest
+    validate(UpdateUserRequest request)
+    {
+        logger.debug("<update> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUserToUpdate(),
+            "validation failed: id was not provided");
+        return request;
+    }
+
+    protected UpdateUsersRequest
+    validate(UpdateUsersRequest request)
+    {
+        logger.debug("<update set> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUsersToUpdate(),
+            "validation failed: usersToUpdate was not provided");
+
+        if (request.getUsersToUpdate().isEmpty())
+            throw new IllegalArgumentException("validation failed: usersToUpdate was empty");
+
+        return request;
+    }
+
+    protected DestroyUserRequest
+    validate(DestroyUserRequest request)
+    {
+        logger.debug("<destroy> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUserId(),
+            "validation failed: id was not provided");
+        return request;
+    }
+
+    protected DestroyUsersRequest
+    validate(DestroyUsersRequest request)
+    {
+        logger.debug("<destroy set> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUserIds(),
+            "validation failed: userIds was not provided");
+
+        if (request.getUserIds().isEmpty())
+            throw new IllegalArgumentException("validation failed: userIds was empty");
+
+        return request;
+    }
+
+    protected FindUserRequest
+    validate(FindUserRequest request)
+    {
+        logger.debug("<find> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUserId(),
+            "validation failed: id was not provided");
+        return request;
+    }
+
+    protected CreateUserContext
+    mapToContext(CreateUserRequest request)
+    {
+        logger.debug("<create> mapToContext({})",request.getRequestId());
+        return new CreateUserContext(request);
+    }
+
+    protected CreateUsersContext
+    mapToContext(CreateUsersRequest request)
+    {
+        logger.debug("<create set> mapToContext({})",request.getRequestId());
+        return new CreateUsersContext(request);
+    }
+
+    protected UpdateUserContext
+    mapToContext(UpdateUserRequest request)
+    {
+        logger.debug("<update> mapToContext({})",request.getRequestId());
+        return new UpdateUserContext(request);
+    }
+
+    protected UpdateUsersContext
+    mapToContext(UpdateUsersRequest request)
+    {
+        logger.debug("<update set> mapToContext({})",request.getRequestId());
+        return new UpdateUsersContext(request);
+    }
+
+    protected DestroyUserContext
+    mapToContext(DestroyUserRequest request)
+    {
+        logger.debug("<destroy> mapToContext({})",request.getRequestId());
+        return new DestroyUserContext(request);
+    }
+
+    protected DestroyUsersContext
+    mapToContext(DestroyUsersRequest request)
+    {
+        logger.debug("<destroy set> mapToContext({})",request.getRequestId());
+        return new DestroyUsersContext(request);
+    }
+
+    protected FindUserContext
+    mapToContext(FindUserRequest request)
+    {
+        logger.debug("<find> mapToContext({})",request.getRequestId());
+        return new FindUserContext(request);
+    }
+
+    protected CreateUserContext
+    createUser(CreateUserContext context)
+    {
+        logger.debug("create User");
+        return
+            context
+                .setCreatedUser(
+                    mapper
+                        .map(context.getUserToCreate(),User.class)
+                        .attach(this));
+    }
+
+    protected CreateUsersContext
+    createUsers(CreateUsersContext context)
+    {
+        logger.debug("create Users");
+
+        List<User> created = new ArrayList<>();
+
+        for (CreateUserData entityData : context.getUsersToCreate())
+            created.add(mapper.map(entityData,User.class).attach(this));
+
+        return context.setCreatedUsers(created);
+    }
+
+    protected UpdateUserContext
+    findUser(UpdateUserContext context)
+    {
+        logger.debug("<update> find User");
+        return
+            context
+                .setUpdatedUser(
+                    repository
+                        .findById(
+                            context
+                                .getUserToUpdate()
+                                .getUserId())
+                        .map(entity -> entity.attach(this)));
+    }
+
+    protected DestroyUserContext
+    findUser(DestroyUserContext context)
+    {
+        logger.debug("<destroy> find User");
+        return
+            context
+                .setDestroyedUser(
+                    repository
+                        .findById(context.getUserId())
+                        .map(entity -> entity.attach(this)));
+    }
+
+    protected FindUserContext
+    findUser(FindUserContext context)
+    {
+        logger.debug("<find> find User");
+        return
+            context
+                .setFoundUser(
+                    repository
+                        .findById(context.getUserId())
+                        .map(entity -> entity.attach(this)));
+    }
+
+    protected UpdateUserContext
+    updateUser(UpdateUserContext context)
+    {
+        UpdateUserData data = context.getUserToUpdate();
+
+        logger.debug("update User");
+
+        data
+            .getFoo()
+            .ifPresent(
+                foo ->
+                    context
+                        .getUpdatedUser()
+                        .orElseThrow()
+                        .setFoo(foo));
+
+        return context;
+    }
+
+    protected DestroyUserContext
+    deleteUser(DestroyUserContext context)
+    {
+        logger.debug("destroy User");
+
+        repository
+            .delete(
+                context
+                    .getDestroyedUser()
+                    .orElseThrow(
+                        () ->
+                            new NoSuchElementException(
+                                "Error during user destroy")));
+
+        context
+            .getDestroyedUser()
+            .ifPresent(User::notifyDestroyed);
+
+        return context;
+    }
+
+    protected DestroyUsersContext
+    findUsers(DestroyUsersContext context)
+    {
+        logger.debug("<destroy set> find Users");
+
+        Map<Long,Optional<User>> found =
+            repository.findAllByIdIn(context.getUserIds());
+
+        List<User> entities = new ArrayList<>();
+
+        for (Optional<User> entry : found.values())
+            entry
+                .map(entity -> entity.attach(this))
+                .ifPresent(entities::add);
+
+        return context.setDestroyedUsers(entities);
+    }
+
+    protected UpdateUsersContext
+    findUsers(UpdateUsersContext context)
+    {
+        logger.debug("<update set> find Users");
+
+        Set<Long> ids =
+            context
+                .getUsersToUpdate()
+                .stream()
+                .map(UpdateUserData::getUserId)
+                .collect(Collectors.toSet());
+
+        Map<Long,Optional<User>> found =
+            repository.findAllByIdIn(ids);
+
+        List<User> entities = new ArrayList<>();
+
+        for (Optional<User> entry : found.values())
+            entry
+                .map(entity -> entity.attach(this))
+                .ifPresent(entities::add);
+
+        return context.setUpdatedUsers(entities);
+    }
+
+    protected UpdateUsersContext
+    updateUsers(UpdateUsersContext context)
+    {
+        logger.debug("<update set> update Users");
+
+        Map<Long,UpdateUserData> dataById =
+            context
+                .getUsersToUpdate()
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        UpdateUserData::getUserId,
+                        d -> d));
+
+        for (User entity : context.getUpdatedUsers())
+        {
+            UpdateUserData data = dataById.get(entity.getPrimaryId());
+
+            if (data == null)
+                continue;
+
+            data.getFoo().ifPresent(entity::setFoo);
+        }
+
+        return context;
+    }
+
+    protected DestroyUsersContext
+    deleteUsers(DestroyUsersContext context)
+    {
+        logger.debug("<destroy set> destroy Users");
+
+        List<User> deleted = new ArrayList<>();
+
+        for (User entity : context.getDestroyedUsers())
+        {
+            repository.delete(entity);
+            entity.notifyDestroyed();
+            deleted.add(entity);
+        }
+
+        return context.setDestroyedUsers(deleted);
+    }
+
+    protected CreateUserContext
+    saveUser(CreateUserContext context)
+    {
+        logger.debug("<create> save User");
+        return
+            context
+                .setCreatedUser(
+                    repository
+                        .save(
+                            context
+                                .getCreatedUser()
+                                .orElseThrow(
+                                    () ->
+                                        new IllegalStateException(
+                                            "Error during user creation.")))
+                        .notifyCreated());
+    }
+
+    protected CreateUsersContext
+    saveUsers(CreateUsersContext context)
+    {
+        logger.debug("<create> save Users");
+
+        List<User> persisted = new ArrayList<>();
+
+        for (User entity : context.getCreatedUsers())
+            persisted.add(repository.save(entity).notifyCreated());
+
+        return context.setCreatedUsers(persisted);
+    }
+
+    protected UpdateUserContext
+    saveUser(UpdateUserContext context)
+    {
+        logger.debug("<update> save User");
+        return
+            context
+                .setUpdatedUser(
+                    repository
+                        .save(
+                            context
+                                .getUpdatedUser()
+                                .orElseThrow(
+                                    () ->
+                                        new IllegalStateException(
+                                            "Error during user update.")))
+                        .notifyUpdated());
+    }
+
+    protected UpdateUsersContext
+    saveUsers(UpdateUsersContext context)
+    {
+        logger.debug("<update set> save Users");
+
+        List<User> persisted = new ArrayList<>();
+
+        for (User entity : context.getUpdatedUsers())
+            persisted.add(repository.save(entity).notifyUpdated());
+
+        return context.setUpdatedUsers(persisted);
+    }
+
+    private CreateUserReply
+    buildReply(CreateUserContext context)
+    {
+        User created =
+            context
+                .getCreatedUser()
+                .orElseThrow();
+
+        logger.info("building successful reply");
+
+        return
+            new CreateUserReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("User: " + created.getPrimaryId() + " created")
+                .setCreatedUser(mapper.map(created,UserData.class));
+    }
+
+    private CreateUserReply
+    buildReply(Throwable e,CreateUserRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new CreateUserReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to create user")
+                .setException(ExceptionData.of(e));
+    }
+
+    private CreateUsersReply
+    buildReply(CreateUsersContext context)
+    {
+        logger.info("building successful set reply");
+
+        List<CreateUserData> requested = context.getUsersToCreate();
+        Set<String> createdFoos = new HashSet<>();
+        List<UserData> created =
+            context
+                .getCreatedUsers()
+                .stream()
+                .map(entity -> mapper.map(entity,UserData.class))
+                .map(entity -> {createdFoos.add(entity.getFoo()); return entity;})
+                .toList();
+        List<CreateUserData> failed =
+            requested
+                .stream()
+                .filter(r -> !createdFoos.contains(r.getFoo()))
+                .toList();
+
+        return
+            new CreateUsersReply(context.getRequest())
+                .setSuccess(failed.isEmpty())
+                .setSuccessMessage("Users created: " + created.size())
+                .setRequestedUsers(requested)
+                .setFailedUsers(failed)
+                .setCreatedUsers(created);
+    }
+
+    private CreateUsersReply
+    buildReply(Throwable e,CreateUsersRequest request)
+    {
+        logger.info("building exception set reply: {}",e.getMessage());
+        return
+            new CreateUsersReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to create users")
+                .setException(ExceptionData.of(e));
+    }
+
+    private UpdateUserReply
+    buildReply(UpdateUserContext context)
+    {
+        User created =
+            context
+                .getUpdatedUser()
+                .orElseThrow();
+
+        logger.info("building successful reply");
+
+        return
+            new UpdateUserReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("User: " + created.getPrimaryId() + " created")
+                .setUpdatedUser(mapper.map(created,UserData.class));
+    }
+
+    private UpdateUserReply
+    buildReply(Throwable e,UpdateUserRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new UpdateUserReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to create user")
+                .setException(ExceptionData.of(e));
+    }
+
+    private UpdateUsersReply
+    buildReply(UpdateUsersContext context)
+    {
+        logger.info("building successful set reply");
+
+        List<UpdateUserData> requested = context.getUsersToUpdate();
+        List<UserData> updated =
+            context
+                .getUpdatedUsers()
+                .stream()
+                .map(entity -> mapper.map(entity,UserData.class))
+                .toList();
+        Set<Long> updatedIds =
+            updated
+                .stream()
+                .map(UserData::getUserId)
+                .collect(Collectors.toSet());
+        List<UpdateUserData> failed =
+            requested
+                .stream()
+                .filter(r -> !updatedIds.contains(r.getUserId()))
+                .toList();
+
+        return
+            new UpdateUsersReply(context.getRequest())
+                .setSuccess(failed.isEmpty())
+                .setSuccessMessage("Users updated: " + updated.size())
+                .setRequestedUsers(requested)
+                .setFailedUsers(failed)
+                .setUpdatedUsers(updated);
+    }
+
+    private UpdateUsersReply
+    buildReply(Throwable e,UpdateUsersRequest request)
+    {
+        logger.info("building exception set reply: {}",e.getMessage());
+        return
+            new UpdateUsersReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to update users")
+                .setException(ExceptionData.of(e));
+    }
+
+    private DestroyUserReply
+    buildReply(DestroyUserContext context)
+    {
+        User destroyed =
+            context
+                .getDestroyedUser()
+                .orElseThrow();
+
+        logger.info("building successful reply");
+
+        return
+            new DestroyUserReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("User: " + destroyed.getPrimaryId() + " destroyed")
+                .setDestroyedUser(mapper.map(destroyed,UserData.class));
+    }
+
+    private DestroyUserReply
+    buildReply(Throwable e,DestroyUserRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new DestroyUserReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to destroy user")
+                .setException(ExceptionData.of(e));
+    }
+
+    private DestroyUsersReply
+    buildReply(DestroyUsersContext context)
+    {
+        logger.info("building successful set reply");
+
+        Set<Long> requested = context.getUserIds();
+        List<UserData> destroyed =
+            context
+                .getDestroyedUsers()
+                .stream()
+                .map(entity -> mapper.map(entity,UserData.class))
+                .toList();
+        Set<Long> destroyedIds =
+            destroyed
+                .stream()
+                .map(UserData::getUserId)
+                .collect(Collectors.toSet());
+        Set<Long> failed =
+            requested
+                .stream()
+                .filter(id -> !destroyedIds.contains(id))
+                .collect(Collectors.toSet());
+
+        return
+            new DestroyUsersReply(context.getRequest())
+                .setSuccess(failed.isEmpty())
+                .setSuccessMessage("Users destroyed: " + destroyed.size())
+                .setRequestedUserIds(requested)
+                .setFailedUserIds(failed)
+                .setDestroyedUsers(destroyed);
+    }
+
+    private DestroyUsersReply
+    buildReply(Throwable e,DestroyUsersRequest request)
+    {
+        logger.info("building exception set reply: {}",e.getMessage());
+        return
+            new DestroyUsersReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to destroy users")
+                .setException(ExceptionData.of(e));
+    }
+
+    private FindUserReply
+    buildReply(FindUserContext context)
+    {
+        User found =
+            context
+                .getFoundUser()
+                .orElseThrow();
+
+        logger.info("building successful reply");
+
+        return
+            new FindUserReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("User: " + found.getPrimaryId() + " found")
+                .setFoundUser(mapper.map(found,UserData.class));
+    }
+
+    private FindUserReply
+    buildReply(Throwable e,FindUserRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new FindUserReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to find user " + request.getUserId())
+                .setException(ExceptionData.of(e));
+    }
+
+    private UserEvent
+    toServiceEvent(IUserEvent domainEvent,StandardEventType eventType)
+    {
+        return
+            UserEvent
+                .newBuilder()
+                .setEventType(eventType)
+                .setIdentifiers(
+                    EventIdentifiersData
+                        .newBuilder()
+                        .setEventId(UUID.randomUUID().toString())
+                        .setCorrelationId(domainEvent.getCorrelationId())
+                        .setTimestamp(domainEvent.getTimestamp())
+                        .build())
+                .setSourceType(
+                    domainEvent
+                        .getSource()
+                        .getClass()
+                        .getCanonicalName())
+                .setSourceId(
+                    domainEvent
+                        .getSource()
+                        .getPrimaryId())
+                .build();
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

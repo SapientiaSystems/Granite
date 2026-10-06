@@ -1,0 +1,17 @@
+plugins {
+    id 'java-library'
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/java','build/generated-java']
+    main.resources.srcDirs = ['src/main/resources','src/main/schema']
+    test.java.srcDirs = ['src/unused']
+    test.resources.srcDirs = ['src/unused']
+}
+
+dependencies {
+    api project(":Components:Granite.FrontEndController.Service")
+    api "strata.client:strata-client-resteasy:$strata_client_version"
+    api "strata.foundation:strata-foundation-kafka:$strata_foundation_version"
+    api 'org.jboss.resteasy:resteasy-client:6.2.7.Final'
+}

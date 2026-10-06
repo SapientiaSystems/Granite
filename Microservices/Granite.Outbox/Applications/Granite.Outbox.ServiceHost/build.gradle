@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id "com.google.cloud.tools.jib" version "3.4.2"
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/java','.build/generated-java']
+    main.resources.srcDirs = ['src/main/resources','src/main/schema']
+    test.java.srcDirs = ['src/unused']
+    test.resources.srcDirs = ['src/unused']
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+dependencies {
+    implementation project(":Components:Granite.Outbox.Server")
+    implementation "strata.foundation:strata-foundation-spring:$strata_foundation_version"
+    implementation "strata.outbox:strata-outbox-server:$strata_outbox_version"
+    implementation "org.springframework.boot:spring-boot-starter:$springboot_version"
+    implementation "org.springframework.boot:spring-boot-starter-actuator:$springboot_version"
+}
+
+jib {
+    from {
+        image = "amazoncorretto:23-alpine"
+        auth {
+            username = "$System.env.DOCKER_USER"
+            password = "$System.env.DOCKER_PASSWORD"
+        }
+    }
+    to {
+        image = "registry.gitlab.com/guitar-center/gl_merchandising-technology/applicationsystems/granite/granite.outbox/granite-outbox-servicehost"
+        tags = ["${version}","latest"]
+        auth {
+            username = "oauth2"
+            password = "$System.env.GITLAB_TOKEN"
+        }
+    }
+    container {
+        environment = [DEPLOY_ENV:"development",PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
+        jvmFlags = ["-Xmx1024m"]
+        extraClasspath = [".build/libs/Granite.Outbox.ServiceHost-${version}.jar"]
+        mainClass = "granite.outbox.servicehost.main.OutboxServiceHost"
+        ports = ['8085']
+        format = 'OCI'
+    }
+}

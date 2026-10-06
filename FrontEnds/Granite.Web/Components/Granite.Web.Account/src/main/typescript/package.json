@@ -1,0 +1,13 @@
+{
+  "name": "granite.web.account",
+  "version": "1.0.0-snapshot.1791249513068",
+  "license": "Apache-2.0",
+  "scripts": {
+    "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.17.0",
+    "@mantine/hooks": "^7.17.0",
+    "react": "^19.0.0"
+  }
+}
