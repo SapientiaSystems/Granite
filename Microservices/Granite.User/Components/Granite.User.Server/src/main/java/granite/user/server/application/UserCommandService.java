@@ -214,7 +214,7 @@ class UserCommandService
 
         Objects.requireNonNull(
             request.getUserToCreate(),
-            "validation failed: foo was not provided");
+            "validation failed: userToCreate was not provided");
         return request;
     }
 
@@ -671,7 +671,6 @@ class UserCommandService
     private void
     applyUpdate(User user,UpdateUserData data)
     {
-        data.getFoo().ifPresent(user::setFoo);
         data
             .getUserName()
             .filter(userName -> !userName.isBlank())
@@ -684,6 +683,9 @@ class UserCommandService
             .getPassword()
             .filter(password -> !password.isBlank())
             .ifPresent(password -> user.setPassword(hash(password)));
+        data
+            .getAuthorities()
+            .ifPresent(user::setAuthorities);
     }
 
     private String
@@ -729,18 +731,18 @@ class UserCommandService
         logger.info("building successful set reply");
 
         List<CreateUserData> requested = context.getUsersToCreate();
-        Set<String> createdFoos = new HashSet<>();
+        Set<String> createdUserNames = new HashSet<>();
         List<UserData> created =
             context
                 .getCreatedUsers()
                 .stream()
                 .map(entity -> mapper.map(entity,UserData.class))
-                .map(entity -> {createdFoos.add(entity.getFoo()); return entity;})
+                .map(entity -> {createdUserNames.add(entity.getUserName()); return entity;})
                 .toList();
         List<CreateUserData> failed =
             requested
                 .stream()
-                .filter(r -> !createdFoos.contains(r.getFoo()))
+                .filter(r -> !createdUserNames.contains(r.getUserName()))
                 .toList();
 
         return
@@ -945,15 +947,18 @@ class UserCommandService
 
         if (context.getValid())
         {
-            Long userId =
+            UserData userData =
                 context
                     .getUser()
-                    .map(User::getPrimaryId)
+                    .map(u -> mapper.map(u,UserData.class))
                     .orElse(null);
 
             reply
-                .setUserId(userId)
-                .setSuccessMessage("User: " + userId + " authenticated");
+                .setUser(userData)
+                .setSuccessMessage(
+                    "User: "
+                        + (userData != null ? userData.getUserId() : null)
+                        + " authenticated");
         }
         else if (context.getFailureMessage() != null)
         {

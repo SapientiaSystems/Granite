@@ -42,16 +42,16 @@ class InitializeUsersView
                 .findUsersByKeySet(
                     new FindUsersByKeySetRequest()
                         .addHeader("Authorization",request.getHeaders().get("Authorization"))
-                        .setKeys(UserKeySet.ofFoos(getFoos()))
+                        .setKeys(UserKeySet.ofIds(getIds()))
                         .setReturnIfFound(true))
                 .thenApply(this::processReply)
                 .thenApply(this::toUsersOutput);
     }
 
-    protected Set<String>
-    getFoos()
+    protected Set<Long>
+    getIds()
     {
-        return Set.of("1","2","3","4","5","6","7","8","9","10");
+        return Set.of(1L,2L,3L,4L,5L,6L,7L,8L,9L,10L);
     }
 
     protected List<UserData>

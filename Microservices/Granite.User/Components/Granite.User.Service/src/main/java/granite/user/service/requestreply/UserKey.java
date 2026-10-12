@@ -16,7 +16,7 @@ class UserKey
     implements Serializable, Comparable<UserKey>
 {
     public static final String USER_ID = "userId";
-    public static final String USER_FOO = "userFoo";
+    public static final String USER_NAME = "userName";
 
     private final String name;
     private final String value;
@@ -103,9 +103,9 @@ class UserKey
     }
 
     public static UserKey
-    ofUserFoo(String foo)
+    ofUserName(String userName)
     {
-        return of(USER_FOO,foo);
+        return of(USER_NAME,userName);
     }
 
     public static UserKey
@@ -127,7 +127,7 @@ class UserKey
         switch (name)
         {
             case USER_ID:
-            case USER_FOO:
+            case USER_NAME:
                 break;
 
             default:

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Tag("IntegrationStage")
@@ -21,38 +22,41 @@ class UserServiceTest
     public void
     testCreateUser()
     {
-        String userName = uniqueUserName();
+        String      userName    = uniqueUserName();
+        Set<String> authorities = Set.of("ROLE_USER");
         CreateUserReply reply =
             getSubject()
                 .createUser(
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")
-                                .setUserName(userName)))
+                                .setUserName(userName)
+                                .setAuthorities(authorities)))
                 .toCompletableFuture()
                 .join();
 
         Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
         Assertions.assertNotNull(reply.getCreatedUser());
         Assertions.assertNotNull(reply.getCreatedUser().getUserId());
-        Assertions.assertEquals("XXX-YYYYY-ZZZZZZZ",reply.getCreatedUser().getFoo());
         Assertions.assertEquals(userName,reply.getCreatedUser().getUserName());
+        Assertions.assertEquals(authorities,reply.getCreatedUser().getAuthorities());
     }
 
     @Test
     public void
     testUpdateUser()
     {
-        String userName = uniqueUserName();
+        String      userName           = uniqueUserName();
+        Set<String> initialAuthorities = Set.of("ROLE_USER");
+        Set<String> updatedAuthorities = Set.of("ROLE_USER","ROLE_ADMIN");
         CreateUserReply createReply =
             getSubject()
                 .createUser(
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")
-                                .setUserName(userName)))
+                                .setUserName(userName)
+                                .setAuthorities(initialAuthorities)))
                 .toCompletableFuture()
                 .join();
 
@@ -64,7 +68,7 @@ class UserServiceTest
         id = entity.getUserId();
         Assertions.assertNotNull(entity);
         Assertions.assertNotNull(id);
-        Assertions.assertEquals("XXX-YYYYY-ZZZZZZZ",entity.getFoo());
+        Assertions.assertEquals(initialAuthorities,entity.getAuthorities());
 
         UpdateUserReply updateReply =
             getSubject()
@@ -73,7 +77,7 @@ class UserServiceTest
                         .setUserToUpdate(
                             new UpdateUserData()
                                 .setUserId(id)
-                                .setFoo("AAA-BBBBB-CCCCCCC")))
+                                .setAuthorities(updatedAuthorities)))
                 .toCompletableFuture()
                 .join();
 
@@ -81,7 +85,7 @@ class UserServiceTest
         entity = updateReply.getUpdatedUser();
         Assertions.assertNotNull(entity);
         Assertions.assertEquals(id,entity.getUserId());
-        Assertions.assertEquals("AAA-BBBBB-CCCCCCC",entity.getFoo());
+        Assertions.assertEquals(updatedAuthorities,entity.getAuthorities());
     }
 
     @Test
@@ -94,8 +98,8 @@ class UserServiceTest
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")
-                                .setUserName(uniqueUserName())))
+                                .setUserName(uniqueUserName())
+                                .setAuthorities(Set.of("ROLE_USER"))))
                 .toCompletableFuture()
                 .join();
 
@@ -105,8 +109,8 @@ class UserServiceTest
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("AAA-BBBBB-CCCCCCC")
-                                .setUserName(uniqueUserName())))
+                                .setUserName(uniqueUserName())
+                                .setAuthorities(Set.of("ROLE_USER"))))
                 .toCompletableFuture()
                 .join();
 
@@ -124,10 +128,10 @@ class UserServiceTest
                             List.of(
                                 new UpdateUserData()
                                     .setUserId(id1)
-                                    .setFoo("UPDATED-ONE"),
+                                    .setAuthorities(Set.of("ROLE_USER","ROLE_ADMIN")),
                                 new UpdateUserData()
                                     .setUserId(id2)
-                                    .setFoo("UPDATED-TWO"))))
+                                    .setAuthorities(Set.of("ROLE_USER","ROLE_AUDITOR")))))
                 .toCompletableFuture()
                 .join();
 
@@ -147,8 +151,8 @@ class UserServiceTest
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")
-                                .setUserName(uniqueUserName())))
+                                .setUserName(uniqueUserName())
+                                .setAuthorities(Set.of("ROLE_USER"))))
                 .toCompletableFuture()
                 .join();
 
@@ -160,7 +164,6 @@ class UserServiceTest
         id = entity.getUserId();
         Assertions.assertNotNull(entity);
         Assertions.assertNotNull(id);
-        Assertions.assertEquals("XXX-YYYYY-ZZZZZZZ",entity.getFoo());
 
         DestroyUserReply destroyReply =
             getSubject()

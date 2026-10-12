@@ -71,7 +71,6 @@ class UserRepositoryTest
             {
                 expected.set(
                     new User()
-                        .setFoo("XXXXX.YYYYYYY.ZZZZZZZZZZZ1")
                         .setUserName("user-save-1@example.com"));
                 actual.set(target.save(expected.get()));
                 synchronizer
@@ -82,7 +81,7 @@ class UserRepositoryTest
             });
         assertNotNull(actual.get());
         assertNotNull(actual.get().getPrimaryId());
-        assertEquals(expected.get().getFoo(),actual.get().getFoo());
+        assertEquals(expected.get().getUserName(),actual.get().getUserName());
     }
 
     @Test
@@ -97,13 +96,12 @@ class UserRepositoryTest
             {
                 expected.set(
                     new User()
-                        .setFoo("XXXXX.YYYYYYY.ZZZZZZZZZZZ5")
                         .setUserName("user-delete-5@example.com"));
                 actual.set(target.save(expected.get()));
             });
         assertNotNull(actual.get());
         assertNotNull(actual.get().getPrimaryId());
-        assertEquals(expected.get().getFoo(),actual.get().getFoo());
+        assertEquals(expected.get().getUserName(),actual.get().getUserName());
 
         transaction.executeWithoutResult(
             status ->

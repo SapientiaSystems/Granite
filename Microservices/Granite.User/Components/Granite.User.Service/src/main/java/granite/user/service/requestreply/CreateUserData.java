@@ -5,30 +5,25 @@
 package granite.user.service.requestreply;
 
 import java.io.Serializable;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public
 class CreateUserData
     implements Serializable
 {
-    private String foo;
-    private String userName;
-    private String password;
-    private String externalIdentity;
+    private String      userName;
+    private String      password;
+    private String      externalIdentity;
+    private Set<String> authorities;
 
     public
     CreateUserData()
     {
-        foo              = null;
         userName         = null;
         password         = null;
         externalIdentity = null;
-    }
-
-    public CreateUserData
-    setFoo(String f)
-    {
-        foo = f;
-        return this;
+        authorities      = new LinkedHashSet<>();
     }
 
     public CreateUserData
@@ -52,8 +47,12 @@ class CreateUserData
         return this;
     }
 
-    public String
-    getFoo() { return foo; }
+    public CreateUserData
+    setAuthorities(Set<String> values)
+    {
+        authorities = values;
+        return this;
+    }
 
     public String
     getUserName() { return userName; }
@@ -63,6 +62,9 @@ class CreateUserData
 
     public String
     getExternalIdentity() { return externalIdentity; }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

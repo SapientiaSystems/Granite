@@ -6,8 +6,10 @@ package granite.session.service.requestreply;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 public
 class SessionData
@@ -19,7 +21,8 @@ class SessionData
     private Instant             created;
     private Instant             expires;
     private String              deviceId;
-    private Map<String,String>  values;
+    private Map<String,Object>  values;
+    private Set<String>         authorities;
 
     public
     SessionData()
@@ -30,7 +33,8 @@ class SessionData
         created     = null;
         expires     = null;
         deviceId    = null;
-        values      = new HashMap<>();
+        values      = new LinkedHashMap<>();
+        authorities = new LinkedHashSet<>();
     }
 
     public SessionData
@@ -76,9 +80,16 @@ class SessionData
     }
 
     public SessionData
-    setValues(Map<String,String> v)
+    setValues(Map<String,Object> v)
     {
         values = v;
+        return this;
+    }
+
+    public SessionData
+    setAuthorities(Set<String> values)
+    {
+        authorities = values;
         return this;
     }
 
@@ -100,8 +111,11 @@ class SessionData
     public String
     getDeviceId() { return deviceId; }
 
-    public Map<String,String>
+    public Map<String,Object>
     getValues() { return values; }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

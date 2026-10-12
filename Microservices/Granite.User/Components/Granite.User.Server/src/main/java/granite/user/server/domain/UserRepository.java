@@ -26,17 +26,14 @@ class UserRepository
         super(User.class,"primaryId",uow);
         getUnitOfWork()
             .registerQuery(
-                "findByFoo",
-                "select e from User e where e.foo = :foo")
-            .registerQuery(
                 "findAllByIdIn",
                 "select e from User e where e.primaryId IN :userIds")
             .registerQuery(
-                "findAllByFooIn",
-                "select e from User e where e.foo IN :foos")
-            .registerQuery(
                 "findByUserName",
                 "select e from User e where e.userName = :userName")
+            .registerQuery(
+                "findAllByUserNameIn",
+                "select e from User e where e.userName IN :userNames")
             .registerQuery(
                 "findAllByExternalIdentity",
                 "select e from User e where e.externalIdentity = :externalIdentity");
@@ -69,20 +66,6 @@ class UserRepository
     }
 
     @Override
-    public List<User>
-    findAllByFoo(String foo)
-    {
-        return
-            getUnitOfWork()
-                .findManyByQuery(
-                    User.class,
-                    "findAllByFoo",
-                    Map.of("foo",foo))
-                .stream()
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public Optional<User>
     findByUserName(String userName)
     {
@@ -110,7 +93,7 @@ class UserRepository
 
     @Override
     public IMultiMap<String,User>
-    findAllByFooIn(Set<String> foos)
+    findAllByUserNameIn(Set<String> userNames)
     {
         ListValuedMultiMap<String,User> result =
             new ListValuedMultiMap<>();
@@ -118,14 +101,14 @@ class UserRepository
         getUnitOfWork()
             .findManyByQuery(
                 User.class,
-                "findAllByFooIn",
-                Map.of("foos",foos))
-            .forEach(entity -> result.put(entity.getFoo(),entity));
+                "findAllByUserNameIn",
+                Map.of("userNames",userNames))
+            .forEach(entity -> result.put(entity.getUserName(),entity));
 
-        foos
+        userNames
             .stream()
-            .filter(foo -> !result.containsKey(foo))
-            .forEach(foo -> result.putAll(foo,List.of()));
+            .filter(userName -> !result.containsKey(userName))
+            .forEach(userName -> result.putAll(userName,List.of()));
 
         return result;
     }

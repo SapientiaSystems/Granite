@@ -25,7 +25,8 @@ class MappingModule
             .addMapping(Session::getCreated,SessionData::setCreated)
             .addMapping(Session::getExpires,SessionData::setExpires)
             .addMapping(Session::getDeviceId,SessionData::setDeviceId)
-            .addMapping(Session::getValues,SessionData::setValues);
+            .addMapping(Session::getValues,SessionData::setValues)
+            .addMapping(Session::getAuthorities,SessionData::setAuthorities);
     }
 }
 

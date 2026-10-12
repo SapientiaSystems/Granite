@@ -14,23 +14,23 @@ public
 class AuthenticateUserReply
     extends AbstractServiceReply
 {
-    private boolean valid;
-    private Long    userId;
+    private boolean  valid;
+    private UserData user;
 
     public
     AuthenticateUserReply()
     {
         super();
-        valid  = false;
-        userId = null;
+        valid = false;
+        user  = null;
     }
 
     public
     AuthenticateUserReply(AuthenticateUserRequest originatingRequest)
     {
         super(originatingRequest);
-        valid  = false;
-        userId = null;
+        valid = false;
+        user  = null;
     }
 
     @Override
@@ -90,17 +90,17 @@ class AuthenticateUserReply
     }
 
     public AuthenticateUserReply
-    setUserId(Long value)
+    setUser(UserData value)
     {
-        userId = value;
+        user = value;
         return this;
     }
 
     public boolean
     getValid() { return valid; }
 
-    public Long
-    getUserId() { return userId; }
+    public UserData
+    getUser() { return user; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

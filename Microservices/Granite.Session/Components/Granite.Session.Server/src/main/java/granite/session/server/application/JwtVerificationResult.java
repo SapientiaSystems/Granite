@@ -6,7 +6,9 @@ package granite.session.server.application;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public
 class JwtVerificationResult
@@ -17,16 +19,18 @@ class JwtVerificationResult
     private Instant      expiresAt;
     private List<String> audience;
     private String       deviceId;
+    private Set<String>  authorities;
 
     public
     JwtVerificationResult()
     {
-        subject   = null;
-        jwtId     = null;
-        issuedAt  = null;
-        expiresAt = null;
-        audience  = Collections.emptyList();
-        deviceId  = null;
+        subject     = null;
+        jwtId       = null;
+        issuedAt    = null;
+        expiresAt   = null;
+        audience    = Collections.emptyList();
+        deviceId    = null;
+        authorities = new LinkedHashSet<>();
     }
 
     public JwtVerificationResult
@@ -88,6 +92,16 @@ class JwtVerificationResult
 
     public String
     getDeviceId() { return deviceId; }
+
+    public JwtVerificationResult
+    setAuthorities(Set<String> values)
+    {
+        authorities = values != null ? new LinkedHashSet<>(values) : new LinkedHashSet<>();
+        return this;
+    }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

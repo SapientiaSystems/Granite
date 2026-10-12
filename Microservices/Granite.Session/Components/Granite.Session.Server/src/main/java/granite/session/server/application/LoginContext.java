@@ -8,11 +8,15 @@ import granite.session.server.domain.Session;
 import granite.session.service.requestreply.LoginRequest;
 import granite.user.service.requestreply.CredentialKind;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public
 class LoginContext
 {
     private LoginRequest request;
     private Long         validatedUserId;
+    private Set<String>  validatedAuthorities;
     private boolean      unsupportedKind;
     private Session      created;
     private String       jwt;
@@ -20,17 +24,25 @@ class LoginContext
     public
     LoginContext(LoginRequest req)
     {
-        request         = req;
-        validatedUserId = null;
-        unsupportedKind = false;
-        created         = null;
-        jwt             = null;
+        request              = req;
+        validatedUserId      = null;
+        validatedAuthorities = new LinkedHashSet<>();
+        unsupportedKind      = false;
+        created              = null;
+        jwt                  = null;
     }
 
     public LoginContext
     setValidatedUserId(Long value)
     {
         validatedUserId = value;
+        return this;
+    }
+
+    public LoginContext
+    setValidatedAuthorities(Set<String> values)
+    {
+        validatedAuthorities = values != null ? values : new LinkedHashSet<>();
         return this;
     }
 
@@ -72,6 +84,9 @@ class LoginContext
 
     public Long
     getValidatedUserId() { return validatedUserId; }
+
+    public Set<String>
+    getValidatedAuthorities() { return validatedAuthorities; }
 
     public boolean
     isUnsupportedKind() { return unsupportedKind; }

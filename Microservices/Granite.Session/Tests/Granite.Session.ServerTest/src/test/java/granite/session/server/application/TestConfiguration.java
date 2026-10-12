@@ -196,7 +196,11 @@ class TestConfiguration
                     if (valid)
                         reply
                             .setValid(true)
-                            .setUserId(ids.computeIfAbsent(userName,k -> next.incrementAndGet()))
+                            .setUser(
+                                new UserData()
+                                    .setUserId(ids.computeIfAbsent(userName,k -> next.incrementAndGet()))
+                                    .setUserName(userName)
+                                    .setAuthorities(java.util.Set.of("ROLE_USER","ROLE_ADMIN")))
                             .setSuccess(true);
                     else
                         reply
@@ -222,7 +226,8 @@ class TestConfiguration
                                         .setUserId(next.incrementAndGet())
                                         .setUserName(request.getUserToCreate().getUserName())
                                         .setExternalIdentity(
-                                            request.getUserToCreate().getExternalIdentity()))
+                                            request.getUserToCreate().getExternalIdentity())
+                                        .setAuthorities(java.util.Set.of("ROLE_USER")))
                                 .setSuccess(true));
                 });
 
@@ -253,7 +258,8 @@ class TestConfiguration
                                                 500L + Math.floorMod(request.getExternalId().hashCode(),500))
                                             .setUserName(request.getExternalId())
                                             .setExternalIdentity(
-                                                request.getProvider() + ":" + request.getExternalId())))
+                                                request.getProvider() + ":" + request.getExternalId())
+                                            .setAuthorities(java.util.Set.of("ROLE_USER"))))
                                 .setSuccess(true));
                 });
 

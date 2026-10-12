@@ -19,7 +19,7 @@ class UserKeySet
     implements Serializable, Comparable<UserKeySet>
 {
     public static final String USER_IDS = "userIds";
-    public static final String USER_FOOS = "userFoos";
+    public static final String USER_NAMES = "userNames";
 
     private final String name;
     private final Set<String> values;
@@ -128,9 +128,9 @@ class UserKeySet
     }
 
     public static UserKeySet
-    ofFoos(Set<String> foos)
+    ofUserNames(Set<String> userNames)
     {
-        return ofStrings(USER_FOOS,foos);
+        return ofStrings(USER_NAMES,userNames);
     }
 
     public static UserKeySet
@@ -157,7 +157,7 @@ class UserKeySet
         switch (name)
         {
             case USER_IDS:
-            case USER_FOOS:
+            case USER_NAMES:
                 break;
 
             default:

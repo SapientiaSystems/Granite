@@ -5,37 +5,31 @@
 package granite.user.service.requestreply;
 
 import java.util.Optional;
+import java.util.Set;
 
 public
 class UpdateUserData
 {
-    private Long   userId;
-    private String foo;
-    private String userName;
-    private String password;
-    private String externalIdentity;
+    private Long        userId;
+    private String      userName;
+    private String      password;
+    private String      externalIdentity;
+    private Set<String> authorities;
 
     public
     UpdateUserData()
     {
         userId           = null;
-        foo              = null;
         userName         = null;
         password         = null;
         externalIdentity = null;
+        authorities      = null;
     }
 
     public UpdateUserData
     setUserId(Long id)
     {
         userId = id;
-        return this;
-    }
-
-    public UpdateUserData
-    setFoo(String f)
-    {
-        foo = f;
         return this;
     }
 
@@ -60,11 +54,15 @@ class UpdateUserData
         return this;
     }
 
+    public UpdateUserData
+    setAuthorities(Set<String> values)
+    {
+        authorities = values;
+        return this;
+    }
+
     public Long
     getUserId() { return userId; }
-
-    public Optional<String>
-    getFoo() { return Optional.ofNullable(foo); }
 
     public Optional<String>
     getUserName() { return Optional.ofNullable(userName); }
@@ -74,6 +72,9 @@ class UpdateUserData
 
     public Optional<String>
     getExternalIdentity() { return Optional.ofNullable(externalIdentity); }
+
+    public Optional<Set<String>>
+    getAuthorities() { return Optional.ofNullable(authorities); }
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,8 @@ class SessionCommandServiceTest
         Assertions.assertNotNull(reply.getSessionData().getDeviceId());
         Assertions.assertNotNull(reply.getSessionData().getCreated());
         Assertions.assertNotNull(reply.getSessionData().getExpires());
+        Assertions.assertNotNull(reply.getSessionData().getAuthorities());
+        Assertions.assertFalse(reply.getSessionData().getAuthorities().isEmpty());
     }
 
     @Test
@@ -51,6 +53,7 @@ class SessionCommandServiceTest
         Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
         Assertions.assertNotNull(reply.getAccessToken());
         Assertions.assertNotNull(reply.getSessionData());
+        Assertions.assertNotNull(reply.getSessionData().getAuthorities());
     }
 
     @Test

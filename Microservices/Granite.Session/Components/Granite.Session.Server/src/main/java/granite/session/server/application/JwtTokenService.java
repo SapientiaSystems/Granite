@@ -18,17 +18,20 @@ import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public
 class JwtTokenService
     implements IJwtTokenService
 {
-    private static final String DEVICE_ID_CLAIM = "did";
+    private static final String DEVICE_ID_CLAIM   = "did";
+    private static final String AUTHORITIES_CLAIM = "authorities";
 
     private final RSASSASigner    signer;
     private final RSASSAVerifier  verifier;
@@ -67,9 +70,10 @@ class JwtTokenService
         Objects.requireNonNull(session.getUserId(),"session.userId");
         Objects.requireNonNull(session.getSessionId(),"session.sessionId");
 
-        Instant      now       = Instant.now();
-        Instant      exp       = session.getExpires() != null ? session.getExpires() : now.plus(ttl);
-        JWTClaimsSet claims    =
+        Instant      now         = Instant.now();
+        Instant      exp         = session.getExpires() != null ? session.getExpires() : now.plus(ttl);
+        Set<String>  authorities = session.getAuthorities();
+        JWTClaimsSet claims      =
             new JWTClaimsSet.Builder()
                 .issuer(issuer)
                 .subject(String.valueOf(session.getUserId()))
@@ -78,6 +82,9 @@ class JwtTokenService
                 .expirationTime(Date.from(exp))
                 .audience(audience)
                 .claim(DEVICE_ID_CLAIM,session.getDeviceId())
+                .claim(
+                    AUTHORITIES_CLAIM,
+                    authorities != null ? new ArrayList<>(authorities) : List.of())
                 .build();
         SignedJWT    signed    = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256),claims);
 
@@ -158,7 +165,8 @@ class JwtTokenService
                 .setIssuedAt(issueTime != null ? issueTime.toInstant() : null)
                 .setExpiresAt(exp)
                 .setAudience(aud)
-                .setDeviceId(readStringClaim(claims,DEVICE_ID_CLAIM));
+                .setDeviceId(readStringClaim(claims,DEVICE_ID_CLAIM))
+                .setAuthorities(readStringListClaim(claims,AUTHORITIES_CLAIM));
     }
 
     private String
@@ -171,6 +179,24 @@ class JwtTokenService
         catch (ParseException e)
         {
             return null;
+        }
+    }
+
+    private Set<String>
+    readStringListClaim(JWTClaimsSet claims,String name)
+    {
+        try
+        {
+            List<String> values = claims.getStringListClaim(name);
+
+            if (values == null)
+                return Set.of();
+
+            return new java.util.LinkedHashSet<>(values);
+        }
+        catch (ParseException e)
+        {
+            return Set.of();
         }
     }
 }

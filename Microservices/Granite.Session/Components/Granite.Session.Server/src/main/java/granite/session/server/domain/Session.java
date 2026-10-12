@@ -7,9 +7,11 @@ package granite.session.server.domain;
 import strata.server.core.entity.AbstractEntityAndDomainEventSource;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public
 class Session
@@ -25,7 +27,8 @@ class Session
     private String              accessToken;
     private Instant             expires;
     private String              deviceId;
-    private Map<String,String>  values;
+    private Map<String,Object>  values;
+    private Set<String>         authorities;
 
     public
     Session()
@@ -35,7 +38,8 @@ class Session
         accessToken = null;
         expires     = null;
         deviceId    = null;
-        values      = new HashMap<>();
+        values      = new LinkedHashMap<>();
+        authorities = new LinkedHashSet<>();
     }
 
     @Override
@@ -102,30 +106,43 @@ class Session
     public String
     getDeviceId() { return deviceId; }
 
-    public Session
-    setValues(Map<String,String> v)
+    public <T> Session
+    setValue(String key,T value)
     {
-        values = v;
+        values.put(key,value);
         notifyUpdated();
         return this;
     }
 
-    public Map<String,String>
-    getValues() { return Collections.unmodifiableMap(values); }
-
-    public Session
-    putValue(String key,String value)
+    public <T> Optional<T>
+    getValue(Class<T> type,String key)
     {
-        values.put(key,value);
-        return notifyUpdated();
+        Object stored = values.get(key);
+
+        return
+            type.isInstance(stored)
+                ? Optional.of(type.cast(stored))
+                : Optional.empty();
     }
 
-    public Session
-    removeValue(String key)
+    public boolean
+    hasValue(String key)
     {
-        values.remove(key);
-        return notifyUpdated();
+        return values.containsKey(key);
     }
+
+    public Map<String,Object>
+    getValues() { return values; }
+
+    public Session
+    setAuthorities(Set<String> values)
+    {
+        authorities = values;
+        return this;
+    }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
 
     public Session
     destroy()

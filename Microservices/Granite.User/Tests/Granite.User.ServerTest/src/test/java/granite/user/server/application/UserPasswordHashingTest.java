@@ -133,11 +133,11 @@ class UserPasswordHashingTest
         stored.setPassword(existing);
 
         UpdateUserReply reply =
-            update(new UpdateUserData().setUserId(USER_ID).setFoo("changed"));
+            update(new UpdateUserData().setUserId(USER_ID).setUserName("changed@example.com"));
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertEquals(existing,stored.getPassword());
-        assertEquals("changed",stored.getFoo());
+        assertEquals("changed@example.com",stored.getUserName());
     }
 
     @Test
@@ -291,7 +291,7 @@ class UserPasswordHashingTest
 
         UpdateUsersReply reply =
             updateAll(
-                new UpdateUserData().setUserId(USER_ID).setFoo("changed"),
+                new UpdateUserData().setUserId(USER_ID).setUserName("changed@example.com"),
                 new UpdateUserData().setUserId(43L).setPassword(""));
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());

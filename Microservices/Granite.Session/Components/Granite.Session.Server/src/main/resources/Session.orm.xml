@@ -32,13 +32,14 @@
             <basic name="deviceId" optional="false">
                 <column name="deviceId" nullable="false" column-definition="VARCHAR(255)"/>
             </basic>
-            <element-collection name="values" fetch="EAGER" access="FIELD">
-                <map-key-column name="name"/>
-                <column name="elementValue" column-definition="VARCHAR(4096)"/>
-                <collection-table name="SessionValues">
-                    <join-column name="sessionId"/>
-                </collection-table>
-            </element-collection>
+            <basic name="values" access="FIELD">
+                <column name="value_map" column-definition="TEXT"/>
+                <convert converter="granite.session.server.domain.ValueMapConverter"/>
+            </basic>
+            <basic name="authorities">
+                <column name="authorities" column-definition="VARCHAR(1024)"/>
+                <convert converter="granite.session.server.domain.StringSetConverter"/>
+            </basic>
             <version name="version">
                 <column name="version"/>
             </version>

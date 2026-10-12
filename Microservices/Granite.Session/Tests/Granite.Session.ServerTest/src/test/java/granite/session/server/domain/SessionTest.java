@@ -8,14 +8,13 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -54,10 +53,10 @@ class SessionTest
     public void
     testValuesDefaultsToEmptyMap()
     {
-        Map<String,String> result = new Session().getValues();
+        Session target = new Session();
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertNotNull(target.getValues());
+        assertTrue(target.getValues().isEmpty());
     }
 
     @Test
@@ -118,60 +117,58 @@ class SessionTest
 
     @Test
     public void
-    testSetValuesFiresSessionUpdated()
-    {
-        Session            target   = new Session();
-        CapturingObserver  observer = new CapturingObserver();
-        Map<String,String> replace  = new HashMap<>();
-
-        replace.put("cart-id","c-1");
-        target.attach(observer);
-        target.setValues(replace);
-
-        assertEquals(1,observer.events.size());
-        assertTrue(observer.events.get(0) instanceof SessionUpdated);
-    }
-
-    @Test
-    public void
-    putValueFiresSessionUpdated()
-    {
-        Session           target   = new Session();
-        CapturingObserver observer = new CapturingObserver();
-
-        target.attach(observer);
-        target.putValue("cart-id","c-1");
-
-        assertEquals(1,observer.events.size());
-        assertTrue(observer.events.get(0) instanceof SessionUpdated);
-        assertEquals("c-1",target.getValues().get("cart-id"));
-    }
-
-    @Test
-    public void
-    removeValueFiresSessionUpdated()
-    {
-        Session           target   = new Session();
-        CapturingObserver observer = new CapturingObserver();
-
-        target.putValue("cart-id","c-1");
-        target.attach(observer);
-        target.removeValue("cart-id");
-
-        assertEquals(1,observer.events.size());
-        assertTrue(observer.events.get(0) instanceof SessionUpdated);
-        assertTrue(target.getValues().isEmpty());
-    }
-
-    @Test
-    public void
-    getValuesReturnsUnmodifiableMap()
+    testSetValueFluentlyAndReadByType()
     {
         Session target = new Session();
 
-        assertThrows(
-            UnsupportedOperationException.class,
-            () -> target.getValues().put("k","v"));
+        assertSame(target,target.setValue("cart-id","c-1"));
+        assertEquals(Optional.of("c-1"),target.getValue(String.class,"cart-id"));
+    }
+
+    @Test
+    public void
+    testSetValueFiresSessionUpdated()
+    {
+        Session           target   = new Session();
+        CapturingObserver observer = new CapturingObserver();
+
+        target.attach(observer);
+        target.setValue("cart-id","c-1");
+
+        assertEquals(1,observer.events.size());
+        assertTrue(observer.events.get(0) instanceof SessionUpdated);
+    }
+
+    @Test
+    public void
+    testGetValueOnMissingKeyReturnsEmpty()
+    {
+        assertTrue(new Session().getValue(String.class,"missing").isEmpty());
+    }
+
+    @Test
+    public void
+    testGetValueOnTypeMismatchReturnsEmpty()
+    {
+        Session target = new Session().setValue("count","not-a-number");
+
+        assertTrue(target.getValue(Integer.class,"count").isEmpty());
+    }
+
+    @Test
+    public void
+    testHasValueReturnsTrueForPresentKey()
+    {
+        Session target = new Session().setValue("cart-id","c-1");
+
+        assertTrue(target.hasValue("cart-id"));
+    }
+
+    @Test
+    public void
+    testHasValueReturnsFalseForAbsentKey()
+    {
+        assertFalse(new Session().hasValue("missing"));
     }
 
     @Test

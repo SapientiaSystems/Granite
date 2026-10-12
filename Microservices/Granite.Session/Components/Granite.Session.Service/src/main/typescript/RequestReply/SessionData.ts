@@ -7,5 +7,6 @@ interface SessionData
     created?: string;
     expires?: string;
     deviceId?: string;
-    values?: Record<string,string>;
+    values?: Map<string,unknown>;
+    authorities?: Array<string>;
 }

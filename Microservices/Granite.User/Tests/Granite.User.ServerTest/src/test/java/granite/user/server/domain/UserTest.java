@@ -9,9 +9,15 @@ import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
@@ -70,6 +76,77 @@ class UserTest
 
     @Test
     public void
+    testAuthoritiesDefaultsToEmptySet()
+    {
+        Set<String> authorities = new User().getAuthorities();
+
+        assertNotNull(authorities);
+        assertTrue(authorities.isEmpty());
+    }
+
+    @Test
+    public void
+    testSetAuthoritiesFluentlyAndRead()
+    {
+        User        target = new User();
+        Set<String> values = Set.of("ADMIN","USER");
+
+        assertEquals(target,target.setAuthorities(values));
+        assertEquals(values,target.getAuthorities());
+    }
+
+    @Test
+    public void
+    testValuesDefaultsToEmptyMap()
+    {
+        User target = new User();
+
+        assertNotNull(target.getValues());
+        assertTrue(target.getValues().isEmpty());
+    }
+
+    @Test
+    public void
+    testSetValueFluentlyAndReadByType()
+    {
+        User target = new User();
+
+        assertSame(target,target.setValue("preferredTheme","dark"));
+        assertEquals(Optional.of("dark"),target.getValue(String.class,"preferredTheme"));
+    }
+
+    @Test
+    public void
+    testGetValueOnMissingKeyReturnsEmpty()
+    {
+        assertTrue(new User().getValue(String.class,"missing").isEmpty());
+    }
+
+    @Test
+    public void
+    testGetValueOnTypeMismatchReturnsEmpty()
+    {
+        User target = new User().setValue("count","not-a-number");
+
+        assertTrue(target.getValue(Integer.class,"count").isEmpty());
+    }
+
+    @Test
+    public void
+    testHasValueReturnsTrueForPresentKey()
+    {
+        assertTrue(new User().setValue("preferredTheme","dark").hasValue("preferredTheme"));
+    }
+
+    @Test
+    public void
+    testHasValueReturnsFalseForAbsentKey()
+    {
+        assertFalse(new User().hasValue("missing"));
+    }
+
+    @Test
+    public void
     testUserDataJsonExcludesPassword() throws Exception
     {
         UserData data =
@@ -77,7 +154,7 @@ class UserTest
                 .setUserId(1L)
                 .setUserName("alice@example.com")
                 .setExternalIdentity("google:abc")
-                .setFoo("something");
+                .setAuthorities(Set.of("ROLE_USER"));
         String json = new ObjectMapper().writeValueAsString(data);
 
         assertFalse(

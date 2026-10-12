@@ -50,11 +50,11 @@ class ModelMapperTest
         UserData data =
             new UserData()
                 .setUserId(1L)
-                .setFoo("XXXYYYYYZZZZZZZ");
+                .setUserName("alice@example.com");
         User entity = mapper.map(data,User.class);
 
         assertEquals(data.getUserId(),entity.getPrimaryId());
-        assertEquals(data.getFoo(),entity.getFoo());
+        assertEquals(data.getUserName(),entity.getUserName());
     }
 
     @Test
@@ -64,12 +64,27 @@ class ModelMapperTest
         User entity =
             new User()
                 .setPrimaryId(1L)
-                .setFoo("XXXXXXXXX.YYYYYYYYYYYYYYYYYY.ZZZZZZZZZZZZZZZZZZZ");
+                .setUserName("alice@example.com");
 
         UserData data = mapper.map(entity,UserData.class);
 
         assertEquals(entity.getPrimaryId(),data.getUserId());
-        assertEquals(entity.getFoo(),data.getFoo());
+        assertEquals(entity.getUserName(),data.getUserName());
+    }
+
+    @Test
+    public void
+    testUserToUserDataValuesMapping()
+    {
+        User entity =
+            new User()
+                .setPrimaryId(1L)
+                .setUserName("alice@example.com")
+                .setValue("preferredTheme","dark");
+
+        UserData data = mapper.map(entity,UserData.class);
+
+        assertEquals("dark",data.getValues().get("preferredTheme"));
     }
 
 }

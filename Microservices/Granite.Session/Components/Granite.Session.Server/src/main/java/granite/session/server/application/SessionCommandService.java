@@ -286,7 +286,8 @@ class SessionCommandService
                 .setUserId(context.getValidatedUserId())
                 .setDeviceId(context.getDeviceId())
                 .setExpires(now.plus(sessionTtl))
-                .setAccessToken("");
+                .setAccessToken("")
+                .setAuthorities(context.getValidatedAuthorities());
 
         session.setCreated(now);
         session.attach(this);
@@ -385,12 +386,15 @@ class SessionCommandService
         if (context.getValidatedIdentity() == null)
             return context;
 
-        String provider = context.getValidatedIdentity().getProvider();
-        String sub      = context.getValidatedIdentity().getSub();
-        Long   existing = findUserIdByExternalIdentity(provider,sub);
+        String   provider = context.getValidatedIdentity().getProvider();
+        String   sub      = context.getValidatedIdentity().getSub();
+        UserData existing = findUserByExternalIdentity(provider,sub);
 
         if (existing != null)
-            return context.setUserId(existing);
+            return
+                context
+                    .setUserId(existing.getUserId())
+                    .setAuthorities(existing.getAuthorities());
 
         String composite = provider + ":" + sub;
 
@@ -408,12 +412,18 @@ class SessionCommandService
                     .join();
 
             if (reply != null && reply.isSuccess() && reply.getCreatedUser() != null)
-                return context.setUserId(reply.getCreatedUser().getUserId());
+                return
+                    context
+                        .setUserId(reply.getCreatedUser().getUserId())
+                        .setAuthorities(reply.getCreatedUser().getAuthorities());
 
-            Long recovered = findUserIdByExternalIdentity(provider,sub);
+            UserData recovered = findUserByExternalIdentity(provider,sub);
 
             if (recovered != null)
-                return context.setUserId(recovered);
+                return
+                    context
+                        .setUserId(recovered.getUserId())
+                        .setAuthorities(recovered.getAuthorities());
 
             String failureMessage =
                 reply != null && reply.getFailureMessage() != null
@@ -429,10 +439,13 @@ class SessionCommandService
 
             try
             {
-                Long recovered = findUserIdByExternalIdentity(provider,sub);
+                UserData recovered = findUserByExternalIdentity(provider,sub);
 
                 if (recovered != null)
-                    return context.setUserId(recovered);
+                    return
+                        context
+                            .setUserId(recovered.getUserId())
+                            .setAuthorities(recovered.getAuthorities());
             }
             catch (RuntimeException recoveryException)
             {
@@ -457,7 +470,8 @@ class SessionCommandService
                 .setUserId(context.getUserId())
                 .setDeviceId(context.getDeviceId())
                 .setExpires(now.plus(sessionTtl))
-                .setAccessToken("");
+                .setAccessToken("")
+                .setAuthorities(context.getAuthorities());
 
         session.setCreated(now);
         session.attach(this);
@@ -510,8 +524,14 @@ class SessionCommandService
                 .toCompletableFuture()
                 .join();
 
-        if (reply != null && reply.getValid() && reply.getUserId() != null)
-            return context.setValidatedUserId(reply.getUserId());
+        if (reply != null
+            && reply.getValid()
+            && reply.getUser() != null
+            && reply.getUser().getUserId() != null)
+            return
+                context
+                    .setValidatedUserId(reply.getUser().getUserId())
+                    .setValidatedAuthorities(reply.getUser().getAuthorities());
 
         return context;
     }
@@ -876,6 +896,14 @@ class SessionCommandService
     private Long
     findUserIdByExternalIdentity(String provider,String sub)
     {
+        UserData found = findUserByExternalIdentity(provider,sub);
+
+        return found != null ? found.getUserId() : null;
+    }
+
+    private UserData
+    findUserByExternalIdentity(String provider,String sub)
+    {
         FindUsersByExternalIdentityReply reply =
             userQueryServiceClient
                 .findUsersByExternalIdentity(
@@ -893,7 +921,7 @@ class SessionCommandService
         if (users.isEmpty())
             return null;
 
-        return users.get(0).getUserId();
+        return users.get(0);
     }
 
     private LoginWithOauth2Reply

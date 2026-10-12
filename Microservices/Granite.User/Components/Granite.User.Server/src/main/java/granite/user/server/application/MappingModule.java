@@ -27,9 +27,10 @@ class MappingModule
         mapper
             .emptyTypeMap(User.class,UserData.class)
             .addMapping(User::getPrimaryId,UserData::setUserId)
-            .addMapping(User::getFoo,UserData::setFoo)
             .addMapping(User::getUserName,UserData::setUserName)
-            .addMapping(User::getExternalIdentity,UserData::setExternalIdentity);
+            .addMapping(User::getExternalIdentity,UserData::setExternalIdentity)
+            .addMapping(User::getAuthorities,UserData::setAuthorities)
+            .addMapping(User::getValues,UserData::setValues);
     }
 }
 

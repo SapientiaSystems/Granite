@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,11 +51,14 @@ class AuthenticateUserTest
     public void
     returnsValidTrueWithUserIdForCorrectPassword()
     {
+        Set<String> authorities = Set.of("ROLE_USER","ROLE_ADMIN");
+
         stubUser(
             new User()
                 .setPrimaryId(USER_ID)
                 .setUserName(USER_NAME)
-                .setPassword(encoder.encode(PLAINTEXT)));
+                .setPassword(encoder.encode(PLAINTEXT))
+                .setAuthorities(authorities));
 
         AuthenticateUserReply reply =
             subject
@@ -68,7 +72,10 @@ class AuthenticateUserTest
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertTrue(reply.getValid());
-        assertEquals(USER_ID,reply.getUserId());
+        assertNotNull(reply.getUser());
+        assertEquals(USER_ID,reply.getUser().getUserId());
+        assertEquals(USER_NAME,reply.getUser().getUserName());
+        assertEquals(authorities,reply.getUser().getAuthorities());
     }
 
     @Test
@@ -79,7 +86,8 @@ class AuthenticateUserTest
             new User()
                 .setPrimaryId(USER_ID)
                 .setUserName(USER_NAME)
-                .setPassword(encoder.encode(PLAINTEXT)));
+                .setPassword(encoder.encode(PLAINTEXT))
+                .setAuthorities(Set.of("ROLE_ADMIN")));
 
         AuthenticateUserReply reply =
             subject
@@ -93,7 +101,7 @@ class AuthenticateUserTest
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertFalse(reply.getValid());
-        assertNull(reply.getUserId());
+        assertNull(reply.getUser());
     }
 
     @Test
@@ -116,7 +124,7 @@ class AuthenticateUserTest
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertFalse(reply.getValid());
-        assertNull(reply.getUserId());
+        assertNull(reply.getUser());
     }
 
     @Test
@@ -140,7 +148,7 @@ class AuthenticateUserTest
                 .join();
 
         assertFalse(reply.getValid());
-        assertNull(reply.getUserId());
+        assertNull(reply.getUser());
         assertEquals(
             "CredentialKind ACCESS_TOKEN is not supported by Granite.User.authenticateUser",
             reply.getFailureMessage());
@@ -167,7 +175,7 @@ class AuthenticateUserTest
                 .join();
 
         assertFalse(reply.getValid());
-        assertNull(reply.getUserId());
+        assertNull(reply.getUser());
         assertEquals(
             "CredentialKind SECURITY_CODE is not supported by Granite.User.authenticateUser",
             reply.getFailureMessage());
@@ -195,7 +203,7 @@ class AuthenticateUserTest
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertFalse(reply.getValid());
-        assertNull(reply.getUserId());
+        assertNull(reply.getUser());
     }
 
     private void

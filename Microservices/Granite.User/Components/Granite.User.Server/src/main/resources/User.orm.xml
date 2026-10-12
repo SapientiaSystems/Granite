@@ -20,9 +20,6 @@
             <basic name="lastModified">
                 <column name="lastModified"/>
             </basic>
-            <basic name="foo">
-                <column name="foo"/>
-            </basic>
             <basic name="userName" optional="false">
                 <column name="userName" unique="true" nullable="false" column-definition="VARCHAR(255)"/>
             </basic>
@@ -31,6 +28,14 @@
             </basic>
             <basic name="externalIdentity" optional="true">
                 <column name="externalIdentity" unique="true" nullable="true" column-definition="VARCHAR(512)"/>
+            </basic>
+            <basic name="authorities">
+                <column name="authorities" column-definition="VARCHAR(1024)"/>
+                <convert converter="granite.user.server.domain.StringSetConverter"/>
+            </basic>
+            <basic name="values" access="FIELD">
+                <column name="value_map" column-definition="TEXT"/>
+                <convert converter="granite.user.server.domain.ValueMapConverter"/>
             </basic>
             <version name="version">
                 <column name="version"/>

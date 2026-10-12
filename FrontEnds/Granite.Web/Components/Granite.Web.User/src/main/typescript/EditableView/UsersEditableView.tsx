@@ -25,7 +25,7 @@ function createEmptyUser(existing: Array<UserData>): UserData
 {
     const nextId = existing.reduce((max, e) => Math.max(max, e.userId ?? 0), 0) + 1;
 
-    return { userId: nextId, foo: "" } as UserData;
+    return { userId: nextId, userName: "" } as UserData;
 }
 
 export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
@@ -75,8 +75,8 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     const columnDefs: Array<ColDef<UserData>> =
     [
         { field: "userId", headerName: "Id",  width: 120, headerTooltip: "User Id" },
-        { field: "foo",          headerName: "Foo", flex: 1,
-          headerTooltip: "Foo",
+        { field: "userName",     headerName: "User Name", flex: 1,
+          headerTooltip: "User Name",
           editable: (p) => isRowEditable(p.data?.userId),
           cellClassRules: userEditClassRules },
     ];

@@ -6,6 +6,12 @@ package granite.user.server.domain;
 
 import strata.server.core.entity.AbstractEntityAndDomainEventSource;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 public
 class User
     extends
@@ -16,19 +22,21 @@ class User
             IUserEventObserver>
     implements IUserEventSource
 {
-    private String foo;
-    private String userName;
-    private String password;
-    private String externalIdentity;
+    private String             userName;
+    private String             password;
+    private String             externalIdentity;
+    private Set<String>        authorities;
+    private Map<String,Object> values;
 
     public
     User()
     {
         super();
-        foo              = null;
         userName         = null;
         password         = null;
         externalIdentity = null;
+        authorities      = new LinkedHashSet<>();
+        values           = new LinkedHashMap<>();
     }
 
     @Override
@@ -44,16 +52,6 @@ class User
     {
         return super.getPrimaryId();
     }
-
-    public User
-    setFoo(String f)
-    {
-        foo = f;
-        return this;
-    }
-
-    public String
-    getFoo() { return foo; }
 
     public User
     setUserName(String name)
@@ -84,6 +82,43 @@ class User
 
     public String
     getExternalIdentity() { return externalIdentity; }
+
+    public User
+    setAuthorities(Set<String> values)
+    {
+        authorities = values;
+        return this;
+    }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
+
+    public <T> User
+    setValue(String key,T value)
+    {
+        values.put(key,value);
+        return this;
+    }
+
+    public <T> Optional<T>
+    getValue(Class<T> type,String key)
+    {
+        Object stored = values.get(key);
+
+        return
+            type.isInstance(stored)
+                ? Optional.of(type.cast(stored))
+                : Optional.empty();
+    }
+
+    public boolean
+    hasValue(String key)
+    {
+        return values.containsKey(key);
+    }
+
+    public Map<String,Object>
+    getValues() { return values; }
 
     public User
     notifyCreated() { return super.notify(new UserCreated(this)); }

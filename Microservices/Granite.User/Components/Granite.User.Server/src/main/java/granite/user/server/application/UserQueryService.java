@@ -181,9 +181,9 @@ class UserQueryService
                 Long id = key.getValueAsLong();
                 return context.setFoundUsers(findUsersById(id));
 
-            case UserKey.USER_FOO:
-                String foo = key.getValue();
-                return context.setFoundUsers(findUsersByFoo(foo));
+            case UserKey.USER_NAME:
+                String userName = key.getValue();
+                return context.setFoundUsers(findUsersByUserName(userName));
 
             default:
                 throw new IllegalArgumentException("Invalid key: " + key.getName());
@@ -228,30 +228,30 @@ class UserQueryService
                                 .map(entity -> entity.get())
                                 .toList());
 
-            case UserKeySet.USER_FOOS:
-                IMultiMap<String,User> foosResult =
-                    findUsersByFoos(keys.getValues());
+            case UserKeySet.USER_NAMES:
+                IMultiMap<String,User> userNamesResult =
+                    findUsersByUserNames(keys.getValues());
 
                 return
                     context
                         .setFoundKeys(
-                            UserKeySet.ofFoos(
-                                foosResult
+                            UserKeySet.ofUserNames(
+                                userNamesResult
                                     .entrySet()
                                     .stream()
                                     .filter(entry -> !entry.getValue().isEmpty())
                                     .map(entry -> entry.getKey())
                                     .collect(Collectors.toSet())))
                         .setMissingKeys(
-                            UserKeySet.ofFoos(
-                                foosResult
+                            UserKeySet.ofUserNames(
+                                userNamesResult
                                     .entrySet()
                                     .stream()
                                     .filter(entry -> entry.getValue().isEmpty())
                                     .map(entry -> entry.getKey())
                                     .collect(Collectors.toSet())))
                         .setFoundUsers(
-                            foosResult
+                            userNamesResult
                                 .values()
                                 .stream()
                                 .filter(entity -> !entity.isEmpty())
@@ -275,10 +275,14 @@ class UserQueryService
     }
 
     protected List<User>
-    findUsersByFoo(String foo)
+    findUsersByUserName(String userName)
     {
-        logger.debug("find UsersByFoo({})",foo);
-        return repository.findAllByFoo(foo);
+        logger.debug("find UsersByUserName({})",userName);
+        return
+            repository
+                .findByUserName(userName)
+                .map(entity -> List.of(entity))
+                .orElse(List.of());
     }
 
     protected Map<Long,Optional<User>>
@@ -289,10 +293,10 @@ class UserQueryService
     }
 
     protected IMultiMap<String,User>
-    findUsersByFoos(Set<String> foos)
+    findUsersByUserNames(Set<String> userNames)
     {
-        logger.debug("find UsersByFoos({})",foos);
-        return repository.findAllByFooIn(foos);
+        logger.debug("find UsersByUserNames({})",userNames);
+        return repository.findAllByUserNameIn(userNames);
     }
 
     private FindUsersByKeyReply

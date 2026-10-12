@@ -30,7 +30,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -196,6 +198,53 @@ class JwtTokenServiceTest
 
         assertEquals("12345",claims.getJWTID());
         assertEquals(String.valueOf(session.getSessionId()),claims.getJWTID());
+    }
+
+    @Test
+    public void
+    mintedJwtContainsAuthoritiesClaim()
+        throws ParseException
+    {
+        JwtTokenService target      = newService();
+        Set<String>     authorities = new LinkedHashSet<>(List.of("ROLE_USER","ROLE_ADMIN"));
+        Session         session     =
+            newSession(1001L,2002L,"device-A").setAuthorities(authorities);
+        String          token       = target.mint(session);
+        JWTClaimsSet    claims      = SignedJWT.parse(token).getJWTClaimsSet();
+        List<String>    actual      = claims.getStringListClaim("authorities");
+
+        assertNotNull(actual);
+        assertEquals(List.of("ROLE_USER","ROLE_ADMIN"),actual);
+    }
+
+    @Test
+    public void
+    verifyExposesAuthoritiesClaim()
+        throws JwtVerificationException
+    {
+        JwtTokenService       target      = newService();
+        Set<String>           authorities = new LinkedHashSet<>(List.of("ROLE_USER","ROLE_ADMIN"));
+        Session               session     =
+            newSession(1001L,2002L,"device-A").setAuthorities(authorities);
+        String                token       = target.mint(session);
+        JwtVerificationResult result      = target.verifySignatureAndExp(token);
+
+        assertEquals(authorities,result.getAuthorities());
+    }
+
+    @Test
+    public void
+    mintedJwtWithEmptyAuthoritiesEmitsEmptyClaim()
+        throws ParseException
+    {
+        JwtTokenService target  = newService();
+        Session         session = newSession(1001L,2002L,"device-A");
+        String          token   = target.mint(session);
+        JWTClaimsSet    claims  = SignedJWT.parse(token).getJWTClaimsSet();
+        List<String>    actual  = claims.getStringListClaim("authorities");
+
+        assertNotNull(actual);
+        assertTrue(actual.isEmpty());
     }
 
     private JwtTokenService

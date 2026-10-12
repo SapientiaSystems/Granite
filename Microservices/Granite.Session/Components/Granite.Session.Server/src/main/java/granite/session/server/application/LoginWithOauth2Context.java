@@ -7,12 +7,16 @@ package granite.session.server.application;
 import granite.session.server.domain.Session;
 import granite.session.service.requestreply.LoginWithOauth2Request;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public
 class LoginWithOauth2Context
 {
     private LoginWithOauth2Request  request;
     private Oauth2ValidatedIdentity validatedIdentity;
     private Long                    userId;
+    private Set<String>             authorities;
     private Session                 created;
     private String                  jwt;
     private String                  failureReason;
@@ -23,6 +27,7 @@ class LoginWithOauth2Context
         request           = req;
         validatedIdentity = null;
         userId            = null;
+        authorities       = new LinkedHashSet<>();
         created           = null;
         jwt               = null;
         failureReason     = null;
@@ -39,6 +44,13 @@ class LoginWithOauth2Context
     setUserId(Long value)
     {
         userId = value;
+        return this;
+    }
+
+    public LoginWithOauth2Context
+    setAuthorities(Set<String> values)
+    {
+        authorities = values != null ? values : new LinkedHashSet<>();
         return this;
     }
 
@@ -80,6 +92,9 @@ class LoginWithOauth2Context
 
     public Long
     getUserId() { return userId; }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
 
     public Session
     getCreated() { return created; }

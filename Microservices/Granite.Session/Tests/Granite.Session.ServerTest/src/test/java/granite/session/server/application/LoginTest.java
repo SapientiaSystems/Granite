@@ -15,6 +15,7 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
 import granite.user.service.requestreply.CredentialKind;
+import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -115,6 +117,24 @@ class LoginTest
         assertEquals("invalid credentials",reply.getFailureMessage());
         assertNull(reply.getAccessToken());
         assertNull(reply.getSessionData());
+    }
+
+    @Test
+    public void
+    loginWithValidPasswordFlowsAuthoritiesThroughToSession()
+    {
+        Set<String> authorities = Set.of("ROLE_USER","ROLE_ADMIN");
+
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,authorities);
+
+        LoginReply              reply   = login(USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+        ArgumentCaptor<Session> captor  = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(jwtTokenService).mint(captor.capture());
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(authorities,captor.getValue().getAuthorities());
+        assertEquals(authorities,reply.getSessionData().getAuthorities());
     }
 
     @Test
@@ -301,6 +321,18 @@ class LoginTest
         boolean        valid,
         Long           userId)
     {
+        stubAuthenticate(userName,credential,kind,valid,userId,Set.of());
+    }
+
+    private void
+    stubAuthenticate(
+        String         userName,
+        String         credential,
+        CredentialKind kind,
+        boolean        valid,
+        Long           userId,
+        Set<String>    authorities)
+    {
         Mockito
             .when(
                 userCommandServiceClient.authenticateUser(
@@ -311,12 +343,23 @@ class LoginTest
                                 && credential.equals(req.getCredential())
                                 && kind.equals(req.getCredentialKind()))))
             .thenAnswer(invocation ->
-                CompletableFuture.completedFuture(
-                    new AuthenticateUserReply(
-                        (AuthenticateUserRequest)invocation.getArgument(0))
-                        .setSuccess(true)
-                        .setValid(valid)
-                        .setUserId(userId)));
+            {
+                UserData user =
+                    userId != null
+                        ? new UserData()
+                              .setUserId(userId)
+                              .setUserName(userName)
+                              .setAuthorities(authorities)
+                        : null;
+
+                return
+                    CompletableFuture.completedFuture(
+                        new AuthenticateUserReply(
+                            (AuthenticateUserRequest)invocation.getArgument(0))
+                            .setSuccess(true)
+                            .setValid(valid)
+                            .setUser(user));
+            });
     }
 
     private void
