@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag("IntegrationStage")
 public abstract
@@ -20,13 +21,15 @@ class UserServiceTest
     public void
     testCreateUser()
     {
+        String userName = uniqueUserName();
         CreateUserReply reply =
             getSubject()
                 .createUser(
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")))
+                                .setFoo("XXX-YYYYY-ZZZZZZZ")
+                                .setUserName(userName)))
                 .toCompletableFuture()
                 .join();
 
@@ -34,19 +37,22 @@ class UserServiceTest
         Assertions.assertNotNull(reply.getCreatedUser());
         Assertions.assertNotNull(reply.getCreatedUser().getUserId());
         Assertions.assertEquals("XXX-YYYYY-ZZZZZZZ",reply.getCreatedUser().getFoo());
+        Assertions.assertEquals(userName,reply.getCreatedUser().getUserName());
     }
 
     @Test
     public void
     testUpdateUser()
     {
+        String userName = uniqueUserName();
         CreateUserReply createReply =
             getSubject()
                 .createUser(
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")))
+                                .setFoo("XXX-YYYYY-ZZZZZZZ")
+                                .setUserName(userName)))
                 .toCompletableFuture()
                 .join();
 
@@ -88,7 +94,8 @@ class UserServiceTest
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")))
+                                .setFoo("XXX-YYYYY-ZZZZZZZ")
+                                .setUserName(uniqueUserName())))
                 .toCompletableFuture()
                 .join();
 
@@ -98,7 +105,8 @@ class UserServiceTest
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("AAA-BBBBB-CCCCCCC")))
+                                .setFoo("AAA-BBBBB-CCCCCCC")
+                                .setUserName(uniqueUserName())))
                 .toCompletableFuture()
                 .join();
 
@@ -139,7 +147,8 @@ class UserServiceTest
                     new CreateUserRequest()
                         .setUserToCreate(
                             new CreateUserData()
-                                .setFoo("XXX-YYYYY-ZZZZZZZ")))
+                                .setFoo("XXX-YYYYY-ZZZZZZZ")
+                                .setUserName(uniqueUserName())))
                 .toCompletableFuture()
                 .join();
 
@@ -209,6 +218,9 @@ class UserServiceTest
     */
     protected abstract IUserCommandService
     getSubject();
+
+    private static String
+    uniqueUserName() { return "user-" + UUID.randomUUID() + "@example.com"; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

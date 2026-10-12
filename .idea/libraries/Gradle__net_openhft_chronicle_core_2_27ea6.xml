@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: net.openhft:chronicle-core:2.27ea6" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.openhft" artifactId="chronicle-core" version="2.27ea6" baseVersion="2.27ea6" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.openhft/chronicle-core/2.27ea6/896dc9a7792a15a5420c865e7424b126531e29b2/chronicle-core-2.27ea6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

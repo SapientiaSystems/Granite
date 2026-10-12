@@ -28,3 +28,11 @@ includeBuild('Microservices/Granite.Gateway') {
     }
 }
 
+includeBuild('Microservices/Granite.Session') {
+    dependencySubstitution {
+        substitute module('granite.session:granite-session-service') using project(':Components:Granite.Session.Service')
+        substitute module('granite.session:granite-session-client') using project(':Components:Granite.Session.Client')
+        substitute module('granite.session:granite-session-server') using project(':Components:Granite.Session.Server')
+    }
+}
+

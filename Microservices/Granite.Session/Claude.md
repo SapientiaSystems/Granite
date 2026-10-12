@@ -1,0 +1,303 @@
+# Granite.Session Microservice
+
+## Overview
+
+Granite.Session is a Spring Boot microservice that manages authentication and user-activity sessions within the Granite system. A Session entity is created when a user authenticates (credential-based login or OAuth2 federated login) and holds the issued access token (a signed JWT), device identifier, lifetime, and arbitrary user-activity state. Sessions are revoked on logout. The microservice exposes command and query REST APIs and emits domain events (SessionCreated, SessionUpdated, SessionDestroyed) as session state changes occur. Events are propagated to external consumers via the Transactional Outbox pattern and Kafka (topic `granite.session.events`).
+
+Granite.Session mirrors the architecture, build layout, event delivery, and coding style of Granite.User. It depends on Granite.User.Client to authenticate passwords (`authenticateUser`), look up OAuth2 identities (`findUsersByExternalIdentity`), and JIT-provision users (`createUser`).
+
+## Technology Stack
+
+- **Language**: Java 23 (Amazon Corretto), TypeScript
+- **Build**: Gradle (multi-project), Yarn (TypeScript components)
+- **Framework**: Spring Boot 3.4, Spring 6.2
+- **Persistence**: JPA / Hibernate 6.4, PostgreSQL (production), H2 (testing)
+- **Object Mapping**: ModelMapper 3.2
+- **Eventing**: Kafka, Transactional Outbox (strata.outbox)
+- **Security**: spring-security-oauth2-jose (Nimbus JOSE JWT) for RS256 token minting and OAuth2 ID token validation
+- **Containerization**: Google Jib (OCI images)
+- **Testing**: JUnit Jupiter 5, WireMock (OAuth2 JWKS fixture)
+- **Foundation Libraries**: Strata Framework Set (strata.foundation.core, strata.server.core, strata.client.core, strata.outbox.core)
+
+## Project Structure
+
+```
+Granite.Session/
+├── Applications/
+│   ├── Granite.Session.CommandHost/    # Spring Boot app for command operations (port 8088)
+│   └── Granite.Session.QueryHost/      # Spring Boot app for query operations (port 8089)
+├── Components/
+│   ├── Granite.Session.Service/        # Shared interfaces, DTOs, and events (Java + TypeScript)
+│   ├── Granite.Session.Server/         # Server-side implementation (domain, application, platform)
+│   └── Granite.Session.Client/         # REST client and Kafka event receiver (Java + TypeScript)
+├── Tests/
+│   ├── Granite.Session.ServiceTest/    # Test fixtures for service interfaces
+│   ├── Granite.Session.ServerTest/     # Server unit/integration tests
+│   ├── Granite.Session.ClientTest/     # Client integration tests
+│   └── Granite.Session.TestSuite/      # Aggregated test suite
+├── build.gradle                                # Root build with dependency versions
+├── settings.gradle                             # Multi-project module declarations
+└── package.json                                # Root Yarn workspace for TypeScript builds
+```
+
+## Architecture
+
+The microservice follows a strict layered architecture with CQRS (Command Query Responsibility Segregation). Commands and queries are separated into distinct host applications, service interfaces, and controllers.
+
+### Layers (Granite.Session.Server)
+
+Each layer is organized into a dedicated Java package (`granite.session.server.*`):
+
+- **`server.platform`** — Spring REST controllers, Spring configuration, JPA/Hibernate unit-of-work wiring, session event sender implementations. Depends on `server.application` and `server.domain`.
+- **`server.application`** — Service implementations (`SessionCommandService`, `SessionQueryService`), context objects, JWT minting, OAuth2 ID token validation, ModelMapper configuration. Depends on `server.domain`.
+- **`server.domain`** — Domain entity (`Session`), repository interface/implementation, domain event types. No upward dependencies.
+
+### Domain Entity
+
+`Session` extends `AbstractEntityAndDomainEventSource`:
+
+| Field | Type | Notes |
+|---|---|---|
+| `sessionId` | `Long` | Primary key, auto-generated |
+| `userId` | `Long` | Logical reference to User (plain BIGINT, no JPA relation); indexed |
+| `accessToken` | `String` | Signed JWT (RS256); unique index |
+| `created` | `Instant` | Set at construction |
+| `expires` | `Instant` | Set at login/refresh to now + configured TTL |
+| `deviceId` | `String` | Composite index with `userId` |
+| `values` | `Map<String,Object>` | User-activity state; persisted via `@ElementCollection` into `session_values` |
+
+### Component Responsibilities
+
+#### Granite.Session.Service
+
+The shared contract component. Contains no implementation logic. Defines:
+
+- **Service interfaces**: `ISessionCommandService`, `ISessionQueryService`
+- **Request/Reply DTOs**: `LoginRequest`/`Reply`, `LoginWithOauth2Request`/`Reply`, `LogoutRequest`/`Reply`, `LogoutAllForUserRequest`/`Reply`, `RefreshRequest`/`Reply`, `FindSessionsByKeyRequest`/`Reply`, `FindSessionsByKeySetRequest`/`Reply`, `FindSessionByUserIdAndDeviceIdRequest`/`Reply`
+- **Data transfer objects**: `SessionData`
+- **Key types**: `SessionKey` (names `SESSION_ID`, `ACCESS_TOKEN`, `USER_ID`), `SessionKeySet` (names `SESSION_IDS`, `ACCESS_TOKENS`, `USER_IDS`)
+- **Credentials**: carried as sibling scalar fields `credential: String` and `credentialKind: CredentialKind`. `CredentialKind` (`PASSWORD`, `ACCESS_TOKEN`, `SECURITY_CODE`) lives in Granite.User.Service.
+- **Event interfaces**: `ISessionEventSender`, `ISessionEventReceiver`, `ISessionEventListener`
+- **TypeScript mirror**: All interfaces and DTOs are also defined in TypeScript under `src/main/typescript/`
+
+#### Granite.Session.Server
+
+- **Domain layer** (`server.domain`):
+  - `Session` — JPA entity; fires domain events on create/update/destroy
+  - `ISessionRepository` / `SessionRepository` — Repository interface and JPA implementation
+  - Domain events: `SessionCreated`, `SessionUpdated`, `SessionDestroyed` extending `AbstractSessionEvent`
+  - Observer pattern: `ISessionEventObserver`, `ISessionEventSource`
+
+- **Application layer** (`server.application`):
+  - `SessionCommandService` — Implements `ISessionCommandService` and `ISessionEventObserver`. Provides login, loginWithOauth2, logout, logoutAllForUser, and refresh. Translates domain events into service-level session events via `ISessionEventSender`.
+  - `SessionQueryService` — Implements `ISessionQueryService`. Provides find-by-key, find-by-key-set, and find-by-user-id-and-device-id operations.
+  - Context objects for each operation
+  - `MappingModule` — ModelMapper type mappings between Session domain objects and Session DTOs
+  - `ApplicationConfiguration` — Spring `@Configuration` that wires session services with request scope
+
+- **Platform layer** (`server.platform`):
+  - `SessionCommandServiceController` — Spring `@RestController` exposing command endpoints under `/session-command-service/`
+  - `SessionQueryServiceController` — Spring `@RestController` exposing query endpoints under `/session-query-service/`
+  - `PlatformConfiguration`, `CommandPlatformConfiguration` (wires Outbox event sender), `QueryPlatformConfiguration` (wires no event sender)
+  - Event senders: `OnCommitSessionEventSender`, `OutboxEventSessionEventSender`, `MockSessionEventSender` (testing)
+
+#### Granite.Session.Client
+
+- **Request/Reply clients** (Java): `SessionCommandServiceClient`, `SessionQueryServiceClient` extending `AbstractRestClient`
+- **Client interfaces** (Java): `ISessionCommandServiceClient`, `ISessionQueryServiceClient`
+- **Event receiver**: `SessionKafkaEventReceiver`, `SessionKafkaAvroEventReceiver`
+- **TypeScript mirror**: `SessionCommandServiceClient`, `SessionQueryServiceClient` with corresponding interfaces
+
+### Applications
+
+- **SessionCommandHost** — Spring Boot application assembling the command-side stack: `HostConfiguration` imports `ApplicationConfiguration`, `DomainConfiguration`, `CommandPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8088.
+- **SessionQueryHost** — Spring Boot application assembling the query-side stack: imports `ApplicationConfiguration`, `DomainConfiguration`, `QueryPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8089.
+
+## Login and JWT
+
+- `login` dispatches on `credentialKind`: `PASSWORD` calls `IUserCommandServiceClient.authenticateUser` and mints a Session on success; `ACCESS_TOKEN` validates against Session's own store and mints a new Session for the same user and device (original is not destroyed); `SECURITY_CODE` returns a not-supported failure in v1.
+- `loginWithOauth2` validates the ID token with `NimbusJwtDecoder` against the configured provider's JWKS (`granite.session.oauth2.providers.<name>.{issuer-uri,audience,jwks-uri}`), finds the user via `findUsersByExternalIdentity` (JIT-provisioning with `createUser` if absent), and mints a Session.
+- `refresh` verifies the session is unexpired, mints a new JWT, updates `expires`, and fires `SessionUpdated`.
+- Access tokens are RS256 JWTs (private key at `granite.session.jwt.private-key-location`). Claims: `iss=granite-session`, `sub=userId`, `jti=sessionId`, `iat`, `exp`, `aud`, `did=deviceId`.
+- Consumers validate the signature/claims locally, then check revocation via `ISessionQueryServiceClient.findSessionsByKey(SessionKey.ofSessionId(jti))`.
+
+## Commonly Used Design Patterns
+
+### CQRS (Command Query Responsibility Segregation)
+
+Commands (login, loginWithOauth2, logout, logoutAllForUser, refresh) and queries (find) are separated into distinct service interfaces (`ISessionCommandService`, `ISessionQueryService`), distinct controllers (`SessionCommandServiceController`, `SessionQueryServiceController`), and distinct host applications (`SessionCommandHost`, `SessionQueryHost`).
+
+### Request-Reply
+
+All service operations accept a typed request DTO and return a typed reply DTO. Requests extend `AbstractServiceRequest` (with `requestId`, `timestamp`, headers, cookies). Replies extend `AbstractServiceReply` (with `replyId`, `originatingRequestId`, `success`, `successMessage`, `failureMessage`, `exception`). Each operation has its own request/reply pair (e.g., `LoginRequest` → `LoginReply`).
+
+### Pipeline (Chain of Responsibility)
+
+All service methods follow an asynchronous pipeline pattern using `CompletionStage`:
+
+```
+validate → mapToContext → [operation steps] → buildReply
+                                                  ↓ (on failure)
+                                             buildReply(exception)
+```
+
+Each step receives and returns a typed context object that accumulates state through the pipeline.
+
+### Observer (Domain Events)
+
+The `Session` domain object extends `AbstractEntityAndDomainEventSource` and fires domain events (`SessionCreated`, `SessionUpdated`, `SessionDestroyed`). `SessionCommandService` implements `ISessionEventObserver` and attaches itself to each `Session` it creates or retrieves. State changes are translated into service-level `SessionEvent`s and dispatched through `ISessionEventSender`.
+
+### Transactional Outbox
+
+`OnCommitSessionEventSender` defers sending until the database transaction commits. `OutboxEventSessionEventSender` serializes the event into an outbox table within the same transaction as the session state change, and a separate process polls the outbox and publishes to Kafka.
+
+### Repository
+
+`ISessionRepository` extends the Strata `IRepository<Long,Session>` interface. The concrete `SessionRepository` extends `AbstractRepository` and registers named JPA queries (by id set, access token, access token set, user id, user id set, user id and device id).
+
+### Context Object
+
+Each service pipeline uses a typed context object that carries the request, intermediate Session domain objects, and results through the pipeline steps. Context objects use fluent setters and provide convenience getters that delegate to the underlying request.
+
+### Strategy (Event Sending)
+
+`ISessionEventSender` has multiple implementations (`MockSessionEventSender`, `OnCommitSessionEventSender`, `OutboxEventSessionEventSender`) selected via Spring configuration.
+
+### Composable Configuration
+
+Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConfiguration` provides shared JPA/UnitOfWork beans, and `CommandPlatformConfiguration` / `QueryPlatformConfiguration` extend it. `HostConfiguration` at the application level imports and assembles all required configurations.
+
+## REST Endpoints
+
+### Session Command Service (`/session-command-service/`)
+
+| Endpoint | Request | Reply |
+|---|---|---|
+| `POST /login` | `LoginRequest` | `LoginReply` |
+| `POST /login-with-oauth2` | `LoginWithOauth2Request` | `LoginWithOauth2Reply` |
+| `POST /logout` | `LogoutRequest` | `LogoutReply` |
+| `POST /logout-all-for-user` | `LogoutAllForUserRequest` | `LogoutAllForUserReply` |
+| `POST /refresh` | `RefreshRequest` | `RefreshReply` |
+
+### Session Query Service (`/session-query-service/`)
+
+| Endpoint | Request | Reply |
+|---|---|---|
+| `POST /find-sessions-by-key` | `FindSessionsByKeyRequest` | `FindSessionsByKeyReply` |
+| `POST /find-sessions-by-keyset` | `FindSessionsByKeySetRequest` | `FindSessionsByKeySetReply` |
+| `POST /find-session-by-user-id-and-device-id` | `FindSessionByUserIdAndDeviceIdRequest` | `FindSessionByUserIdAndDeviceIdReply` |
+
+## Preferred Coding Style and Idioms
+
+### Interface Naming
+
+All interfaces are prefixed with `I`. Examples: `IUserRepository`, `IUserCommandService`, `IUserEventSender`, `IUserEventObserver`, `IUserCommandServiceClient`.
+
+### Class and Method Formatting
+
+The `class` keyword and the `implements`/`extends` clause each start on their own line. Opening braces are on their own line (Allman style). Method return types are on a separate line from the method name. Example:
+
+```java
+//////////////////////////////////////////////////////////////////////////////
+// UserData.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.user.service.requestreply;
+
+import java.io.Serializable;
+
+public
+class UserData
+    implements Serializable
+{
+    private Long   userId;
+    private String foo;
+
+    public
+    UserData()
+    {
+        userId = null;
+        foo = null;
+    }
+
+    public UserData
+    setUserId(Long id)
+    {
+        userId = id;
+        return this;
+    }
+
+    public UserData
+    setFoo(String f)
+    {
+        foo = f;
+        return this;
+    }
+
+    public Long
+    getUserId() { return userId; }
+
+    public String
+    getFoo() { return foo; }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+```
+
+Key formatting rules:
+
+- **File header/footer**: Every Java file begins and ends with a `//////////////////////////////////////////////////////////////////////////////` comment. The second line contains the filename as a comment.
+- **`class` on its own line**: The access modifier (`public`) is on one line, and `class ClassName` is on the next line. `extends` and `implements` clauses are indented on subsequent lines.
+- **Method return type on its own line**: The access modifier and return type (e.g., `public UserData`) are on one line, and the method name with parameters (e.g., `setFoo(String f)`) is on the next line.
+- **Allman brace style**: Opening braces `{` are on their own line for classes, methods, constructors, and control structures.
+- **Compact getters**: Simple getters that return a single field use an inline body on the same line as the method name: `getFoo() { return foo; }`.
+- **Column alignment**: Related field declarations are column-aligned by type and name (e.g., `private final IUserRepository  repository;` and `private final ModelMapper            mapper;`).
+- **Constructor field alignment**: Assignment statements in constructors are column-aligned on the `=` sign.
+- **Minimal space after commas**: Method calls and declarations use `(param1,param2)` with no space after commas in most cases, or a single space after commas when it improves readability.
+
+### Fluent Setters and Fluent Methods
+
+All setters return `this` (or the concrete subclass type) to enable method chaining. This applies to request, reply, context, and data classes. When overriding base class setters, the return type is narrowed to the concrete class via a cast:
+
+```java
+@Override
+public CreateUserReply
+setSuccess(boolean success)
+{
+    return (CreateUserReply)super.setSuccess(success);
+}
+```
+
+Fluent style is also used for context mutation methods and builder patterns:
+
+```java
+return
+    new CreateUserReply(context.getRequest())
+        .setSuccess(true)
+        .setSuccessMessage("User: " + created.getPrimaryId() + " created")
+        .setCreatedUser(mapper.map(created,UserData.class));
+```
+
+### Singular and Plural Operations
+
+Command operations come in singular and plural variants:
+- **Singular**: `createUser`, `updateUser`, `destroyUser` — operate on a single user
+- **Plural**: `createUsers`, `destroyUsers` — operate on a batch of user instances with independent success/failure tracking per user
+
+Plural replies include `requested`, `failed`, and `succeeded` collections to report partial success.
+
+### Method Organization
+
+Within a class, methods are grouped by access level: public methods first, then protected, then private. Within each group, methods follow the declaration order of the interface or base class they implement. For service implementations, the order is: public service methods, then `onEvent`/`onException`, then protected pipeline steps (`validate`, `mapToContext`, operation methods, `save`, `buildReply`), then private helper methods.
+
+### Stream vs. Loop Style
+
+Prefer explicit `for` loops for simple iteration. Use streams with `Collectors` for set-difference, mapping, and collecting operations. Never use side effects inside stream `map` or `filter` operations — derive intermediate collections in separate stream pipelines instead.
+
+### Validation
+
+Each pipeline starts with a `validate` step. Use `Objects.requireNonNull` for required fields and throw `IllegalArgumentException` for empty collections.
+
+### TypeScript Array Types
+
+Use `Array<Type>` syntax rather than `Type[]` in all TypeScript code.

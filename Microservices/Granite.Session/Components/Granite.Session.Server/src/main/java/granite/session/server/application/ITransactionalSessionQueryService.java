@@ -1,0 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////
+// ITransactionalSessionQueryService.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.application;
+
+import granite.session.service.requestreply.ISessionQueryService;
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public
+interface ITransactionalSessionQueryService
+    extends ISessionQueryService
+{}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -46,6 +46,17 @@ class UserQueryServiceClient
                 request);
     }
 
+    @Override
+    public CompletionStage<FindUsersByExternalIdentityReply>
+    findUsersByExternalIdentity(FindUsersByExternalIdentityRequest request)
+    {
+        return
+            doPostAsync(
+                "find-users-by-external-identity",
+                FindUsersByExternalIdentityReply.class,
+                request);
+    }
+
     public UserQueryServiceClient
     setAuthorizationHeader(String accessToken)
     {

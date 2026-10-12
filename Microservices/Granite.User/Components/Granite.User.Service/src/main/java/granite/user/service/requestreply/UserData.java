@@ -12,12 +12,16 @@ class UserData
 {
     private Long   userId;
     private String foo;
+    private String userName;
+    private String externalIdentity;
 
     public
     UserData()
     {
-        userId = null;
-        foo = null;
+        userId           = null;
+        foo              = null;
+        userName         = null;
+        externalIdentity = null;
     }
 
     public UserData
@@ -34,11 +38,31 @@ class UserData
         return this;
     }
 
+    public UserData
+    setUserName(String name)
+    {
+        userName = name;
+        return this;
+    }
+
+    public UserData
+    setExternalIdentity(String identity)
+    {
+        externalIdentity = identity;
+        return this;
+    }
+
     public Long
     getUserId() { return userId; }
-    
+
     public String
     getFoo() { return foo; }
+
+    public String
+    getUserName() { return userName; }
+
+    public String
+    getExternalIdentity() { return externalIdentity; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

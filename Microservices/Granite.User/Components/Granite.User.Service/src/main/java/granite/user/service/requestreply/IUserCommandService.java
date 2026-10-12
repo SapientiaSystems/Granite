@@ -27,6 +27,9 @@ interface IUserCommandService
     CompletionStage<DestroyUsersReply>
     destroyUsers(DestroyUsersRequest request);
 
+    CompletionStage<AuthenticateUserReply>
+    authenticateUser(AuthenticateUserRequest request);
+
 }
 
 //////////////////////////////////////////////////////////////////////////////

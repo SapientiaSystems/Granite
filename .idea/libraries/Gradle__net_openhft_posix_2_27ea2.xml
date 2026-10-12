@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: net.openhft:posix:2.27ea2" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.openhft" artifactId="posix" version="2.27ea2" baseVersion="2.27ea2" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.openhft/posix/2.27ea2/965dd188c4ba54d5759a7cfbc37d38ec0afa60c1/posix-2.27ea2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

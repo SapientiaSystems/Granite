@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: net.openhft:chronicle-algorithms:2.27ea0" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.openhft" artifactId="chronicle-algorithms" version="2.27ea0" baseVersion="2.27ea0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.openhft/chronicle-algorithms/2.27ea0/8c71734a21df17f15a25130c7f6fe4a1e4f4168/chronicle-algorithms-2.27ea0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

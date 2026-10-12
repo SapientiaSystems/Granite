@@ -21,9 +21,15 @@ interface IUserRepository
 
     List<User>
     findAllByFoo(String foo);
-    
+
     IMultiMap<String,User>
     findAllByFooIn(Set<String> foos);
+
+    Optional<User>
+    findByUserName(String userName);
+
+    List<User>
+    findAllByExternalIdentity(String externalIdentity);
 }
 
 //////////////////////////////////////////////////////////////////////////////

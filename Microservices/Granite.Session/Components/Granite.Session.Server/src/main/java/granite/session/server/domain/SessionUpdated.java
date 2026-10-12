@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// SessionUpdated.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.domain;
+
+public
+class SessionUpdated
+    extends AbstractSessionEvent
+{
+    public
+    SessionUpdated(Session src)
+    {
+        super("SessionUpdated",src);
+    }
+
+    public
+    SessionUpdated(String correlId,Session src)
+    {
+        super("SessionUpdated",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

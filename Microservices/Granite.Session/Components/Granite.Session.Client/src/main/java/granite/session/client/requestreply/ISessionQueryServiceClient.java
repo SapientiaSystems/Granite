@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// ISessionQueryServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.client.requestreply;
+
+import granite.session.service.requestreply.ISessionQueryService;
+
+public
+interface ISessionQueryServiceClient
+    extends ISessionQueryService
+{
+    ISessionQueryServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

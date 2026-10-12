@@ -33,7 +33,13 @@ class UserRepository
                 "select e from User e where e.primaryId IN :userIds")
             .registerQuery(
                 "findAllByFooIn",
-                "select e from User e where e.foo IN :foos");
+                "select e from User e where e.foo IN :foos")
+            .registerQuery(
+                "findByUserName",
+                "select e from User e where e.userName = :userName")
+            .registerQuery(
+                "findAllByExternalIdentity",
+                "select e from User e where e.externalIdentity = :externalIdentity");
 
     }
 
@@ -72,6 +78,32 @@ class UserRepository
                     User.class,
                     "findAllByFoo",
                     Map.of("foo",foo))
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<User>
+    findByUserName(String userName)
+    {
+        return
+            getUnitOfWork()
+                .findOneByQuery(
+                    User.class,
+                    "findByUserName",
+                    Map.of("userName",userName));
+    }
+
+    @Override
+    public List<User>
+    findAllByExternalIdentity(String externalIdentity)
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    User.class,
+                    "findAllByExternalIdentity",
+                    Map.of("externalIdentity",externalIdentity))
                 .stream()
                 .collect(Collectors.toList());
     }

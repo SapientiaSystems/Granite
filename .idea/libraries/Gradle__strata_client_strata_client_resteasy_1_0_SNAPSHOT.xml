@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: strata.client:strata-client-resteasy:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="strata.client" artifactId="strata-client-resteasy" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.client/strata-client-resteasy/1.0-SNAPSHOT/aefd8bb3156281f3c9d6bd985ce00fd07cd3c2fa/strata-client-resteasy-1.0-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

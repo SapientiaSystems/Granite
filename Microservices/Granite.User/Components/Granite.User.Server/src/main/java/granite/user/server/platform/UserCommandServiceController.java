@@ -84,6 +84,16 @@ class UserCommandServiceController
         logger.info("delegating updateUsers to implementation service");
         return implementation.updateUsers(request);
     }
+
+    @PostMapping(
+        value = "/authenticate-user",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<AuthenticateUserReply>
+    authenticateUser(@RequestBody AuthenticateUserRequest request)
+    {
+        logger.info("delegating authenticateUser to implementation service");
+        return implementation.authenticateUser(request);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

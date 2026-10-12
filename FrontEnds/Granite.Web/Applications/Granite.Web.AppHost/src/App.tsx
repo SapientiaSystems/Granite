@@ -16,10 +16,10 @@ export function App(): ReactElement
         <BrowserRouter>
             <Routes>
                 <Route element={<MenuBar />}>
-                    <Route index              element={<HomeView />} />
+                    <Route index        element={<HomeView />} />
                     <Route path="users" element={<UsersView />} />
-                    <Route path="help"        element={<HelpView />} />
-                    <Route path="user"        element={<AccountView />} />
+                    <Route path="help"  element={<HelpView />} />
+                    <Route path="user"  element={<AccountView />} />
                 </Route>
             </Routes>
         </BrowserRouter>

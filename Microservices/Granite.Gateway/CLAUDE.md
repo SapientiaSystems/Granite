@@ -59,6 +59,8 @@ Routes are defined in `RouteConfiguration` and map path prefixes to backend micr
 | `frontendcontroller-admin-route` | `/frontendcontroller-admin-service/**` | FrontEndController AdminHost |
 | `user-command-route` | `/user-command-service/**` | User CommandHost |
 | `user-query-route` | `/user-query-service/**` | User QueryHost |
+| `session-command-route` | `/session-command-service/**` | Session CommandHost |
+| `session-query-route` | `/session-query-service/**` | Session QueryHost |
 | `outbox-route` | `/outbox-service/**` | Outbox ServiceHost |
 | `useradapter-command-route` | `/useradapter-command-service/**` | UserAdapter CommandHost |
 | `useradapter-query-route` | `/useradapter-query-service/**` | UserAdapter QueryHost |
@@ -75,6 +77,8 @@ Backend host URIs are parameterized via Spring properties (`granite.<service>.ho
 | `granite.frontendcontroller-admin-service.host` | `https://localhost:8082/frontendcontroller-admin-service` | `https://granite-frontendcontroller-adminhost:443` |
 | `granite.user-command-service.host` | `https://localhost:8083/user-command-service` | `https://granite-user-commandhost:443` |
 | `granite.user-query-service.host` | `https://localhost:8084/user-query-service` | `https://granite-user-queryhost:443` |
+| `granite.session-command-service.host` | `https://localhost:8088/session-command-service` | `https://granite-session-commandhost:443` |
+| `granite.session-query-service.host` | `https://localhost:8089/session-query-service` | `https://granite-session-queryhost:443` |
 | `granite.outbox-service.host` | `https://localhost:8085/outbox-service` | `https://granite-outbox-servicehost:443` |
 | `granite.useradapter-command-service.host` | `https://localhost:8086/useradapter-command-service` | `https://granite-useradapter-commandhost:443` |
 | `granite.useradapter-query-service.host` | `https://localhost:8087/useradapter-query-service` | `https://granite-useradapter-queryhost:443` |

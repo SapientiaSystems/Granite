@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// SessionCreated.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.domain;
+
+public
+class SessionCreated
+    extends AbstractSessionEvent
+{
+    public
+    SessionCreated(Session src)
+    {
+        super("SessionCreated",src);
+    }
+
+    public
+    SessionCreated(String correlId,Session src)
+    {
+        super("SessionCreated",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

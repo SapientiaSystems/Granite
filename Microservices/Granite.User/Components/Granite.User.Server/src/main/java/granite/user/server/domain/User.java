@@ -17,12 +17,18 @@ class User
     implements IUserEventSource
 {
     private String foo;
+    private String userName;
+    private String password;
+    private String externalIdentity;
 
     public
     User()
     {
         super();
-        foo = null;
+        foo              = null;
+        userName         = null;
+        password         = null;
+        externalIdentity = null;
     }
 
     @Override
@@ -48,6 +54,36 @@ class User
 
     public String
     getFoo() { return foo; }
+
+    public User
+    setUserName(String name)
+    {
+        userName = name;
+        return this;
+    }
+
+    public String
+    getUserName() { return userName; }
+
+    public User
+    setPassword(String hashed)
+    {
+        password = hashed;
+        return this;
+    }
+
+    public String
+    getPassword() { return password; }
+
+    public User
+    setExternalIdentity(String identity)
+    {
+        externalIdentity = identity;
+        return this;
+    }
+
+    public String
+    getExternalIdentity() { return externalIdentity; }
 
     public User
     notifyCreated() { return super.notify(new UserCreated(this)); }

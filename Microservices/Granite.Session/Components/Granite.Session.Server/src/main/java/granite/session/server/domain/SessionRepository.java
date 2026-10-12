@@ -1,0 +1,155 @@
+//////////////////////////////////////////////////////////////////////////////
+// SessionRepository.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.domain;
+
+import strata.foundation.core.collection.IMultiMap;
+import strata.foundation.core.collection.ListValuedMultiMap;
+import strata.server.core.repository.AbstractRepository;
+import strata.server.core.unitofwork.IUnitOfWork;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public
+class SessionRepository
+    extends AbstractRepository<Long,Session>
+    implements ISessionRepository
+{
+    public
+    SessionRepository(IUnitOfWork uow)
+    {
+        super(Session.class,"primaryId",uow);
+        getUnitOfWork()
+            .registerQuery(
+                "findAllByIdIn",
+                "select e from Session e where e.primaryId IN :sessionIds")
+            .registerQuery(
+                "findByAccessToken",
+                "select e from Session e where e.accessToken = :accessToken")
+            .registerQuery(
+                "findAllByAccessTokenIn",
+                "select e from Session e where e.accessToken IN :accessTokens")
+            .registerQuery(
+                "findAllByUserId",
+                "select e from Session e where e.userId = :userId")
+            .registerQuery(
+                "findAllByUserIdIn",
+                "select e from Session e where e.userId IN :userIds")
+            .registerQuery(
+                "findByUserIdAndDeviceId",
+                "select e from Session e where e.userId = :userId and e.deviceId = :deviceId");
+    }
+
+    @Override
+    public Map<Long,Optional<Session>>
+    findAllByIdIn(Set<Long> ids)
+    {
+        Map<Long,Optional<Session>> result =
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findAllByIdIn",
+                    Map.of("sessionIds",ids))
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        Session::getPrimaryId,
+                        Optional::ofNullable));
+
+        ids
+            .stream()
+            .filter(id -> !result.containsKey(id))
+            .forEach(id -> result.put(id,Optional.empty()));
+
+        return result;
+    }
+
+    @Override
+    public Optional<Session>
+    findByAccessToken(String accessToken)
+    {
+        return
+            getUnitOfWork()
+                .findOneByQuery(
+                    Session.class,
+                    "findByAccessToken",
+                    Map.of("accessToken",accessToken));
+    }
+
+    @Override
+    public IMultiMap<String,Session>
+    findAllByAccessTokenIn(Set<String> accessTokens)
+    {
+        ListValuedMultiMap<String,Session> result =
+            new ListValuedMultiMap<>();
+
+        getUnitOfWork()
+            .findManyByQuery(
+                Session.class,
+                "findAllByAccessTokenIn",
+                Map.of("accessTokens",accessTokens))
+            .forEach(entity -> result.put(entity.getAccessToken(),entity));
+
+        accessTokens
+            .stream()
+            .filter(token -> !result.containsKey(token))
+            .forEach(token -> result.putAll(token,List.of()));
+
+        return result;
+    }
+
+    @Override
+    public List<Session>
+    findAllByUserId(Long userId)
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findAllByUserId",
+                    Map.of("userId",userId))
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public IMultiMap<Long,Session>
+    findAllByUserIdIn(Set<Long> userIds)
+    {
+        ListValuedMultiMap<Long,Session> result =
+            new ListValuedMultiMap<>();
+
+        getUnitOfWork()
+            .findManyByQuery(
+                Session.class,
+                "findAllByUserIdIn",
+                Map.of("userIds",userIds))
+            .forEach(entity -> result.put(entity.getUserId(),entity));
+
+        userIds
+            .stream()
+            .filter(userId -> !result.containsKey(userId))
+            .forEach(userId -> result.putAll(userId,List.of()));
+
+        return result;
+    }
+
+    @Override
+    public Optional<Session>
+    findByUserIdAndDeviceId(Long userId,String deviceId)
+    {
+        return
+            getUnitOfWork()
+                .findOneByQuery(
+                    Session.class,
+                    "findByUserIdAndDeviceId",
+                    Map.of("userId",userId,"deviceId",deviceId));
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

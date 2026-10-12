@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings>
+    xmlns="http://java.sun.com/xml/ns/persistence/orm"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="1.0"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd">
+    <description>Session object relational entity mappings</description>
+
+    <entity class="granite.session.server.domain.Session" access="PROPERTY">
+        <table name="Session"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <attributes>
+            <id name="primaryId">
+                <column name="sessionId"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="created">
+                <column name="created"/>
+            </basic>
+            <basic name="lastModified">
+                <column name="lastModified"/>
+            </basic>
+            <basic name="userId" optional="false">
+                <column name="userId" nullable="false"/>
+            </basic>
+            <basic name="accessToken" optional="false">
+                <column name="accessToken" unique="true" nullable="false" column-definition="VARCHAR(2048)"/>
+            </basic>
+            <basic name="expires" optional="false">
+                <column name="expires" nullable="false"/>
+            </basic>
+            <basic name="deviceId" optional="false">
+                <column name="deviceId" nullable="false" column-definition="VARCHAR(255)"/>
+            </basic>
+            <element-collection name="values" fetch="EAGER" access="FIELD">
+                <map-key-column name="name"/>
+                <column name="elementValue" column-definition="VARCHAR(4096)"/>
+                <collection-table name="SessionValues">
+                    <join-column name="sessionId"/>
+                </collection-table>
+            </element-collection>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <transient name="self"/>
+            <transient name="observers"/>
+            <transient name="sessionId"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

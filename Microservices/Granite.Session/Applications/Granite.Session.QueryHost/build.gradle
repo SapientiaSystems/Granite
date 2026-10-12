@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+    id "com.google.cloud.tools.jib" version "3.4.2"
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/java','.build/generated-java']
+    main.resources.srcDirs = ['src/main/resources','src/main/schema']
+    test.java.srcDirs = ['src/test/java']
+    test.resources.srcDirs = ['src/test/resources']
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+dependencies {
+    implementation project(":Components:Granite.Session.Server")
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springboot_version"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter_version"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter_version"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junit_platform_version"
+}
+
+jib {
+    from {
+        image = "amazoncorretto:23-alpine"
+        auth {
+            username = "$System.env.DOCKER_USER"
+            password = "$System.env.DOCKER_PASSWORD"
+        }
+    }
+    to {
+        image = "registry.gitlab.com/guitar-center/gl_merchandising-technology/applicationsystems/granite-session-queryhost"
+        tags = ["${version}","latest"]
+        auth {
+            username = "oauth2"
+            password = "$System.env.GITLAB_TOKEN"
+        }
+    }
+    container {
+        environment = [DEPLOY_ENV:"production",PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
+        jvmFlags = ["-Xmx1024m"]
+        extraClasspath = [".build/libs/Granite.Session.QueryHost-${version}.jar"]
+        mainClass = "granite.session.queryhost.main.SessionQueryHost"
+        ports = ['8089']
+        format = 'OCI'
+    }
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs = [
+            '--add-opens=java.base/java.lang=ALL-UNNAMED',
+            '--add-opens=java.base/java.util=ALL-UNNAMED']
+}

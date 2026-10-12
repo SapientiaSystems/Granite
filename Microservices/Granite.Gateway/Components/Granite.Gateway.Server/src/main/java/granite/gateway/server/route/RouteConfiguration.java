@@ -29,6 +29,12 @@ class RouteConfiguration
     @Value("${granite.user-query-service.host}")
     private String userQueryServiceHost;
 
+    @Value("${granite.session-command-service.host}")
+    private String sessionCommandServiceHost;
+
+    @Value("${granite.session-query-service.host}")
+    private String sessionQueryServiceHost;
+
     @Value("${granite.outbox-service.host}")
     private String outboxServiceHost;
 
@@ -63,6 +69,18 @@ class RouteConfiguration
                         route
                             .path("/user-query-service/**")
                             .uri(userQueryServiceHost))
+                .route(
+                    "session-command-route",
+                    route ->
+                        route
+                            .path("/session-command-service/**")
+                            .uri(sessionCommandServiceHost))
+                .route(
+                    "session-query-route",
+                    route ->
+                        route
+                            .path("/session-query-service/**")
+                            .uri(sessionQueryServiceHost))
                 .route(
                     "outbox-route",
                     route ->

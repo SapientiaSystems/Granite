@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: net.openhft:chronicle-bytes:2.27ea5" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.openhft" artifactId="chronicle-bytes" version="2.27ea5" baseVersion="2.27ea5" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.openhft/chronicle-bytes/2.27ea5/8e0f4dab0f8e91eccfa4f7e6cdefc52306c996ee/chronicle-bytes-2.27ea5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

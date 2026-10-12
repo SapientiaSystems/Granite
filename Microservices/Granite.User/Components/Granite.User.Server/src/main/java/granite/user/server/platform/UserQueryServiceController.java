@@ -53,6 +53,17 @@ class UserQueryServiceController
         return implementation.findUsersByKeySet(request);
     }
 
+    @PostMapping(
+        value = "/find-users-by-external-identity",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    //@Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    public @ResponseBody CompletionStage<FindUsersByExternalIdentityReply>
+    findUsersByExternalIdentity(@RequestBody FindUsersByExternalIdentityRequest request)
+    {
+        logger.info("delegating findUsersByExternalIdentity to implementation service");
+        return implementation.findUsersByExternalIdentity(request);
+    }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////

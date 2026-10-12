@@ -9,6 +9,8 @@ import {DestroyUserRequest} from "./DestroyUserRequest";
 import {DestroyUserReply} from "./DestroyUserReply";
 import {DestroyUsersRequest} from "./DestroyUsersRequest";
 import {DestroyUsersReply} from "./DestroyUsersReply";
+import {AuthenticateUserRequest} from "./AuthenticateUserRequest";
+import {AuthenticateUserReply} from "./AuthenticateUserReply";
 
 export
 interface IUserCommandService
@@ -27,5 +29,8 @@ interface IUserCommandService
 
     destroyUsers(request: DestroyUsersRequest):
         ICompletionStage<DestroyUsersReply>;
+
+    authenticateUser(request: AuthenticateUserRequest):
+        ICompletionStage<AuthenticateUserReply>;
 }
 

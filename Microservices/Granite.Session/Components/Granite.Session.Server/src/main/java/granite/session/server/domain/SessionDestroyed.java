@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// SessionDestroyed.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.domain;
+
+public
+class SessionDestroyed
+    extends AbstractSessionEvent
+{
+    public
+    SessionDestroyed(Session src)
+    {
+        super("SessionDestroyed",src);
+    }
+
+    public
+    SessionDestroyed(String correlId,Session src)
+    {
+        super("SessionDestroyed",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: net.openhft:chronicle-wire:2.27ea7" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.openhft" artifactId="chronicle-wire" version="2.27ea7" baseVersion="2.27ea7" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.openhft/chronicle-wire/2.27ea7/f1cbf06061950fee6af2eb2b449786573548a717/chronicle-wire-2.27ea7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

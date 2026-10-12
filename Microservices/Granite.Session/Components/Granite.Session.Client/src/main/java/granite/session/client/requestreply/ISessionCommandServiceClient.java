@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// ISessionCommandServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.client.requestreply;
+
+import granite.session.service.requestreply.ISessionCommandService;
+
+public
+interface ISessionCommandServiceClient
+    extends ISessionCommandService
+{
+    ISessionCommandServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

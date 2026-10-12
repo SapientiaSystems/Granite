@@ -7,7 +7,7 @@
     <description>User object relational entity mappings</description>
 
     <entity class="granite.user.server.domain.User" access="PROPERTY">
-        <table name="Session"/>
+        <table name="UserData"/>
         <inheritance strategy="SINGLE_TABLE"/>
         <attributes>
             <id name="primaryId">
@@ -22,6 +22,15 @@
             </basic>
             <basic name="foo">
                 <column name="foo"/>
+            </basic>
+            <basic name="userName" optional="false">
+                <column name="userName" unique="true" nullable="false" column-definition="VARCHAR(255)"/>
+            </basic>
+            <basic name="password" optional="true">
+                <column name="password" nullable="true" column-definition="VARCHAR(255)"/>
+            </basic>
+            <basic name="externalIdentity" optional="true">
+                <column name="externalIdentity" unique="true" nullable="true" column-definition="VARCHAR(512)"/>
             </basic>
             <version name="version">
                 <column name="version"/>

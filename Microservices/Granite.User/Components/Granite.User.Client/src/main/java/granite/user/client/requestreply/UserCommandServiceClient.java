@@ -91,6 +91,17 @@ class UserCommandServiceClient
                 request);
     }
 
+    @Override
+    public CompletionStage<AuthenticateUserReply>
+    authenticateUser(AuthenticateUserRequest request)
+    {
+        return
+            doPostAsync(
+                "authenticate-user",
+                AuthenticateUserReply.class,
+                request);
+    }
+
     /*
     @Override
     public CompletionStage<FindUserReply>

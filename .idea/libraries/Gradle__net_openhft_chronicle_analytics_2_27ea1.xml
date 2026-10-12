@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: net.openhft:chronicle-analytics:2.27ea1" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.openhft" artifactId="chronicle-analytics" version="2.27ea1" baseVersion="2.27ea1" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.openhft/chronicle-analytics/2.27ea1/98a3e8d4d9ec35cc7cc68e78cc9e5cce3bfaa012/chronicle-analytics-2.27ea1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

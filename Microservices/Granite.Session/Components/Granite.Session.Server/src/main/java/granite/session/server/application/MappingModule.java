@@ -1,0 +1,32 @@
+//////////////////////////////////////////////////////////////////////////////
+// MappingModule.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.application;
+
+import granite.session.server.domain.Session;
+import granite.session.service.requestreply.SessionData;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.Module;
+
+public
+class MappingModule
+    implements Module
+{
+    @Override
+    public void
+    setupModule(ModelMapper mapper)
+    {
+        mapper
+            .emptyTypeMap(Session.class,SessionData.class)
+            .addMapping(Session::getSessionId,SessionData::setSessionId)
+            .addMapping(Session::getUserId,SessionData::setUserId)
+            .addMapping(Session::getAccessToken,SessionData::setAccessToken)
+            .addMapping(Session::getCreated,SessionData::setCreated)
+            .addMapping(Session::getExpires,SessionData::setExpires)
+            .addMapping(Session::getDeviceId,SessionData::setDeviceId)
+            .addMapping(Session::getValues,SessionData::setValues);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

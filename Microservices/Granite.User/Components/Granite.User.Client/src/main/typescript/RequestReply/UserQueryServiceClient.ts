@@ -5,6 +5,8 @@ import {Guid} from "guid-typescript";
 import {AbstractServiceRequest} from "strata.foundation.core/Transfer";
 import {Instant} from "@js-joda/core";
 import {
+    FindUsersByExternalIdentityReply,
+    FindUsersByExternalIdentityRequest,
     FindUsersByKeyReply,
     FindUsersByKeyRequest,
     FindUsersByKeySetReply,
@@ -50,6 +52,14 @@ class UserQueryServiceClient
         console.log("UserQueryServiceClient.findUsersByKeySet");
         return this.doPost<FindUsersByKeySetReply,FindUsersByKeySetRequest>(
             "find-users-by-keyset",
+            this.initializeRequest(request));
+    }
+
+    findUsersByExternalIdentity(request: FindUsersByExternalIdentityRequest): ICompletionStage<FindUsersByExternalIdentityReply>
+    {
+        console.log("UserQueryServiceClient.findUsersByExternalIdentity");
+        return this.doPost<FindUsersByExternalIdentityReply,FindUsersByExternalIdentityRequest>(
+            "find-users-by-external-identity",
             this.initializeRequest(request));
     }
 

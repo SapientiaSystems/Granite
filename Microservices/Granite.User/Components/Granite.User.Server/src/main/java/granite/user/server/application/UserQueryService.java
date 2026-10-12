@@ -65,6 +65,63 @@ class UserQueryService
                 .exceptionally(exception -> buildReply(exception,request));
     }
 
+    @Override
+    public CompletionStage<FindUsersByExternalIdentityReply>
+    findUsersByExternalIdentity(FindUsersByExternalIdentityRequest request)
+    {
+        logger.debug("findUsersByExternalIdentity({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(findRequest -> mapToContext(findRequest))
+                .thenApply(context -> findUsers(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    protected FindUsersByExternalIdentityRequest
+    validate(FindUsersByExternalIdentityRequest request)
+    {
+        logger.debug("validate((FindUsersByExternalIdentity){})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getProvider(),
+            "validation failed: provider was not provided");
+        Objects.requireNonNull(
+            request.getExternalId(),
+            "validation failed: externalId was not provided");
+
+        if (request.getProvider().isBlank())
+            throw new IllegalArgumentException(
+                "validation failed: provider was blank");
+
+        if (request.getExternalId().isBlank())
+            throw new IllegalArgumentException(
+                "validation failed: externalId was blank");
+
+        return request;
+    }
+
+    protected FindUsersByExternalIdentityContext
+    mapToContext(FindUsersByExternalIdentityRequest request)
+    {
+        logger.debug(
+            "mapToContext((FindUsersByExternalIdentityRequest){})",
+            request.getRequestId());
+
+        return new FindUsersByExternalIdentityContext(request);
+    }
+
+    protected FindUsersByExternalIdentityContext
+    findUsers(FindUsersByExternalIdentityContext context)
+    {
+        logger.debug("find Users((FindUsersByExternalIdentityContext)context)");
+        return
+            context.setFoundUsers(
+                repository.findAllByExternalIdentity(
+                    context.getCompositeIdentity()));
+    }
+
     protected FindUsersByKeyRequest
     validate(FindUsersByKeyRequest request)
     {
@@ -265,6 +322,36 @@ class UserQueryService
                 .setFailureMessage(
                     "Unable to find user(s) for key " +
                     request.getKey() + ": " + e.getMessage())
+                .setException(ExceptionData.of(e));
+    }
+
+    private FindUsersByExternalIdentityReply
+    buildReply(FindUsersByExternalIdentityContext context)
+    {
+        List<User> found = context.getFoundUsers();
+
+        logger.info("building successful reply");
+
+        return
+            new FindUsersByExternalIdentityReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Found " + found.size() + " user(s)")
+                .setUsers(
+                    mapper.map(
+                        found,
+                        new TypeToken<List<UserData>>() {}.getType()));
+    }
+
+    private FindUsersByExternalIdentityReply
+    buildReply(Throwable e,FindUsersByExternalIdentityRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new FindUsersByExternalIdentityReply(request)
+                .setSuccess(false)
+                .setFailureMessage(
+                    "Unable to find user(s) for external identity: " +
+                    e.getMessage())
                 .setException(ExceptionData.of(e));
     }
 

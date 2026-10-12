@@ -16,6 +16,7 @@ import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import strata.foundation.core.concurrent.CurrentThreadExecutor;
 import strata.foundation.core.event.EventIdentifiersData;
 import strata.foundation.core.event.StandardEventType;
@@ -33,14 +34,16 @@ class UserCommandService
     private final IUserRepository  repository;
     private final IUserEventSender sender;
     private final ModelMapper            mapper;
+    private final PasswordEncoder        encoder;
     private final Logger                 logger;
 
     @Inject
-    public UserCommandService(IUserRepository r,IUserEventSender s,ModelMapper m)
+    public UserCommandService(IUserRepository r,IUserEventSender s,ModelMapper m,PasswordEncoder e)
     {
         repository = r;
         sender     = s;
         mapper     = m;
+        encoder    = e;
         logger     = LogManager.getLogger(UserCommandService.class);
     }
 
@@ -133,6 +136,21 @@ class UserCommandService
                 .thenApply(destroyRequest -> mapToContext(destroyRequest))
                 .thenApply(context -> findUsers(context))
                 .thenApply(context -> deleteUsers(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public CompletionStage<AuthenticateUserReply>
+    authenticateUser(AuthenticateUserRequest request)
+    {
+        logger.debug("authenticateUser({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(authRequest -> mapToContext(authRequest))
+                .thenApply(context -> lookupUser(context))
+                .thenApply(context -> checkCredential(context))
                 .thenApply(context -> buildReply(context))
                 .exceptionally(exception -> buildReply(exception,request));
     }
@@ -278,6 +296,28 @@ class UserCommandService
         return request;
     }
 
+    protected AuthenticateUserRequest
+    validate(AuthenticateUserRequest request)
+    {
+        logger.debug("<authenticate> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(request,"request");
+        Objects.requireNonNull(
+            request.getUserName(),
+            "validation failed: userName was not provided");
+        Objects.requireNonNull(
+            request.getCredential(),
+            "validation failed: credential was not provided");
+
+        if (request.getCredential().isBlank())
+            throw new IllegalArgumentException("validation failed: credential was blank");
+
+        Objects.requireNonNull(
+            request.getCredentialKind(),
+            "validation failed: credentialKind was not provided");
+        return request;
+    }
+
     protected CreateUserContext
     mapToContext(CreateUserRequest request)
     {
@@ -327,6 +367,54 @@ class UserCommandService
         return new FindUserContext(request);
     }
 
+    protected AuthenticateUserContext
+    mapToContext(AuthenticateUserRequest request)
+    {
+        logger.debug("<authenticate> mapToContext({})",request.getRequestId());
+        return new AuthenticateUserContext(request);
+    }
+
+    protected AuthenticateUserContext
+    lookupUser(AuthenticateUserContext context)
+    {
+        logger.debug("<authenticate> lookup User");
+        return context.setUser(repository.findByUserName(context.getUserName()));
+    }
+
+    protected AuthenticateUserContext
+    checkCredential(AuthenticateUserContext context)
+    {
+        logger.debug("<authenticate> check credential");
+
+        CredentialKind kind = context.getCredentialKind();
+
+        switch (kind)
+        {
+            case PASSWORD:
+                User user = context.getUser().orElse(null);
+
+                if (user == null || user.getPassword() == null)
+                    return context.setValid(false);
+
+                return
+                    context.setValid(
+                        encoder.matches(
+                            context.getCredential(),
+                            user.getPassword()));
+
+            case ACCESS_TOKEN:
+            case SECURITY_CODE:
+            default:
+                return
+                    context
+                        .setValid(false)
+                        .setFailureMessage(
+                            "CredentialKind "
+                                + kind
+                                + " is not supported by Granite.User.authenticateUser");
+        }
+    }
+
     protected CreateUserContext
     createUser(CreateUserContext context)
     {
@@ -334,9 +422,7 @@ class UserCommandService
         return
             context
                 .setCreatedUser(
-                    mapper
-                        .map(context.getUserToCreate(),User.class)
-                        .attach(this));
+                    mapToUser(context.getUserToCreate()).attach(this));
     }
 
     protected CreateUsersContext
@@ -347,7 +433,7 @@ class UserCommandService
         List<User> created = new ArrayList<>();
 
         for (CreateUserData entityData : context.getUsersToCreate())
-            created.add(mapper.map(entityData,User.class).attach(this));
+            created.add(mapToUser(entityData).attach(this));
 
         return context.setCreatedUsers(created);
     }
@@ -398,14 +484,7 @@ class UserCommandService
 
         logger.debug("update User");
 
-        data
-            .getFoo()
-            .ifPresent(
-                foo ->
-                    context
-                        .getUpdatedUser()
-                        .orElseThrow()
-                        .setFoo(foo));
+        applyUpdate(context.getUpdatedUser().orElseThrow(),data);
 
         return context;
     }
@@ -495,7 +574,7 @@ class UserCommandService
             if (data == null)
                 continue;
 
-            data.getFoo().ifPresent(entity::setFoo);
+            applyUpdate(entity,data);
         }
 
         return context;
@@ -578,6 +657,42 @@ class UserCommandService
             persisted.add(repository.save(entity).notifyUpdated());
 
         return context.setUpdatedUsers(persisted);
+    }
+
+    private User
+    mapToUser(CreateUserData data)
+    {
+        User user = mapper.map(data,User.class);
+
+        user.setPassword(hash(data.getPassword()));
+        return user;
+    }
+
+    private void
+    applyUpdate(User user,UpdateUserData data)
+    {
+        data.getFoo().ifPresent(user::setFoo);
+        data
+            .getUserName()
+            .filter(userName -> !userName.isBlank())
+            .ifPresent(user::setUserName);
+        data
+            .getExternalIdentity()
+            .filter(identity -> !identity.isBlank())
+            .ifPresent(user::setExternalIdentity);
+        data
+            .getPassword()
+            .filter(password -> !password.isBlank())
+            .ifPresent(password -> user.setPassword(hash(password)));
+    }
+
+    private String
+    hash(String password)
+    {
+        if (password == null || password.isBlank())
+            return null;
+
+        return encoder.encode(password);
     }
 
     private CreateUserReply
@@ -815,6 +930,48 @@ class UserCommandService
             new FindUserReply(request)
                 .setSuccess(false)
                 .setFailureMessage("Unable to find user " + request.getUserId())
+                .setException(ExceptionData.of(e));
+    }
+
+    private AuthenticateUserReply
+    buildReply(AuthenticateUserContext context)
+    {
+        logger.info("building authenticate reply (valid={})",context.getValid());
+
+        AuthenticateUserReply reply =
+            new AuthenticateUserReply(context.getRequest())
+                .setSuccess(true)
+                .setValid(context.getValid());
+
+        if (context.getValid())
+        {
+            Long userId =
+                context
+                    .getUser()
+                    .map(User::getPrimaryId)
+                    .orElse(null);
+
+            reply
+                .setUserId(userId)
+                .setSuccessMessage("User: " + userId + " authenticated");
+        }
+        else if (context.getFailureMessage() != null)
+        {
+            reply.setFailureMessage(context.getFailureMessage());
+        }
+
+        return reply;
+    }
+
+    private AuthenticateUserReply
+    buildReply(Throwable e,AuthenticateUserRequest request)
+    {
+        logger.info("building authenticate exception reply: {}",e.getMessage());
+        return
+            new AuthenticateUserReply(request)
+                .setSuccess(false)
+                .setValid(false)
+                .setFailureMessage("Unable to authenticate user")
                 .setException(ExceptionData.of(e));
     }
 
