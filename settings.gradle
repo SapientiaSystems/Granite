@@ -36,3 +36,8 @@ includeBuild('Microservices/Granite.Session') {
     }
 }
 
+includeBuild('Shared/Granite.Foundation') {
+    dependencySubstitution {
+        substitute module('granite.foundation:granite-foundation-core') using project(':Components:Granite.Foundation.Core')
+    }
+}

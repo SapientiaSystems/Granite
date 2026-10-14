@@ -4,6 +4,8 @@
 
 package granite.session.server.domain;
 
+import granite.foundation.core.mapper.StringMapperRegistry;
+import strata.foundation.core.mapper.IMapper;
 import strata.server.core.entity.AbstractEntityAndDomainEventSource;
 
 import java.time.Instant;
@@ -23,12 +25,14 @@ class Session
             ISessionEventObserver>
     implements ISessionEventSource
 {
-    private Long                userId;
-    private String              accessToken;
-    private Instant             expires;
-    private String              deviceId;
-    private Map<String,Object>  values;
-    private Set<String>         authorities;
+    private Long                       userId;
+    private String                     accessToken;
+    private Instant                    expires;
+    private String                     deviceId;
+    private Set<String>                authorities;
+    private Map<String,Object>         values;
+
+    private static final StringMapperRegistry registry = StringMapperRegistry.of();
 
     public
     Session()
@@ -38,8 +42,8 @@ class Session
         accessToken = null;
         expires     = null;
         deviceId    = null;
-        values      = new LinkedHashMap<>();
         authorities = new LinkedHashSet<>();
+        values      = new LinkedHashMap<>();
     }
 
     @Override
@@ -62,9 +66,6 @@ class Session
         return super.setPrimaryId(id);
     }
 
-    public Long
-    getSessionId() { return super.getPrimaryId(); }
-
     public Session
     setUserId(Long id)
     {
@@ -72,18 +73,12 @@ class Session
         return this;
     }
 
-    public Long
-    getUserId() { return userId; }
-
     public Session
     setAccessToken(String token)
     {
         accessToken = token;
         return this;
     }
-
-    public String
-    getAccessToken() { return accessToken; }
 
     public Session
     setExpires(Instant time)
@@ -93,9 +88,6 @@ class Session
         return this;
     }
 
-    public Instant
-    getExpires() { return expires; }
-
     public Session
     setDeviceId(String id)
     {
@@ -103,21 +95,58 @@ class Session
         return this;
     }
 
-    public String
-    getDeviceId() { return deviceId; }
+    public Session
+    setAuthorities(Set<String> values)
+    {
+        authorities = values;
+        return this;
+    }
 
     public <T> Session
     setValue(String key,T value)
     {
-        values.put(key,value);
-        notifyUpdated();
+        Optional<IMapper<String,T>> mapper =
+            registry.get(String.class,(Class<T>)value.getClass());
+
+        values.put(
+            key,
+            mustStringify(value)
+                ? mapper
+                    .map(m -> m.map(value))
+                    .orElse(value.toString())
+                : value);
         return this;
     }
+
+    public Long
+    getSessionId() { return super.getPrimaryId(); }
+
+    public Long
+    getUserId() { return userId; }
+
+    public String
+    getAccessToken() { return accessToken; }
+
+    public Instant
+    getExpires() { return expires; }
+
+    public String
+    getDeviceId() { return deviceId; }
+
+    public Set<String>
+    getAuthorities() { return authorities; }
+
+    public Map<String,Object>
+    getValues() { return values; }
 
     public <T> Optional<T>
     getValue(Class<T> type,String key)
     {
-        Object stored = values.get(key);
+        Optional<IMapper<T,String>> mapper = registry.get(type,String.class);
+        Object                      stored = values.get(key);
+
+        if (stored instanceof String s && !type.equals(String.class))
+            return mapper.map(m -> m.map(s));
 
         return
             type.isInstance(stored)
@@ -131,24 +160,8 @@ class Session
         return values.containsKey(key);
     }
 
-    public Map<String,Object>
-    getValues() { return values; }
-
     public Session
-    setAuthorities(Set<String> values)
-    {
-        authorities = values;
-        return this;
-    }
-
-    public Set<String>
-    getAuthorities() { return authorities; }
-
-    public Session
-    destroy()
-    {
-        return notifyDestroyed();
-    }
+    destroy() { return notifyDestroyed(); }
 
     public Session
     notifyCreated() { return super.notify(new SessionCreated(this)); }
@@ -159,11 +172,29 @@ class Session
     public Session
     notifyDestroyed() { return super.notify(new SessionDestroyed(this)); }
 
+    public static StringMapperRegistry
+    getRegistry() { return registry; }
+
     @Override
     protected Session
     getSelf()
     {
         return this;
+    }
+
+    private <T> boolean
+    mustStringify(T value)
+    {
+        if (value instanceof String)
+            return false;
+
+        if (value instanceof Number)
+            return false;
+
+        if (value.getClass().isPrimitive())
+            return false;
+
+        return true;
     }
 }
 

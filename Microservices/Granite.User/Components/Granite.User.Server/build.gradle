@@ -42,6 +42,7 @@ publishing {
 
 dependencies {
     api project(":Components:Granite.User.Service")
+    api "granite.foundation:granite-foundation-core:$system_version"
     api "strata.server:strata-server-spring:$strata_server_version"
     api "strata.outbox:strata-outbox-core:$strata_outbox_version"
     api "org.springframework.boot:spring-boot-starter-security:$springboot_version"

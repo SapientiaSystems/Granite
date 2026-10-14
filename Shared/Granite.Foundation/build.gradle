@@ -1,0 +1,54 @@
+plugins {
+    id 'base'
+}
+
+wrapper.jarFile = ".gradle/wrapper/gradle-wrapper.jar"
+
+ext {
+    strata_foundation_version = "1.0-SNAPSHOT"
+
+    junit_jupiter_version = "5.13.3"
+    junit_platform_version = "1.13.3"
+
+    major = "1"
+    minor = "0"
+    patch = "SNAPSHOT"
+    separator1 = "."
+    separator2 = "-"
+
+    system_version = "$major$separator1$minor$separator2$patch"
+}
+
+group 'granite.foundation'
+version "$system_version"
+layout.buildDirectory.set(layout.projectDirectory.dir(".build"))
+
+subprojects {
+    group 'granite.foundation'
+    version "$system_version"
+    layout.buildDirectory.set(layout.projectDirectory.dir(".build"))
+
+    plugins.withType(JavaPlugin) {
+        java {
+            sourceCompatibility = JavaVersion.VERSION_23
+            targetCompatibility = JavaVersion.VERSION_23
+        }
+    }
+}
+
+tasks.register('jib') {
+    description = 'Builds images and publishes to registry'
+    group = 'jib'
+}
+
+subprojects { sp ->
+    sp.plugins.withType(org.gradle.api.plugins.BasePlugin) {
+        rootProject.tasks.named('build').configure   { dependsOn sp.tasks.named('build') }
+        rootProject.tasks.named('clean').configure   { dependsOn sp.tasks.named('clean') }
+        rootProject.tasks.named('check').configure   { dependsOn sp.tasks.named('check') }
+        rootProject.tasks.named('assemble').configure { dependsOn sp.tasks.named('assemble') }
+    }
+    sp.plugins.withId('com.google.cloud.tools.jib') {
+        rootProject.tasks.named('jib').configure { dependsOn sp.tasks.named('jib') }
+    }
+}
