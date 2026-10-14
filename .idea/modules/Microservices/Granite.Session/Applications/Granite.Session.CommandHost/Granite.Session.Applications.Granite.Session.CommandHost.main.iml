@@ -19,6 +19,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Server.main" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Service.main" />
+    <orderEntry type="module" module-name="Granite.Foundation.Components.Granite.Foundation.Core.main" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Client.main" />
     <orderEntry type="library" name="Gradle: strata.server:strata-server-spring:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-core:1.0-SNAPSHOT" level="project" />

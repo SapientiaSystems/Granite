@@ -29,6 +29,7 @@
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Service.main" />
     <orderEntry type="library" name="Gradle: strata.server:strata-server-spring:1.0-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="Granite.Foundation.Components.Granite.Foundation.Core.main" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-core:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: org.modelmapper:modelmapper:3.2.6" level="project" />
     <orderEntry type="module" module-name="Granite.User.Tests.Granite.User.ServiceTest.main" />

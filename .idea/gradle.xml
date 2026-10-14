@@ -7,6 +7,16 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
+              <build path="$PROJECT_DIR$/Shared/Granite.Foundation" name="Granite.Foundation">
+                <projects>
+                  <project path="$PROJECT_DIR$/Shared/Granite.Foundation" />
+                  <project path="$PROJECT_DIR$/Shared/Granite.Foundation/Components" />
+                  <project path="$PROJECT_DIR$/Shared/Granite.Foundation/Components/Granite.Foundation.Core" />
+                  <project path="$PROJECT_DIR$/Shared/Granite.Foundation/Tests" />
+                  <project path="$PROJECT_DIR$/Shared/Granite.Foundation/Tests/Granite.Foundation.CoreTest" />
+                  <project path="$PROJECT_DIR$/Shared/Granite.Foundation/Tests/Granite.Foundation.TestSuite" />
+                </projects>
+              </build>
               <build path="$PROJECT_DIR$/Microservices/Granite.FrontEndController" name="Granite.FrontEndController">
                 <projects>
                   <project path="$PROJECT_DIR$/Microservices/Granite.FrontEndController" />
@@ -141,6 +151,12 @@
             <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ServerTest" />
             <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.ServiceTest" />
             <option value="$PROJECT_DIR$/Microservices/Granite.User/Tests/Granite.User.TestSuite" />
+            <option value="$PROJECT_DIR$/Shared/Granite.Foundation" />
+            <option value="$PROJECT_DIR$/Shared/Granite.Foundation/Components" />
+            <option value="$PROJECT_DIR$/Shared/Granite.Foundation/Components/Granite.Foundation.Core" />
+            <option value="$PROJECT_DIR$/Shared/Granite.Foundation/Tests" />
+            <option value="$PROJECT_DIR$/Shared/Granite.Foundation/Tests/Granite.Foundation.CoreTest" />
+            <option value="$PROJECT_DIR$/Shared/Granite.Foundation/Tests/Granite.Foundation.TestSuite" />
           </set>
         </option>
       </GradleProjectSettings>
