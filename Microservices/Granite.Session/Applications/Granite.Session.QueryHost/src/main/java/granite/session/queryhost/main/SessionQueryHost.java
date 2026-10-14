@@ -35,7 +35,7 @@ class SessionQueryHost
         if (deployEnv.equals("development"))
             profiles.add("dev");
 
-        application.setDefaultProperties(Map.of("granite.deploy-env",deployEnv));
+        application.setDefaultProperties(Map.of("DEPLOY_ENV",deployEnv));
         application.setAdditionalProfiles(profiles.toArray(new String[0]));
         application.run(args);
     }

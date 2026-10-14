@@ -37,21 +37,23 @@ The gateway follows a simplified two-layer architecture. There is no domain, app
 
 #### Granite.Gateway.Server
 
-Contains the route definitions:
+Published as `granite.gateway:granite-gateway-server`. Contains the gateway's entry configuration and its health endpoint:
 
-- **`server.route`**:
-  - `RouteConfiguration` — Spring `@Configuration` class that defines a `RouteLocator` bean. Each route maps a URL path prefix to a backend microservice host URI. Host URIs are injected via `@Value` from profile-specific properties, enabling different targets per environment (development, test, production).
+- **`server.configuration`**:
+  - `GraniteGatewayServerConfiguration` — the entry configuration that hosts extend, following the Strata.Outbox → Granite.Outbox pattern. It defines the `RouteLocator`, the reactive `SecurityWebFilterChain`, the health controller, and the SecurityContextHolder strategy.
+- **`server.health`**:
+  - `GatewayHealthCheckController` — reactive liveness/readiness/startup endpoints under `${strata.health.base-path:/health}`.
 
 #### Granite.Gateway.ServiceHost
 
 The Spring Boot application entry point:
 
-- `GatewayServiceHost` — `@SpringBootApplication` that excludes `DataSourceAutoConfiguration` and `HibernateJpaAutoConfiguration` (no database needed). Sets the "production" profile by default.
-- `HostConfiguration` — `@Configuration` with `@Import({RouteConfiguration.class})` to bring in route definitions from the Server component (required because `RouteConfiguration` is outside the default component scan scope). Also defines a `SecurityWebFilterChain` bean that disables CSRF and permits all exchanges.
+- `GatewayServiceHost` — `@SpringBootApplication` that excludes `DataSourceAutoConfiguration`, servlet `SecurityAutoConfiguration`, and `KafkaAutoConfiguration`. The active profile comes from `DEPLOY_ENV` (default `development`).
+- `HostConfiguration` — `HostConfiguration extends GraniteGatewayServerConfiguration`; contains no bean definitions of its own.
 
 ## Routes
 
-Routes are defined in `RouteConfiguration` and map path prefixes to backend microservice hosts:
+Routes are defined in `GraniteGatewayServerConfiguration.configureRoutes(...)` and map path prefixes to backend microservice hosts:
 
 | Route ID | Path Prefix | Backend Service |
 |---|---|---|
@@ -62,8 +64,6 @@ Routes are defined in `RouteConfiguration` and map path prefixes to backend micr
 | `session-command-route` | `/session-command-service/**` | Session CommandHost |
 | `session-query-route` | `/session-query-service/**` | Session QueryHost |
 | `outbox-route` | `/outbox-service/**` | Outbox ServiceHost |
-| `useradapter-command-route` | `/useradapter-command-service/**` | UserAdapter CommandHost |
-| `useradapter-query-route` | `/useradapter-query-service/**` | UserAdapter QueryHost |
 
 No path stripping is applied — backend controllers are mounted at these exact path prefixes.
 
@@ -80,18 +80,55 @@ Backend host URIs are parameterized via Spring properties (`granite.<service>.ho
 | `granite.session-command-service.host` | `https://localhost:8088/session-command-service` | `https://granite-session-commandhost:443` |
 | `granite.session-query-service.host` | `https://localhost:8089/session-query-service` | `https://granite-session-queryhost:443` |
 | `granite.outbox-service.host` | `https://localhost:8085/outbox-service` | `https://granite-outbox-servicehost:443` |
-| `granite.useradapter-command-service.host` | `https://localhost:8086/useradapter-command-service` | `https://granite-useradapter-commandhost:443` |
-| `granite.useradapter-query-service.host` | `https://localhost:8087/useradapter-query-service` | `https://granite-useradapter-queryhost:443` |
+
+Each property is required. A missing host fails startup, because routes resolve it with `Environment.getRequiredProperty`.
+
+## Extending Granite.Gateway
+
+Downstream application systems reuse the gateway by depending on `granite-gateway-server` and subclassing `GraniteGatewayServerConfiguration` in their own host. A seam is replaced by overriding its `@Bean` method, which must be re-annotated with `@Bean`. Defining a same-named bean elsewhere does not work, because Spring Boot rejects bean definition overriding. Gateway has no `IConfiguration`; all values are plain Spring properties.
+
+| Seam | Default |
+|---|---|
+| `routeLocator(RouteLocatorBuilder,Environment)` → `configureRoutes(Builder,Environment)` | adds the seven Granite routes above |
+| `addRoute(Builder,id,pathPattern,hostProperty,Environment)` | helper: one route whose URI comes from the required property `hostProperty` |
+| `securityWebFilterChain(ServerHttpSecurity)` | CSRF disabled, all exchanges permitted |
+| `healthCheckController()` | `GatewayHealthCheckController` |
+
+To add routes, override `configureRoutes`, call `super`, then call `addRoute`. To expose only some Granite routes, override without calling `super` and add the ones you want.
+
+```java
+@Configuration
+public
+class HostConfiguration
+    extends GraniteGatewayServerConfiguration
+{
+    @Override
+    protected RouteLocatorBuilder.Builder
+    configureRoutes(RouteLocatorBuilder.Builder routes,Environment environment)
+    {
+        super.configureRoutes(routes,environment);
+        return
+            addRoute(
+                routes,
+                "order-command-route",
+                "/order-command-service/**",
+                "retail.order-command-service.host",
+                environment);
+    }
+}
+```
+
+Spring Cloud Gateway normalizes route URIs, so `http://host` is reported as `http://host:80`.
 
 ## Commonly Used Design Patterns
 
 ### Composable Configuration
 
-Spring `@Configuration` classes are composed via `@Import`. `HostConfiguration` at the application level imports `RouteConfiguration` from the Server component, following the same pattern used by all Granite host applications.
+Spring `@Configuration` classes are composed via `@Import` and inheritance. `HostConfiguration` at the application level extends `GraniteGatewayServerConfiguration` from the Server component, following the same entry-configuration pattern used by all Granite host applications.
 
 ### Reactive Security
 
-The gateway uses Spring Security's reactive `ServerHttpSecurity` (not the servlet `HttpSecurity`). The `SecurityWebFilterChain` bean in `HostConfiguration` disables CSRF and permits all exchanges, matching the security posture of the other Granite microservices.
+The gateway uses Spring Security's reactive `ServerHttpSecurity` (not the servlet `HttpSecurity`). The `SecurityWebFilterChain` bean in `GraniteGatewayServerConfiguration` disables CSRF and permits all exchanges, matching the security posture of the other Granite microservices.
 
 ### Profile-Based Configuration
 

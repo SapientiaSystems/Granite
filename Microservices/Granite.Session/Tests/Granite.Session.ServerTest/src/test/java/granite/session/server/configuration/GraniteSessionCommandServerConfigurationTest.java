@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////
-// CommandPlatformConfigurationTest.java
+// GraniteSessionCommandServerConfigurationTest.java
 //////////////////////////////////////////////////////////////////////////////
 
-package granite.session.server.platform;
+package granite.session.server.configuration;
 
 import granite.session.server.application.Oauth2ProviderConfig;
 import granite.session.server.application.Oauth2ProvidersProperties;
@@ -19,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
-class CommandPlatformConfigurationTest
+class GraniteSessionCommandServerConfigurationTest
 {
     private static final String PRIVATE_KEY = "classpath:jwt-test-private-key.pem";
     private static final String PUBLIC_KEY  = "classpath:jwt-test-public-key.pem";
 
-    private final CommandPlatformConfiguration subject =
-        new CommandPlatformConfiguration();
+    private final GraniteSessionCommandServerConfiguration subject =
+        new GraniteSessionCommandServerConfiguration();
 
     @Test
     public void
@@ -149,14 +149,11 @@ class CommandPlatformConfigurationTest
     private Object
     newJwtTokenService(MockEnvironment env,String privateKey,String publicKey)
     {
-        return
-            subject.jwtTokenService(
-                env,
-                new DefaultResourceLoader(),
-                privateKey,
-                publicKey,
-                "granite-session",
-                "PT15M");
+        env.setProperty("granite.session.jwt.private-key-location",privateKey);
+        env.setProperty("granite.session.jwt.public-key-location",publicKey);
+        env.setProperty("granite.session.jwt.issuer","granite-session");
+        env.setProperty("granite.session.jwt.ttl","PT15M");
+        return subject.jwtTokenService(env,new DefaultResourceLoader());
     }
 }
 

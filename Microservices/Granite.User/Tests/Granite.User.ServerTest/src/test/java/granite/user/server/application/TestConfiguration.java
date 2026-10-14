@@ -4,43 +4,38 @@
 
 package granite.user.server.application;
 
-import granite.user.server.platform.CommandPlatformConfiguration;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.context.annotation.*;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.request.RequestScope;
-import granite.user.server.domain.DomainConfiguration;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import granite.user.server.configuration.GraniteUserCommandServerConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
 
 @Configuration
-@EnableTransactionManagement
 @PropertySource("classpath:test.properties")
-@Import({ApplicationConfiguration.class,DomainConfiguration.class,CommandPlatformConfiguration.class})
 public
 class TestConfiguration
+    extends GraniteUserCommandServerConfiguration
 {
+    @Override
     @Bean
-    public BeanFactoryPostProcessor
-    beanFactoryPostProcessor()
+    @Scope("singleton")
+    public IConfiguration
+    configuration(Environment environment)
     {
-        return
-            factory ->
-                factory.registerScope(
-                    "request",
-                    new RequestScope());
+        return new ApplicationConfigurationProvider("test").get();
     }
 
     @Bean
     @Scope("singleton")
-    public IConfiguration
-    configuration()
+    public ObjectMapper
+    objectMapper()
     {
-        return
-            new ApplicationConfigurationProvider("test").get();
+        return new ObjectMapper();
     }
-
-
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -290,7 +290,6 @@ class SessionCommandService
                 .setAuthorities(context.getValidatedAuthorities());
 
         session.setCreated(now);
-        session.attach(this);
         return context.setCreated(session);
     }
 
@@ -320,7 +319,7 @@ class SessionCommandService
         if (context.getCreated() == null)
             return context;
 
-        Session session = repository.save(context.getCreated());
+        Session session = repository.save(context.getCreated()).attach(this);
 
         session.notifyCreated();
         return context.setCreated(session);
@@ -474,7 +473,6 @@ class SessionCommandService
                 .setAuthorities(context.getAuthorities());
 
         session.setCreated(now);
-        session.attach(this);
         return context.setCreated(session);
     }
 
@@ -504,7 +502,7 @@ class SessionCommandService
         if (context.getCreated() == null)
             return context;
 
-        Session session = repository.save(context.getCreated());
+        Session session = repository.save(context.getCreated()).attach(this);
 
         session.notifyCreated();
         return context.setCreated(session);

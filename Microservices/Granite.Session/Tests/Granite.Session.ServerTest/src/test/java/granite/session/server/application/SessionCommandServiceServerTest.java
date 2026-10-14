@@ -12,9 +12,15 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import granite.session.service.requestreply.ISessionCommandService;
+import granite.session.service.requestreply.LoginReply;
+import granite.session.service.requestreply.LoginWithOauth2Reply;
+import granite.session.service.requestreply.LoginWithOauth2Request;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +32,10 @@ import strata.server.spring.inject.RequestAttributeMap;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 @ExtendWith(SpringExtension.class)
@@ -41,6 +50,9 @@ class SessionCommandServiceServerTest
 
     @Autowired
     private RSAKey signingKey;
+
+    @Autowired
+    private EntityManagerFactory factory;
 
     @Value("${granite.session.oauth2.providers.test.issuer-uri}")
     private String issuer;
@@ -60,6 +72,38 @@ class SessionCommandServiceServerTest
     tearDown()
     {
         RequestContextHolder.resetRequestAttributes();
+    }
+
+    @Test
+    public void
+    testLoginWritesCreatedOutboxEvent()
+    {
+        LoginReply reply =
+            subject
+                .login(newLoginRequest(uniqueUserName(),uniqueDeviceId()))
+                .toCompletableFuture()
+                .join();
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertCreatedOutboxEvent(reply.getSessionData().getSessionId());
+    }
+
+    @Test
+    public void
+    testLoginWithOauth2WritesCreatedOutboxEvent()
+    {
+        LoginWithOauth2Reply reply =
+            subject
+                .loginWithOauth2(
+                    new LoginWithOauth2Request()
+                        .setProvider(oauth2Provider())
+                        .setIdToken(oauth2IdToken())
+                        .setDeviceId(uniqueDeviceId()))
+                .toCompletableFuture()
+                .join();
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertCreatedOutboxEvent(reply.getSessionData().getSessionId());
     }
 
     @Override
@@ -96,6 +140,31 @@ class SessionCommandServiceServerTest
         catch (JOSEException e)
         {
             throw new IllegalStateException("failed to sign test id token",e);
+        }
+    }
+
+    private void
+    assertCreatedOutboxEvent(Long sessionId)
+    {
+        EntityManager manager = factory.createEntityManager();
+
+        try
+        {
+            List<String> payloads =
+                manager
+                    .createQuery(
+                        "select e.eventPayload from OutboxEvent e where e.sourceId = :id",
+                        String.class)
+                    .setParameter("id",sessionId.toString())
+                    .getResultList();
+
+            assertTrue(
+                payloads.stream().anyMatch(payload -> payload.contains("CREATED")),
+                "no CREATED outbox event for session " + sessionId + ": " + payloads);
+        }
+        finally
+        {
+            manager.close();
         }
     }
 }

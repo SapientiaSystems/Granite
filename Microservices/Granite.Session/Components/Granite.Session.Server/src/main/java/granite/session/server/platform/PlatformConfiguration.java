@@ -21,8 +21,6 @@ import strata.server.spring.unitofwork.JpaUnitOfWork;
 import strata.server.spring.unitofwork.JpaUnitOfWorkManager;
 import strata.server.spring.unitofwork.SpringUnitOfWorkSynchronizationManager;
 
-import java.time.Clock;
-
 @Configuration
 @EnableTransactionManagement
 @Import({HealthCheckConfiguration.class})
@@ -61,14 +59,6 @@ class PlatformConfiguration
     synchronizer()
     {
         return new SpringUnitOfWorkSynchronizationManager();
-    }
-
-    @Bean
-    @Scope("singleton")
-    public Clock
-    clock()
-    {
-        return Clock.systemUTC();
     }
 }
 

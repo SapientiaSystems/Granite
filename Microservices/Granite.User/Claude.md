@@ -83,9 +83,14 @@ The server-side implementation:
   - `UserCommandServiceController` — Spring `@RestController` exposing command endpoints under `/user-command-service/`
   - `UserQueryServiceController` — Spring `@RestController` exposing query endpoints under `/user-query-service/`
   - `PlatformConfiguration` — Base Spring configuration for JPA EntityManagerFactory, UnitOfWork, and synchronization manager
-  - `CommandPlatformConfiguration` — Extends `PlatformConfiguration`; wires command controller and user event sender with Outbox support
+  - `CommandPlatformConfiguration` — Extends `PlatformConfiguration`; wires the command controller and imports the outbox repository configuration
   - `QueryPlatformConfiguration` — Extends `PlatformConfiguration`; wires query controller
   - Event senders: `OnCommitUserEventSender` (sends after transaction commit), `OutboxEventUserEventSender` (persists to outbox table), `MockUserEventSender` (testing)
+
+- **Configuration layer** (`server.configuration`): the entry configurations that hosts extend, following the Strata.Outbox → Granite.Outbox pattern.
+  - `AbstractGraniteUserServerConfiguration` — imports `ApplicationConfiguration`, `DomainConfiguration`, `ServiceConfiguration`, and springdoc support. It declares the shared seam beans and the host plumbing: SecurityContextHolder strategy, request-scope registration, and the springdoc `ObjectMapperProvider`/`SpringDocConfigProperties`.
+  - `GraniteUserCommandServerConfiguration` — adds `CommandPlatformConfiguration` and the `userEventSender` seam.
+  - `GraniteUserQueryServerConfiguration` — adds `QueryPlatformConfiguration`.
 
 #### Granite.User.Client
 
@@ -98,8 +103,44 @@ REST client and event receiver implementations:
 
 ### Applications
 
-- **UserCommandHost** — Spring Boot application that assembles the command-side stack: `HostConfiguration` imports `ApplicationConfiguration`, `DomainConfiguration`, `CommandPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8081.
-- **UserQueryHost** — Spring Boot application that assembles the query-side stack: imports `ApplicationConfiguration`, `DomainConfiguration`, `QueryPlatformConfiguration`, and `ServiceConfiguration`.
+Both hosts are thin subclasses of the entry configurations. They contain no bean definitions of their own.
+
+- **UserCommandHost** — `HostConfiguration extends GraniteUserCommandServerConfiguration`. Listens on port 8081.
+- **UserQueryHost** — `HostConfiguration extends GraniteUserQueryServerConfiguration`.
+
+Configuration values come from `SpringConfigurationProvider(environment)`, which loads `application.properties` and `application-<DEPLOY_ENV>.properties`, resolves `${...}` placeholders, and decrypts `ENC(...)`. `spring.jpa.mapping-resources` must include `OutboxEvent.orm.xml` because the default event sender writes to the outbox table.
+
+## Extending Granite.User
+
+Downstream application systems reuse Granite.User by depending on `granite-user-server` and subclassing an entry configuration in their own host. A seam is replaced by overriding its `@Bean` method, which must be re-annotated with `@Bean`. Declaring a bean with the same name in a separate configuration does not work, because Spring Boot rejects bean definition overriding.
+
+| Seam | Declared in | Default |
+|---|---|---|
+| `configuration(Environment)` | Abstract | `SpringConfigurationProvider(environment).get()` |
+| `mapper()` / `configureMapper(ModelMapper)` | Abstract | registers `MappingModule`; override `configureMapper`, call `super`, then add modules |
+| `passwordEncoder()` | Abstract | `BCryptPasswordEncoder(12)` |
+| `requestLoggingFilter()` | Abstract | query string, payload (10000), headers |
+| `openApi()` | Abstract | group `User`, service path + `/health/**` |
+| `userEventSender(IOutboxEventRepository)` | Command | `OutboxEventUserEventSender` |
+
+Domain extension is done through the `User` values map (`setValue`/`getValue`) together with `User.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
+
+```java
+@Configuration
+public
+class HostConfiguration
+    extends GraniteUserCommandServerConfiguration
+{
+    @Override
+    protected ModelMapper
+    configureMapper(ModelMapper mapper)
+    {
+        return super.configureMapper(mapper).registerModule(new RetailMappingModule());
+    }
+}
+```
+
+Plain (non-Boot) Spring contexts, such as `AnnotationConfigApplicationContext` in tests, must supply a Jackson `ObjectMapper` bean because springdoc's `StrataModelResolver` requires one. Boot hosts get it from Jackson auto-configuration.
 
 ## Commonly Used Design Patterns
 

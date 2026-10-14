@@ -421,8 +421,7 @@ class UserCommandService
         logger.debug("create User");
         return
             context
-                .setCreatedUser(
-                    mapToUser(context.getUserToCreate()).attach(this));
+                .setCreatedUser(mapToUser(context.getUserToCreate()));
     }
 
     protected CreateUsersContext
@@ -433,7 +432,7 @@ class UserCommandService
         List<User> created = new ArrayList<>();
 
         for (CreateUserData entityData : context.getUsersToCreate())
-            created.add(mapToUser(entityData).attach(this));
+            created.add(mapToUser(entityData));
 
         return context.setCreatedUsers(created);
     }
@@ -612,6 +611,7 @@ class UserCommandService
                                     () ->
                                         new IllegalStateException(
                                             "Error during user creation.")))
+                        .attach(this)
                         .notifyCreated());
     }
 
@@ -623,7 +623,7 @@ class UserCommandService
         List<User> persisted = new ArrayList<>();
 
         for (User entity : context.getCreatedUsers())
-            persisted.add(repository.save(entity).notifyCreated());
+            persisted.add(repository.save(entity).attach(this).notifyCreated());
 
         return context.setCreatedUsers(persisted);
     }

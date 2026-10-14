@@ -4,13 +4,13 @@
 
 package granite.session.server.application;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import granite.session.server.domain.DomainConfiguration;
-import granite.session.server.platform.CommandPlatformConfiguration;
+import granite.session.server.configuration.GraniteSessionCommandServerConfiguration;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
@@ -20,24 +20,18 @@ import granite.user.service.requestreply.CreateUserRequest;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.UserData;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.Scope;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.core.env.Environment;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.sql.Statement;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -55,16 +49,10 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.mockito.ArgumentMatchers.any;
 
 @Configuration
-@EnableTransactionManagement
 @PropertySource("classpath:test.properties")
-@Import(
-    {
-        ApplicationConfiguration.class,
-        DomainConfiguration.class,
-        CommandPlatformConfiguration.class
-    })
 public
 class TestConfiguration
+    extends GraniteSessionCommandServerConfiguration
 {
     public static final String JWKS_PATH = "/.well-known/jwks.json";
 
@@ -72,72 +60,30 @@ class TestConfiguration
     private static final String USER_SUFFIX     = "@example.com";
     private static final String PASSWORD_PREFIX = "password-";
 
-    @Bean
-    public static BeanFactoryPostProcessor
-    requestScopeRegistrar()
-    {
-        return
-            factory ->
-                factory.registerScope(
-                    "request",
-                    new org.springframework.web.context.request.RequestScope());
-    }
-
+    @Override
     @Bean
     @Scope("singleton")
     public IConfiguration
-    configuration()
+    configuration(Environment environment)
     {
         return new ApplicationConfigurationProvider("test").get();
     }
 
-    @Bean
-    @Scope("singleton")
-    public InitializingBean
-    schemaInitializer(EntityManagerFactory factory)
-    {
-        return
-            () ->
-            {
-                String script;
-
-                try (InputStream in = getClass().getResourceAsStream("/schema.sql"))
-                {
-                    script = new String(in.readAllBytes(),StandardCharsets.UTF_8);
-                }
-
-                EntityManager em = factory.createEntityManager();
-
-                try
-                {
-                    em.unwrap(org.hibernate.Session.class).doWork(
-                        connection ->
-                        {
-                            for (String sql : script.split(";"))
-                            {
-                                if (!sql.isBlank())
-                                {
-                                    try (Statement statement = connection.createStatement())
-                                    {
-                                        statement.execute(sql.trim());
-                                    }
-                                }
-                            }
-                        });
-                }
-                finally
-                {
-                    em.close();
-                }
-            };
-    }
-
+    @Override
     @Bean
     @Scope("singleton")
     public Clock
     clock()
     {
         return new TickingClock(Instant.now(),Duration.ofSeconds(1));
+    }
+
+    @Bean
+    @Scope("singleton")
+    public ObjectMapper
+    objectMapper()
+    {
+        return new ObjectMapper();
     }
 
     @Bean
@@ -170,10 +116,11 @@ class TestConfiguration
         return server;
     }
 
+    @Override
     @Bean
     @Scope("singleton")
     public IUserCommandServiceClient
-    userCommandServiceClient()
+    userCommandServiceClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
     {
         IUserCommandServiceClient client = Mockito.mock(IUserCommandServiceClient.class);
         Map<String,Long>          ids    = new ConcurrentHashMap<>();
@@ -234,10 +181,11 @@ class TestConfiguration
         return client;
     }
 
+    @Override
     @Bean
     @Scope("singleton")
     public IUserQueryServiceClient
-    userQueryServiceClient()
+    userQueryServiceClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
     {
         IUserQueryServiceClient client = Mockito.mock(IUserQueryServiceClient.class);
 

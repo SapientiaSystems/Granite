@@ -64,7 +64,7 @@ Each layer is organized into a dedicated Java package (`granite.session.server.*
 | `created` | `Instant` | Set at construction |
 | `expires` | `Instant` | Set at login/refresh to now + configured TTL |
 | `deviceId` | `String` | Composite index with `userId` |
-| `values` | `Map<String,Object>` | User-activity state; persisted via `@ElementCollection` into `session_values` |
+| `values` | `Map<String,Object>` | User-activity state; persisted as a JSON blob in the `value_map` column via `ValueMapConverter` |
 
 ### Component Responsibilities
 
@@ -98,8 +98,14 @@ The shared contract component. Contains no implementation logic. Defines:
 - **Platform layer** (`server.platform`):
   - `SessionCommandServiceController` — Spring `@RestController` exposing command endpoints under `/session-command-service/`
   - `SessionQueryServiceController` — Spring `@RestController` exposing query endpoints under `/session-query-service/`
-  - `PlatformConfiguration`, `CommandPlatformConfiguration` (wires Outbox event sender), `QueryPlatformConfiguration` (wires no event sender)
+  - `PlatformConfiguration` (JPA/UnitOfWork, health), `CommandPlatformConfiguration` (command controller, outbox repository, `Oauth2ProvidersProperties`), `QueryPlatformConfiguration` (query controller)
+  - `JwtKeyLoader` — loads the RSA key pair from configured locations; classpath keys are allowed only under the `dev` profile (and never with `test`/`production`)
   - Event senders: `OnCommitSessionEventSender`, `OutboxEventSessionEventSender`, `MockSessionEventSender` (testing)
+
+- **Configuration layer** (`server.configuration`): the entry configurations that hosts extend, following the Strata.Outbox → Granite.Outbox pattern.
+  - `AbstractGraniteSessionServerConfiguration` — imports `ApplicationConfiguration`, `DomainConfiguration`, `ServiceConfiguration`, and springdoc support. It declares the shared seam beans and the host plumbing: SecurityContextHolder strategy, request-scope registration, and the springdoc `ObjectMapperProvider`/`SpringDocConfigProperties`.
+  - `GraniteSessionCommandServerConfiguration` — adds `CommandPlatformConfiguration` and the command seams: event sender, JWT, OAuth2, User clients.
+  - `GraniteSessionQueryServerConfiguration` — adds `QueryPlatformConfiguration`.
 
 #### Granite.Session.Client
 
@@ -110,8 +116,37 @@ The shared contract component. Contains no implementation logic. Defines:
 
 ### Applications
 
-- **SessionCommandHost** — Spring Boot application assembling the command-side stack: `HostConfiguration` imports `ApplicationConfiguration`, `DomainConfiguration`, `CommandPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8088.
-- **SessionQueryHost** — Spring Boot application assembling the query-side stack: imports `ApplicationConfiguration`, `DomainConfiguration`, `QueryPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8089.
+Both hosts are thin subclasses of the entry configurations. They contain no bean definitions of their own.
+
+- **SessionCommandHost** — `HostConfiguration extends GraniteSessionCommandServerConfiguration`. Listens on port 8088.
+- **SessionQueryHost** — `HostConfiguration extends GraniteSessionQueryServerConfiguration`. Listens on port 8089.
+
+`main()` reads `DEPLOY_ENV` (default `production`), activates it as a Spring profile, adds `dev` when it is `development`, and publishes `DEPLOY_ENV` as a default property. Configuration comes from two places:
+- **`IConfiguration`** (JPA and datasource settings) comes from `SpringConfigurationProvider(environment)`, which loads `application.properties` plus `application-<DEPLOY_ENV>.properties`, resolves `${...}` placeholders (e.g. `${DB_PASSWORD}`), and decrypts `ENC(...)`.
+- **Spring-bound settings** (`granite.session.*`, User service hosts) come from the same profile file, which Boot loads natively.
+
+`spring.jpa.mapping-resources` must include `OutboxEvent.orm.xml` for the outbox event sender.
+
+## Extending Granite.Session
+
+Downstream application systems reuse Granite.Session by depending on `granite-session-server` and subclassing an entry configuration in their own host. A seam is replaced by overriding its `@Bean` method, which must be re-annotated with `@Bean`. Declaring a bean with the same name elsewhere does not work, because Spring Boot rejects bean definition overriding. Seam signatures take only injectable types (`Environment`, `ResourceLoader`, `ObjectProvider<SslBundles>`, ...) and never `@Value String` parameters, so overrides stay simple.
+
+| Seam | Declared in | Default |
+|---|---|---|
+| `configuration(Environment)` | Abstract | `SpringConfigurationProvider(environment).get()` |
+| `mapper()` / `configureMapper(ModelMapper)` | Abstract | registers `MappingModule`; override `configureMapper`, call `super`, then add modules |
+| `clock()` | Abstract | `Clock.systemUTC()` |
+| `schemaInitializer(EntityManagerFactory)` | Abstract | runs `schema.sql` against the persistence unit's DataSource |
+| `requestLoggingFilter()` | Abstract | query string only |
+| `openApi()` | Abstract | group `Session`, service path + `/health/**` |
+| `sessionEventSender(IOutboxEventRepository)` | Command | `OutboxEventSessionEventSender` |
+| `jwtTokenService(Environment,ResourceLoader)` | Command | `JwtTokenService` with keys from `JwtKeyLoader` and `granite.session.jwt.*` |
+| `oauth2IdTokenValidator(Oauth2ProvidersProperties)` | Command | `Oauth2IdTokenValidator` |
+| `userCommandServiceClient(...)` / `userQueryServiceClient(...)` | Command | REST clients to `granite.user-{command,query}-service.host`, with optional SSL bundle `granite.session.user-client.ssl-bundle`; `createClientBuilder(...)` is a protected hook |
+
+Domain extension is done through the `Session` values map (`setValue`/`getValue`) together with `Session.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
+
+Plain (non-Boot) Spring contexts, such as the ServerTest configurations, must supply a Jackson `ObjectMapper` bean because springdoc's `StrataModelResolver` requires one. Boot hosts get it from Jackson auto-configuration.
 
 ## Login and JWT
 
@@ -165,7 +200,7 @@ Each service pipeline uses a typed context object that carries the request, inte
 
 ### Composable Configuration
 
-Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConfiguration` provides shared JPA/UnitOfWork beans, and `CommandPlatformConfiguration` / `QueryPlatformConfiguration` extend it. `HostConfiguration` at the application level imports and assembles all required configurations.
+Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConfiguration` provides shared JPA/UnitOfWork beans, and `CommandPlatformConfiguration` / `QueryPlatformConfiguration` extend it. The entry configurations in `server.configuration` import the layer configurations and expose overridable seams. Each host's `HostConfiguration` simply extends the appropriate entry configuration.
 
 ## REST Endpoints
 

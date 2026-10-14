@@ -5,6 +5,7 @@
 package granite.frontendcontroller.userhost.main;
 
 import granite.frontendcontroller.server.configuration.GraniteUserFrontEndControllerConfiguration;
+import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.ObjectMapperProvider;
@@ -14,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
@@ -29,7 +29,8 @@ import strata.server.spring.service.ServiceConfiguration;
     GraniteUserFrontEndControllerConfiguration.class,
     ServiceConfiguration.class,
     SpringDocConfigProperties.class,
-    StrataModelResolver.class})
+    StrataModelResolver.class,
+    FrontEndControllerHealthCheckConfiguration.class})
 public
 class HostConfiguration
 {

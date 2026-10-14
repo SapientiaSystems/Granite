@@ -19,7 +19,6 @@ import strata.foundation.core.inject.ApplicationConfigurationProvider;
 import strata.foundation.kafka.event.IKafkaConfigurationProvider;
 import strata.foundation.kafka.event.KafkaConfigurationProvider;
 import strata.outbox.core.receiver.IOutboxEventReceiverMapProvider;
-import strata.outbox.server.configuration.StrataChangeCaptureOutboxServerConfiguration;
 import strata.outbox.server.configuration.StrataPollingOutboxServerConfiguration;
 import strata.server.spring.health.HealthCheckConfiguration;
 

@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(
     classes = SessionCommandHost.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "granite.deploy-env=smoke")
+    properties = "DEPLOY_ENV=smoke")
 @ActiveProfiles({"smoke","dev"})
 public
 class SessionCommandHostSmokeTest
