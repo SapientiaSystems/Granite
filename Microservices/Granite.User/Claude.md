@@ -76,7 +76,7 @@ The server-side implementation:
   - `UserCommandService` — Implements `IUserCommandService` and `IUserEventObserver`. Provides create, create-batch, update, destroy, and destroy-batch operations. Translates domain events into service-level user events via `IUserEventSender`.
   - `UserQueryService` — Implements `IUserQueryService`. Provides find-by-key, find-by-key-set and find-all-users operations. `findAllUsers` returns every user ordered by `userId` ascending.
   - Context objects: `CreateUserContext`, `CreateUsersContext`, `UpdateUserContext`, `DestroyUserContext`, `DestroyUsersContext`, `FindUsersByKeyContext`, `FindUsersByKeySetContext`, `FindAllUsersContext`
-  - `MappingModule` — ModelMapper type mappings between User domain objects and User DTOs
+  - `MappingModule` — ModelMapper type mappings between User domain objects and User DTOs. `UserData.password` is never the stored hash: the `User → UserData` map converts a non-blank password to the constant `********` and a null or blank one to `null`, so every `UserData`-returning path (create, update, destroy, find, authenticate) is masked. Callers still send plaintext through `CreateUserData`/`UpdateUserData`
   - `ApplicationConfiguration` — Spring `@Configuration` that wires user services with request scope
 
 - **Platform layer** (`server.platform`):

@@ -17,6 +17,7 @@ class UserData
     private Long               userId;
     private String             userName;
     private String             externalIdentity;
+    private String             password;
     private Set<String>        authorities;
     private Map<String,Object> values;
 
@@ -26,6 +27,7 @@ class UserData
         userId           = null;
         userName         = null;
         externalIdentity = null;
+        password         = null;
         authorities      = new LinkedHashSet<>();
         values           = new LinkedHashMap<>();
     }
@@ -52,6 +54,13 @@ class UserData
     }
 
     public UserData
+    setPassword(String p)
+    {
+        password = p;
+        return this;
+    }
+
+    public UserData
     setAuthorities(Set<String> values)
     {
         authorities = values;
@@ -73,6 +82,9 @@ class UserData
 
     public String
     getExternalIdentity() { return externalIdentity; }
+
+    public String
+    getPassword() { return password; }
 
     public Set<String>
     getAuthorities() { return authorities; }

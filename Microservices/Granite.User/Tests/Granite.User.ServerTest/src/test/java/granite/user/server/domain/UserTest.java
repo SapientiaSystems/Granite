@@ -147,19 +147,21 @@ class UserTest
 
     @Test
     public void
-    testUserDataJsonExcludesPassword() throws Exception
+    testUserDataJsonCarriesOnlyMaskedPassword() throws Exception
     {
         UserData data =
             new UserData()
                 .setUserId(1L)
                 .setUserName("alice@example.com")
                 .setExternalIdentity("google:abc")
-                .setAuthorities(Set.of("ROLE_USER"));
+                .setAuthorities(Set.of("ROLE_USER"))
+                .setPassword("********");
         String json = new ObjectMapper().writeValueAsString(data);
 
+        assertTrue(json.contains("\"password\":\"********\""),json);
         assertFalse(
-            json.toLowerCase().contains("password"),
-            "UserData JSON must never contain a password field: " + json);
+            json.contains("$2"),
+            "UserData JSON must never contain a password hash: " + json);
     }
 }
 
