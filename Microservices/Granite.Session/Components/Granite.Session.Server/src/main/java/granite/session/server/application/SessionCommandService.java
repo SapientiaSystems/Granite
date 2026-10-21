@@ -25,9 +25,6 @@ import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
-import granite.user.service.requestreply.CreateUserData;
-import granite.user.service.requestreply.CreateUserReply;
-import granite.user.service.requestreply.CreateUserRequest;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.UserData;
@@ -428,64 +425,7 @@ class SessionCommandService
                     .setUserId(existing.getUserId())
                     .setAuthorities(existing.getAuthorities());
 
-        String composite = provider + ":" + sub;
-
-        try
-        {
-            CreateUserReply reply =
-                userCommandServiceClient
-                    .createUser(
-                        new CreateUserRequest()
-                            .setUserToCreate(
-                                new CreateUserData()
-                                    .setExternalIdentity(composite)
-                                    .setUserName(sub)))
-                    .toCompletableFuture()
-                    .join();
-
-            if (reply != null && reply.isSuccess() && reply.getCreatedUser() != null)
-                return
-                    context
-                        .setUserId(reply.getCreatedUser().getUserId())
-                        .setAuthorities(reply.getCreatedUser().getAuthorities());
-
-            UserData recovered = findUserByExternalIdentity(provider,sub);
-
-            if (recovered != null)
-                return
-                    context
-                        .setUserId(recovered.getUserId())
-                        .setAuthorities(recovered.getAuthorities());
-
-            String failureMessage =
-                reply != null && reply.getFailureMessage() != null
-                    ? reply.getFailureMessage()
-                    : "unable to provision user";
-            return context.setFailureReason(failureMessage);
-        }
-        catch (RuntimeException createUserException)
-        {
-            logger.info(
-                "<loginWithOauth2> createUser failed, re-querying: {}",
-                createUserException.getMessage());
-
-            try
-            {
-                UserData recovered = findUserByExternalIdentity(provider,sub);
-
-                if (recovered != null)
-                    return
-                        context
-                            .setUserId(recovered.getUserId())
-                            .setAuthorities(recovered.getAuthorities());
-            }
-            catch (RuntimeException recoveryException)
-            {
-                createUserException.addSuppressed(recoveryException);
-            }
-
-            throw createUserException;
-        }
+        return context.setFailureReason("invalid credentials");
     }
 
     protected LoginWithOauth2Context

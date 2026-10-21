@@ -4,7 +4,7 @@
 
 Granite.Session is a Spring Boot microservice that manages authentication and user-activity sessions within the Granite system. A Session entity is created when a user authenticates (credential-based login or OAuth2 federated login) and holds the issued access token (a signed JWT), device identifier, lifetime, and arbitrary user-activity state. Sessions are revoked on logout. The microservice exposes command and query REST APIs and emits domain events (SessionCreated, SessionUpdated, SessionDestroyed) as session state changes occur. Events are propagated to external consumers via the Transactional Outbox pattern and Kafka (topic `granite.session.events`).
 
-Granite.Session mirrors the architecture, build layout, event delivery, and coding style of Granite.User. It depends on Granite.User.Client to authenticate passwords (`authenticateUser`), look up OAuth2 identities (`findUsersByExternalIdentity`), and JIT-provision users (`createUser`).
+Granite.Session mirrors the architecture, build layout, event delivery, and coding style of Granite.User. It depends on Granite.User.Client to authenticate passwords (`authenticateUser`) and look up OAuth2 identities (`findUsersByExternalIdentity`).
 
 ## Technology Stack
 
@@ -168,7 +168,7 @@ Plain (non-Boot) Spring contexts, such as the ServerTest configurations, must su
 ## Login and JWT
 
 - `login` dispatches on `credentialKind`: `PASSWORD` calls `IUserCommandServiceClient.authenticateUser` and mints a Session on success; `ACCESS_TOKEN` validates against Session's own store and mints a new Session for the same user and device (original is not destroyed), carrying the existing session's authorities; `SECURITY_CODE` returns a not-supported failure in v1.
-- `loginWithOauth2` validates the ID token with `NimbusJwtDecoder` against the configured provider's JWKS (`granite.session.oauth2.providers.<name>.{issuer-uri,audience,jwks-uri}`), finds the user via `findUsersByExternalIdentity` (JIT-provisioning with `createUser` if absent), and mints a Session.
+- `loginWithOauth2` validates the ID token with `NimbusJwtDecoder` against the configured provider's JWKS (`granite.session.oauth2.providers.<name>.{issuer-uri,audience,jwks-uri}`), finds the user via `findUsersByExternalIdentity`; an unknown identity is refused with `invalid credentials` and no user is ever created. Otherwise it applies the login gate and mints a Session.
 - Every successful `login`/`loginWithOauth2` reply carries `accessToken` and an opaque `refreshToken`. Only the refresh token's SHA-256 hash is stored on the Session.
 - `refresh` takes `{refreshToken}` (not a sessionId). It looks the session up by the token's hash, rejects it if the sliding `expires` or the absolute cap `created + granite.session.max-lifetime` (default `PT24H`) has passed, rotates the refresh token (the current hash becomes `previousRefreshTokenHash`), sets `expires = min(now + session-ttl, created + max-lifetime)`, mints a new JWT, and fires `SessionUpdated`. The reply carries the new `accessToken` and `refreshToken`.
 - Presenting a refresh token that matches a session's `previousRefreshTokenHash` is treated as theft: the session is destroyed (`SessionDestroyed`) and the refresh fails. Each refresh token is therefore single-use.
