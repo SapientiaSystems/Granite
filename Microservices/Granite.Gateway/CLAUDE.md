@@ -48,7 +48,7 @@ Published as `granite.gateway:granite-gateway-server`. Contains the gateway's en
 
 The Spring Boot application entry point:
 
-- `GatewayServiceHost` — `@SpringBootApplication` that excludes `DataSourceAutoConfiguration`, servlet `SecurityAutoConfiguration`, and `KafkaAutoConfiguration`. The active profile comes from `DEPLOY_ENV` (default `development`).
+- `GatewayServiceHost` — `@SpringBootApplication` that excludes `DataSourceAutoConfiguration`, servlet `SecurityAutoConfiguration`, and `KafkaAutoConfiguration`. The active profile comes from `DEPLOY_ENV` (default `local`); the only environments are `local`, `development`, `test` and `production`.
 - `HostConfiguration` — `HostConfiguration extends GraniteGatewayServerConfiguration`; contains no bean definitions of its own.
 
 ## Routes
@@ -69,17 +69,17 @@ No path stripping is applied — backend controllers are mounted at these exact 
 
 ### Route Host Configuration
 
-Backend host URIs are parameterized via Spring properties (`granite.<service>.host`) and vary by profile:
+Backend host URIs are parameterized via Spring properties (`granite.<service>.host`). Following `Templates/__System__`, every environment (`local` = docker-compose network, `development`/`test`/`production` = cluster) uses the same service names:
 
-| Property | Development | Test / Production |
-|---|---|---|
-| `granite.frontendcontroller-user-service.host` | `https://localhost:8081/frontendcontroller-user-service` | `https://granite-frontendcontroller-userhost:443` |
-| `granite.frontendcontroller-admin-service.host` | `https://localhost:8082/frontendcontroller-admin-service` | `https://granite-frontendcontroller-adminhost:443` |
-| `granite.user-command-service.host` | `https://localhost:8083/user-command-service` | `https://granite-user-commandhost:443` |
-| `granite.user-query-service.host` | `https://localhost:8084/user-query-service` | `https://granite-user-queryhost:443` |
-| `granite.session-command-service.host` | `https://localhost:8088/session-command-service` | `https://granite-session-commandhost:443` |
-| `granite.session-query-service.host` | `https://localhost:8089/session-query-service` | `https://granite-session-queryhost:443` |
-| `granite.outbox-service.host` | `https://localhost:8085/outbox-service` | `https://granite-outbox-servicehost:443` |
+| Property | Value |
+|---|---|
+| `granite.frontendcontroller-user-service.host` | `https://granite-frontendcontroller-userhost:443` |
+| `granite.frontendcontroller-admin-service.host` | `https://granite-frontendcontroller-adminhost:443` |
+| `granite.user-command-service.host` | `https://granite-user-commandhost:443` |
+| `granite.user-query-service.host` | `https://granite-user-queryhost:443` |
+| `granite.session-command-service.host` | `https://granite-session-commandhost:443` |
+| `granite.session-query-service.host` | `https://granite-session-queryhost:443` |
+| `granite.outbox-service.host` | `https://granite-outbox-servicehost:443` |
 
 Each property is required. A missing host fails startup, because routes resolve it with `Environment.getRequiredProperty`.
 
@@ -91,8 +91,38 @@ Downstream application systems reuse the gateway by depending on `granite-gatewa
 |---|---|
 | `routeLocator(RouteLocatorBuilder,Environment)` → `configureRoutes(Builder,Environment)` | adds the seven Granite routes above |
 | `addRoute(Builder,id,pathPattern,hostProperty,Environment)` | helper: one route whose URI comes from the required property `hostProperty` |
-| `securityWebFilterChain(ServerHttpSecurity)` | CSRF disabled, all exchanges permitted |
+| `securityWebFilterChain(ServerHttpSecurity,ReactiveJwtDecoder,GraniteJwtAuthenticationConverter,Environment)` | reactive JWT resource server: CSRF off. `OPTIONS` and the `getPublicPathPatterns(Environment)` paths are public (`/health/**` plus Session `login`, `login-with-oauth2`, `refresh`, plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production`). Then come the `configureAuthorization(...)` rules, then `anyExchange().authenticated()` |
+| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | hook where an application declares its authorization rules; the default declares none (authentication only) |
+| `getPublicPathPatterns(Environment)` | hook: paths reachable without a token |
+| `jwtDecoder(Environment,ISessionRevocationChecker)` | `RevocationCheckingReactiveJwtDecoder` wrapping `createJwtDecoder(Environment)`. The inner decoder is a `NimbusReactiveJwtDecoder` against `granite.security.jwt.jwk-set-uri` (Session's JWKS) with the Foundation `iss`/`aud`/`exp` validators |
+| `revocationChecker(ObjectProvider<SslBundles>,Environment)` | `SessionQueryRevocationChecker`: after signature validation, looks up the token's `jti` (session id) via Session Query's `find-sessions-by-key`, using the caller's own bearer. Live results are cached for `granite.gateway.revocation.cache-ttl` (`PT30S`); revoked results are cached until the token's `exp`. Lookup errors and timeouts (`granite.gateway.revocation.timeout`, `PT2S`) reject the request and are not cached. Tokens whose `sub` starts with `service:` skip the lookup. `granite.gateway.revocation.enabled=false` turns the check off |
+| `createRevocationWebClient(ObjectProvider<SslBundles>,Environment)` | hook: the WebClient for lookups. It trusts `granite.gateway.revocation.ssl-bundle`, which defaults to `spring.cloud.gateway.httpclient.ssl.bundle` |
+| `createJwtDecoder(ObjectProvider<SslBundles>,Environment)` / `createTrustingWebClient(...)` | hooks: the JWKS is fetched with a WebClient that trusts `granite.security.jwt.ssl-bundle`, which also defaults to the gateway HTTP client bundle |
+
+Production no longer uses `useInsecureTrustManager`. The `granite-services` bundle's truststore comes from `${GRANITE_TRUSTSTORE_LOCATION}` / `${GRANITE_TRUSTSTORE_PASSWORD}`, which must be supplied at deploy time.
+
+After logout, a token is rejected at the Gateway within the live-cache window (30 seconds by default) instead of lasting until its `exp`.
+| `jwtAuthenticationConverter()` | `GraniteJwtAuthenticationConverter` (`sub` principal, `authorities` claim) |
 | `healthCheckController()` | `GatewayHealthCheckController` |
+
+Authorization rules live here and only here: User and Session only authenticate. Each application that instantiates a Gateway declares its rules by overriding `configureAuthorization`. Rules match on path and method, so they cannot inspect request bodies. The caller's `Authorization` header is relayed to the routed service unchanged.
+
+```java
+@Override
+protected ServerHttpSecurity.AuthorizeExchangeSpec
+configureAuthorization(ServerHttpSecurity.AuthorizeExchangeSpec exchanges,Environment environment)
+{
+    return
+        super
+            .configureAuthorization(exchanges,environment)
+            .pathMatchers(HttpMethod.POST,"/user-command-service/**")
+                .hasAuthority("ROLE_ADMIN")
+            .pathMatchers("/session-query-service/**")
+                .hasAnyAuthority("ROLE_ADMIN","SCOPE_internal");
+}
+```
+
+`AuthorizingGatewayTestConfiguration` and `GatewayAuthorizationTest` in ServerTest show this end to end. `GatewayTestBackend` serves a JWKS and stands in for the routed services.
 
 To add routes, override `configureRoutes`, call `super`, then call `addRoute`. To expose only some Granite routes, override without calling `super` and add the ones you want.
 
@@ -128,11 +158,11 @@ Spring `@Configuration` classes are composed via `@Import` and inheritance. `Hos
 
 ### Reactive Security
 
-The gateway uses Spring Security's reactive `ServerHttpSecurity` (not the servlet `HttpSecurity`). The `SecurityWebFilterChain` bean in `GraniteGatewayServerConfiguration` disables CSRF and permits all exchanges, matching the security posture of the other Granite microservices.
+The gateway uses Spring Security's reactive `ServerHttpSecurity` (not the servlet `HttpSecurity`). The `SecurityWebFilterChain` bean in `GraniteGatewayServerConfiguration` validates Session-issued JWTs and enforces the application's authorization rules (see "Extending Granite.Gateway").
 
 ### Profile-Based Configuration
 
-Route target URIs are externalized into profile-specific properties files (`development.properties`, `test.properties`, `production.properties`), allowing the same gateway code to route to localhost during development and to Kubernetes service DNS names in deployed environments.
+Route target URIs are externalized into environment files (`application-local.properties`, `application-development.properties`, `application-test.properties`, `application-production.properties`) that follow `Templates/__System__`.
 
 ## Key Dependency Note
 

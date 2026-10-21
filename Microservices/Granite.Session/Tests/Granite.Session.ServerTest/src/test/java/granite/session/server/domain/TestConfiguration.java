@@ -30,7 +30,7 @@ import strata.server.spring.unitofwork.SpringUnitOfWorkSynchronizationManager;
 
 @Configuration
 @EnableTransactionManagement
-@PropertySource("classpath:test.properties")
+@PropertySource({"classpath:application.properties","classpath:application-local.properties"})
 @Import({DomainConfiguration.class})
 public
 class TestConfiguration
@@ -52,7 +52,7 @@ class TestConfiguration
     configuration()
     {
         return
-            new ApplicationConfigurationProvider("test").get();
+            new ApplicationConfigurationProvider("application-local").get();
     }
 
     @Bean

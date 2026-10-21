@@ -37,7 +37,7 @@ class UserEventSenderTest
     {
         IKafkaConfigurationProvider provider =
             new KafkaConfigurationProvider(
-                new ApplicationConfigurationProvider("test").get());
+                new ApplicationConfigurationProvider("application-local").get());
 
         sender = new KafkaAvroUserEventSender(provider,"test-granite.userevent.avro");
         receiver = new UserKafkaAvroEventReceiver(provider,"test-granite.userevent.avro");

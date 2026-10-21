@@ -20,7 +20,7 @@ import strata.server.spring.inject.RequestAttributeMap;
 @Tag("CommitStage")
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = TestConfiguration.class)
-@ActiveProfiles("dev")
+@ActiveProfiles("local")
 public
 class SessionQueryServiceServerTest
     extends granite.session.service.requestreply.SessionQueryServiceTest

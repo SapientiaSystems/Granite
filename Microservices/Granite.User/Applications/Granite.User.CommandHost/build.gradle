@@ -27,19 +27,19 @@ jib {
         }
     }
     to {
-        image = "registry.gitlab.com/guitar-center/gl_merchandising-technology/applicationsystems/granite-user-commandhost"
+        image = "ghcr.io/johnliebenau/granite/granite-user-commandhost"
         tags = ["${version}","latest"]
         auth {
-            username = "oauth2"
-            password = "$System.env.GITLAB_TOKEN"
+            username = "$System.env.REPOSITORY_USER"
+            password = "$System.env.REPOSITORY_PASSWORD"
         }
     }
     container {
-        environment = [DEPLOY_ENV:"development",PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
+        environment = [PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
         jvmFlags = ["-Xmx1024m"]
         extraClasspath = [".build/libs/Granite.User.CommandHost-${version}.jar"]
         mainClass = "granite.user.commandhost.main.UserCommandHost"
-        ports = ['8081']
+        ports = ['8083']
         format = 'OCI'
     }
 }

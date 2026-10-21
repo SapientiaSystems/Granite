@@ -25,26 +25,41 @@ import strata.foundation.core.transfer.ExceptionData;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public
 class UserCommandService
     implements ITransactionalUserCommandService, IUserEventObserver
 {
-    private final IUserRepository  repository;
-    private final IUserEventSender sender;
-    private final ModelMapper            mapper;
-    private final PasswordEncoder        encoder;
-    private final Logger                 logger;
+    private static final Map<PasswordEncoder,String> DUMMY_HASHES = new ConcurrentHashMap<>();
 
-    @Inject
+    private final IUserRepository    repository;
+    private final IUserEventSender   sender;
+    private final ModelMapper        mapper;
+    private final PasswordEncoder    encoder;
+    private final LoginLockoutPolicy lockoutPolicy;
+    private final Logger             logger;
+
     public UserCommandService(IUserRepository r,IUserEventSender s,ModelMapper m,PasswordEncoder e)
     {
-        repository = r;
-        sender     = s;
-        mapper     = m;
-        encoder    = e;
-        logger     = LogManager.getLogger(UserCommandService.class);
+        this(r,s,m,e,LoginLockoutPolicy.defaults());
+    }
+
+    @Inject
+    public UserCommandService(
+        IUserRepository    r,
+        IUserEventSender   s,
+        ModelMapper        m,
+        PasswordEncoder    e,
+        LoginLockoutPolicy p)
+    {
+        repository    = r;
+        sender        = s;
+        mapper        = m;
+        encoder       = e;
+        lockoutPolicy = p;
+        logger        = LogManager.getLogger(UserCommandService.class);
     }
 
     @Override
@@ -150,7 +165,9 @@ class UserCommandService
                 .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
                 .thenApply(authRequest -> mapToContext(authRequest))
                 .thenApply(context -> lookupUser(context))
+                .thenApply(context -> checkLockout(context))
                 .thenApply(context -> checkCredential(context))
+                .thenApply(context -> recordOutcome(context))
                 .thenApply(context -> buildReply(context))
                 .exceptionally(exception -> buildReply(exception,request));
     }
@@ -382,6 +399,20 @@ class UserCommandService
     }
 
     protected AuthenticateUserContext
+    checkLockout(AuthenticateUserContext context)
+    {
+        logger.debug("<authenticate> check lockout");
+
+        boolean locked =
+            context
+                .getUser()
+                .map(user -> user.isLocked(lockoutPolicy.now()))
+                .orElse(false);
+
+        return locked ? context.setLocked(true).setFailureMessage("account locked") : context;
+    }
+
+    protected AuthenticateUserContext
     checkCredential(AuthenticateUserContext context)
     {
         logger.debug("<authenticate> check credential");
@@ -391,16 +422,14 @@ class UserCommandService
         switch (kind)
         {
             case PASSWORD:
-                User user = context.getUser().orElse(null);
+                User    user    = context.getUser().orElse(null);
+                boolean hasHash = user != null && user.getPassword() != null;
+                boolean matches =
+                    encoder.matches(
+                        context.getCredential(),
+                        hasHash ? user.getPassword() : dummyHash());
 
-                if (user == null || user.getPassword() == null)
-                    return context.setValid(false);
-
-                return
-                    context.setValid(
-                        encoder.matches(
-                            context.getCredential(),
-                            user.getPassword()));
+                return context.setValid(hasHash && matches && !context.isLocked());
 
             case ACCESS_TOKEN:
             case SECURITY_CODE:
@@ -413,6 +442,32 @@ class UserCommandService
                                 + kind
                                 + " is not supported by Granite.User.authenticateUser");
         }
+    }
+
+    protected AuthenticateUserContext
+    recordOutcome(AuthenticateUserContext context)
+    {
+        logger.debug("<authenticate> record outcome");
+
+        User user = context.getUser().orElse(null);
+
+        if (user == null || context.isLocked() || context.getCredentialKind() != CredentialKind.PASSWORD)
+            return context;
+
+        if (context.getValid())
+        {
+            if (user.getFailedLoginAttempts() > 0 || user.getLockedUntil() != null)
+                repository.save(user.resetFailedLogins());
+
+            return context;
+        }
+
+        user.recordFailedLogin(
+            lockoutPolicy.now(),
+            lockoutPolicy.getMaxAttempts(),
+            lockoutPolicy.getLockDuration());
+        repository.save(user);
+        return context;
     }
 
     protected CreateUserContext
@@ -686,6 +741,12 @@ class UserCommandService
         data
             .getAuthorities()
             .ifPresent(user::setAuthorities);
+    }
+
+    private String
+    dummyHash()
+    {
+        return DUMMY_HASHES.computeIfAbsent(encoder,e -> e.encode(UUID.randomUUID().toString()));
     }
 
     private String

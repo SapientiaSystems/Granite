@@ -95,3 +95,27 @@ tasks.named('check') {
         dependsOn b.task(':check')
     }
 }
+
+tasks.register('publish') {
+    description = 'Publishes all publications produced by all included builds'
+    group = 'publishing'
+    includedBuilds.each { b ->
+        dependsOn b.task(':publish')
+    }
+}
+
+tasks.register('publishToMavenLocal') {
+    description = 'Publishes all publications produced by all included builds to the local Maven cache'
+    group = 'publishing'
+    includedBuilds.each { b ->
+        dependsOn b.task(':publishToMavenLocal')
+    }
+}
+
+tasks.register('publishToGitHubPackages') {
+    description = 'Publishes all publications produced by all included builds to the GitHubPackages repository'
+    group = 'publishing'
+    includedBuilds.each { b ->
+        dependsOn b.task(':publishToGitHubPackages')
+    }
+}

@@ -9,6 +9,7 @@ import strata.foundation.core.collection.ListValuedMultiMap;
 import strata.server.core.repository.AbstractRepository;
 import strata.server.core.unitofwork.IUnitOfWork;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,8 +33,14 @@ class SessionRepository
                 "findByAccessToken",
                 "select e from Session e where e.accessToken = :accessToken")
             .registerQuery(
-                "findAllByAccessTokenIn",
-                "select e from Session e where e.accessToken IN :accessTokens")
+                "findByRefreshTokenHash",
+                "select e from Session e where e.refreshTokenHash = :hash")
+            .registerQuery(
+                "findExpiredBefore",
+                "select e from Session e where e.expires < :time order by e.expires")
+            .registerQuery(
+                "findByPreviousRefreshTokenHash",
+                "select e from Session e where e.previousRefreshTokenHash = :hash")
             .registerQuery(
                 "findAllByUserId",
                 "select e from Session e where e.userId = :userId")
@@ -82,25 +89,41 @@ class SessionRepository
     }
 
     @Override
-    public IMultiMap<String,Session>
-    findAllByAccessTokenIn(Set<String> accessTokens)
+    public Optional<Session>
+    findByRefreshTokenHash(String hash)
     {
-        ListValuedMultiMap<String,Session> result =
-            new ListValuedMultiMap<>();
+        return
+            getUnitOfWork()
+                .findOneByQuery(
+                    Session.class,
+                    "findByRefreshTokenHash",
+                    Map.of("hash",hash));
+    }
 
-        getUnitOfWork()
-            .findManyByQuery(
-                Session.class,
-                "findAllByAccessTokenIn",
-                Map.of("accessTokens",accessTokens))
-            .forEach(entity -> result.put(entity.getAccessToken(),entity));
+    @Override
+    public List<Session>
+    findExpiredBefore(Instant time)
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findExpiredBefore",
+                    Map.of("time",time))
+                .stream()
+                .collect(Collectors.toList());
+    }
 
-        accessTokens
-            .stream()
-            .filter(token -> !result.containsKey(token))
-            .forEach(token -> result.putAll(token,List.of()));
-
-        return result;
+    @Override
+    public Optional<Session>
+    findByPreviousRefreshTokenHash(String hash)
+    {
+        return
+            getUnitOfWork()
+                .findOneByQuery(
+                    Session.class,
+                    "findByPreviousRefreshTokenHash",
+                    Map.of("hash",hash));
     }
 
     @Override

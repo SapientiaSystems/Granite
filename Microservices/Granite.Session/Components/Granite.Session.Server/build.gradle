@@ -3,7 +3,7 @@ plugins {
 }
 
 sourceSets {
-    main.java.srcDirs = ['src/main/java','build/generated-java']
+    main.java.srcDirs = ['src/main/java','.build/generated-java']
     main.resources.srcDirs = ['src/main/resources','src/main/schema']
     test.java.srcDirs = ['src/unused']
     test.resources.srcDirs = ['src/unused']
@@ -21,10 +21,6 @@ publishing {
         GraniteSessionServer(MavenPublication) {
             artifactId = 'granite-session-server'
             from components.java
-
-            artifact sourceJar {
-                //classifier "sources"
-            }
 
             repositories {
                 maven {

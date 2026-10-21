@@ -58,12 +58,14 @@ class SessionCommandService
 {
     private final ISessionRepository        repository;
     private final IJwtTokenService          jwtTokenService;
+    private final IRefreshTokenService      refreshTokenService;
     private final IUserCommandServiceClient userCommandServiceClient;
     private final IUserQueryServiceClient   userQueryServiceClient;
     private final IOauth2IdTokenValidator   oauth2Validator;
     private final ISessionEventSender       sender;
     private final ModelMapper               mapper;
     private final Duration                  sessionTtl;
+    private final Duration                  maxLifetime;
     private final Clock                     clock;
     private final Logger                    logger;
 
@@ -72,22 +74,26 @@ class SessionCommandService
     SessionCommandService(
         ISessionRepository        repository,
         IJwtTokenService          jwtTokenService,
+        IRefreshTokenService      refreshTokenService,
         IUserCommandServiceClient userCommandServiceClient,
         IUserQueryServiceClient   userQueryServiceClient,
         IOauth2IdTokenValidator   oauth2Validator,
         ISessionEventSender       sender,
         ModelMapper               mapper,
         Duration                  sessionTtl,
+        Duration                  maxLifetime,
         Clock                     clock)
     {
         this.repository               = repository;
         this.jwtTokenService          = jwtTokenService;
+        this.refreshTokenService      = refreshTokenService;
         this.userCommandServiceClient = userCommandServiceClient;
         this.userQueryServiceClient   = userQueryServiceClient;
         this.oauth2Validator          = oauth2Validator;
         this.sender                   = sender;
         this.mapper                   = mapper;
         this.sessionTtl               = sessionTtl;
+        this.maxLifetime              = maxLifetime;
         this.clock                    = clock;
         this.logger                   = LogManager.getLogger(SessionCommandService.class);
     }
@@ -177,8 +183,10 @@ class SessionCommandService
                 .supplyAsync(() -> validateRefresh(request),new CurrentThreadExecutor())
                 .thenApply(this::mapToRefreshContext)
                 .thenApply(this::loadForRefresh)
+                .thenApply(this::revokeOnReuse)
                 .thenApply(this::verifyLive)
                 .thenApply(this::updateExpires)
+                .thenApply(this::rotateRefreshToken)
                 .thenApply(this::remintJwt)
                 .thenApply(this::saveRefreshed)
                 .thenApply(this::buildRefreshReply)
@@ -280,17 +288,22 @@ class SessionCommandService
         if (context.getValidatedUserId() == null || context.isUnsupportedKind())
             return context;
 
-        Instant now = Instant.now(clock);
-        Session session =
+        Instant now          = Instant.now(clock);
+        String  refreshToken = refreshTokenService.generate();
+        Session session      =
             new Session()
                 .setUserId(context.getValidatedUserId())
                 .setDeviceId(context.getDeviceId())
-                .setExpires(now.plus(sessionTtl))
+                .setExpires(capExpires(now,now))
                 .setAccessToken("")
+                .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .setAuthorities(context.getValidatedAuthorities());
 
         session.setCreated(now);
-        return context.setCreated(session);
+        return
+            context
+                .setCreated(session)
+                .setRefreshToken(refreshToken);
     }
 
     protected LoginContext
@@ -463,17 +476,22 @@ class SessionCommandService
         if (context.getUserId() == null)
             return context;
 
-        Instant now     = Instant.now(clock);
-        Session session =
+        Instant now          = Instant.now(clock);
+        String  refreshToken = refreshTokenService.generate();
+        Session session      =
             new Session()
                 .setUserId(context.getUserId())
                 .setDeviceId(context.getDeviceId())
-                .setExpires(now.plus(sessionTtl))
+                .setExpires(capExpires(now,now))
                 .setAccessToken("")
+                .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .setAuthorities(context.getAuthorities());
 
         session.setCreated(now);
-        return context.setCreated(session);
+        return
+            context
+                .setCreated(session)
+                .setRefreshToken(refreshToken);
     }
 
     protected LoginWithOauth2Context
@@ -585,7 +603,8 @@ class SessionCommandService
                 .setSuccess(true)
                 .setSuccessMessage("Session: " + session.getSessionId() + " created")
                 .setSessionData(data)
-                .setAccessToken(session.getAccessToken());
+                .setAccessToken(session.getAccessToken())
+                .setRefreshToken(context.getRefreshToken());
     }
 
     private LoginReply
@@ -701,8 +720,12 @@ class SessionCommandService
 
         Objects.requireNonNull(request,"request");
         Objects.requireNonNull(
-            request.getSessionId(),
-            "validation failed: sessionId was not provided");
+            request.getRefreshToken(),
+            "validation failed: refreshToken was not provided");
+
+        if (request.getRefreshToken().isBlank())
+            throw new IllegalArgumentException("validation failed: refreshToken was blank");
+
         return request;
     }
 
@@ -716,14 +739,42 @@ class SessionCommandService
     protected RefreshContext
     loadForRefresh(RefreshContext context)
     {
-        logger.debug("<refresh> load({})",context.getSessionId());
+        logger.debug("<refresh> load");
 
-        Optional<Session> found = repository.findById(context.getSessionId());
+        String            hash  = refreshTokenService.hash(context.getPresentedRefreshToken());
+        Optional<Session> found = repository.findByRefreshTokenHash(hash);
 
-        if (found.isEmpty())
-            return context.setNotFound(true);
+        if (found.isPresent())
+            return context.setLoaded(found.get());
 
-        return context.setLoaded(found.get());
+        Optional<Session> replayed = repository.findByPreviousRefreshTokenHash(hash);
+
+        if (replayed.isPresent())
+            return
+                context
+                    .setReused(true)
+                    .setLoaded(replayed.get());
+
+        return context.setNotFound(true);
+    }
+
+    protected RefreshContext
+    revokeOnReuse(RefreshContext context)
+    {
+        logger.debug("<refresh> revokeOnReuse");
+
+        if (!context.isReused() || context.getLoaded() == null)
+            return context;
+
+        Session session = context.getLoaded();
+
+        logger.warn(
+            "<refresh> refresh token reuse detected; destroying session: {}",
+            session.getSessionId());
+        session.attach(this);
+        session.destroy();
+        repository.delete(session);
+        return context;
     }
 
     protected RefreshContext
@@ -731,13 +782,16 @@ class SessionCommandService
     {
         logger.debug("<refresh> verifyLive");
 
-        if (context.isNotFound() || context.getLoaded() == null)
+        if (context.isRejected())
             return context;
 
         Session session = context.getLoaded();
         Instant now     = Instant.now(clock);
 
         if (session.getExpires() == null || session.getExpires().isBefore(now))
+            return context.setExpired(true);
+
+        if (session.getCreated() == null || !session.getCreated().plus(maxLifetime).isAfter(now))
             return context.setExpired(true);
 
         return context;
@@ -748,15 +802,31 @@ class SessionCommandService
     {
         logger.debug("<refresh> updateExpires");
 
-        if (context.isNotFound() || context.isExpired() || context.getLoaded() == null)
+        if (context.isRejected())
             return context;
 
         Session session = context.getLoaded();
         Instant now     = Instant.now(clock);
 
         session.attach(this);
-        session.setExpires(now.plus(sessionTtl));
+        session.setExpires(capExpires(session.getCreated(),now));
         return context;
+    }
+
+    protected RefreshContext
+    rotateRefreshToken(RefreshContext context)
+    {
+        logger.debug("<refresh> rotateRefreshToken");
+
+        if (context.isRejected())
+            return context;
+
+        String refreshToken = refreshTokenService.generate();
+
+        context
+            .getLoaded()
+            .rotateRefreshTokenHash(refreshTokenService.hash(refreshToken));
+        return context.setRefreshToken(refreshToken);
     }
 
     protected RefreshContext
@@ -764,7 +834,7 @@ class SessionCommandService
     {
         logger.debug("<refresh> remintJwt");
 
-        if (context.isNotFound() || context.isExpired() || context.getLoaded() == null)
+        if (context.isRejected())
             return context;
 
         Session session = context.getLoaded();
@@ -779,7 +849,7 @@ class SessionCommandService
     {
         logger.debug("<refresh> save");
 
-        if (context.isNotFound() || context.isExpired() || context.getLoaded() == null)
+        if (context.isRejected())
             return context;
 
         Session session = repository.save(context.getLoaded());
@@ -852,16 +922,25 @@ class SessionCommandService
     {
         if (context.isNotFound())
         {
-            logger.info("<refresh> session not found: {}",context.getSessionId());
+            logger.info("<refresh> invalid refresh token");
             return
                 new RefreshReply(context.getRequest())
                     .setSuccess(false)
-                    .setFailureMessage("session not found");
+                    .setFailureMessage("invalid refresh token");
+        }
+
+        if (context.isReused())
+        {
+            logger.info("<refresh> session: {} revoked",context.getLoaded().getSessionId());
+            return
+                new RefreshReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage("refresh token reused; session revoked");
         }
 
         if (context.isExpired())
         {
-            logger.info("<refresh> session expired: {}",context.getSessionId());
+            logger.info("<refresh> session expired: {}",context.getLoaded().getSessionId());
             return
                 new RefreshReply(context.getRequest())
                     .setSuccess(false)
@@ -877,7 +956,8 @@ class SessionCommandService
                 .setSuccess(true)
                 .setSuccessMessage("Session: " + session.getSessionId() + " refreshed")
                 .setSessionData(data)
-                .setAccessToken(session.getAccessToken());
+                .setAccessToken(session.getAccessToken())
+                .setRefreshToken(context.getRefreshToken());
     }
 
     private RefreshReply
@@ -889,6 +969,15 @@ class SessionCommandService
                 .setSuccess(false)
                 .setFailureMessage("Unable to refresh")
                 .setException(ExceptionData.of(e));
+    }
+
+    private Instant
+    capExpires(Instant created,Instant now)
+    {
+        Instant sliding  = now.plus(sessionTtl);
+        Instant absolute = created.plus(maxLifetime);
+
+        return sliding.isBefore(absolute) ? sliding : absolute;
     }
 
     private Long
@@ -952,7 +1041,8 @@ class SessionCommandService
                 .setSuccess(true)
                 .setSuccessMessage("Session: " + session.getSessionId() + " created")
                 .setSessionData(data)
-                .setAccessToken(session.getAccessToken());
+                .setAccessToken(session.getAccessToken())
+                .setRefreshToken(context.getRefreshToken());
     }
 
     private LoginWithOauth2Reply

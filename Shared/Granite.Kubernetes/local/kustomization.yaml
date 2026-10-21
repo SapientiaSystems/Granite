@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+  - granite-local.yml
+configMapGenerator:
+  - name: granite-environment
+    namespace: granite
+    literals:
+      - DEPLOY_ENV=local
+      - IMAGE_TAG=latest
+replacements:
+  - source:
+      kind: ConfigMap
+      name: granite-environment
+      fieldPath: data.IMAGE_TAG
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths:
+          - spec.template.spec.containers.0.image
+        options:
+          delimiter: ":"
+          index: 1
+patches:
+  - target:
+      kind: Ingress
+      name: granite-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: granite.localhost
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: granite.localhost
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1issuer
+        value: granite-ca-issuer

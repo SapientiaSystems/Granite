@@ -5,6 +5,7 @@
 package granite.session.server.platform;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import granite.session.server.application.IServiceTokenProvider;
 import granite.session.server.configuration.GraniteSessionCommandServerConfiguration;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -20,7 +21,7 @@ import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
 
 @Configuration
-@PropertySource("classpath:test.properties")
+@PropertySource({"classpath:application.properties","classpath:application-local.properties"})
 public
 class PlatformContextTestConfiguration
     extends GraniteSessionCommandServerConfiguration
@@ -31,14 +32,17 @@ class PlatformContextTestConfiguration
     public IConfiguration
     configuration(Environment environment)
     {
-        return new ApplicationConfigurationProvider("test").get();
+        return new ApplicationConfigurationProvider("application-local").get();
     }
 
     @Override
     @Bean
     @Scope("singleton")
     public IUserCommandServiceClient
-    userCommandServiceClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    userCommandServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
     {
         return Mockito.mock(IUserCommandServiceClient.class);
     }
@@ -47,7 +51,10 @@ class PlatformContextTestConfiguration
     @Bean
     @Scope("singleton")
     public IUserQueryServiceClient
-    userQueryServiceClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    userQueryServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
     {
         return Mockito.mock(IUserQueryServiceClient.class);
     }

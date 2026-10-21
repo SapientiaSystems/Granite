@@ -7,4 +7,5 @@ interface LoginReply
 {
     sessionData?: SessionData;
     accessToken?: string;
+    refreshToken?: string;
 }

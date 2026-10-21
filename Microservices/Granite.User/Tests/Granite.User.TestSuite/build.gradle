@@ -78,11 +78,11 @@ jib {
         }
     }
     to {
-        image = "registry.gitlab.com/guitar-center/gl_merchandising-technology/applicationsystems/granite/granite.user/granite-user-testsuite"
+        image = "ghcr.io/johnliebenau/granite/granite-user-testsuite"
         tags = ["${version}", "latest"]
         auth {
-            username = "oauth2"
-            password = "$System.env.GITLAB_TOKEN"
+            username = "$System.env.REPOSITORY_USER"
+            password = "$System.env.REPOSITORY_PASSWORD"
         }
     }
     containerizingMode = 'packaged'

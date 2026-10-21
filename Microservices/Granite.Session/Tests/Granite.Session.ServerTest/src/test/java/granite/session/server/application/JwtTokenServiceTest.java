@@ -5,9 +5,11 @@
 package granite.session.server.application;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import granite.session.server.domain.Session;
@@ -28,6 +30,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -35,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -245,6 +249,69 @@ class JwtTokenServiceTest
 
         assertNotNull(actual);
         assertTrue(actual.isEmpty());
+    }
+
+    @Test
+    public void
+    mintedJwtExpirationIsCappedAtTtl()
+        throws ParseException
+    {
+        JwtTokenService target  = newService();
+        Instant         before  = Instant.now();
+        Session         session =
+            newSession(1001L,2002L,"device-A").setExpires(Instant.now().plus(Duration.ofHours(8)));
+        JWTClaimsSet    claims  = SignedJWT.parse(target.mint(session)).getJWTClaimsSet();
+        Instant         exp     = claims.getExpirationTime().toInstant();
+
+        assertFalse(exp.isAfter(Instant.now().plus(TTL)),"exp should not exceed now + ttl");
+        assertFalse(exp.isBefore(before.plus(TTL).minusSeconds(1)),"exp should be about now + ttl");
+    }
+
+    @Test
+    public void
+    mintedJwtExpirationNeverOutlivesSession()
+        throws ParseException
+    {
+        JwtTokenService target   = newService();
+        Instant         expires  = Instant.now().plus(Duration.ofMinutes(3)).truncatedTo(ChronoUnit.SECONDS);
+        Session         session  = newSession(1001L,2002L,"device-A").setExpires(expires);
+        JWTClaimsSet    claims   = SignedJWT.parse(target.mint(session)).getJWTClaimsSet();
+
+        assertEquals(expires,claims.getExpirationTime().toInstant());
+    }
+
+    @Test
+    public void
+    mintedJwtHeaderCarriesThumbprintKeyId()
+        throws ParseException,JOSEException
+    {
+        JwtTokenService target   = newService();
+        SignedJWT       parsed   = SignedJWT.parse(target.mint(newSession(1001L,2002L,"device-A")));
+        String          expected = new RSAKey.Builder(publicKey).keyIDFromThumbprint().build().getKeyID();
+
+        assertEquals(expected,parsed.getHeader().getKeyID());
+        assertEquals(expected,target.getKeyId());
+        assertEquals(JOSEObjectType.JWT,parsed.getHeader().getType());
+    }
+
+    @Test
+    public void
+    mintedServiceTokenCarriesServiceIdentity()
+        throws ParseException,JwtVerificationException
+    {
+        JwtTokenService target = newService();
+        String          token  =
+            target.mintServiceToken("service:granite-session",List.of("SCOPE_internal"),Duration.ofMinutes(5));
+        SignedJWT       parsed = SignedJWT.parse(token);
+        JWTClaimsSet    claims = parsed.getJWTClaimsSet();
+
+        assertEquals("service:granite-session",claims.getSubject());
+        assertEquals(List.of("SCOPE_internal"),claims.getStringListClaim("authorities"));
+        assertTrue(claims.getAudience().contains(AUDIENCE));
+        assertNotNull(claims.getJWTID());
+        assertEquals(target.getKeyId(),parsed.getHeader().getKeyID());
+        assertFalse(claims.getExpirationTime().toInstant().isAfter(Instant.now().plus(Duration.ofMinutes(5))));
+        assertEquals("service:granite-session",target.verifySignatureAndExp(token).getSubject());
     }
 
     private JwtTokenService

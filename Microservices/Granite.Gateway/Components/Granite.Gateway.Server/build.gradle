@@ -3,7 +3,7 @@ plugins {
 }
 
 sourceSets {
-    main.java.srcDirs = ['src/main/java','build/generated-java']
+    main.java.srcDirs = ['src/main/java','.build/generated-java']
     main.resources.srcDirs = ['src/main/resources','src/main/schema']
     test.java.srcDirs = ['src/unused']
     test.resources.srcDirs = ['src/unused']
@@ -21,9 +21,6 @@ publishing {
             artifactId = 'granite-gateway-server'
             from components.java
 
-            artifact sourceJar {
-            }
-
             repositories {
                 maven {
                     name "GitHubPackages"
@@ -40,6 +37,7 @@ publishing {
 
 dependencies {
     api "strata.foundation:strata-foundation-spring:$strata_foundation_version"
+    api "granite.foundation:granite-foundation-core:$system_version"
     api "org.springframework.boot:spring-boot-starter-security:$springboot_version"
     api "org.springframework.security:spring-security-core:$spring_security_version"
     api "org.springframework.cloud:spring-cloud-starter-gateway:$spring_cloud_gateway_version"

@@ -126,6 +126,32 @@ class SessionTest
 
     @Test
     public void
+    testRefreshTokenHashesDefaultToNull()
+    {
+        Session target = new Session();
+
+        assertNull(target.getRefreshTokenHash());
+        assertNull(target.getPreviousRefreshTokenHash());
+    }
+
+    @Test
+    public void
+    testRotateRefreshTokenHashMovesCurrentToPrevious()
+    {
+        Session target = new Session().setRefreshTokenHash("hash-1");
+
+        assertSame(target,target.rotateRefreshTokenHash("hash-2"));
+        assertEquals("hash-2",target.getRefreshTokenHash());
+        assertEquals("hash-1",target.getPreviousRefreshTokenHash());
+
+        target.rotateRefreshTokenHash("hash-3");
+
+        assertEquals("hash-3",target.getRefreshTokenHash());
+        assertEquals("hash-2",target.getPreviousRefreshTokenHash());
+    }
+
+    @Test
+    public void
     testSetDeviceIdFluentlyAndRead()
     {
         Session target = new Session();

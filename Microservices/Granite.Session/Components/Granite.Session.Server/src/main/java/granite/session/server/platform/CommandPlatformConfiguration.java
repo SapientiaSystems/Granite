@@ -4,6 +4,7 @@
 
 package granite.session.server.platform;
 
+import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.Oauth2ProvidersProperties;
 import granite.session.service.requestreply.ISessionCommandService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -28,6 +29,13 @@ class CommandPlatformConfiguration
     sessionCommandServiceController(ISessionCommandService service)
     {
         return new SessionCommandServiceController(service);
+    }
+
+    @Bean
+    public JwkSetController
+    jwkSetController(IJwkSetProvider provider)
+    {
+        return new JwkSetController(provider);
     }
 }
 

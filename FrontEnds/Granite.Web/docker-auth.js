@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// __System__.Web
+// Granite.Web
 //////////////////////////////////////////////////////////////////////////////
 
 const { spawn } = require("child_process");
@@ -52,15 +52,16 @@ async function main()
     }
     else if (target === "to")
     {
-        const token = process.env.GITLAB_TOKEN;
+        const user     = process.env.REPOSITORY_USER;
+        const password = process.env.REPOSITORY_PASSWORD;
 
-        if (!token)
+        if (!user || !password)
         {
-            console.error("Error: GITLAB_TOKEN environment variable is required.");
+            console.error("Error: REPOSITORY_USER and REPOSITORY_PASSWORD environment variables are required.");
             process.exit(1);
         }
 
-        await login("registry.gitlab.com", "oauth2", token);
+        await login("ghcr.io", user, password);
     }
     else
     {

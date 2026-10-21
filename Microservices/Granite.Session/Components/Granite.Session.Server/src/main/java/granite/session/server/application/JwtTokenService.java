@@ -5,10 +5,12 @@
 package granite.session.server.application;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import granite.session.server.domain.Session;
@@ -25,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public
 class JwtTokenService
@@ -35,6 +38,7 @@ class JwtTokenService
 
     private final RSASSASigner    signer;
     private final RSASSAVerifier  verifier;
+    private final String          keyId;
     private final String          issuer;
     private final List<String>    audience;
     private final Duration        ttl;
@@ -57,6 +61,7 @@ class JwtTokenService
 
         this.signer   = new RSASSASigner(privateKey);
         this.verifier = new RSASSAVerifier(publicKey);
+        this.keyId    = computeKeyId(publicKey);
         this.issuer   = issuer;
         this.audience = List.copyOf(audience);
         this.ttl      = ttl;
@@ -71,7 +76,7 @@ class JwtTokenService
         Objects.requireNonNull(session.getSessionId(),"session.sessionId");
 
         Instant      now         = Instant.now();
-        Instant      exp         = session.getExpires() != null ? session.getExpires() : now.plus(ttl);
+        Instant      exp         = computeExpiration(session.getExpires(),now);
         Set<String>  authorities = session.getAuthorities();
         JWTClaimsSet claims      =
             new JWTClaimsSet.Builder()
@@ -86,18 +91,30 @@ class JwtTokenService
                     AUTHORITIES_CLAIM,
                     authorities != null ? new ArrayList<>(authorities) : List.of())
                 .build();
-        SignedJWT    signed    = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256),claims);
+        return sign(claims);
+    }
 
-        try
-        {
-            signed.sign(signer);
-        }
-        catch (JOSEException e)
-        {
-            throw new IllegalStateException("failed to sign JWT",e);
-        }
+    @Override
+    public String
+    mintServiceToken(String subject,Collection<String> authorities,Duration lifetime)
+    {
+        Objects.requireNonNull(subject,"subject");
+        Objects.requireNonNull(authorities,"authorities");
+        Objects.requireNonNull(lifetime,"lifetime");
 
-        return signed.serialize();
+        Instant      now    = Instant.now();
+        JWTClaimsSet claims =
+            new JWTClaimsSet.Builder()
+                .issuer(issuer)
+                .subject(subject)
+                .jwtID(UUID.randomUUID().toString())
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(now.plus(lifetime)))
+                .audience(audience)
+                .claim(AUTHORITIES_CLAIM,new ArrayList<>(authorities))
+                .build();
+
+        return sign(claims);
     }
 
     @Override
@@ -167,6 +184,60 @@ class JwtTokenService
                 .setAudience(aud)
                 .setDeviceId(readStringClaim(claims,DEVICE_ID_CLAIM))
                 .setAuthorities(readStringListClaim(claims,AUTHORITIES_CLAIM));
+    }
+
+    public String
+    getKeyId() { return keyId; }
+
+    private String
+    sign(JWTClaimsSet claims)
+    {
+        SignedJWT signed =
+            new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.RS256)
+                    .type(JOSEObjectType.JWT)
+                    .keyID(keyId)
+                    .build(),
+                claims);
+
+        try
+        {
+            signed.sign(signer);
+        }
+        catch (JOSEException e)
+        {
+            throw new IllegalStateException("failed to sign JWT",e);
+        }
+
+        return signed.serialize();
+    }
+
+    private Instant
+    computeExpiration(Instant sessionExpires,Instant now)
+    {
+        Instant capped = now.plus(ttl);
+
+        if (sessionExpires != null && sessionExpires.isBefore(capped))
+            return sessionExpires;
+
+        return capped;
+    }
+
+    private static String
+    computeKeyId(RSAPublicKey publicKey)
+    {
+        try
+        {
+            return
+                new RSAKey.Builder(publicKey)
+                    .keyIDFromThumbprint()
+                    .build()
+                    .getKeyID();
+        }
+        catch (JOSEException e)
+        {
+            throw new IllegalStateException("failed to compute key id",e);
+        }
     }
 
     private String

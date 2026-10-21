@@ -173,14 +173,6 @@ class SessionQueryService
                             .map(entity -> List.of(entity))
                             .orElse(List.of()));
 
-            case SessionKey.ACCESS_TOKEN:
-                return
-                    context.setFound(
-                        repository
-                            .findByAccessToken(key.getValue())
-                            .map(entity -> List.of(entity))
-                            .orElse(List.of()));
-
             case SessionKey.USER_ID:
                 return
                     context.setFound(
@@ -208,17 +200,6 @@ class SessionQueryService
                             .stream()
                             .filter(entity -> entity.isPresent())
                             .map(entity -> entity.get())
-                            .toList());
-
-            case SessionKeySet.ACCESS_TOKENS:
-                return
-                    context.setFound(
-                        repository
-                            .findAllByAccessTokenIn(keySet.getValues())
-                            .values()
-                            .stream()
-                            .filter(entities -> !entities.isEmpty())
-                            .flatMap(entities -> entities.stream())
                             .toList());
 
             case SessionKeySet.USER_IDS:

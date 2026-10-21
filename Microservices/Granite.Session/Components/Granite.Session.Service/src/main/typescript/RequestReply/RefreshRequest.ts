@@ -4,5 +4,5 @@ export
 interface RefreshRequest
     extends AbstractServiceRequest
 {
-    sessionId?: number;
+    refreshToken?: string;
 }

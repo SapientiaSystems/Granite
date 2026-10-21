@@ -29,7 +29,7 @@ class SessionQueryServiceTest
             getSubject()
                 .findSessionsByKey(
                     new FindSessionsByKeyRequest()
-                        .setKey(SessionKey.ofAccessToken(loginReply.getAccessToken()))
+                        .setKey(SessionKey.ofSessionId(created.getSessionId()))
                         .setReturnIfFound(true))
                 .toCompletableFuture()
                 .join();

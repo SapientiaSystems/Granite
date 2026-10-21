@@ -96,6 +96,10 @@ REST client and event receiver implementations:
 - **Event receiver**: `FrontEndControllerKafkaEventReceiver`, `FrontEndControllerKafkaAvroEventReceiver` — Kafka consumers for FrontEndController events
 - **TypeScript mirror**: `BusinessPresentersServiceClient`, `FrontEndControllerQueryServiceClient` with corresponding interfaces
 
+### Calling User with the caller's identity
+
+User requires a valid Session-issued bearer token. The request-scoped `IUserQueryServiceClient` beans and the UserHost's `IUserCommandServiceClient` (`user-command-service.base-url`) in `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` register `ForwardedBearerClientRequestFilter`. It captures the inbound `Authorization: Bearer ...` header when the client is created, and adds it as a real HTTP header on outgoing calls. Copying `Authorization` into a request DTO's `headers` does not reach User, because DTO headers are part of the JSON body.
+
 ### Applications
 
 - **FrontEndControllerUserHost** — Spring Boot application that assembles the command-side stack: `HostConfiguration` imports `ApplicationConfiguration`, `DomainConfiguration`, `BusinessPresentersPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8081.

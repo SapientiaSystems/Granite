@@ -1,0 +1,38 @@
+[req]
+default_bits = 2048
+prompt = no
+distinguished_name = dn
+req_extensions = v3_req
+
+[dn]
+CN = granite-services
+O = Granite
+
+[v3_req]
+subjectAltName = @alt_names
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = host.docker.internal
+DNS.3 = granite-frontendcontroller-userhost
+DNS.4 = granite-frontendcontroller-userhost.granite.svc.cluster.local
+DNS.5 = granite-frontendcontroller-adminhost
+DNS.6 = granite-frontendcontroller-adminhost.granite.svc.cluster.local
+DNS.7 = granite-user-commandhost
+DNS.8 = granite-user-commandhost.granite.svc.cluster.local
+DNS.9 = granite-user-queryhost
+DNS.10 = granite-user-queryhost.granite.svc.cluster.local
+DNS.11 = granite-session-commandhost
+DNS.12 = granite-session-commandhost.granite.svc.cluster.local
+DNS.13 = granite-session-queryhost
+DNS.14 = granite-session-queryhost.granite.svc.cluster.local
+DNS.15 = granite-gateway-servicehost
+DNS.16 = granite-gateway-servicehost.granite.svc.cluster.local
+DNS.17 = granite-outbox-servicehost
+DNS.18 = granite-outbox-servicehost.granite.svc.cluster.local
+DNS.19 = granite-web-apphost
+DNS.20 = granite-web-apphost.granite.svc.cluster.local
+IP.1 = 127.0.0.1

@@ -15,6 +15,7 @@ import strata.server.core.unitofwork.IUnitOfWorkSynchronizationManager;
 import strata.server.spring.inject.RequestAttributeMap;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -82,6 +83,32 @@ class UserRepositoryTest
         assertNotNull(actual.get());
         assertNotNull(actual.get().getPrimaryId());
         assertEquals(expected.get().getUserName(),actual.get().getUserName());
+    }
+
+    @Test
+    public void
+    testLockoutStatePersists() throws Exception
+    {
+        final Instant               lockedUntil = Instant.parse("2026-10-20T12:15:00Z");
+        final AtomicReference<User> saved       = new AtomicReference<>();
+
+        transaction.executeWithoutResult(
+            status ->
+                saved.set(
+                    target.save(
+                        new User()
+                            .setUserName("user-lockout-1@example.com")
+                            .setFailedLoginAttempts(3)
+                            .setLockedUntil(lockedUntil))));
+
+        Optional<User> reloaded =
+            transaction.execute(status -> target.findById(saved.get().getPrimaryId()));
+
+        assertTrue(reloaded.isPresent());
+        assertEquals(3,reloaded.get().getFailedLoginAttempts());
+        assertEquals(lockedUntil,reloaded.get().getLockedUntil());
+        assertTrue(reloaded.get().isLocked(lockedUntil.minusSeconds(1)));
+        assertFalse(reloaded.get().isLocked(lockedUntil));
     }
 
     @Test

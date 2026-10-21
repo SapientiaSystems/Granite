@@ -8,6 +8,8 @@ import granite.foundation.core.mapper.StringMapperRegistry;
 import strata.foundation.core.mapper.IMapper;
 import strata.server.core.entity.AbstractEntityAndDomainEventSource;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -29,6 +31,8 @@ class User
     private String                     externalIdentity;
     private Set<String>                authorities;
     private Map<String,Object>         values;
+    private Integer                    failedLoginAttempts;
+    private Instant                    lockedUntil;
 
     private static final StringMapperRegistry registry = StringMapperRegistry.of();
 
@@ -36,11 +40,13 @@ class User
     User()
     {
         super();
-        userName         = null;
-        password         = null;
-        externalIdentity = null;
-        authorities      = new LinkedHashSet<>();
-        values           = new LinkedHashMap<>();
+        userName            = null;
+        password            = null;
+        externalIdentity    = null;
+        authorities         = new LinkedHashSet<>();
+        values              = new LinkedHashMap<>();
+        failedLoginAttempts = 0;
+        lockedUntil         = null;
     }
 
     @Override
@@ -85,6 +91,48 @@ class User
         return this;
     }
 
+    public User
+    setFailedLoginAttempts(Integer attempts)
+    {
+        failedLoginAttempts = attempts;
+        return this;
+    }
+
+    public User
+    setLockedUntil(Instant time)
+    {
+        lockedUntil = time;
+        return this;
+    }
+
+    public User
+    recordFailedLogin(Instant now,int maxAttempts,Duration lockDuration)
+    {
+        failedLoginAttempts = getFailedLoginAttempts() + 1;
+
+        if (failedLoginAttempts >= maxAttempts)
+        {
+            lockedUntil         = now.plus(lockDuration);
+            failedLoginAttempts = 0;
+        }
+
+        return this;
+    }
+
+    public User
+    resetFailedLogins()
+    {
+        failedLoginAttempts = 0;
+        lockedUntil         = null;
+        return this;
+    }
+
+    public boolean
+    isLocked(Instant now)
+    {
+        return lockedUntil != null && lockedUntil.isAfter(now);
+    }
+
     public <T> User
     setValue(String key,T value)
     {
@@ -115,6 +163,12 @@ class User
 
     public Map<String,Object>
     getValues() { return values; }
+
+    public Integer
+    getFailedLoginAttempts() { return failedLoginAttempts != null ? failedLoginAttempts : 0; }
+
+    public Instant
+    getLockedUntil() { return lockedUntil; }
 
     public <T> Optional<T>
     getValue(Class<T> type,String key)

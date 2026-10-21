@@ -60,7 +60,9 @@ Each layer is organized into a dedicated Java package (`granite.session.server.*
 |---|---|---|
 | `sessionId` | `Long` | Primary key, auto-generated |
 | `userId` | `Long` | Logical reference to User (plain BIGINT, no JPA relation); indexed |
-| `accessToken` | `String` | Signed JWT (RS256); unique index |
+| `accessToken` | `String` | Signed JWT (RS256); unique index; never returned in `SessionData` |
+| `refreshTokenHash` | `String` | SHA-256 hex of the current refresh token; unique. The raw token is never stored |
+| `previousRefreshTokenHash` | `String` | Hash of the token that was just rotated out; used for reuse detection; indexed |
 | `created` | `Instant` | Set at construction |
 | `expires` | `Instant` | Set at login/refresh to now + configured TTL |
 | `deviceId` | `String` | Composite index with `userId` |
@@ -75,7 +77,7 @@ The shared contract component. Contains no implementation logic. Defines:
 - **Service interfaces**: `ISessionCommandService`, `ISessionQueryService`
 - **Request/Reply DTOs**: `LoginRequest`/`Reply`, `LoginWithOauth2Request`/`Reply`, `LogoutRequest`/`Reply`, `LogoutAllForUserRequest`/`Reply`, `RefreshRequest`/`Reply`, `FindSessionsByKeyRequest`/`Reply`, `FindSessionsByKeySetRequest`/`Reply`, `FindSessionByUserIdAndDeviceIdRequest`/`Reply`
 - **Data transfer objects**: `SessionData`
-- **Key types**: `SessionKey` (names `SESSION_ID`, `ACCESS_TOKEN`, `USER_ID`), `SessionKeySet` (names `SESSION_IDS`, `ACCESS_TOKENS`, `USER_IDS`)
+- **Key types**: `SessionKey` (names `SESSION_ID`, `USER_ID`), `SessionKeySet` (names `SESSION_IDS`, `USER_IDS`). Lookup by access token is deliberately not offered, so tokens never appear in query requests.
 - **Credentials**: carried as sibling scalar fields `credential: String` and `credentialKind: CredentialKind`. `CredentialKind` (`PASSWORD`, `ACCESS_TOKEN`, `SECURITY_CODE`) lives in Granite.User.Service.
 - **Event interfaces**: `ISessionEventSender`, `ISessionEventReceiver`, `ISessionEventListener`
 - **TypeScript mirror**: All interfaces and DTOs are also defined in TypeScript under `src/main/typescript/`
@@ -99,7 +101,7 @@ The shared contract component. Contains no implementation logic. Defines:
   - `SessionCommandServiceController` — Spring `@RestController` exposing command endpoints under `/session-command-service/`
   - `SessionQueryServiceController` — Spring `@RestController` exposing query endpoints under `/session-query-service/`
   - `PlatformConfiguration` (JPA/UnitOfWork, health), `CommandPlatformConfiguration` (command controller, outbox repository, `Oauth2ProvidersProperties`), `QueryPlatformConfiguration` (query controller)
-  - `JwtKeyLoader` — loads the RSA key pair from configured locations; classpath keys are allowed only under the `dev` profile (and never with `test`/`production`)
+  - `JwtKeyLoader` — loads the RSA key pair from configured locations; classpath keys are allowed only in the `local` and `development` environments (and never with `test`/`production`)
   - Event senders: `OnCommitSessionEventSender`, `OutboxEventSessionEventSender`, `MockSessionEventSender` (testing)
 
 - **Configuration layer** (`server.configuration`): the entry configurations that hosts extend, following the Strata.Outbox → Granite.Outbox pattern.
@@ -121,11 +123,16 @@ Both hosts are thin subclasses of the entry configurations. They contain no bean
 - **SessionCommandHost** — `HostConfiguration extends GraniteSessionCommandServerConfiguration`. Listens on port 8088.
 - **SessionQueryHost** — `HostConfiguration extends GraniteSessionQueryServerConfiguration`. Listens on port 8089.
 
-`main()` reads `DEPLOY_ENV` (default `production`), activates it as a Spring profile, adds `dev` when it is `development`, and publishes `DEPLOY_ENV` as a default property. Configuration comes from two places:
+`main()` reads `DEPLOY_ENV` (default `local`), activates it as the only Spring profile, and publishes it as a default property. The only environments are `local`, `development`, `test` and `production`; each host has `application.properties` plus one `application-<env>.properties` per environment, following `Templates/__System__` (`local`: docker-host Postgres; `development`/`test`/`production`: cluster Postgres. `local` and `development` update the schema automatically (`ddl-auto=update`); `test` and `production` use `validate` until Flyway is introduced). Configuration comes from two places:
 - **`IConfiguration`** (JPA and datasource settings) comes from `SpringConfigurationProvider(environment)`, which loads `application.properties` plus `application-<DEPLOY_ENV>.properties`, resolves `${...}` placeholders (e.g. `${DB_PASSWORD}`), and decrypts `ENC(...)`.
 - **Spring-bound settings** (`granite.session.*`, User service hosts) come from the same profile file, which Boot loads natively.
 
 `spring.jpa.mapping-resources` must include `OutboxEvent.orm.xml` for the outbox event sender.
+
+TLS: in every environment, both hosts serve HTTPS with the `granite-services` SSL bundle (`server.ssl.bundle`), like the Gateway, FrontEndController, Outbox and User. The keystore and truststore files (`granite-services.p12`, `granite-truststore.p12`) are supplied outside the repository. In `production`, their locations and passwords come from `${GRANITE_KEYSTORE_*}` / `${GRANITE_TRUSTSTORE_*}`.
+- The CommandHost's User clients trust the bundle through `granite.session.user-client.ssl-bundle`.
+- The QueryHost fetches the JWKS through `granite.security.jwt.ssl-bundle`.
+- The smoke tests run under `local` with a test-resource `application-local.properties` (H2, plain HTTP) that shadows the main one.
 
 ## Extending Granite.Session
 
@@ -139,10 +146,19 @@ Downstream application systems reuse Granite.Session by depending on `granite-se
 | `schemaInitializer(EntityManagerFactory)` | Abstract | runs `schema.sql` against the persistence unit's DataSource |
 | `requestLoggingFilter()` | Abstract | query string only |
 | `openApi()` | Abstract | group `Session`, service path + `/health/**` |
+| `securityFilterChain(HttpSecurity,JwtDecoder,GraniteJwtAuthenticationConverter,Environment)` | Abstract | stateless JWT resource server; public paths come from `getPublicPathPatterns(Environment)`: `OPTIONS`, `${strata.health.base-path}/**`, `/error` (and the springdoc paths outside `production`), plus on the Command side `login`, `login-with-oauth2`, `refresh` and `/.well-known/jwks.json` |
+| `jwtDecoder(Environment,ObjectProvider<IJwkSetProvider>)` | Abstract | CommandHost validates in-process against its own `IJwkSetProvider`. QueryHost (or any host with `granite.security.jwt.jwk-set-uri` set) fetches the JWKS remotely |
+| `jwtAuthenticationConverter()` | Abstract | `GraniteJwtAuthenticationConverter` (`sub` principal, `authorities` claim) |
 | `sessionEventSender(IOutboxEventRepository)` | Command | `OutboxEventSessionEventSender` |
 | `jwtTokenService(Environment,ResourceLoader)` | Command | `JwtTokenService` with keys from `JwtKeyLoader` and `granite.session.jwt.*` |
+| `jwkSetProvider(Environment,ResourceLoader)` | Command | `JwkSetProvider` with the public key at `granite.session.jwt.public-key-location`, plus `granite.session.jwt.previous-public-key-location` when set (key rotation) |
+| `refreshTokenService()` | Command | `RefreshTokenService`: 256-bit SecureRandom base64url tokens, SHA-256 hex hashes |
 | `oauth2IdTokenValidator(Oauth2ProvidersProperties)` | Command | `Oauth2IdTokenValidator` |
-| `userCommandServiceClient(...)` / `userQueryServiceClient(...)` | Command | REST clients to `granite.user-{command,query}-service.host`, with optional SSL bundle `granite.session.user-client.ssl-bundle`; `createClientBuilder(...)` is a protected hook |
+| `sessionPurgeJob(ObjectProvider<ISessionRepository>,ObjectProvider<ISpringUnitOfWorkManager>,Clock,Environment)` | Command | `SessionPurgeJob` (`SmartLifecycle`): every `granite.session.purge.interval` (`PT15M`) it deletes up to `granite.session.purge.batch-size` (500) expired sessions, oldest first, in its own request scope and transaction, without firing `SessionDestroyed`. `granite.session.purge.enabled=false` disables the schedule; `purgeExpired()` can still be called directly |
+| `serviceTokenProvider(IJwtTokenService,Clock,Environment)` | Command | `ServiceTokenProvider`: a cached service JWT (`granite.session.service-token.subject` default `service:granite-session`, `.authorities` default `SCOPE_internal`, `.ttl` default `PT5M`), renewed a minute before expiry |
+| `userCommandServiceClient(...)` / `userQueryServiceClient(...)` | Command | REST clients to `granite.user-{command,query}-service.host`, with optional SSL bundle `granite.session.user-client.ssl-bundle`. `createClientBuilder(sslBundles,environment,serviceTokenProvider)` is a protected hook; it registers `ServiceTokenClientRequestFilter`, so every User call carries `Authorization: Bearer <service token>` |
+
+Security: Session only authenticates. Authorization rules belong to the Gateway's `securityWebFilterChain`. `SecurityAutoConfiguration` stays excluded in the host mains, because the entry configuration enables web security itself. The SecurityContextHolder strategy is set in `beanFactoryPostProcessor()`, before any security filter captures it.
 
 Domain extension is done through the `Session` values map (`setValue`/`getValue`) together with `Session.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
 
@@ -152,8 +168,11 @@ Plain (non-Boot) Spring contexts, such as the ServerTest configurations, must su
 
 - `login` dispatches on `credentialKind`: `PASSWORD` calls `IUserCommandServiceClient.authenticateUser` and mints a Session on success; `ACCESS_TOKEN` validates against Session's own store and mints a new Session for the same user and device (original is not destroyed); `SECURITY_CODE` returns a not-supported failure in v1.
 - `loginWithOauth2` validates the ID token with `NimbusJwtDecoder` against the configured provider's JWKS (`granite.session.oauth2.providers.<name>.{issuer-uri,audience,jwks-uri}`), finds the user via `findUsersByExternalIdentity` (JIT-provisioning with `createUser` if absent), and mints a Session.
-- `refresh` verifies the session is unexpired, mints a new JWT, updates `expires`, and fires `SessionUpdated`.
-- Access tokens are RS256 JWTs (private key at `granite.session.jwt.private-key-location`). Claims: `iss=granite-session`, `sub=userId`, `jti=sessionId`, `iat`, `exp`, `aud`, `did=deviceId`.
+- Every successful `login`/`loginWithOauth2` reply carries `accessToken` and an opaque `refreshToken`. Only the refresh token's SHA-256 hash is stored on the Session.
+- `refresh` takes `{refreshToken}` (not a sessionId). It looks the session up by the token's hash, rejects it if the sliding `expires` or the absolute cap `created + granite.session.max-lifetime` (default `PT24H`) has passed, rotates the refresh token (the current hash becomes `previousRefreshTokenHash`), sets `expires = min(now + session-ttl, created + max-lifetime)`, mints a new JWT, and fires `SessionUpdated`. The reply carries the new `accessToken` and `refreshToken`.
+- Presenting a refresh token that matches a session's `previousRefreshTokenHash` is treated as theft: the session is destroyed (`SessionDestroyed`) and the refresh fails. Each refresh token is therefore single-use.
+- Access tokens are RS256 JWTs (private key at `granite.session.jwt.private-key-location`). The header carries `typ=JWT` and `kid` (the RFC 7638 thumbprint of the public key). Claims: `iss=granite-session`, `sub=userId`, `jti=sessionId`, `iat`, `exp`, `aud`, `did=deviceId`, `authorities`.
+- Access tokens are short-lived: `exp = min(now + granite.session.jwt.ttl, session.expires)`, where `jwt.ttl` defaults to `PT15M`. Clients get a new one via `refresh`. Revocation relies on this short lifetime: after logout, an outstanding access token stays valid until its `exp`.
 - Consumers validate the signature/claims locally, then check revocation via `ISessionQueryServiceClient.findSessionsByKey(SessionKey.ofSessionId(jti))`.
 
 ## Commonly Used Design Patterns
@@ -213,6 +232,12 @@ Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConf
 | `POST /logout` | `LogoutRequest` | `LogoutReply` |
 | `POST /logout-all-for-user` | `LogoutAllForUserRequest` | `LogoutAllForUserReply` |
 | `POST /refresh` | `RefreshRequest` | `RefreshReply` |
+
+### JWK Set (CommandHost)
+
+| Endpoint | Reply |
+|---|---|
+| `GET /.well-known/jwks.json` | Public JWK set (RS256, `use=sig`, thumbprint `kid`), cacheable for 5 minutes. Resource servers validate access tokens against it. To rotate keys, deploy the new key pair and set `previous-public-key-location` to the old public key until outstanding tokens expire. |
 
 ### Session Query Service (`/session-query-service/`)
 

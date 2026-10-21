@@ -21,7 +21,6 @@ class MappingModule
             .emptyTypeMap(Session.class,SessionData.class)
             .addMapping(Session::getSessionId,SessionData::setSessionId)
             .addMapping(Session::getUserId,SessionData::setUserId)
-            .addMapping(Session::getAccessToken,SessionData::setAccessToken)
             .addMapping(Session::getCreated,SessionData::setCreated)
             .addMapping(Session::getExpires,SessionData::setExpires)
             .addMapping(Session::getDeviceId,SessionData::setDeviceId)

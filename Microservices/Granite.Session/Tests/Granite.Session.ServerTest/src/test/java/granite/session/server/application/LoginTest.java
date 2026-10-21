@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -76,12 +77,14 @@ class LoginTest
             new SessionCommandService(
                 repository,
                 jwtTokenService,
+                new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
+                Duration.ofHours(24),
                 clock);
 
         stubSaveAssignsSessionId(500L);
@@ -101,8 +104,32 @@ class LoginTest
         assertNotNull(reply.getSessionData());
         assertEquals(USER_ID,reply.getSessionData().getUserId());
         assertEquals(DEVICE_ID,reply.getSessionData().getDeviceId());
-        assertEquals(MINTED_JWT,reply.getSessionData().getAccessToken());
         assertEquals(NOW.plus(TTL),reply.getSessionData().getExpires());
+    }
+
+    @Test
+    public void
+    loginIssuesRefreshTokenAndStoresOnlyItsHash()
+    {
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID);
+
+        LoginReply reply = login(USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertNotNull(reply.getRefreshToken());
+        assertFalse(reply.getRefreshToken().isBlank());
+
+        ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
+
+        Session saved = captor.getValue();
+
+        assertEquals(
+            new RefreshTokenService().hash(reply.getRefreshToken()),
+            saved.getRefreshTokenHash());
+        assertNotEquals(reply.getRefreshToken(),saved.getRefreshTokenHash());
+        assertNull(saved.getPreviousRefreshTokenHash());
     }
 
     @Test
@@ -116,6 +143,7 @@ class LoginTest
         assertFalse(reply.isSuccess());
         assertEquals("invalid credentials",reply.getFailureMessage());
         assertNull(reply.getAccessToken());
+        assertNull(reply.getRefreshToken());
         assertNull(reply.getSessionData());
     }
 

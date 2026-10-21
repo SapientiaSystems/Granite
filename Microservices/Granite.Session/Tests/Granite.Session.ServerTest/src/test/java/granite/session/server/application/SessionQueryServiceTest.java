@@ -60,25 +60,7 @@ class SessionQueryServiceTest
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertEquals(1,reply.getSessions().size());
         assertEquals(700L,reply.getSessions().get(0).getSessionId());
-        assertEquals("token-700",reply.getSessions().get(0).getAccessToken());
-    }
-
-    @Test
-    public void
-    findSessionsByKeyByAccessTokenReturnsMatch()
-    {
-        Session session = session(701L,USER_ID,"token-701",NOW.plusSeconds(900));
-
-        Mockito
-            .when(repository.findByAccessToken("token-701"))
-            .thenReturn(Optional.of(session));
-
-        FindSessionsByKeyReply reply =
-            findByKey(SessionKey.ofAccessToken("token-701"));
-
-        assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(1,reply.getSessions().size());
-        assertEquals(701L,reply.getSessions().get(0).getSessionId());
+        assertEquals(DEVICE_ID,reply.getSessions().get(0).getDeviceId());
     }
 
     @Test

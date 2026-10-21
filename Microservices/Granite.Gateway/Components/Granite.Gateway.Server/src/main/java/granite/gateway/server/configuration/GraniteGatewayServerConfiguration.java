@@ -1,0 +1,329 @@
+//////////////////////////////////////////////////////////////////////////////
+// GraniteGatewayServerConfiguration.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.gateway.server.configuration;
+
+import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
+import granite.foundation.core.security.GraniteJwtDecoderFactory;
+import granite.foundation.core.security.GraniteResourceServerSettings;
+import granite.gateway.server.health.GatewayHealthCheckController;
+import granite.gateway.server.security.ISessionRevocationChecker;
+import granite.gateway.server.security.RevocationCheckingReactiveJwtDecoder;
+import granite.gateway.server.security.SessionQueryRevocationChecker;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder.Builder;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.config.web.server.ServerHttpSecurity.AuthorizeExchangeSpec;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import strata.foundation.spring.inject.ScopeConfiguration;
+import strata.foundation.spring.inject.SingletonScoped;
+
+import javax.net.ssl.SSLException;
+import java.net.URI;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+@Configuration
+@Import({ScopeConfiguration.class})
+public
+class GraniteGatewayServerConfiguration
+{
+    @Bean
+    public InitializingBean
+    initialize()
+    {
+        return
+            () ->
+                SecurityContextHolder
+                    .setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+    }
+
+    @Bean
+    public RouteLocator
+    routeLocator(RouteLocatorBuilder builder,Environment environment)
+    {
+        return
+            configureRoutes(builder.routes(),environment)
+                .build();
+    }
+
+    @Bean
+    public SecurityWebFilterChain
+    securityWebFilterChain(
+        ServerHttpSecurity                http,
+        ReactiveJwtDecoder                jwtDecoder,
+        GraniteJwtAuthenticationConverter jwtAuthenticationConverter,
+        Environment                       environment)
+    {
+        List<String> publicPaths = getPublicPathPatterns(environment);
+
+        return
+            http
+                .csrf(csrf -> csrf.disable())
+                .authorizeExchange(
+                    exchanges ->
+                    {
+                        exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
+                        exchanges.pathMatchers(publicPaths.toArray(String[]::new)).permitAll();
+                        configureAuthorization(exchanges,environment);
+                        exchanges.anyExchange().authenticated();
+                    })
+                .oauth2ResourceServer(
+                    server ->
+                        server.jwt(
+                            jwt ->
+                                jwt
+                                    .jwtDecoder(jwtDecoder)
+                                    .jwtAuthenticationConverter(
+                                        new ReactiveJwtAuthenticationConverterAdapter(
+                                            jwtAuthenticationConverter))))
+                .build();
+    }
+
+    @Bean
+    @SingletonScoped
+    public ReactiveJwtDecoder
+    jwtDecoder(
+        Environment                environment,
+        ObjectProvider<SslBundles> sslBundles,
+        ISessionRevocationChecker  revocationChecker)
+    {
+        return
+            new RevocationCheckingReactiveJwtDecoder(
+                createJwtDecoder(sslBundles,environment),
+                revocationChecker);
+    }
+
+    @Bean
+    @SingletonScoped
+    public ISessionRevocationChecker
+    revocationChecker(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    {
+        if (!environment.getProperty("granite.gateway.revocation.enabled",Boolean.class,true))
+            return jwt -> Mono.just(true);
+
+        URI host = URI.create(environment.getRequiredProperty("granite.session-query-service.host"));
+
+        return
+            new SessionQueryRevocationChecker(
+                createRevocationWebClient(sslBundles,environment),
+                UriComponentsBuilder
+                    .newInstance()
+                    .scheme(host.getScheme())
+                    .host(host.getHost())
+                    .port(host.getPort())
+                    .path("/session-query-service/find-sessions-by-key")
+                    .build()
+                    .toUri(),
+                Duration.parse(environment.getProperty("granite.gateway.revocation.cache-ttl","PT30S")),
+                Duration.parse(environment.getProperty("granite.gateway.revocation.timeout","PT2S")),
+                Clock.systemUTC());
+    }
+
+    @Bean
+    @SingletonScoped
+    public GraniteJwtAuthenticationConverter
+    jwtAuthenticationConverter()
+    {
+        return new GraniteJwtAuthenticationConverter();
+    }
+
+    @Bean
+    @SingletonScoped
+    public GatewayHealthCheckController
+    healthCheckController()
+    {
+        return new GatewayHealthCheckController();
+    }
+
+    protected ReactiveJwtDecoder
+    createJwtDecoder(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    {
+        GraniteResourceServerSettings settings = GraniteResourceServerSettings.from(environment);
+        NimbusReactiveJwtDecoder      decoder  =
+            NimbusReactiveJwtDecoder
+                .withJwkSetUri(
+                    settings
+                        .getJwkSetUri()
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    GraniteResourceServerSettings.JWK_SET_URI + " must be configured")))
+                .jwsAlgorithm(SignatureAlgorithm.RS256)
+                .webClient(
+                    createTrustingWebClient(
+                        sslBundles,
+                        environment.getProperty(
+                            GraniteResourceServerSettings.SSL_BUNDLE,
+                            environment.getProperty("spring.cloud.gateway.httpclient.ssl.bundle",""))))
+                .build();
+
+        decoder.setJwtValidator(new GraniteJwtDecoderFactory().createValidator(settings));
+        return decoder;
+    }
+
+    protected WebClient
+    createRevocationWebClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    {
+        return
+            createTrustingWebClient(
+                sslBundles,
+                environment.getProperty(
+                    "granite.gateway.revocation.ssl-bundle",
+                    environment.getProperty("spring.cloud.gateway.httpclient.ssl.bundle","")));
+    }
+
+    protected WebClient
+    createTrustingWebClient(ObjectProvider<SslBundles> sslBundles,String bundle)
+    {
+        if (bundle.isBlank())
+            return WebClient.builder().build();
+
+        try
+        {
+            SslContext context =
+                SslContextBuilder
+                    .forClient()
+                    .trustManager(
+                        sslBundles
+                            .getObject()
+                            .getBundle(bundle)
+                            .getManagers()
+                            .getTrustManagerFactory())
+                    .build();
+
+            return
+                WebClient
+                    .builder()
+                    .clientConnector(
+                        new ReactorClientHttpConnector(
+                            HttpClient.create().secure(spec -> spec.sslContext(context))))
+                    .build();
+        }
+        catch (SSLException e)
+        {
+            throw new IllegalStateException("unable to configure TLS for session revocation lookups",e);
+        }
+    }
+
+    protected List<String>
+    getPublicPathPatterns(Environment environment)
+    {
+        List<String> paths =
+            new ArrayList<>(
+                List.of(
+                    environment.getProperty("strata.health.base-path","/health") + "/**",
+                    "/session-command-service/login",
+                    "/session-command-service/login-with-oauth2",
+                    "/session-command-service/refresh"));
+
+        if (!environment.acceptsProfiles(Profiles.of("production")))
+            paths.addAll(
+                List.of(
+                    "/*/swagger-ui/**",
+                    "/*/swagger-ui.html",
+                    "/*/v3/api-docs/**"));
+
+        return paths;
+    }
+
+    protected ServerHttpSecurity.AuthorizeExchangeSpec
+    configureAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
+    {
+        return exchanges;
+    }
+
+    protected Builder
+    configureRoutes(Builder routes,Environment environment)
+    {
+        addRoute(
+            routes,
+            "frontendcontroller-user-route",
+            "/frontendcontroller-user-service/**",
+            "granite.frontendcontroller-user-service.host",
+            environment);
+        addRoute(
+            routes,
+            "frontendcontroller-admin-route",
+            "/frontendcontroller-admin-service/**",
+            "granite.frontendcontroller-admin-service.host",
+            environment);
+        addRoute(
+            routes,
+            "user-command-route",
+            "/user-command-service/**",
+            "granite.user-command-service.host",
+            environment);
+        addRoute(
+            routes,
+            "user-query-route",
+            "/user-query-service/**",
+            "granite.user-query-service.host",
+            environment);
+        addRoute(
+            routes,
+            "session-command-route",
+            "/session-command-service/**",
+            "granite.session-command-service.host",
+            environment);
+        addRoute(
+            routes,
+            "session-query-route",
+            "/session-query-service/**",
+            "granite.session-query-service.host",
+            environment);
+        addRoute(
+            routes,
+            "outbox-route",
+            "/outbox-service/**",
+            "granite.outbox-service.host",
+            environment);
+        return routes;
+    }
+
+    protected Builder
+    addRoute(
+        Builder     routes,
+        String      id,
+        String      pathPattern,
+        String      hostProperty,
+        Environment environment)
+    {
+        String host = environment.getRequiredProperty(hostProperty);
+
+        return
+            routes.route(
+                id,
+                route ->
+                    route
+                        .path(pathPattern)
+                        .uri(host));
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("CommitStage")
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = TestConfiguration.class)
-@ActiveProfiles("dev")
+@ActiveProfiles("local")
 public
 class SessionCommandServiceServerTest
     extends granite.session.service.requestreply.SessionCommandServiceTest

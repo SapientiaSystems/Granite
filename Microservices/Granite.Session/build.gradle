@@ -53,6 +53,21 @@ tasks.register('jib') {
     group = 'jib'
 }
 
+tasks.register('publish') {
+    description = 'Publishes all publications produced by this build'
+    group = 'publishing'
+}
+
+tasks.register('publishToMavenLocal') {
+    description = 'Publishes all publications produced by this build to the local Maven cache'
+    group = 'publishing'
+}
+
+tasks.register('publishToGitHubPackages') {
+    description = 'Publishes all publications produced by this build to the GitHubPackages repository'
+    group = 'publishing'
+}
+
 subprojects { sp ->
     sp.plugins.withType(org.gradle.api.plugins.BasePlugin) {
         rootProject.tasks.named('build').configure   { dependsOn sp.tasks.named('build') }
@@ -62,5 +77,12 @@ subprojects { sp ->
     }
     sp.plugins.withId('com.google.cloud.tools.jib') {
         rootProject.tasks.named('jib').configure { dependsOn sp.tasks.named('jib') }
+    }
+    sp.plugins.withId('maven-publish') {
+        rootProject.tasks.named('publish').configure { dependsOn sp.tasks.named('publish') }
+        rootProject.tasks.named('publishToMavenLocal').configure { dependsOn sp.tasks.named('publishToMavenLocal') }
+        rootProject.tasks.named('publishToGitHubPackages').configure {
+            dependsOn sp.tasks.matching { it.name == 'publishAllPublicationsToGitHubPackagesRepository' }
+        }
     }
 }

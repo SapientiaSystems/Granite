@@ -3,7 +3,7 @@ plugins {
 }
 
 sourceSets {
-    main.java.srcDirs = ['src/main/java','build/generated-java']
+    main.java.srcDirs = ['src/main/java','.build/generated-java']
     main.resources.srcDirs = ['src/main/resources','src/main/schema']
     test.java.srcDirs = ['src/unused']
     test.resources.srcDirs = ['src/unused']

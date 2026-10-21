@@ -1,3 +1,4 @@
-window.____SYSTEM___CONFIG__ = {
-    apiBaseUrl: ""
+window.__GRANITE_CONFIG__ = {
+    apiBaseUrl: "",
+    googleClientId: ""
 };

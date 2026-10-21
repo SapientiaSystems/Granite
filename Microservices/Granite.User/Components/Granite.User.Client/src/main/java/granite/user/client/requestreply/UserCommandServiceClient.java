@@ -21,7 +21,7 @@ class UserCommandServiceClient
         super(
             builder,
             preprocessBaseUrl(baseUrl),
-            "user-service/");
+            "user-command-service/");
     }
 
     @Override

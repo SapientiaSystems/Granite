@@ -49,7 +49,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.mockito.ArgumentMatchers.any;
 
 @Configuration
-@PropertySource("classpath:test.properties")
+@PropertySource({"classpath:application.properties","classpath:application-local.properties"})
 public
 class TestConfiguration
     extends GraniteSessionCommandServerConfiguration
@@ -66,7 +66,7 @@ class TestConfiguration
     public IConfiguration
     configuration(Environment environment)
     {
-        return new ApplicationConfigurationProvider("test").get();
+        return new ApplicationConfigurationProvider("application-local").get();
     }
 
     @Override
@@ -120,7 +120,10 @@ class TestConfiguration
     @Bean
     @Scope("singleton")
     public IUserCommandServiceClient
-    userCommandServiceClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    userCommandServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
     {
         IUserCommandServiceClient client = Mockito.mock(IUserCommandServiceClient.class);
         Map<String,Long>          ids    = new ConcurrentHashMap<>();
@@ -185,7 +188,10 @@ class TestConfiguration
     @Bean
     @Scope("singleton")
     public IUserQueryServiceClient
-    userQueryServiceClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    userQueryServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
     {
         IUserQueryServiceClient client = Mockito.mock(IUserQueryServiceClient.class);
 

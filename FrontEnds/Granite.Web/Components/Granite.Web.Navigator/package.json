@@ -24,6 +24,7 @@
         "granite.frontendcontroller.service": "1.0.0-snapshot",
         "granite.user.service": "1.0.0-snapshot",
         "granite.web.account": "1.0.0-snapshot",
+        "granite.web.authentication": "1.0.0-snapshot",
         "granite.web.user": "1.0.0-snapshot",
         "react": "^19.0.0",
         "react-router-dom": "^7.0.0",

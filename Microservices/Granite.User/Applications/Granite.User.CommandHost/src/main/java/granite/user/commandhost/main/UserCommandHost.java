@@ -31,8 +31,9 @@ class UserCommandHost
             new SpringApplication(UserCommandHost.class);
         IEnvironment environment =
             DefaultEnvironment.of(
-                Map.of("DEPLOY_ENV","development"));
+                Map.of("DEPLOY_ENV","local"));
 
+        application.setDefaultProperties(Map.of("DEPLOY_ENV",environment.get("DEPLOY_ENV")));
         application.setAdditionalProfiles(environment.get("DEPLOY_ENV"));
         application.run(args);
     }

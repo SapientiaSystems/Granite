@@ -16,6 +16,7 @@ class AuthenticateUserContext
     private AuthenticateUserRequest request;
     private Optional<User>          user;
     private boolean                 valid;
+    private boolean                 locked;
     private String                  failureMessage;
 
     public
@@ -24,7 +25,15 @@ class AuthenticateUserContext
         request        = req;
         user           = Optional.empty();
         valid          = false;
+        locked         = false;
         failureMessage = null;
+    }
+
+    public AuthenticateUserContext
+    setLocked(boolean value)
+    {
+        locked = value;
+        return this;
     }
 
     public AuthenticateUserContext
@@ -65,6 +74,9 @@ class AuthenticateUserContext
 
     public boolean
     getValid() { return valid; }
+
+    public boolean
+    isLocked() { return locked; }
 
     public String
     getFailureMessage() { return failureMessage; }

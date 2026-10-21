@@ -78,12 +78,14 @@ class LoginWithOauth2Test
             new SessionCommandService(
                 repository,
                 jwtTokenService,
+                new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
+                Duration.ofHours(24),
                 clock);
 
         stubSaveAssignsSessionId(600L);
@@ -101,6 +103,7 @@ class LoginWithOauth2Test
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertEquals(MINTED_JWT,reply.getAccessToken());
+        assertNotNull(reply.getRefreshToken());
         assertNotNull(reply.getSessionData());
         assertEquals(EXISTING_USER_ID,reply.getSessionData().getUserId());
         assertEquals(DEVICE_ID,reply.getSessionData().getDeviceId());

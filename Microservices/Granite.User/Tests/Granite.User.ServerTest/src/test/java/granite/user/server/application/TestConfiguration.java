@@ -15,7 +15,7 @@ import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
 
 @Configuration
-@PropertySource("classpath:test.properties")
+@PropertySource({"classpath:application.properties","classpath:application-local.properties"})
 public
 class TestConfiguration
     extends GraniteUserCommandServerConfiguration
@@ -26,7 +26,7 @@ class TestConfiguration
     public IConfiguration
     configuration(Environment environment)
     {
-        return new ApplicationConfigurationProvider("test").get();
+        return new ApplicationConfigurationProvider("application-local").get();
     }
 
     @Bean

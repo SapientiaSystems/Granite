@@ -63,12 +63,14 @@ class LogoutAllForUserTest
             new SessionCommandService(
                 repository,
                 jwtTokenService,
+                new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
+                Duration.ofHours(24),
                 clock);
     }
 

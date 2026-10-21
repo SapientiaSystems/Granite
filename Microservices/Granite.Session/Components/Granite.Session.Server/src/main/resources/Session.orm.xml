@@ -26,6 +26,12 @@
             <basic name="accessToken" optional="false">
                 <column name="accessToken" unique="true" nullable="false" column-definition="VARCHAR(2048)"/>
             </basic>
+            <basic name="refreshTokenHash">
+                <column name="refreshTokenHash" unique="true" column-definition="VARCHAR(64)"/>
+            </basic>
+            <basic name="previousRefreshTokenHash">
+                <column name="previousRefreshTokenHash" column-definition="VARCHAR(64)"/>
+            </basic>
             <basic name="expires" optional="false">
                 <column name="expires" nullable="false"/>
             </basic>

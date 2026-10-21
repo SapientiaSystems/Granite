@@ -14,13 +14,13 @@ public
 class RefreshRequest
     extends AbstractServiceRequest
 {
-    private Long sessionId;
+    private String refreshToken;
 
     public
     RefreshRequest()
     {
         super();
-        sessionId = null;
+        refreshToken = null;
     }
 
     @Override
@@ -66,14 +66,14 @@ class RefreshRequest
     }
 
     public RefreshRequest
-    setSessionId(Long sessionId)
+    setRefreshToken(String refreshToken)
     {
-        this.sessionId = sessionId;
+        this.refreshToken = refreshToken;
         return this;
     }
 
-    public Long
-    getSessionId() { return sessionId; }
+    public String
+    getRefreshToken() { return refreshToken; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

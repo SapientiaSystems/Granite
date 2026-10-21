@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag("CommitStage")
 @SpringJUnitConfig(PlatformContextTestConfiguration.class)
-@ActiveProfiles("dev")
+@ActiveProfiles("local")
 public
 class PlatformContextLoadsTest
 {

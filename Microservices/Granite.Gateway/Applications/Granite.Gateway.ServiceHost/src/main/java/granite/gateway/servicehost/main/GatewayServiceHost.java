@@ -31,7 +31,7 @@ class GatewayServiceHost
             new SpringApplication(GatewayServiceHost.class);
         IEnvironment environment =
             DefaultEnvironment.of(
-                Map.of("DEPLOY_ENV","development"));
+                Map.of("DEPLOY_ENV","local"));
 
         application.setAdditionalProfiles(environment.get("DEPLOY_ENV"));
         application.run(args);

@@ -9,8 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import strata.foundation.core.utility.DefaultEnvironment;
+import strata.foundation.core.utility.IEnvironment;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 @SpringBootApplication(
@@ -21,31 +22,18 @@ import java.util.Map;
 public
 class SessionCommandHost
 {
-    public static final String DEFAULT_DEPLOY_ENV = "production";
-
     public static void
     main(String[] args)
     {
-        SpringApplication application = new SpringApplication(SessionCommandHost.class);
-        String            deployEnv   = deployEnvironment();
-        ArrayList<String> profiles    = new ArrayList<>();
+        SpringApplication application =
+            new SpringApplication(SessionCommandHost.class);
+        IEnvironment environment =
+            DefaultEnvironment.of(
+                Map.of("DEPLOY_ENV","local"));
 
-        profiles.add(deployEnv);
-
-        if (deployEnv.equals("development"))
-            profiles.add("dev");
-
-        application.setDefaultProperties(Map.of("DEPLOY_ENV",deployEnv));
-        application.setAdditionalProfiles(profiles.toArray(new String[0]));
+        application.setDefaultProperties(Map.of("DEPLOY_ENV",environment.get("DEPLOY_ENV")));
+        application.setAdditionalProfiles(environment.get("DEPLOY_ENV"));
         application.run(args);
-    }
-
-    private static String
-    deployEnvironment()
-    {
-        String value = System.getenv("DEPLOY_ENV");
-
-        return value == null || value.isBlank() ? DEFAULT_DEPLOY_ENV : value;
     }
 }
 

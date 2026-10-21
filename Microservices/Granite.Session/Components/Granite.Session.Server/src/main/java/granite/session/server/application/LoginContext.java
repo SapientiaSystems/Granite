@@ -20,6 +20,7 @@ class LoginContext
     private boolean      unsupportedKind;
     private Session      created;
     private String       jwt;
+    private String       refreshToken;
 
     public
     LoginContext(LoginRequest req)
@@ -30,6 +31,7 @@ class LoginContext
         unsupportedKind      = false;
         created              = null;
         jwt                  = null;
+        refreshToken         = null;
     }
 
     public LoginContext
@@ -67,6 +69,13 @@ class LoginContext
         return this;
     }
 
+    public LoginContext
+    setRefreshToken(String value)
+    {
+        refreshToken = value;
+        return this;
+    }
+
     public LoginRequest
     getRequest() { return request; }
 
@@ -96,6 +105,9 @@ class LoginContext
 
     public String
     getJwt() { return jwt; }
+
+    public String
+    getRefreshToken() { return refreshToken; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

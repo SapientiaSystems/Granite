@@ -18,6 +18,7 @@ import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -114,6 +115,42 @@ class SessionRepositoryTest
 
     @Test
     public void
+    testFindByRefreshTokenHashAndPreviousRefreshTokenHash() throws Exception
+    {
+        final String current  = "current-" + UUID.randomUUID();
+        final String previous = "previous-" + UUID.randomUUID();
+        final AtomicReference<Session> saved = new AtomicReference<>();
+
+        transaction.executeWithoutResult(
+            status ->
+                saved.set(
+                    target.save(
+                        new Session()
+                            .setUserId(250L)
+                            .setAccessToken("token-refresh-" + unique())
+                            .setRefreshTokenHash(current)
+                            .setPreviousRefreshTokenHash(previous)
+                            .setDeviceId("device-refresh-1")
+                            .setExpires(Instant.parse("2026-10-07T12:00:00Z")))));
+
+        Optional<Session> byCurrent =
+            transaction.execute(status -> target.findByRefreshTokenHash(current));
+        Optional<Session> byPrevious =
+            transaction.execute(status -> target.findByPreviousRefreshTokenHash(previous));
+        Optional<Session> byUnknown =
+            transaction.execute(status -> target.findByRefreshTokenHash(previous));
+
+        assertTrue(byCurrent.isPresent());
+        assertEquals(saved.get().getPrimaryId(),byCurrent.get().getPrimaryId());
+        assertEquals(current,byCurrent.get().getRefreshTokenHash());
+        assertEquals(previous,byCurrent.get().getPreviousRefreshTokenHash());
+        assertTrue(byPrevious.isPresent());
+        assertEquals(saved.get().getPrimaryId(),byPrevious.get().getPrimaryId());
+        assertFalse(byUnknown.isPresent());
+    }
+
+    @Test
+    public void
     testFindByUserIdAndDeviceId() throws Exception
     {
         final Long   userId   = 300L + unique();
@@ -184,10 +221,10 @@ class SessionRepositoryTest
         {
             Number count =
                 (Number)em.createNativeQuery(
-                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(INDEX_NAME) IN ('IX_SESSION_USER_ID','IX_SESSION_USER_ID_DEVICE_ID')")
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(INDEX_NAME) IN ('IX_SESSION_USER_ID','IX_SESSION_USER_ID_DEVICE_ID','IX_SESSION_PREVIOUS_REFRESH_TOKEN_HASH')")
                     .getSingleResult();
 
-            assertEquals(2,count.intValue());
+            assertEquals(3,count.intValue());
         }
         finally
         {

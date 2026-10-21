@@ -4,15 +4,27 @@
 
 package granite.session.server.configuration;
 
+import granite.session.server.application.IJwkSetProvider;
+import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.Oauth2ProviderConfig;
 import granite.session.server.application.Oauth2ProvidersProperties;
+import granite.session.server.application.RefreshTokenService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.mock.env.MockEnvironment;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyPairGenerator;
+import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,12 +41,22 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
-    devProfileLoadsClasspathKeys()
+    localAndDevelopmentLoadClasspathKeys()
     {
-        MockEnvironment env = new MockEnvironment();
+        for (String profile : new String[] {"local","development"})
+        {
+            MockEnvironment env = new MockEnvironment();
 
-        env.setActiveProfiles("dev");
-        assertNotNull(newJwtTokenService(env,PRIVATE_KEY,PUBLIC_KEY));
+            env.setActiveProfiles(profile);
+            assertNotNull(newJwtTokenService(env,PRIVATE_KEY,PUBLIC_KEY));
+        }
+    }
+
+    @Test
+    public void
+    refreshTokenServiceDefaultsToRefreshTokenService()
+    {
+        assertInstanceOf(RefreshTokenService.class,subject.refreshTokenService());
     }
 
     @Test
@@ -43,7 +65,7 @@ class GraniteSessionCommandServerConfigurationTest
     {
         MockEnvironment env = new MockEnvironment();
 
-        env.setActiveProfiles("dev");
+        env.setActiveProfiles("local");
         env.setProperty("granite.session.jwt.audience","a,b");
         assertNotNull(newJwtTokenService(env,PRIVATE_KEY,PUBLIC_KEY));
     }
@@ -59,7 +81,7 @@ class GraniteSessionCommandServerConfigurationTest
                     newJwtTokenService(
                         new MockEnvironment(),PRIVATE_KEY,PUBLIC_KEY));
 
-        assertTrue(e.getMessage().contains("dev"));
+        assertTrue(e.getMessage().contains("local"));
     }
 
     @Test
@@ -79,11 +101,11 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
-    devProfileCombinedWithProductionRejectsClasspathKeys()
+    localCombinedWithProductionRejectsClasspathKeys()
     {
         MockEnvironment env = new MockEnvironment();
 
-        env.setActiveProfiles("dev","production");
+        env.setActiveProfiles("local","production");
         assertThrows(
             IllegalStateException.class,
             () -> newJwtTokenService(env,PRIVATE_KEY,PUBLIC_KEY));
@@ -91,7 +113,7 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
-    nonDevProfileRejectsClasspathPublicKeyEvenWhenPrivateKeyIsExternal()
+    productionRejectsClasspathPublicKeyEvenWhenPrivateKeyIsExternal()
     {
         MockEnvironment env = new MockEnvironment();
 
@@ -133,6 +155,57 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    jwkSetProviderPublishesKeyMatchingTokenKid()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setActiveProfiles("local");
+
+        JwtTokenService minter   = (JwtTokenService)newJwtTokenService(env,PRIVATE_KEY,PUBLIC_KEY);
+        IJwkSetProvider provider = subject.jwkSetProvider(env,new DefaultResourceLoader());
+
+        assertEquals(List.of(minter.getKeyId()),provider.getKeyIds());
+    }
+
+    @Test
+    public void
+    jwkSetProviderIncludesPreviousPublicKey(@TempDir Path directory)
+        throws Exception
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setActiveProfiles("local");
+        env.setProperty("granite.session.jwt.public-key-location",PUBLIC_KEY);
+        env.setProperty(
+            "granite.session.jwt.previous-public-key-location",
+            writePublicKeyPem(directory).toUri().toString());
+
+        assertEquals(2,subject.jwkSetProvider(env,new DefaultResourceLoader()).getKeyIds().size());
+    }
+
+    @Test
+    public void
+    productionRejectsClasspathPreviousPublicKey(@TempDir Path directory)
+        throws Exception
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setActiveProfiles("production");
+        env.setProperty(
+            "granite.session.jwt.public-key-location",
+            writePublicKeyPem(directory).toUri().toString());
+        env.setProperty("granite.session.jwt.previous-public-key-location",PUBLIC_KEY);
+
+        IllegalStateException e =
+            assertThrows(
+                IllegalStateException.class,
+                () -> subject.jwkSetProvider(env,new DefaultResourceLoader()));
+
+        assertTrue(e.getMessage().contains("previous-public-key-location"));
+    }
+
+    @Test
+    public void
     oauth2ProviderConfigFieldsAreValidated()
     {
         jakarta.validation.Validator validator =
@@ -154,6 +227,24 @@ class GraniteSessionCommandServerConfigurationTest
         env.setProperty("granite.session.jwt.issuer","granite-session");
         env.setProperty("granite.session.jwt.ttl","PT15M");
         return subject.jwtTokenService(env,new DefaultResourceLoader());
+    }
+
+    private Path
+    writePublicKeyPem(Path directory)
+        throws Exception
+    {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+
+        generator.initialize(2048);
+
+        String pem =
+            "-----BEGIN PUBLIC KEY-----\n"
+                + Base64
+                    .getMimeEncoder(64,"\n".getBytes(StandardCharsets.US_ASCII))
+                    .encodeToString(generator.generateKeyPair().getPublic().getEncoded())
+                + "\n-----END PUBLIC KEY-----\n";
+
+        return Files.writeString(directory.resolve("previous-public-key.pem"),pem);
     }
 }
 

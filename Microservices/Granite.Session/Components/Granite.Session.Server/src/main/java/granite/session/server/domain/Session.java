@@ -27,6 +27,8 @@ class Session
 {
     private Long                       userId;
     private String                     accessToken;
+    private String                     refreshTokenHash;
+    private String                     previousRefreshTokenHash;
     private Instant                    expires;
     private String                     deviceId;
     private Set<String>                authorities;
@@ -38,12 +40,14 @@ class Session
     Session()
     {
         super();
-        userId      = null;
-        accessToken = null;
-        expires     = null;
-        deviceId    = null;
-        authorities = new LinkedHashSet<>();
-        values      = new LinkedHashMap<>();
+        userId                   = null;
+        accessToken              = null;
+        refreshTokenHash         = null;
+        previousRefreshTokenHash = null;
+        expires                  = null;
+        deviceId                 = null;
+        authorities              = new LinkedHashSet<>();
+        values                   = new LinkedHashMap<>();
     }
 
     @Override
@@ -77,6 +81,28 @@ class Session
     setAccessToken(String token)
     {
         accessToken = token;
+        return this;
+    }
+
+    public Session
+    setRefreshTokenHash(String hash)
+    {
+        refreshTokenHash = hash;
+        return this;
+    }
+
+    public Session
+    setPreviousRefreshTokenHash(String hash)
+    {
+        previousRefreshTokenHash = hash;
+        return this;
+    }
+
+    public Session
+    rotateRefreshTokenHash(String hash)
+    {
+        previousRefreshTokenHash = refreshTokenHash;
+        refreshTokenHash         = hash;
         return this;
     }
 
@@ -126,6 +152,12 @@ class Session
 
     public String
     getAccessToken() { return accessToken; }
+
+    public String
+    getRefreshTokenHash() { return refreshTokenHash; }
+
+    public String
+    getPreviousRefreshTokenHash() { return previousRefreshTokenHash; }
 
     public Instant
     getExpires() { return expires; }

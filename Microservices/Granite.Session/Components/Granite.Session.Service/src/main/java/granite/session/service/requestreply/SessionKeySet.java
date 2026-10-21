@@ -19,7 +19,6 @@ class SessionKeySet
     implements Serializable, Comparable<SessionKeySet>
 {
     public static final String SESSION_IDS = "sessionIds";
-    public static final String ACCESS_TOKENS = "accessTokens";
     public static final String USER_IDS = "userIds";
 
     private final String name;
@@ -129,12 +128,6 @@ class SessionKeySet
     }
 
     public static SessionKeySet
-    ofAccessTokens(Set<String> tokens)
-    {
-        return ofStrings(ACCESS_TOKENS,tokens);
-    }
-
-    public static SessionKeySet
     ofUserIds(Set<Long> ids)
     {
         return ofLongs(USER_IDS,ids);
@@ -164,7 +157,6 @@ class SessionKeySet
         switch (name)
         {
             case SESSION_IDS:
-            case ACCESS_TOKENS:
             case USER_IDS:
                 break;
 

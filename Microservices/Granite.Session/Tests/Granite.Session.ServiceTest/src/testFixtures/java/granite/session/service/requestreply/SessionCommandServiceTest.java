@@ -27,6 +27,7 @@ class SessionCommandServiceTest
 
         Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
         Assertions.assertNotNull(reply.getAccessToken());
+        Assertions.assertNotNull(reply.getRefreshToken());
         Assertions.assertNotNull(reply.getSessionData());
         Assertions.assertNotNull(reply.getSessionData().getUserId());
         Assertions.assertNotNull(reply.getSessionData().getDeviceId());
@@ -117,23 +118,63 @@ class SessionCommandServiceTest
         Assertions.assertTrue(loginReply.isSuccess(),loginReply.getFailureMessage());
         Assertions.assertNotNull(loginReply.getSessionData());
 
-        RefreshReply refreshReply =
-            getSubject()
-                .refresh(
-                    new RefreshRequest()
-                        .setSessionId(loginReply.getSessionData().getSessionId()))
-                .toCompletableFuture()
-                .join();
+        RefreshReply refreshReply = refresh(loginReply.getRefreshToken());
 
         Assertions.assertTrue(refreshReply.isSuccess(),refreshReply.getFailureMessage());
         Assertions.assertNotNull(refreshReply.getAccessToken());
+        Assertions.assertNotNull(refreshReply.getRefreshToken());
+        Assertions.assertNotEquals(loginReply.getRefreshToken(),refreshReply.getRefreshToken());
         Assertions.assertNotNull(refreshReply.getSessionData());
         Assertions.assertFalse(
             refreshReply.getSessionData().getExpires().isBefore(loginReply.getSessionData().getExpires()));
     }
 
+    @Test
+    public void
+    testRefreshTokenReuseRevokesSession()
+    {
+        LoginReply loginReply =
+            getSubject()
+                .login(newLoginRequest(uniqueUserName(),uniqueDeviceId()))
+                .toCompletableFuture()
+                .join();
+
+        Assertions.assertTrue(loginReply.isSuccess(),loginReply.getFailureMessage());
+
+        RefreshReply rotated  = refresh(loginReply.getRefreshToken());
+        RefreshReply replayed = refresh(loginReply.getRefreshToken());
+        RefreshReply revoked  = refresh(rotated.getRefreshToken());
+
+        Assertions.assertTrue(rotated.isSuccess(),rotated.getFailureMessage());
+        Assertions.assertFalse(replayed.isSuccess());
+        Assertions.assertNull(replayed.getAccessToken());
+        Assertions.assertFalse(revoked.isSuccess());
+        Assertions.assertNull(revoked.getAccessToken());
+    }
+
+    @Test
+    public void
+    testRefreshWithUnknownTokenFails()
+    {
+        RefreshReply reply = refresh("unknown-" + UUID.randomUUID());
+
+        Assertions.assertFalse(reply.isSuccess());
+        Assertions.assertNull(reply.getAccessToken());
+        Assertions.assertNull(reply.getRefreshToken());
+    }
+
     protected abstract ISessionCommandService
     getSubject();
+
+    protected RefreshReply
+    refresh(String refreshToken)
+    {
+        return
+            getSubject()
+                .refresh(new RefreshRequest().setRefreshToken(refreshToken))
+                .toCompletableFuture()
+                .join();
+    }
 
     protected LoginRequest
     newLoginRequest(String userName,String deviceId)

@@ -5,7 +5,7 @@
         "sourceMap": true,
         "declaration": true,
         "rootDir": "src/main/typescript",
-        "outDir": "build/dist",
+        "outDir": ".build/dist",
         "allowSyntheticDefaultImports": true
     },
     "include": [

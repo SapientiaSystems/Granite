@@ -25,9 +25,10 @@ class ApplicationConfiguration
         IUserRepository  repository,
         IUserEventSender sender,
         ModelMapper            mapper,
-        PasswordEncoder        encoder)
+        PasswordEncoder        encoder,
+        LoginLockoutPolicy     lockoutPolicy)
     {
-        return new UserCommandService(repository,sender,mapper,encoder);
+        return new UserCommandService(repository,sender,mapper,encoder,lockoutPolicy);
     }
     @Bean
     @RequestScope

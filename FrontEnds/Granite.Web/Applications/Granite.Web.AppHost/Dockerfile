@@ -9,12 +9,14 @@ RUN apk add --no-cache openssl gettext \
        -subj "/CN=localhost"
 
 COPY dist/ /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY config.js.template /etc/nginx/templates/config.js.template
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 ENV API_BASE_URL=""
+ENV GOOGLE_CLIENT_ID=""
+ENV GATEWAY_URL="https://granite-gateway-servicehost:8181"
 
 EXPOSE 443
 ENTRYPOINT ["/docker-entrypoint.sh"]

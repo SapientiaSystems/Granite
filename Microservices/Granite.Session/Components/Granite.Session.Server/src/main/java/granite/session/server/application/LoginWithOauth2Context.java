@@ -19,6 +19,7 @@ class LoginWithOauth2Context
     private Set<String>             authorities;
     private Session                 created;
     private String                  jwt;
+    private String                  refreshToken;
     private String                  failureReason;
 
     public
@@ -30,6 +31,7 @@ class LoginWithOauth2Context
         authorities       = new LinkedHashSet<>();
         created           = null;
         jwt               = null;
+        refreshToken      = null;
         failureReason     = null;
     }
 
@@ -69,6 +71,13 @@ class LoginWithOauth2Context
     }
 
     public LoginWithOauth2Context
+    setRefreshToken(String value)
+    {
+        refreshToken = value;
+        return this;
+    }
+
+    public LoginWithOauth2Context
     setFailureReason(String value)
     {
         failureReason = value;
@@ -101,6 +110,9 @@ class LoginWithOauth2Context
 
     public String
     getJwt() { return jwt; }
+
+    public String
+    getRefreshToken() { return refreshToken; }
 
     public String
     getFailureReason() { return failureReason; }

@@ -16,6 +16,7 @@ task sourceJar(type: Jar) {
 
 dependencies {
     implementation project(":Components:Granite.Outbox.Server")
+    implementation "granite.foundation:granite-foundation-core:$system_version"
     implementation "strata.foundation:strata-foundation-spring:$strata_foundation_version"
     implementation "strata.outbox:strata-outbox-server:$strata_outbox_version"
     implementation "org.springframework.boot:spring-boot-starter:$springboot_version"
@@ -31,15 +32,15 @@ jib {
         }
     }
     to {
-        image = "registry.gitlab.com/guitar-center/gl_merchandising-technology/applicationsystems/granite/granite.outbox/granite-outbox-servicehost"
+        image = "ghcr.io/johnliebenau/granite/granite-outbox-servicehost"
         tags = ["${version}","latest"]
         auth {
-            username = "oauth2"
-            password = "$System.env.GITLAB_TOKEN"
+            username = "$System.env.REPOSITORY_USER"
+            password = "$System.env.REPOSITORY_PASSWORD"
         }
     }
     container {
-        environment = [DEPLOY_ENV:"development",PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
+        environment = [PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
         jvmFlags = ["-Xmx1024m"]
         extraClasspath = [".build/libs/Granite.Outbox.ServiceHost-${version}.jar"]
         mainClass = "granite.outbox.servicehost.main.OutboxServiceHost"

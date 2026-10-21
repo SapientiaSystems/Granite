@@ -13,17 +13,21 @@ class RefreshContext
     private RefreshRequest request;
     private Session        loaded;
     private boolean        notFound;
+    private boolean        reused;
     private boolean        expired;
     private String         jwt;
+    private String         refreshToken;
 
     public
     RefreshContext(RefreshRequest req)
     {
-        request  = req;
-        loaded   = null;
-        notFound = false;
-        expired  = false;
-        jwt      = null;
+        request      = req;
+        loaded       = null;
+        notFound     = false;
+        reused       = false;
+        expired      = false;
+        jwt          = null;
+        refreshToken = null;
     }
 
     public RefreshContext
@@ -41,6 +45,13 @@ class RefreshContext
     }
 
     public RefreshContext
+    setReused(boolean value)
+    {
+        reused = value;
+        return this;
+    }
+
+    public RefreshContext
     setExpired(boolean value)
     {
         expired = value;
@@ -54,11 +65,18 @@ class RefreshContext
         return this;
     }
 
+    public RefreshContext
+    setRefreshToken(String value)
+    {
+        refreshToken = value;
+        return this;
+    }
+
     public RefreshRequest
     getRequest() { return request; }
 
-    public Long
-    getSessionId() { return request.getSessionId(); }
+    public String
+    getPresentedRefreshToken() { return request.getRefreshToken(); }
 
     public Session
     getLoaded() { return loaded; }
@@ -67,10 +85,19 @@ class RefreshContext
     isNotFound() { return notFound; }
 
     public boolean
+    isReused() { return reused; }
+
+    public boolean
     isExpired() { return expired; }
+
+    public boolean
+    isRejected() { return notFound || reused || expired || loaded == null; }
 
     public String
     getJwt() { return jwt; }
+
+    public String
+    getRefreshToken() { return refreshToken; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

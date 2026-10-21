@@ -14,17 +14,21 @@ export default defineConfig({
         ],
     },
     server: {
-        proxy: {
-            "/frontendcontroller-user-service": {
-                target:       "https://localhost:8181",
-                changeOrigin: true,
-                secure:       false,
-            },
-            "/frontendcontroller-admin-service": {
-                target:       "https://localhost:8182",
-                changeOrigin: true,
-                secure:       false,
-            },
-        },
+        proxy: Object.fromEntries(
+            [
+                "/frontendcontroller-user-service",
+                "/frontendcontroller-admin-service",
+                "/session-command-service",
+                "/session-query-service",
+                "/user-command-service",
+                "/user-query-service",
+            ].map((prefix: string) => [
+                prefix,
+                {
+                    target:       process.env.GRANITE_GATEWAY_URL ?? "https://localhost:8181",
+                    changeOrigin: true,
+                    secure:       false,
+                },
+            ])),
     },
 });

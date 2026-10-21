@@ -2,7 +2,6 @@
 // Granite.Web.Navigator
 //////////////////////////////////////////////////////////////////////////////
 
-import { useState }          from "react";
 import { useDisclosure }     from "@mantine/hooks";
 import type { ReactElement } from "react";
 import { NavLink, Outlet,
@@ -11,6 +10,7 @@ import { NavLink, Outlet,
 import { AppShell, Burger, Group, Text, ActionIcon,
          Menu, UnstyledButton } from "@mantine/core";
 import type { IMenuTab }     from "./IMenuTab";
+import { useAuthentication } from "granite.web.authentication/Authentication";
 
 const menuTabs: Array<IMenuTab> =
 [
@@ -22,7 +22,8 @@ const menuTabs: Array<IMenuTab> =
 export function MenuBar(): ReactElement
 {
     const [opened, { toggle, close }] = useDisclosure(false);
-    const [loggedIn, setLoggedIn]     = useState(false);
+    const { state, logout }           = useAuthentication();
+    const signedIn: boolean           = state.status === "authenticated";
     const navigate                    = useNavigate();
     const location                    = useLocation();
     const isUserRouteActive: boolean  = location.pathname.startsWith("/user");
@@ -77,15 +78,15 @@ export function MenuBar(): ReactElement
                                         </svg>
                                     </ActionIcon>
                                     <Text c="var(--accent)" size="sm" fw={500}>
-                                        sample.user
+                                        {signedIn ? state.userName : "Sign in"}
                                     </Text>
                                 </Group>
                             </UnstyledButton>
                         </Menu.Target>
                         <Menu.Dropdown>
-                            <Menu.Item onClick={() => setLoggedIn(!loggedIn)}>
-                                {loggedIn ? "Logout" : "Login"}
-                            </Menu.Item>
+                            {signedIn
+                                ? <Menu.Item onClick={() => { void logout().then(() => navigate("/login")); }}>Logout</Menu.Item>
+                                : <Menu.Item onClick={() => navigate("/login")}>Login</Menu.Item>}
                             <Menu.Item onClick={() => navigate("/user")}>
                                 Manage Preferences
                             </Menu.Item>

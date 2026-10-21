@@ -105,10 +105,10 @@ REST client and event receiver implementations:
 
 Both hosts are thin subclasses of the entry configurations. They contain no bean definitions of their own.
 
-- **UserCommandHost** — `HostConfiguration extends GraniteUserCommandServerConfiguration`. Listens on port 8081.
+- **UserCommandHost** — `HostConfiguration extends GraniteUserCommandServerConfiguration`. Listens on port 8083 (QueryHost: 8084).
 - **UserQueryHost** — `HostConfiguration extends GraniteUserQueryServerConfiguration`.
 
-Configuration values come from `SpringConfigurationProvider(environment)`, which loads `application.properties` and `application-<DEPLOY_ENV>.properties`, resolves `${...}` placeholders, and decrypts `ENC(...)`. `spring.jpa.mapping-resources` must include `OutboxEvent.orm.xml` because the default event sender writes to the outbox table.
+`DEPLOY_ENV` defaults to `local`; the only environments are `local`, `development`, `test` and `production`, each with an `application-<env>.properties` that follows `Templates/__System__` (TLS via the `granite-services` bundle). Configuration values come from `SpringConfigurationProvider(environment)`, which loads `application.properties` and `application-<DEPLOY_ENV>.properties`, resolves `${...}` placeholders, and decrypts `ENC(...)`. `spring.jpa.mapping-resources` must include `OutboxEvent.orm.xml` because the default event sender writes to the outbox table.
 
 ## Extending Granite.User
 
@@ -119,9 +119,24 @@ Downstream application systems reuse Granite.User by depending on `granite-user-
 | `configuration(Environment)` | Abstract | `SpringConfigurationProvider(environment).get()` |
 | `mapper()` / `configureMapper(ModelMapper)` | Abstract | registers `MappingModule`; override `configureMapper`, call `super`, then add modules |
 | `passwordEncoder()` | Abstract | `BCryptPasswordEncoder(12)` |
-| `requestLoggingFilter()` | Abstract | query string, payload (10000), headers |
+| `loginLockoutPolicy(Environment)` | Abstract | `LoginLockoutPolicy`: `granite.user.lockout.max-attempts` (default 5) failed password attempts lock the account for `granite.user.lockout.duration` (default `PT15M`) |
+| `requestLoggingFilter()` | Abstract | query string only (payloads and headers would leak passwords and bearer tokens) |
 | `openApi()` | Abstract | group `User`, service path + `/health/**` |
+| `securityFilterChain(HttpSecurity,JwtDecoder,GraniteJwtAuthenticationConverter,Environment)` | Abstract | stateless JWT resource server: CSRF off; `OPTIONS`, `${strata.health.base-path}/**`, `/error` (and the springdoc paths outside `production`) public; everything else authenticated. Public paths come from the `getPublicPathPatterns(Environment)` hook |
+| `jwtDecoder(Environment,ObjectProvider<SslBundles>)` | Abstract | `GraniteJwtDecoderFactory` against `granite.security.jwt.jwk-set-uri` (Session's JWKS), validating `iss`, `aud`, `exp`. The JWKS is fetched through `createJwkSetRestOperations(...)`, which trusts the SSL bundle named by `granite.security.jwt.ssl-bundle` when it is set (`development` uses the `granite-services` truststore) |
+| `jwtAuthenticationConverter()` | Abstract | `GraniteJwtAuthenticationConverter`: principal is `sub`, and the `authorities` claim becomes the GrantedAuthorities |
 | `userEventSender(IOutboxEventRepository)` | Command | `OutboxEventUserEventSender` |
+| `userBootstrapper(ObjectProvider<IUserRepository>,ObjectProvider<ISpringUnitOfWorkManager>,PasswordEncoder,Environment)` | Command | `UserBootstrapper`: once the context refreshes, creates the user `granite.user.bootstrap.user-name` (BCrypt password from `granite.user.bootstrap.password`, authorities from `granite.user.bootstrap.authorities`) if it does not exist. It never overwrites an existing user and fires no event. Enabled by `granite.user.bootstrap.enabled=true`, which is permitted only in `local`/`development`; startup fails if it is enabled elsewhere. A blank password skips it with a warning |
+
+First sign-in on a fresh `local` or `development` database: the CommandHost files enable the bootstrap user `admin` (`ROLE_USER,ROLE_ADMIN`) with its password taken from the environment variable `GRANITE_BOOTSTRAP_ADMIN_PASSWORD`. Set that variable before starting User CommandHost, then sign in as `admin`.
+
+`authenticateUser` (password) pipeline: `lookupUser → checkLockout → checkCredential → recordOutcome`.
+- `checkCredential` always runs one BCrypt comparison. Unknown users and users without a password are compared against a cached dummy hash, so response time does not reveal whether a user name exists.
+- `recordOutcome` updates `User.failedLoginAttempts` / `lockedUntil` and saves them without firing `UserUpdated`.
+- While an account is locked, even the correct password returns `valid=false` with `failureMessage="account locked"`, and the lock is not extended.
+- A successful login resets the counters.
+
+Security: User only authenticates. Every non-public request needs a valid Session-issued access token. Authorization rules (who may call which endpoint) belong to the Gateway's `securityWebFilterChain`, configured by each application that instantiates a Gateway. `SecurityAutoConfiguration` stays excluded in the host mains: the entry configuration enables web security itself (`@EnableWebSecurity`). The SecurityContextHolder strategy is set in `beanFactoryPostProcessor()`, before any security filter captures it.
 
 Domain extension is done through the `User` values map (`setValue`/`getValue`) together with `User.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
 

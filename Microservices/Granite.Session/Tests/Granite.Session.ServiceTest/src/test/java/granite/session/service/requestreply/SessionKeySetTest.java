@@ -35,18 +35,19 @@ class SessionKeySetTest
     sessionKeySetFactoriesAndValidation()
         throws Exception
     {
-        SessionKeySet tokens = SessionKeySet.ofAccessTokens(Set.of("a","b"));
+        SessionKeySet userIds = SessionKeySet.ofUserIds(Set.of(5L,6L));
 
-        assertEquals("accessTokens",tokens.getName());
-        assertEquals(Set.of("a","b"),tokens.getValues());
+        assertEquals("userIds",userIds.getName());
+        assertEquals(Set.of("5","6"),userIds.getValues());
         assertTrue(SessionKeySet.empty(SessionKeySet.USER_IDS).isEmpty());
         assertThrows(IllegalArgumentException.class,() -> SessionKeySet.empty("bogus"));
+        assertThrows(IllegalArgumentException.class,() -> SessionKeySet.empty("accessTokens"));
 
         ObjectMapper mapper = new ObjectMapper();
 
         assertEquals(
-            tokens,
-            mapper.readValue(mapper.writeValueAsString(tokens),SessionKeySet.class));
+            userIds,
+            mapper.readValue(mapper.writeValueAsString(userIds),SessionKeySet.class));
     }
 }
 

@@ -29,24 +29,28 @@ class ApplicationConfiguration
     sessionCommandService(
         ISessionRepository        repository,
         IJwtTokenService          jwtTokenService,
+        IRefreshTokenService      refreshTokenService,
         IUserCommandServiceClient userCommandServiceClient,
         IUserQueryServiceClient   userQueryServiceClient,
         IOauth2IdTokenValidator   oauth2Validator,
         ISessionEventSender       sender,
         ModelMapper               mapper,
         @Value("${granite.session.session-ttl:PT8H}") String sessionTtl,
+        @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,
         Clock                     clock)
     {
         return
             new SessionCommandService(
                 repository,
                 jwtTokenService,
+                refreshTokenService,
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
                 sender,
                 mapper,
                 Duration.parse(sessionTtl),
+                Duration.parse(maxLifetime),
                 clock);
     }
 

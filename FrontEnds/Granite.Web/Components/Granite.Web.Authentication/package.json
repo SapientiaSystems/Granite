@@ -1,0 +1,46 @@
+{
+    "name": "granite.web.authentication",
+    "version": "1.0.0",
+    "description": "",
+    "private": true,
+    "main": ".build/dist/index.js",
+    "types": ".build/dist/index.d.ts",
+    "scripts": {
+        "copy-files": "shx cp src/main/typescript/package.json .build/dist/package.json",
+        "clean": "del-cli -f .build/dist",
+        "deep-clean": "yarn run clean && del-cli -f node_modules && del-cli -f yarn.lock",
+        "dev-init": "yarn --dev install",
+        "build-init": "yarn run dev-init && yarn install && yarn run clean && shx mkdir -p .build && yarn upgrade --pattern \"granite|strata\"",
+        "build": "yarn run build-init && tsc && cd src/main/typescript && yarn run increment-snapshot && cd ../../.. && yarn run copy-files && cd .build/dist && yarn pack",
+        "publish-package": "yarn run build && cd .build/dist && yarn publish --non-interactive --tag 1.0.0-snapshot",
+        "test": "vitest run"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@mantine/core": "^7.17.0",
+        "@mantine/hooks": "^7.17.0",
+        "granite.session.client": "1.0.0-snapshot",
+        "granite.session.service": "1.0.0-snapshot",
+        "granite.user.service": "1.0.0-snapshot",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-router-dom": "^7.0.0",
+        "strata.client.core": "0.0.0-snapshot",
+        "strata.foundation.core": "0.0.0-snapshot"
+    },
+    "devDependencies": {
+        "@testing-library/dom": "^10.4.0",
+        "@testing-library/react": "^16.1.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "del-cli": "^5.1.0",
+        "jsdom": "^25.0.1",
+        "npm-prerelease-timestamp": "^1.0.1",
+        "shx": "^0.3.4",
+        "typescript": "~6.0.2",
+        "vitest": "^3.2.4"
+    }
+}

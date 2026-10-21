@@ -15,6 +15,7 @@
         "ag-grid-community": "^33.0.0",
         "ag-grid-react": "^33.0.0",
         "granite.web.account": "1.0.0-snapshot",
+        "granite.web.authentication": "1.0.0-snapshot",
         "granite.web.navigator": "1.0.0-snapshot",
         "granite.web.user": "1.0.0-snapshot",
         "react": "^19.0.0",

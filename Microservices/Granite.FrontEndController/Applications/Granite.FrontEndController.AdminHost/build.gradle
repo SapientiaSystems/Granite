@@ -16,6 +16,7 @@ task sourceJar(type: Jar) {
 
 dependencies {
     implementation project(":Components:Granite.FrontEndController.Server")
+    implementation "granite.foundation:granite-foundation-core:$system_version"
 }
 
 jib {
@@ -27,19 +28,19 @@ jib {
         }
     }
     to {
-        image = "registry.gitlab.com/guitar-center/gl_merchandising-technology/applicationsystems/granite/granite.frontendcontroller/granite-frontendcontroller-adminhost"
+        image = "ghcr.io/johnliebenau/granite/granite-frontendcontroller-adminhost"
         tags = ["${version}","latest"]
         auth {
-            username = "oauth2"
-            password = "$System.env.GITLAB_TOKEN"
+            username = "$System.env.REPOSITORY_USER"
+            password = "$System.env.REPOSITORY_PASSWORD"
         }
     }
     container {
-        environment = [DEPLOY_ENV:"test",PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
+        environment = [PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
         jvmFlags = ["-Xmx1024m"]
-        extraClasspath = ["build/libs/Granite.FrontEndController.AdminHost-${version}.jar"]
+        extraClasspath = [".build/libs/Granite.FrontEndController.AdminHost-${version}.jar"]
         mainClass = "granite.frontendcontroller.adminhost.main.FrontEndControllerAdminHost"
-        ports = ['8081']
+        ports = ['8082']
         format = 'OCI'
     }
 }

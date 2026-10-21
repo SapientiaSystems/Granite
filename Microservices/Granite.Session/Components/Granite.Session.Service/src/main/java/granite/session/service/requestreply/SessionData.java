@@ -17,7 +17,6 @@ class SessionData
 {
     private Long                sessionId;
     private Long                userId;
-    private String              accessToken;
     private Instant             created;
     private Instant             expires;
     private String              deviceId;
@@ -29,7 +28,6 @@ class SessionData
     {
         sessionId   = null;
         userId      = null;
-        accessToken = null;
         created     = null;
         expires     = null;
         deviceId    = null;
@@ -48,13 +46,6 @@ class SessionData
     setUserId(Long id)
     {
         userId = id;
-        return this;
-    }
-
-    public SessionData
-    setAccessToken(String token)
-    {
-        accessToken = token;
         return this;
     }
 
@@ -98,9 +89,6 @@ class SessionData
 
     public Long
     getUserId() { return userId; }
-
-    public String
-    getAccessToken() { return accessToken; }
 
     public Instant
     getCreated() { return created; }

@@ -16,7 +16,6 @@ class SessionKey
     implements Serializable, Comparable<SessionKey>
 {
     public static final String SESSION_ID = "sessionId";
-    public static final String ACCESS_TOKEN = "accessToken";
     public static final String USER_ID = "userId";
 
     private final String name;
@@ -111,12 +110,6 @@ class SessionKey
     }
 
     public static SessionKey
-    ofAccessToken(String token)
-    {
-        return of(ACCESS_TOKEN,token);
-    }
-
-    public static SessionKey
     of(String key,String value)
     {
         return new SessionKey(key,value);
@@ -135,7 +128,6 @@ class SessionKey
         switch (name)
         {
             case SESSION_ID:
-            case ACCESS_TOKEN:
             case USER_ID:
                 break;
 

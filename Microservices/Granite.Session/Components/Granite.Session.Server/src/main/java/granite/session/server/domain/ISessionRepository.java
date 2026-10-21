@@ -7,6 +7,7 @@ package granite.session.server.domain;
 import strata.foundation.core.collection.IMultiMap;
 import strata.server.core.repository.IRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,8 +23,14 @@ interface ISessionRepository
     Optional<Session>
     findByAccessToken(String accessToken);
 
-    IMultiMap<String,Session>
-    findAllByAccessTokenIn(Set<String> accessTokens);
+    Optional<Session>
+    findByRefreshTokenHash(String hash);
+
+    List<Session>
+    findExpiredBefore(Instant time);
+
+    Optional<Session>
+    findByPreviousRefreshTokenHash(String hash);
 
     List<Session>
     findAllByUserId(Long userId);

@@ -16,6 +16,7 @@ class LoginReply
 {
     private SessionData sessionData;
     private String accessToken;
+    private String refreshToken;
 
     public
     LoginReply()
@@ -23,6 +24,7 @@ class LoginReply
         super();
         sessionData = null;
         accessToken = null;
+        refreshToken = null;
     }
 
     public
@@ -31,6 +33,7 @@ class LoginReply
         super(originatingRequest);
         sessionData = null;
         accessToken = null;
+        refreshToken = null;
     }
 
     @Override
@@ -101,6 +104,16 @@ class LoginReply
 
     public String
     getAccessToken() { return accessToken; }
+
+    public LoginReply
+    setRefreshToken(String refreshToken)
+    {
+        this.refreshToken = refreshToken;
+        return this;
+    }
+
+    public String
+    getRefreshToken() { return refreshToken; }
 }
 
 //////////////////////////////////////////////////////////////////////////////
