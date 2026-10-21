@@ -49,7 +49,7 @@ Published as `granite.gateway:granite-gateway-server`. Contains the gateway's en
 The Spring Boot application entry point:
 
 - `GatewayServiceHost` — `@SpringBootApplication` that excludes `DataSourceAutoConfiguration`, servlet `SecurityAutoConfiguration`, and `KafkaAutoConfiguration`. The active profile comes from `DEPLOY_ENV` (default `local`); the only environments are `local`, `development`, `test` and `production`.
-- `HostConfiguration` — `HostConfiguration extends GraniteGatewayServerConfiguration`; contains no bean definitions of its own.
+- `HostConfiguration` — `HostConfiguration extends GraniteRoleRulesGatewayServerConfiguration`; contains no bean definitions of its own.
 
 ## Routes
 
@@ -106,6 +106,18 @@ After logout, a token is rejected at the Gateway within the live-cache window (3
 | `healthCheckController()` | `GatewayHealthCheckController` |
 
 Authorization rules live here and only here: User and Session only authenticate. Each application that instantiates a Gateway declares its rules by overriding `configureAuthorization`. Rules match on path and method, so they cannot inspect request bodies. The caller's `Authorization` header is relayed to the routed service unchanged.
+
+Granite's own rules ship in `GraniteRoleRulesGatewayServerConfiguration` (`HostConfiguration` extends it) and apply only when `granite.gateway.authorization.role-rules.enabled=true` (default `false`: authentication only). The property is `true` in the ServiceHost `local` and `development` profiles and unset in `test` and `production`. Public paths are permitted before these rules. Every allowed list also includes `SCOPE_internal`. Rules are evaluated in this order:
+
+| Matcher | Authorities |
+|---|---|
+| `POST /frontendcontroller-user-service/get-output`, `POST /frontendcontroller-admin-service/get-output` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
+| `/user-query-service/**` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
+| `POST /session-command-service/logout` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
+| `/session-query-service/**` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
+| `/**` (catch-all, so everything else) | `ROLE_ADMIN` |
+
+The catch-all uses `pathMatchers("/**")`, not `anyExchange()`, because the base chain registers `anyExchange().authenticated()` afterwards.
 
 ```java
 @Override

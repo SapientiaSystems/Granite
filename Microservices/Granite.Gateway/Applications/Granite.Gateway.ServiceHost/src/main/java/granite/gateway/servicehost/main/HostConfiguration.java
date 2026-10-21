@@ -4,12 +4,12 @@
 
 package granite.gateway.servicehost.main;
 
-import granite.gateway.server.configuration.GraniteGatewayServerConfiguration;
+import granite.gateway.server.configuration.GraniteRoleRulesGatewayServerConfiguration;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public
 class HostConfiguration
-    extends GraniteGatewayServerConfiguration {}
+    extends GraniteRoleRulesGatewayServerConfiguration {}
 
 //////////////////////////////////////////////////////////////////////////////
