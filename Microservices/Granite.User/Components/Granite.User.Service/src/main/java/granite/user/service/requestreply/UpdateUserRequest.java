@@ -15,14 +15,12 @@ class UpdateUserRequest
     extends AbstractServiceRequest
 {
     private UpdateUserData userToUpdate;
-    private String foo;
 
     public
     UpdateUserRequest()
     {
         super();
         userToUpdate = null;
-        foo = null;
     }
 
     @Override

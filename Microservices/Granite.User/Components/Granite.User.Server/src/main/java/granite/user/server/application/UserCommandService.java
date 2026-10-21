@@ -720,6 +720,7 @@ class UserCommandService
         User user = mapper.map(data,User.class);
 
         user.setPassword(hash(data.getPassword()));
+        replaceValues(user,data.getValues());
         return user;
     }
 
@@ -741,6 +742,22 @@ class UserCommandService
         data
             .getAuthorities()
             .ifPresent(user::setAuthorities);
+        data
+            .getValues()
+            .ifPresent(values -> replaceValues(user,values));
+    }
+
+    private void
+    replaceValues(User user,Map<String,Object> values)
+    {
+        user.getValues().clear();
+
+        if (values == null)
+            return;
+
+        for (Map.Entry<String,Object> entry : values.entrySet())
+            if (entry.getValue() != null)
+                user.setValue(entry.getKey(),entry.getValue());
     }
 
     private String

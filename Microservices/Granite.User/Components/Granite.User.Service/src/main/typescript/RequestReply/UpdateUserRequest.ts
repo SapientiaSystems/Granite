@@ -5,5 +5,5 @@ export
 interface UpdateUserRequest
     extends AbstractServiceRequest
 {
-    user: UpdateUserData;
+    userToUpdate: UpdateUserData;
 }

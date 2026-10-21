@@ -140,6 +140,8 @@ Security: User only authenticates. Every non-public request needs a valid Sessio
 
 Domain extension is done through the `User` values map (`setValue`/`getValue`) together with `User.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
 
+`values` on create and update: `CreateUserData.values` (default empty) seeds the new user's map and `UpdateUserData.values` is `null` for unchanged, otherwise it replaces the whole map (an empty map clears it). Entries with a null value are skipped. `values` is applied explicitly through `User.setValue`; the `CreateUserData → User` type map is explicit and does not map it.
+
 ```java
 @Configuration
 public

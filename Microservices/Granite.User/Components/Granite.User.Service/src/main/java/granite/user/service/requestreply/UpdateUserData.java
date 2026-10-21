@@ -4,6 +4,7 @@
 
 package granite.user.service.requestreply;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ class UpdateUserData
     private String      password;
     private String      externalIdentity;
     private Set<String> authorities;
+    private Map<String,Object> values;
 
     public
     UpdateUserData()
@@ -24,6 +26,7 @@ class UpdateUserData
         password         = null;
         externalIdentity = null;
         authorities      = null;
+        values           = null;
     }
 
     public UpdateUserData
@@ -61,6 +64,13 @@ class UpdateUserData
         return this;
     }
 
+    public UpdateUserData
+    setValues(Map<String,Object> v)
+    {
+        values = v;
+        return this;
+    }
+
     public Long
     getUserId() { return userId; }
 
@@ -75,6 +85,9 @@ class UpdateUserData
 
     public Optional<Set<String>>
     getAuthorities() { return Optional.ofNullable(authorities); }
+
+    public Optional<Map<String,Object>>
+    getValues() { return Optional.ofNullable(values); }
 }
 
 //////////////////////////////////////////////////////////////////////////////

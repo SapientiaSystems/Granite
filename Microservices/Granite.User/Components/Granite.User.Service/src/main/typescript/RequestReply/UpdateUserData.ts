@@ -6,4 +6,5 @@ interface UpdateUserData
     password?: string;
     externalIdentity?: string;
     authorities?: Array<string>;
+    values?: Record<string,unknown>;
 }

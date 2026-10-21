@@ -6,5 +6,5 @@ interface UserData
     externalIdentity?: string;
     password?: string;
     authorities?: Array<string>;
-    values?: Map<string,unknown>;
+    values?: Record<string,unknown>;
 }

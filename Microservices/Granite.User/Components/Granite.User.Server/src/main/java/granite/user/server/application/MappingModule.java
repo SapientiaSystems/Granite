@@ -21,7 +21,12 @@ class MappingModule
     public void
     setupModule(ModelMapper mapper)
     {
-        mapper.createTypeMap(CreateUserData.class,User.class);
+        mapper
+            .emptyTypeMap(CreateUserData.class,User.class)
+            .addMapping(CreateUserData::getUserName,User::setUserName)
+            .addMapping(CreateUserData::getPassword,User::setPassword)
+            .addMapping(CreateUserData::getExternalIdentity,User::setExternalIdentity)
+            .addMapping(CreateUserData::getAuthorities,User::setAuthorities);
 
         mapper
             .createTypeMap(UserData.class,User.class)

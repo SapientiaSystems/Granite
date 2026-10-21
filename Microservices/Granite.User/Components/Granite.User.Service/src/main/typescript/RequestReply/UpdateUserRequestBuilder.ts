@@ -31,7 +31,7 @@ class UpdateUserRequestBuilder
             {
                 requestId: this.getRequestId(),
                 timestamp: this.getTimestamp().toString(),
-                user: this.getUser()
+                userToUpdate: this.getUser()
             };
 
         return request;

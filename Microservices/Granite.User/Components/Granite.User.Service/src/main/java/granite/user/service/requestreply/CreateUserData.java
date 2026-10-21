@@ -5,7 +5,9 @@
 package granite.user.service.requestreply;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public
@@ -16,6 +18,7 @@ class CreateUserData
     private String      password;
     private String      externalIdentity;
     private Set<String> authorities;
+    private Map<String,Object> values;
 
     public
     CreateUserData()
@@ -24,6 +27,7 @@ class CreateUserData
         password         = null;
         externalIdentity = null;
         authorities      = new LinkedHashSet<>();
+        values           = new LinkedHashMap<>();
     }
 
     public CreateUserData
@@ -54,6 +58,13 @@ class CreateUserData
         return this;
     }
 
+    public CreateUserData
+    setValues(Map<String,Object> v)
+    {
+        values = v;
+        return this;
+    }
+
     public String
     getUserName() { return userName; }
 
@@ -65,6 +76,9 @@ class CreateUserData
 
     public Set<String>
     getAuthorities() { return authorities; }
+
+    public Map<String,Object>
+    getValues() { return values; }
 }
 
 //////////////////////////////////////////////////////////////////////////////
