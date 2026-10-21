@@ -2,165 +2,393 @@
 // Granite.Web.User
 //////////////////////////////////////////////////////////////////////////////
 
-import { useEffect, useRef, useState }       from "react";
-import type { ReactElement }                 from "react";
+import { useEffect, useMemo, useRef, useState }  from "react";
+import type { ReactElement }                     from "react";
 import { Stack, Group, ActionIcon, Loader, Tooltip,
-         Text, Modal, Button, Divider }      from "@mantine/core";
-import { useDisclosure }                     from "@mantine/hooks";
-import { AgGridReact }                       from "ag-grid-react";
+         Text, Modal, Button, Divider, Alert }   from "@mantine/core";
+import { useDisclosure }                         from "@mantine/hooks";
+import { AgGridReact }                           from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry,
-         themeQuartz }                       from "ag-grid-community";
-import type { ColDef, CellClassParams,
-              CellKeyDownEvent }             from "ag-grid-community";
-import type { UserData }               from "granite.user.service/RequestReply";
-import type { IUsersEditableViewProps } from "./IUsersEditableViewProps";
+         themeQuartz }                           from "ag-grid-community";
+import type { ColDef, CellClassParams, CellKeyDownEvent,
+              CellValueChangedEvent, PostSortRowsParams,
+              RowClassParams }                   from "ag-grid-community";
+import type { IUsersEditableViewProps, IUsersResult } from "./IUsersEditableViewProps";
+import { computeChanges, mergePending, normalizeAuthorities,
+         toRows, validateRows }                  from "./UsersChangeSet";
+import type { IUserRow }                         from "./UsersChangeSet";
+import { toEntries, toValues, validateEntries, entryMessages } from "./UsersValueEntries";
+import type { IValueEntry }                      from "./UsersValueEntries";
+import { ExpandCellRenderer }                    from "./ExpandCellRenderer";
+import { AuthoritiesCellRenderer }               from "./AuthoritiesCellRenderer";
+import { AuthoritiesCellEditor }                 from "./AuthoritiesCellEditor";
+import { PasswordCellEditor }                    from "./PasswordCellEditor";
+import { UserValuesDetail, UserValuesContext,
+         detailRowHeight }                       from "./UserValuesDetail";
+import type { IUserValuesContext }               from "./UserValuesDetail";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const masterGridTheme = themeQuartz.withParams({ columnBorder: true, headerBackgroundColor: "#e8e8e8",
                                                   selectedRowBackgroundColor: "#3264C8" });
-const defaultColDef: ColDef = { sortable: true, resizable: true, filter: true };
+const defaultColDef: ColDef<IUserRow> = { sortable: true, resizable: true, filter: true };
 
-function createEmptyUser(existing: Array<UserData>): UserData
+const gridStyles: string = ".user-editable-cell { background: #fff8e1; }"
+                         + " .user-invalid-row { background: #fdecea !important; }"
+                         + " .user-expanded-parent { border-bottom: none; }";
+
+const svgProps = { xmlns: "http://www.w3.org/2000/svg", width: 20, height: 20, viewBox: "0 0 24 24",
+                   fill: "none", stroke: "currentColor", strokeWidth: 2,
+                   strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+
+function errorText(error: unknown): string
 {
-    const nextId = existing.reduce((max, e) => Math.max(max, e.userId ?? 0), 0) + 1;
-
-    return { userId: nextId, userName: "" } as UserData;
+    return error instanceof Error ? error.message : String(error);
 }
+
+function rowLabel(row: IUserRow): string
+{
+    return (row.userName ?? "").trim() === "" ? "(new user)" : (row.userName ?? "");
+}
+
+function createNewRow(rowKey: string): IUserRow
+{
+    return { userId: 0, userName: "", password: "", authorities: [], values: {},
+             rowKey, isNew: true, isDetailRow: false };
+}
+
+function seedEntries(rowKey: string | null, rows: Array<IUserRow>): Record<string, Array<IValueEntry>>
+{
+    const row: IUserRow | undefined = rows.find(r => r.rowKey === rowKey);
+
+    return rowKey !== null && row !== undefined ? { [rowKey]: toEntries(row.values) } : {};
+}
+
+function handlePostSortRows(params: PostSortRowsParams<IUserRow>): void
+{
+    const nodes       = params.nodes;
+    const detailIndex = nodes.findIndex(n => n.data?.isDetailRow === true);
+
+    if (detailIndex < 0)
+    {
+        return;
+    }
+
+    const detailNode  = nodes[detailIndex];
+    const parentKey   = detailNode.data?.rowKey;
+    const parentIndex = nodes.findIndex(n => n.data?.isDetailRow === false && n.data?.rowKey === parentKey);
+
+    if (parentIndex >= 0 && detailIndex !== parentIndex + 1)
+    {
+        nodes.splice(detailIndex, 1);
+        nodes.splice(parentIndex + 1, 0, detailNode);
+    }
+}
+
+function toolbarButton(label: string, text: string, icon: ReactElement, onClick: () => void,
+                       disabled: boolean, active: boolean = false): ReactElement
+{
+    return (
+        <Tooltip label={label}>
+            <Stack align="center" gap={2}>
+                <ActionIcon variant={active ? "filled" : "default"} color={active ? "blue" : undefined}
+                            size="lg" onClick={onClick} disabled={disabled}>
+                    <svg {...svgProps}>{icon}</svg>
+                </ActionIcon>
+                <Text size="xs" c={disabled ? "dimmed" : undefined}>{text}</Text>
+            </Stack>
+        </Tooltip>
+    );
+}
+
+const createIcon: ReactElement = (<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>);
+const editIcon:   ReactElement = (<><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></>);
+const saveIcon:   ReactElement = (<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                     <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></>);
+const undoIcon:   ReactElement = (<><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></>);
+const deleteIcon: ReactElement = (<><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                     <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></>);
 
 export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 {
-    const [rowData, setRowData]           = useState<Array<UserData>>(props.users ?? []);
-    const [savedRowData, setSavedRowData] = useState<Array<UserData>>(props.users ?? []);
-    const [editingIds, setEditingIds]     = useState<Set<number>>(new Set());
-    const [hasSelection, setHasSelection] = useState<boolean>(false);
-    const [deleteIds, setDeleteIds]       = useState<Array<number>>([]);
+    const [rows, setRows]                 = useState<Array<IUserRow>>(() => toRows(props.users ?? []));
+    const [baseline, setBaseline]         = useState<Array<IUserRow>>(() => toRows(props.users ?? []));
+    const [editingKeys, setEditingKeys]   = useState<Set<string>>(new Set());
+    const [expandedKey, setExpandedKey]   = useState<string | null>(null);
+    const [entriesByKey, setEntriesByKey] = useState<Record<string, Array<IValueEntry>>>({});
+    const [selectedKeys, setSelectedKeys] = useState<Array<string>>([]);
+    const [invalidKeys, setInvalidKeys]   = useState<Set<string>>(new Set());
+    const [messages, setMessages]         = useState<Array<string>>([]);
+    const [busy, setBusy]                 = useState<boolean>(false);
+    const [deleteKeys, setDeleteKeys]     = useState<Array<string>>([]);
     const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
-    const gridRef                         = useRef<AgGridReact<UserData>>(null);
+    const gridRef                         = useRef<AgGridReact<IUserRow>>(null);
+    const newRowCounter                   = useRef<number>(0);
+    const pendingVisibleKey               = useRef<string | null>(null);
+    const actions                         = useRef<{ create: () => void; edit: () => void; save: () => void;
+                                                     undo: () => void; remove: () => void }>(
+                                                { create: () => undefined, edit: () => undefined, save: () => undefined,
+                                                  undo: () => undefined, remove: () => undefined });
 
-    const loading: boolean = props.loading ?? false;
-    const isEditing        = editingIds.size > 0;
+    const loading:   boolean = (props.loading ?? false) || busy;
+    const isEditing: boolean = editingKeys.size > 0;
+    const hasSelection: boolean = selectedKeys.length > 0;
+
+    const deleteDisabled: boolean = !hasSelection || busy
+        || rows.some(r => selectedKeys.includes(r.rowKey) && !r.isNew && r.userId === props.currentUserId);
 
     useEffect(() =>
     {
         if (props.users != null)
         {
-            setRowData(props.users);
-            setSavedRowData(props.users);
+            const fresh: Array<IUserRow> = toRows(props.users);
+
+            setRows(fresh);
+            setBaseline(fresh);
+            setEditingKeys(new Set());
+            setInvalidKeys(new Set());
+            setEntriesByKey(seedEntries(expandedKey, fresh));
         }
     }, [props.users]);
 
     useEffect(() =>
     {
-        gridRef.current?.api?.resetRowHeights();
-    }, [editingIds]);
+        gridRef.current?.api?.redrawRows();
+    }, [editingKeys, invalidKeys]);
 
-    const isRowEditable = (id: number | undefined): boolean =>
-        id != null && editingIds.has(id);
-
-    const userEditClassRules: Record<string, (params: CellClassParams<UserData>) => boolean> =
+    useEffect(() =>
     {
-        "user-editable-cell":
-            (params) =>
-                params.data != null
-                && editingIds.has(params.data.userId)
-                && params.node.isSelected() !== true,
-        "user-master-editable-selected-cell":
-            (params) =>
-                params.data != null
-                && editingIds.has(params.data.userId)
-                && params.node.isSelected() === true,
-    };
+        gridRef.current?.api?.refreshCells({ force: true, columns: ["expand"] });
+    }, [expandedKey]);
 
-    const columnDefs: Array<ColDef<UserData>> =
-    [
-        { field: "userId", headerName: "Id",  width: 120, headerTooltip: "User Id" },
-        { field: "userName",     headerName: "User Name", flex: 1,
-          headerTooltip: "User Name",
-          editable: (p) => isRowEditable(p.data?.userId),
-          cellClassRules: userEditClassRules },
-    ];
+    const displayData = useMemo<Array<IUserRow>>(() =>
+    {
+        const result: Array<IUserRow> = [];
+
+        for (const row of rows)
+        {
+            result.push({ ...row, isDetailRow: false });
+
+            if (row.rowKey === expandedKey)
+            {
+                result.push({ ...row, isDetailRow: true });
+            }
+        }
+
+        return result;
+    }, [rows, expandedKey]);
+
+    function updateRow(rowKey: string, patch: Partial<IUserRow>): void
+    {
+        setRows(prev => prev.map(r => r.rowKey === rowKey ? { ...r, ...patch } : r));
+    }
+
+    function setEntries(rowKey: string, entries: Array<IValueEntry>): void
+    {
+        setEntriesByKey(prev => ({ ...prev, [rowKey]: entries }));
+
+        if (entryMessages(entries).length === 0)
+        {
+            updateRow(rowKey, { values: toValues(entries) });
+        }
+    }
+
+    function toggleExpand(rowKey: string): void
+    {
+        if (rowKey === expandedKey)
+        {
+            setExpandedKey(null);
+            return;
+        }
+
+        setExpandedKey(rowKey);
+
+        if (entriesByKey[rowKey] === undefined)
+        {
+            setEntriesByKey(prev => ({ ...prev, ...seedEntries(rowKey, rows) }));
+        }
+    }
+
+    function applyResult(result: IUsersResult, current: Array<IUserRow>): void
+    {
+        const refreshed: Array<IUserRow> = toRows(result.users);
+        const merged:    Array<IUserRow> = mergePending(result.users, current, baseline);
+        const pending                    = computeChanges(refreshed, merged);
+        const pendingKeys: Set<string>   = new Set([ ...merged.filter(r => r.isNew).map(r => r.rowKey),
+                                                     ...pending.usersToUpdate.map(u => `user-${u.userId}`) ]);
+        const nextExpanded: string | null = merged.some(r => r.rowKey === expandedKey) ? expandedKey : null;
+
+        setRows(merged);
+        setBaseline(refreshed);
+        setEditingKeys(pendingKeys);
+        setExpandedKey(nextExpanded);
+        setEntriesByKey(seedEntries(nextExpanded, merged));
+        setInvalidKeys(new Set());
+        setMessages(result.failureMessages ?? []);
+    }
+
+    function collectProblems(): Map<string, Array<string>>
+    {
+        const problems: Map<string, Array<string>> = validateRows(rows);
+
+        for (const [rowKey, entryProblems] of validateEntries(entriesByKey))
+        {
+            const existing: Array<string> = problems.get(rowKey) ?? [];
+
+            problems.set(rowKey, [...new Set([...existing, ...entryProblems])]);
+        }
+
+        return problems;
+    }
 
     function handleCreate(): void
     {
-        setSavedRowData(rowData);
-        const newEntity = createEmptyUser(rowData);
+        const rowKey: string = `new-${++newRowCounter.current}`;
 
-        setRowData(prev => [...prev, newEntity]);
-        setEditingIds(new Set([newEntity.userId]));
+        pendingVisibleKey.current = rowKey;
+        setRows(prev => [...prev, createNewRow(rowKey)]);
+        setEditingKeys(prev => new Set([...prev, rowKey]));
     }
 
     function handleEdit(): void
     {
-        const selected = gridRef.current?.api?.getSelectedRows() ?? [];
-        const ids      = selected.map(row => row.userId);
-
-        if (ids.length > 0)
+        if (selectedKeys.length > 0)
         {
-            setSavedRowData(rowData);
-            setEditingIds(new Set(ids));
+            setEditingKeys(prev => new Set([...prev, ...selectedKeys]));
         }
     }
 
-    function handleSave(): void
+    async function handleSave(): Promise<void>
     {
-        setSavedRowData(rowData);
-        setEditingIds(new Set());
+        if (busy || !isEditing)
+        {
+            return;
+        }
+
+        const problems: Map<string, Array<string>> = collectProblems();
+
+        if (problems.size > 0)
+        {
+            const lines: Array<string> = [];
+
+            for (const [rowKey, rowProblems] of problems)
+            {
+                const row: IUserRow | undefined = rows.find(r => r.rowKey === rowKey);
+
+                lines.push(...rowProblems.map(p => `${row === undefined ? rowKey : rowLabel(row)}: ${p}`));
+            }
+
+            setInvalidKeys(new Set(problems.keys()));
+            setMessages(lines);
+            return;
+        }
+
+        const changes = computeChanges(baseline, rows);
+
+        if (changes.usersToCreate.length === 0 && changes.usersToUpdate.length === 0)
+        {
+            setEditingKeys(new Set());
+            setInvalidKeys(new Set());
+            setMessages([]);
+            return;
+        }
+
+        if (props.onSave === undefined)
+        {
+            return;
+        }
+
+        setBusy(true);
+        setInvalidKeys(new Set());
+
+        try
+        {
+            applyResult(await props.onSave(changes), rows);
+        }
+        catch (error)
+        {
+            setMessages([errorText(error)]);
+        }
+        finally
+        {
+            setBusy(false);
+        }
     }
 
     function handleUndo(): void
     {
-        setRowData(savedRowData);
-        setEditingIds(new Set());
-    }
-
-    function handleApprove(): void
-    {
-        // Template placeholder: wire your approve-state transition here.
-        console.log("Approve clicked for",
-            gridRef.current?.api?.getSelectedRows().map(r => r.userId));
-    }
-
-    function handleCancel(): void
-    {
-        // Template placeholder: wire your cancel-state transition here.
-        console.log("Cancel clicked for",
-            gridRef.current?.api?.getSelectedRows().map(r => r.userId));
+        setRows(baseline);
+        setEditingKeys(new Set());
+        setInvalidKeys(new Set());
+        setMessages([]);
+        setExpandedKey(prev => baseline.some(r => r.rowKey === prev) ? prev : null);
+        setEntriesByKey(seedEntries(baseline.some(r => r.rowKey === expandedKey) ? expandedKey : null, baseline));
     }
 
     function handleDelete(): void
     {
-        const selected = gridRef.current?.api?.getSelectedRows() ?? [];
-        const ids      = selected.map(row => row.userId);
-
-        if (ids.length > 0)
+        if (!deleteDisabled)
         {
-            setDeleteIds(ids);
+            setDeleteKeys(selectedKeys);
             openDeleteModal();
         }
     }
 
-    function confirmDelete(): void
+    async function confirmDelete(): Promise<void>
     {
-        const idsToDelete = new Set(deleteIds);
+        const keys:      Set<string>     = new Set(deleteKeys);
+        const doomed:    Array<IUserRow> = rows.filter(r => keys.has(r.rowKey));
+        const remaining: Array<IUserRow> = rows.filter(r => !keys.has(r.rowKey));
+        const ids:       Array<number>   = doomed.filter(r => !r.isNew).map(r => r.userId);
 
-        setRowData(prev => prev.filter(e => !idsToDelete.has(e.userId)));
-        setEditingIds(prev =>
-        {
-            const next = new Set(prev);
-
-            for (const id of idsToDelete)
-            {
-                next.delete(id);
-            }
-
-            return next;
-        });
-        setDeleteIds([]);
         closeDeleteModal();
+        setDeleteKeys([]);
+
+        if (ids.length === 0)
+        {
+            setRows(remaining);
+            setEditingKeys(prev => new Set([...prev].filter(k => !keys.has(k))));
+            setExpandedKey(prev => prev !== null && keys.has(prev) ? null : prev);
+            return;
+        }
+
+        if (props.onDelete === undefined)
+        {
+            return;
+        }
+
+        setBusy(true);
+
+        try
+        {
+            applyResult(await props.onDelete(ids), remaining);
+        }
+        catch (error)
+        {
+            setMessages([errorText(error)]);
+        }
+        finally
+        {
+            setBusy(false);
+        }
     }
 
-    function handleMasterKeyDown(event: CellKeyDownEvent<UserData>): void
+    actions.current = { create: handleCreate, edit: handleEdit, save: () => { void handleSave(); },
+                        undo: handleUndo, remove: handleDelete };
+
+    function handleCellValueChanged(event: CellValueChangedEvent<IUserRow>): void
+    {
+        const edited: IUserRow = event.data;
+
+        if (!edited.isDetailRow)
+        {
+            updateRow(edited.rowKey, { userName:    edited.userName,
+                                       password:    edited.password,
+                                       authorities: normalizeAuthorities(edited.authorities ?? []) });
+        }
+    }
+
+    function handleMasterKeyDown(event: CellKeyDownEvent<IUserRow>): void
     {
         const e = event.event as KeyboardEvent;
 
@@ -172,13 +400,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         if (e.ctrlKey && e.key === "s" && isEditing && (props.showSave ?? true))
         {
             e.preventDefault();
-            handleSave();
-            return;
-        }
-
-        if (e.key === "Escape" && isEditing && (props.showSave ?? true))
-        {
-            handleSave();
+            void handleSave();
             return;
         }
 
@@ -188,6 +410,66 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         }
     }
 
+    const isMasterEditable = (row: IUserRow | undefined): boolean =>
+        row !== undefined && !row.isDetailRow && editingKeys.has(row.rowKey);
+
+    const newRowEditableRules: Record<string, (params: CellClassParams<IUserRow>) => boolean> =
+    {
+        "user-editable-cell": (params) => params.data?.isDetailRow === false && params.data.isNew,
+    };
+
+    const authoritiesEditableRules: Record<string, (params: CellClassParams<IUserRow>) => boolean> =
+    {
+        "user-editable-cell": (params) => isMasterEditable(params.data),
+    };
+
+    const columnDefs: Array<ColDef<IUserRow>> =
+    [
+        { colId: "expand", headerName: "", width: 50, sortable: false, filter: false, resizable: false,
+          suppressMovable: true, cellRenderer: ExpandCellRenderer },
+        { colId: "id", headerName: "Id", width: 110, headerTooltip: "User Id",
+          valueGetter: (p) => p.data == null || p.data.isNew ? "" : p.data.userId },
+        { field: "userName", headerName: "User Name", flex: 1, headerTooltip: "User Name",
+          editable: (p) => p.data?.isDetailRow === false && p.data.isNew,
+          cellClassRules: newRowEditableRules },
+        { field: "externalIdentity", headerName: "External Identity", flex: 1, headerTooltip: "External Identity" },
+        { field: "password", headerName: "Password", width: 160, headerTooltip: "Password",
+          sortable: false, filter: false,
+          editable: (p) => p.data?.isDetailRow === false && p.data.isNew,
+          cellEditor: PasswordCellEditor,
+          valueFormatter: (p) => p.data?.isNew ? "•".repeat((p.value ?? "").length) : "********",
+          cellClassRules: newRowEditableRules },
+        { field: "authorities", headerName: "Authorities", flex: 2, headerTooltip: "Authorities",
+          editable: (p) => isMasterEditable(p.data),
+          cellEditor: AuthoritiesCellEditor, cellEditorPopup: true,
+          suppressKeyboardEvent: (p) => p.editing && p.event.key === "Enter",
+          cellRenderer: AuthoritiesCellRenderer,
+          filterValueGetter: (p) => (p.data?.authorities ?? []).join(", "),
+          comparator: (a: Array<string> | undefined, b: Array<string> | undefined) =>
+              (a ?? []).join(", ").localeCompare((b ?? []).join(", ")),
+          cellClassRules: authoritiesEditableRules },
+    ];
+
+    const valuesContext: IUserValuesContext =
+    {
+        entriesFor: (rowKey) => entriesByKey[rowKey] ?? [],
+        setEntries,
+        isEditing:  (rowKey) => editingKeys.has(rowKey),
+    };
+
+    const gridContext =
+    {
+        expandedKey,
+        toggleExpand,
+        isEditing:       (rowKey: string) => editingKeys.has(rowKey),
+        removeAuthority: (rowKey: string, authority: string) =>
+        {
+            const row: IUserRow | undefined = rows.find(r => r.rowKey === rowKey);
+
+            updateRow(rowKey, { authorities: (row?.authorities ?? []).filter(a => a !== authority) });
+        },
+    };
+
     const isGrowMode: boolean = props.height === "grow" || props.height == null;
     const isDetached: boolean = isGrowMode && props.onRenderToolbar != null;
     const gridHeight: string | number =
@@ -195,107 +477,20 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
             ? "100%"
             : (props.height as number) * 36 + 48;
 
+    const showCreate: boolean = props.showCreate ?? true;
+    const showEdit:   boolean = props.showEdit   ?? true;
+    const showSave:   boolean = props.showSave   ?? true;
+    const showUndo:   boolean = props.showUndo   ?? true;
+    const showDelete: boolean = props.showDelete ?? true;
+
     const toolbarContent: ReactElement = (
         <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
-            {(props.showCreate ?? true) &&
-            <Tooltip label="Create User">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant="default" size="lg" onClick={handleCreate}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs">Create</Text>
-                </Stack>
-            </Tooltip>}
-            {(props.showEdit ?? true) &&
-            <Tooltip label="Edit Users">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant={isEditing ? "filled" : "default"}
-                                color={isEditing ? "blue" : undefined}
-                                size="lg" onClick={handleEdit} disabled={!hasSelection}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                            <path d="m15 5 4 4" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs" c={!hasSelection ? "dimmed" : undefined}>Edit</Text>
-                </Stack>
-            </Tooltip>}
-            {(props.showSave ?? true) &&
-            <Tooltip label="Save Users">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant="default" size="lg" onClick={handleSave} disabled={!isEditing}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                            <polyline points="17 21 17 13 7 13 7 21" />
-                            <polyline points="7 3 7 8 15 8" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs" c={!isEditing ? "dimmed" : undefined}>Save</Text>
-                </Stack>
-            </Tooltip>}
-            {(props.showUndo ?? true) &&
-            <Tooltip label="Undo Changes">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant="default" size="lg" onClick={handleUndo} disabled={!isEditing}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="1 4 1 10 7 10" />
-                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs" c={!isEditing ? "dimmed" : undefined}>Undo</Text>
-                </Stack>
-            </Tooltip>}
+            {showCreate && toolbarButton("Create User", "Create", createIcon, () => actions.current.create(), busy)}
+            {showEdit   && toolbarButton("Edit Users", "Edit", editIcon, () => actions.current.edit(), !hasSelection || busy, isEditing)}
+            {showSave   && toolbarButton("Save Users", "Save", saveIcon, () => actions.current.save(), !isEditing || busy)}
+            {showUndo   && toolbarButton("Undo Changes", "Undo", undoIcon, () => actions.current.undo(), !isEditing || busy)}
             <Divider orientation="vertical" mx="md" />
-            {(props.showApprove ?? true) &&
-            <Tooltip label="Approve Users">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant="default" size="lg" onClick={handleApprove} disabled={!hasSelection}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs" c={!hasSelection ? "dimmed" : undefined}>Approve</Text>
-                </Stack>
-            </Tooltip>}
-            <Divider orientation="vertical" mx="md" />
-            {(props.showCancel ?? true) &&
-            <Tooltip label="Cancel Users">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant="default" size="lg" onClick={handleCancel} disabled={!hasSelection}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="15" y1="9" x2="9" y2="15" />
-                            <line x1="9" y1="9" x2="15" y2="15" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs" c={!hasSelection ? "dimmed" : undefined}>Cancel</Text>
-                </Stack>
-            </Tooltip>}
-            {(props.showDelete ?? true) &&
-            <Tooltip label="Delete Users">
-                <Stack align="center" gap={2}>
-                    <ActionIcon variant="default" size="lg" onClick={handleDelete} disabled={!hasSelection}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6" />
-                            <path d="M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                        </svg>
-                    </ActionIcon>
-                    <Text size="xs" c={!hasSelection ? "dimmed" : undefined}>Delete</Text>
-                </Stack>
-            </Tooltip>}
+            {showDelete && toolbarButton("Delete Users", "Delete", deleteIcon, () => actions.current.remove(), deleteDisabled)}
             <div style={{ flex: 1 }} />
         </Group>
     );
@@ -306,66 +501,102 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         {
             props.onRenderToolbar(toolbarContent);
         }
-    }, [isEditing, hasSelection, editingIds]);
+    }, [isEditing, hasSelection, deleteDisabled, busy, showCreate, showEdit, showSave, showUndo, showDelete]);
+
+    const gridPanel: ReactElement = (
+        <>
+            <style>{gridStyles}</style>
+            {messages.length > 0 &&
+            <Alert color="red" withCloseButton onClose={() => setMessages([])} mx="sm" my={6}>
+                {messages.map((m, i) => <div key={i}>{m}</div>)}
+            </Alert>}
+            <div className="ag-theme-quartz" style={{ flex: 1, minHeight: 0, width: "100%",
+                                                     height: isDetached ? undefined : gridHeight }}>
+                <UserValuesContext.Provider value={valuesContext}>
+                    <AgGridReact<IUserRow>
+                        ref={gridRef}
+                        theme={masterGridTheme}
+                        loading={loading}
+                        overlayLoadingTemplate="Retrieving Users..."
+                        rowData={displayData}
+                        columnDefs={columnDefs}
+                        defaultColDef={defaultColDef}
+                        context={gridContext}
+                        alwaysPassFilter={(node) => node.isSelected() === true}
+                        undoRedoCellEditing={true}
+                        undoRedoCellEditingLimit={20}
+                        rowClassRules={{
+                            "user-expanded-parent": (params: RowClassParams<IUserRow>) =>
+                                params.data?.isDetailRow === false && params.data.rowKey === expandedKey,
+                            "user-invalid-row": (params: RowClassParams<IUserRow>) =>
+                                params.data != null && invalidKeys.has(params.data.rowKey),
+                        }}
+                        rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: true,
+                                        selectAll: "filtered", enableClickSelection: false,
+                                        isRowSelectable: (node) =>
+                                            node.data?.isDetailRow !== true
+                                            && (editingKeys.size === 0 || editingKeys.has(node.data?.rowKey ?? "")) }}
+                        onSelectionChanged={(event) =>
+                        {
+                            setSelectedKeys(event.api.getSelectedRows().filter(r => !r.isDetailRow).map(r => r.rowKey));
+                            event.api.refreshCells({ force: true });
+                            event.api.onFilterChanged();
+                        }}
+                        onCellValueChanged={handleCellValueChanged}
+                        onRowDataUpdated={(event) =>
+                        {
+                            if (pendingVisibleKey.current !== null)
+                            {
+                                const node = event.api.getRowNode(pendingVisibleKey.current);
+
+                                pendingVisibleKey.current = null;
+
+                                if (node != null)
+                                {
+                                    event.api.ensureNodeVisible(node);
+                                }
+                            }
+                        }}
+                        onCellKeyDown={handleMasterKeyDown}
+                        getRowId={(params) => params.data.isDetailRow ? "detail-" + params.data.rowKey : params.data.rowKey}
+                        getRowHeight={(params) =>
+                            params.data?.isDetailRow === true
+                                ? detailRowHeight(entriesByKey[params.data.rowKey]?.length
+                                                  ?? Object.keys(params.data.values ?? {}).length)
+                                : undefined}
+                        isFullWidthRow={(params) => params.rowNode.data?.isDetailRow === true}
+                        fullWidthCellRenderer={UserValuesDetail}
+                        postSortRows={handlePostSortRows}
+                    />
+                </UserValuesContext.Provider>
+            </div>
+            <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Confirm Delete" centered>
+                <Text size="sm">Are you sure you want to delete the following users?</Text>
+                <ul>
+                    {rows.filter(r => deleteKeys.includes(r.rowKey)).map(r => <li key={r.rowKey}>{rowLabel(r)}</li>)}
+                </ul>
+                <Group justify="flex-end" mt="lg">
+                    <Button variant="default" onClick={closeDeleteModal}>Cancel</Button>
+                    <Button color="red" onClick={() => { void confirmDelete(); }}>Delete</Button>
+                </Group>
+            </Modal>
+        </>
+    );
+
+    const loader: ReactElement | false = loading && (
+        <div style={{ position: "absolute", inset: 0, display: "flex",
+                      alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+            <Loader size="lg" />
+        </div>
+    );
 
     if (isDetached)
     {
         return (
-            <>
-                <div style={{ flex: 1, minHeight: 0, position: "relative", display: "flex", flexDirection: "column" }}>
-                    {loading && (
-                        <div style={{
-                            position: "absolute", inset: 0, display: "flex",
-                            alignItems: "center", justifyContent: "center", zIndex: 10,
-                        }}>
-                            <Loader size="lg" />
-                        </div>
-                    )}
-                    <div className="ag-theme-quartz" style={{ flex: 1, minHeight: 0, width: "100%" }}>
-                        <AgGridReact<UserData>
-                            ref={gridRef}
-                            theme={masterGridTheme}
-                            loading={loading}
-                            overlayLoadingTemplate="Retrieving Users..."
-                            rowData={rowData}
-                            columnDefs={columnDefs}
-                            defaultColDef={defaultColDef}
-                            alwaysPassFilter={(node) => node.isSelected() === true}
-                            undoRedoCellEditing={true}
-                            undoRedoCellEditingLimit={20}
-                            rowClassRules={{
-                                "user-editable-row":
-                                    (params) =>
-                                        params.data != null
-                                        && editingIds.has(params.data.userId),
-                            }}
-                            rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: true,
-                                            selectAll: "filtered", enableClickSelection: false,
-                                            isRowSelectable: (node) =>
-                                                editingIds.size === 0
-                                                || editingIds.has(node.data?.userId ?? -1) }}
-                            onSelectionChanged={(event) =>
-                            {
-                                setHasSelection(event.api.getSelectedRows().length > 0);
-                                event.api.refreshCells({ force: true });
-                                event.api.onFilterChanged();
-                            }}
-                            onCellKeyDown={handleMasterKeyDown}
-                            getRowId={(params) => "user-" + params.data.userId}
-                        />
-                    </div>
-                </div>
-                <Modal opened={deleteModalOpened} onClose={closeDeleteModal}
-                       title="Confirm Delete" centered>
-                    <Text size="sm">
-                        Are you sure you want to delete the selected users?
-                    </Text>
-                    <Group justify="flex-end" mt="lg">
-                        <Button variant="default" onClick={closeDeleteModal}>Cancel</Button>
-                        <Button color="red" onClick={confirmDelete}>Delete</Button>
-                    </Group>
-                </Modal>
-            </>
+            <div style={{ flex: 1, minHeight: 0, position: "relative", display: "flex", flexDirection: "column" }}>
+                {loader}
+                {gridPanel}
+            </div>
         );
     }
 
@@ -376,57 +607,8 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
             <Group gap="sm" className="view-toolbar" px="sm" py={6} justify="flex-start" wrap="nowrap">
                 {toolbarContent}
             </Group>
-            {loading && (
-                <div style={{
-                    position: "absolute", inset: 0, display: "flex",
-                    alignItems: "center", justifyContent: "center", zIndex: 10,
-                }}>
-                    <Loader size="lg" />
-                </div>
-            )}
-            <div className="ag-theme-quartz" style={{ flex: 1, minHeight: 0, width: "100%", height: gridHeight }}>
-                <AgGridReact<UserData>
-                    ref={gridRef}
-                    theme={masterGridTheme}
-                    loading={loading}
-                    overlayLoadingTemplate="Retrieving Users..."
-                    rowData={rowData}
-                    columnDefs={columnDefs}
-                    defaultColDef={defaultColDef}
-                    alwaysPassFilter={(node) => node.isSelected() === true}
-                    undoRedoCellEditing={true}
-                    undoRedoCellEditingLimit={20}
-                    rowClassRules={{
-                        "user-editable-row":
-                            (params) =>
-                                params.data != null
-                                && editingIds.has(params.data.userId),
-                    }}
-                    rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: true,
-                                    selectAll: "filtered", enableClickSelection: false,
-                                    isRowSelectable: (node) =>
-                                        editingIds.size === 0
-                                        || editingIds.has(node.data?.userId ?? -1) }}
-                    onSelectionChanged={(event) =>
-                    {
-                        setHasSelection(event.api.getSelectedRows().length > 0);
-                        event.api.refreshCells({ force: true });
-                        event.api.onFilterChanged();
-                    }}
-                    onCellKeyDown={handleMasterKeyDown}
-                    getRowId={(params) => "user-" + params.data.userId}
-                />
-            </div>
-            <Modal opened={deleteModalOpened} onClose={closeDeleteModal}
-                   title="Confirm Delete" centered>
-                <Text size="sm">
-                    Are you sure you want to delete the selected users?
-                </Text>
-                <Group justify="flex-end" mt="lg">
-                    <Button variant="default" onClick={closeDeleteModal}>Cancel</Button>
-                    <Button color="red" onClick={confirmDelete}>Delete</Button>
-                </Group>
-            </Modal>
+            {loader}
+            {gridPanel}
         </Stack>
     );
 }

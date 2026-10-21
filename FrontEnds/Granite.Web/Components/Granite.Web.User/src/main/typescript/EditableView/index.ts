@@ -1,2 +1,2 @@
-export type {IUsersEditableViewProps} from "./IUsersEditableViewProps";
-export {UsersEditableView}            from "./UsersEditableView";
+export type {IUsersEditableViewProps, IUsersResult} from "./IUsersEditableViewProps";
+export {UsersEditableView}                          from "./UsersEditableView";
