@@ -64,6 +64,39 @@ export function validateEntries(entriesByKey: Record<string, Array<IValueEntry>>
     return result;
 }
 
+export function removeOrphanEntries(entriesByKey: Record<string, Array<IValueEntry>>,
+                                    rowKeys: Array<string>): Record<string, Array<IValueEntry>>
+{
+    return Object.fromEntries(Object.entries(entriesByKey).filter(([key]) => rowKeys.includes(key)));
+}
+
+export type UsersAction = "create" | "edit" | "save" | "undo" | "delete";
+
+export interface IActionState
+{
+    busy:           boolean;
+    isEditing:      boolean;
+    hasSelection:   boolean;
+    deleteDisabled: boolean;
+}
+
+export function isActionAllowed(action: UsersAction, state: IActionState): boolean
+{
+    if (state.busy)
+    {
+        return false;
+    }
+
+    switch (action)
+    {
+        case "create": return true;
+        case "edit":   return state.hasSelection;
+        case "save":
+        case "undo":   return state.isEditing;
+        case "delete": return state.hasSelection && !state.deleteDisabled;
+    }
+}
+
 export function entryDisplay(entry: IValueEntry): string
 {
     return displayValue(entry.value);

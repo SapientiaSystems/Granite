@@ -17,8 +17,9 @@ import type { IUsersEditableViewProps, IUsersResult } from "./IUsersEditableView
 import { computeChanges, mergePending, normalizeAuthorities,
          toRows, validateRows }                  from "./UsersChangeSet";
 import type { IUserRow }                         from "./UsersChangeSet";
-import { toEntries, toValues, validateEntries, entryMessages } from "./UsersValueEntries";
-import type { IValueEntry }                      from "./UsersValueEntries";
+import { toEntries, toValues, validateEntries, entryMessages,
+         removeOrphanEntries, isActionAllowed }     from "./UsersValueEntries";
+import type { IValueEntry, UsersAction }         from "./UsersValueEntries";
 import { ExpandCellRenderer }                    from "./ExpandCellRenderer";
 import { AuthoritiesCellRenderer }               from "./AuthoritiesCellRenderer";
 import { AuthoritiesCellEditor }                 from "./AuthoritiesCellEditor";
@@ -123,12 +124,22 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     const [deleteKeys, setDeleteKeys]     = useState<Array<string>>([]);
     const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
     const gridRef                         = useRef<AgGridReact<IUserRow>>(null);
+    const rowsRef                         = useRef<Array<IUserRow>>(rows);
+    const baselineRef                     = useRef<Array<IUserRow>>(baseline);
+    const entriesRef                      = useRef<Record<string, Array<IValueEntry>>>(entriesByKey);
+    const expandedRef                     = useRef<string | null>(expandedKey);
+    const busyRef                         = useRef<boolean>(false);
     const newRowCounter                   = useRef<number>(0);
     const pendingVisibleKey               = useRef<string | null>(null);
     const actions                         = useRef<{ create: () => void; edit: () => void; save: () => void;
                                                      undo: () => void; remove: () => void }>(
                                                 { create: () => undefined, edit: () => undefined, save: () => undefined,
                                                   undo: () => undefined, remove: () => undefined });
+
+    rowsRef.current     = rows;
+    baselineRef.current = baseline;
+    entriesRef.current  = entriesByKey;
+    expandedRef.current = expandedKey;
 
     const loading:   boolean = (props.loading ?? false) || busy;
     const isEditing: boolean = editingKeys.size > 0;
@@ -178,14 +189,42 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         return result;
     }, [rows, expandedKey]);
 
+    function commitRows(next: Array<IUserRow>): void
+    {
+        rowsRef.current = next;
+        setRows(next);
+    }
+
+    function commitEntries(next: Record<string, Array<IValueEntry>>): void
+    {
+        entriesRef.current = next;
+        setEntriesByKey(next);
+    }
+
+    function commitBusy(next: boolean): void
+    {
+        busyRef.current = next;
+        setBusy(next);
+    }
+
     function updateRow(rowKey: string, patch: Partial<IUserRow>): void
     {
-        setRows(prev => prev.map(r => r.rowKey === rowKey ? { ...r, ...patch } : r));
+        if (busyRef.current)
+        {
+            return;
+        }
+
+        commitRows(rowsRef.current.map(r => r.rowKey === rowKey ? { ...r, ...patch } : r));
     }
 
     function setEntries(rowKey: string, entries: Array<IValueEntry>): void
     {
-        setEntriesByKey(prev => ({ ...prev, [rowKey]: entries }));
+        if (busyRef.current)
+        {
+            return;
+        }
+
+        commitEntries({ ...entriesRef.current, [rowKey]: entries });
 
         if (entryMessages(entries).length === 0)
         {
@@ -195,43 +234,47 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     function toggleExpand(rowKey: string): void
     {
-        if (rowKey === expandedKey)
+        if (rowKey === expandedRef.current)
         {
+            expandedRef.current = null;
             setExpandedKey(null);
             return;
         }
 
+        expandedRef.current = rowKey;
         setExpandedKey(rowKey);
 
-        if (entriesByKey[rowKey] === undefined)
+        if (entriesRef.current[rowKey] === undefined)
         {
-            setEntriesByKey(prev => ({ ...prev, ...seedEntries(rowKey, rows) }));
+            commitEntries({ ...entriesRef.current, ...seedEntries(rowKey, rowsRef.current) });
         }
     }
 
     function applyResult(result: IUsersResult, current: Array<IUserRow>): void
     {
         const refreshed: Array<IUserRow> = toRows(result.users);
-        const merged:    Array<IUserRow> = mergePending(result.users, current, baseline);
+        const merged:    Array<IUserRow> = mergePending(result.users, current, baselineRef.current);
         const pending                    = computeChanges(refreshed, merged);
         const pendingKeys: Set<string>   = new Set([ ...merged.filter(r => r.isNew).map(r => r.rowKey),
                                                      ...pending.usersToUpdate.map(u => `user-${u.userId}`) ]);
-        const nextExpanded: string | null = merged.some(r => r.rowKey === expandedKey) ? expandedKey : null;
+        const nextExpanded: string | null = merged.some(r => r.rowKey === expandedRef.current) ? expandedRef.current : null;
 
-        setRows(merged);
+        commitRows(merged);
+        baselineRef.current = refreshed;
         setBaseline(refreshed);
         setEditingKeys(pendingKeys);
+        expandedRef.current = nextExpanded;
         setExpandedKey(nextExpanded);
-        setEntriesByKey(seedEntries(nextExpanded, merged));
+        commitEntries(seedEntries(nextExpanded, merged));
         setInvalidKeys(new Set());
         setMessages(result.failureMessages ?? []);
     }
 
     function collectProblems(): Map<string, Array<string>>
     {
-        const problems: Map<string, Array<string>> = validateRows(rows);
+        const problems: Map<string, Array<string>> = validateRows(rowsRef.current);
 
-        for (const [rowKey, entryProblems] of validateEntries(entriesByKey))
+        for (const [rowKey, entryProblems] of validateEntries(entriesRef.current))
         {
             const existing: Array<string> = problems.get(rowKey) ?? [];
 
@@ -241,18 +284,28 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         return problems;
     }
 
+    function actionAllowed(action: UsersAction): boolean
+    {
+        return isActionAllowed(action, { busy: busyRef.current, isEditing, hasSelection, deleteDisabled });
+    }
+
     function handleCreate(): void
     {
+        if (!actionAllowed("create"))
+        {
+            return;
+        }
+
         const rowKey: string = `new-${++newRowCounter.current}`;
 
         pendingVisibleKey.current = rowKey;
-        setRows(prev => [...prev, createNewRow(rowKey)]);
+        commitRows([...rowsRef.current, createNewRow(rowKey)]);
         setEditingKeys(prev => new Set([...prev, rowKey]));
     }
 
     function handleEdit(): void
     {
-        if (selectedKeys.length > 0)
+        if (actionAllowed("edit"))
         {
             setEditingKeys(prev => new Set([...prev, ...selectedKeys]));
         }
@@ -260,11 +313,15 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     async function handleSave(): Promise<void>
     {
-        if (busy || !isEditing)
+        if (!actionAllowed("save"))
         {
             return;
         }
 
+        gridRef.current?.api?.stopEditing();
+
+        const rows:     Array<IUserRow> = rowsRef.current;
+        const baseline: Array<IUserRow> = baselineRef.current;
         const problems: Map<string, Array<string>> = collectProblems();
 
         if (problems.size > 0)
@@ -298,12 +355,14 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
             return;
         }
 
-        setBusy(true);
+        commitBusy(true);
         setInvalidKeys(new Set());
 
         try
         {
-            applyResult(await props.onSave(changes), rows);
+            const result: IUsersResult = await props.onSave(changes);
+
+            applyResult(result, rowsRef.current);
         }
         catch (error)
         {
@@ -311,23 +370,32 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         }
         finally
         {
-            setBusy(false);
+            commitBusy(false);
         }
     }
 
     function handleUndo(): void
     {
-        setRows(baseline);
+        if (!actionAllowed("undo"))
+        {
+            return;
+        }
+
+        const baseline: Array<IUserRow> = baselineRef.current;
+        const keepKey:  string | null   = baseline.some(r => r.rowKey === expandedRef.current) ? expandedRef.current : null;
+
+        commitRows(baseline);
         setEditingKeys(new Set());
         setInvalidKeys(new Set());
         setMessages([]);
-        setExpandedKey(prev => baseline.some(r => r.rowKey === prev) ? prev : null);
-        setEntriesByKey(seedEntries(baseline.some(r => r.rowKey === expandedKey) ? expandedKey : null, baseline));
+        expandedRef.current = keepKey;
+        setExpandedKey(keepKey);
+        commitEntries(seedEntries(keepKey, baseline));
     }
 
     function handleDelete(): void
     {
-        if (!deleteDisabled)
+        if (actionAllowed("delete"))
         {
             setDeleteKeys(selectedKeys);
             openDeleteModal();
@@ -336,19 +404,32 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     async function confirmDelete(): Promise<void>
     {
+        closeDeleteModal();
+
+        if (busyRef.current)
+        {
+            return;
+        }
+
         const keys:      Set<string>     = new Set(deleteKeys);
-        const doomed:    Array<IUserRow> = rows.filter(r => keys.has(r.rowKey));
-        const remaining: Array<IUserRow> = rows.filter(r => !keys.has(r.rowKey));
+        const doomed:    Array<IUserRow> = rowsRef.current.filter(r => keys.has(r.rowKey));
+        const remaining: Array<IUserRow> = rowsRef.current.filter(r => !keys.has(r.rowKey));
         const ids:       Array<number>   = doomed.filter(r => !r.isNew).map(r => r.userId);
 
-        closeDeleteModal();
         setDeleteKeys([]);
 
         if (ids.length === 0)
         {
-            setRows(remaining);
+            commitRows(remaining);
+            commitEntries(removeOrphanEntries(entriesRef.current, remaining.map(r => r.rowKey)));
             setEditingKeys(prev => new Set([...prev].filter(k => !keys.has(k))));
-            setExpandedKey(prev => prev !== null && keys.has(prev) ? null : prev);
+
+            if (expandedRef.current !== null && keys.has(expandedRef.current))
+            {
+                expandedRef.current = null;
+                setExpandedKey(null);
+            }
+
             return;
         }
 
@@ -361,7 +442,9 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
         try
         {
-            applyResult(await props.onDelete(ids), remaining);
+            const result: IUsersResult = await props.onDelete(ids);
+
+            applyResult(result, rowsRef.current.filter(r => !keys.has(r.rowKey)));
         }
         catch (error)
         {
@@ -369,7 +452,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         }
         finally
         {
-            setBusy(false);
+            commitBusy(false);
         }
     }
 
@@ -411,7 +494,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     }
 
     const isMasterEditable = (row: IUserRow | undefined): boolean =>
-        row !== undefined && !row.isDetailRow && editingKeys.has(row.rowKey);
+        row !== undefined && !row.isDetailRow && editingKeys.has(row.rowKey) && !busyRef.current;
 
     const newRowEditableRules: Record<string, (params: CellClassParams<IUserRow>) => boolean> =
     {
@@ -430,12 +513,12 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         { colId: "id", headerName: "Id", width: 110, headerTooltip: "User Id",
           valueGetter: (p) => p.data == null || p.data.isNew ? "" : p.data.userId },
         { field: "userName", headerName: "User Name", flex: 1, headerTooltip: "User Name",
-          editable: (p) => p.data?.isDetailRow === false && p.data.isNew,
+          editable: (p) => p.data?.isDetailRow === false && p.data.isNew && !busyRef.current,
           cellClassRules: newRowEditableRules },
         { field: "externalIdentity", headerName: "External Identity", flex: 1, headerTooltip: "External Identity" },
         { field: "password", headerName: "Password", width: 160, headerTooltip: "Password",
           sortable: false, filter: false,
-          editable: (p) => p.data?.isDetailRow === false && p.data.isNew,
+          editable: (p) => p.data?.isDetailRow === false && p.data.isNew && !busyRef.current,
           cellEditor: PasswordCellEditor,
           valueFormatter: (p) => p.data?.isNew ? "•".repeat((p.value ?? "").length) : "********",
           cellClassRules: newRowEditableRules },
@@ -452,9 +535,9 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     const valuesContext: IUserValuesContext =
     {
-        entriesFor: (rowKey) => entriesByKey[rowKey] ?? [],
+        entriesFor: (rowKey) => entriesRef.current[rowKey] ?? [],
         setEntries,
-        isEditing:  (rowKey) => editingKeys.has(rowKey),
+        isEditing:  (rowKey) => editingKeys.has(rowKey) && !busy,
     };
 
     const gridContext =
@@ -464,7 +547,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         isEditing:       (rowKey: string) => editingKeys.has(rowKey),
         removeAuthority: (rowKey: string, authority: string) =>
         {
-            const row: IUserRow | undefined = rows.find(r => r.rowKey === rowKey);
+            const row: IUserRow | undefined = rowsRef.current.find(r => r.rowKey === rowKey);
 
             updateRow(rowKey, { authorities: (row?.authorities ?? []).filter(a => a !== authority) });
         },

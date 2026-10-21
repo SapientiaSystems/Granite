@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it } from "vitest";
-import { createEntry, entryMessages, toEntries, toValues, validateEntries }
+import { createEntry, entryMessages, isActionAllowed, removeOrphanEntries, toEntries, toValues, validateEntries }
     from "../../main/typescript/EditableView/UsersValueEntries";
 
 describe("UsersValueEntries", () =>
@@ -25,6 +25,35 @@ describe("UsersValueEntries", () =>
         expect(entryMessages([createEntry("a", "1"), createEntry("a ", "2")])).toEqual(["Value keys must be unique (a)"]);
         expect(entryMessages([createEntry("", "1")])).toEqual(["Value keys cannot be blank"]);
         expect(entryMessages([createEntry("a", "1"), createEntry("b", "1")])).toEqual([]);
+    });
+
+    it("removesEntriesOfRowsThatNoLongerExist", () =>
+    {
+        const result = removeOrphanEntries({ "user-1": [createEntry("a")], "new-1": [createEntry("")] }, ["user-1"]);
+
+        expect(Object.keys(result)).toEqual(["user-1"]);
+    });
+
+    it("blocksEveryActionWhileBusy", () =>
+    {
+        const state = { busy: true, isEditing: true, hasSelection: true, deleteDisabled: false };
+
+        for (const action of ["create", "edit", "save", "undo", "delete"] as const)
+        {
+            expect(isActionAllowed(action, state)).toBe(false);
+        }
+    });
+
+    it("allowsActionsByState", () =>
+    {
+        const idle = { busy: false, isEditing: false, hasSelection: false, deleteDisabled: true };
+
+        expect(isActionAllowed("create", idle)).toBe(true);
+        expect(isActionAllowed("save", idle)).toBe(false);
+        expect(isActionAllowed("edit", { ...idle, hasSelection: true })).toBe(true);
+        expect(isActionAllowed("save", { ...idle, isEditing: true })).toBe(true);
+        expect(isActionAllowed("delete", { ...idle, hasSelection: true })).toBe(false);
+        expect(isActionAllowed("delete", { ...idle, hasSelection: true, deleteDisabled: false })).toBe(true);
     });
 
     it("validatesOnlyUsersWithProblems", () =>
