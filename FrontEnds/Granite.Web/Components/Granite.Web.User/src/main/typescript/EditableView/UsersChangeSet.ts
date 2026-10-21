@@ -49,7 +49,7 @@ function sameAuthorities(a: Array<string> | undefined, b: Array<string> | undefi
     const left  = normalizeAuthorities(a ?? []);
     const right = normalizeAuthorities(b ?? []);
 
-    return left.length === right.length && left.every((v, i) => v === right[i]);
+    return left.length === right.length && left.every(v => right.includes(v));
 }
 
 function sameValues(a: Record<string, unknown> | undefined, b: Record<string, unknown> | undefined): boolean
@@ -65,6 +65,31 @@ function sameValues(a: Record<string, unknown> | undefined, b: Record<string, un
 function sameEditable(a: UserData, b: UserData): boolean
 {
     return sameAuthorities(a.authorities, b.authorities) && sameValues(a.values, b.values);
+}
+
+export function findDuplicateKeys(entries: Array<{ key: string; value: unknown }>): Array<string>
+{
+    const seen:       Set<string> = new Set();
+    const duplicates: Set<string> = new Set();
+
+    for (const entry of entries)
+    {
+        const key = entry.key.trim();
+
+        if (seen.has(key))
+        {
+            duplicates.add(key);
+        }
+
+        seen.add(key);
+    }
+
+    return [...duplicates];
+}
+
+function trimKeys(values: Record<string, unknown>): Record<string, unknown>
+{
+    return Object.fromEntries(Object.entries(values).map(([k, v]) => [k.trim(), v]));
 }
 
 export function validateRows(rows: Array<IUserRow>): Map<string, Array<string>>
@@ -123,7 +148,7 @@ export function computeChanges(baseline: Array<IUserRow>, rows: Array<IUserRow>)
             usersToCreate.push({ userName:    row.userName,
                                  password:    row.password,
                                  authorities: normalizeAuthorities(row.authorities ?? []),
-                                 values:      row.values ?? {} });
+                                 values:      trimKeys(row.values ?? {}) });
             continue;
         }
 
@@ -133,7 +158,7 @@ export function computeChanges(baseline: Array<IUserRow>, rows: Array<IUserRow>)
         {
             usersToUpdate.push({ userId:      row.userId,
                                  authorities: normalizeAuthorities(row.authorities ?? []),
-                                 values:      row.values ?? {} });
+                                 values:      trimKeys(row.values ?? {}) });
         }
     }
 
@@ -156,11 +181,12 @@ export function mergePending(refreshed: Array<UserData>, rows: Array<IUserRow>, 
         return { ...server, authorities: edited.authorities, values: edited.values };
     });
 
-    const names = new Set(refreshed.map(u => u.userName));
+    const baselineNames = new Set(baseline.map(b => (b.userName ?? "").trim()));
+    const createdNames  = new Set(refreshed.map(u => (u.userName ?? "").trim()).filter(n => !baselineNames.has(n)));
 
     for (const row of rows)
     {
-        if (row.isNew && !names.has(row.userName))
+        if (row.isNew && !createdNames.has((row.userName ?? "").trim()))
         {
             merged.push(row);
         }

@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { UserData } from "granite.user.service/RequestReply";
-import { computeChanges, displayValue, mergePending, normalizeAuthorities,
+import { computeChanges, displayValue, findDuplicateKeys, mergePending, normalizeAuthorities,
          toRows, validateRows }                   from "../../main/typescript/EditableView/UsersChangeSet";
 import type { IUserRow }                          from "../../main/typescript/EditableView/UsersChangeSet";
 
@@ -111,20 +111,62 @@ describe("UsersChangeSet", () =>
     it("mergeDropsAcceptedEdits", () =>
     {
         const baseline  = toRows([user(1, "ann", ["A"])]);
-        const rows      = [{ ...baseline[0], authorities: ["B"], values: { k: "v" } }];
-        const refreshed = [{ ...user(1, "ann", ["B"], { k: "v" }), externalIdentity: "ext" }];
+        const rows      = [{ ...baseline[0], authorities: [" ROLE_ADMIN", "ROLE_ADMIN"] }];
+        const refreshed = [user(1, "ann", ["ROLE_ADMIN"])];
         const merged    = mergePending(refreshed, rows, baseline);
 
-        expect(merged[0].externalIdentity).toBe("ext");
+        expect(merged[0]).toEqual(toRows(refreshed)[0]);
     });
 
     it("mergeKeepsUnsavedNewRowsNotCreated", () =>
     {
         const baseline  = toRows([user(1, "ann", ["A"])]);
-        const rows      = [...baseline, newRow(1, "bob", "pw"), newRow(2, "ann", "pw")];
-        const merged    = mergePending([user(1, "ann", ["A"])], rows, baseline);
+        const rows      = [...baseline, newRow(1, "bob", "pw"), newRow(2, "carol", "pw")];
+        const merged    = mergePending([user(1, "ann", ["A"]), user(3, "carol", [])], rows, baseline);
+
+        expect(merged.map(r => r.rowKey)).toEqual(["user-1", "user-3", "new-1"]);
+    });
+
+    it("findDuplicateKeysFlagsTrimmedDuplicates", () =>
+    {
+        const result = findDuplicateKeys([{ key: "a", value: 1 }, { key: " a ", value: 2 }, { key: "b", value: 3 }]);
+
+        expect(result).toEqual(["a"]);
+        expect(findDuplicateKeys([{ key: "a", value: 1 }, { key: "b", value: 2 }])).toEqual([]);
+    });
+
+    it("computeChangesTrimsValueKeys", () =>
+    {
+        const baseline = toRows([user(1, "ann", ["A"], { k: "1" })]);
+        const result   = computeChanges(baseline, [{ ...baseline[0], values: { " k ": "2" } }, newRow(1, "bob", "pw", [], { " z ": "1" })]);
+
+        expect(result.usersToUpdate[0].values).toEqual({ k: "2" });
+        expect(result.usersToCreate[0].values).toEqual({ z: "1" });
+    });
+
+    it("mergeKeepsRejectedDuplicateNewRow", () =>
+    {
+        const baseline = toRows([user(1, "bob", ["A"])]);
+        const rows     = [...baseline, newRow(1, "bob", "pw")];
+        const merged   = mergePending([user(1, "bob", ["A"])], rows, baseline);
 
         expect(merged.map(r => r.rowKey)).toEqual(["user-1", "new-1"]);
+    });
+
+    it("mergeDropsCreatedNewRowMatchingTrimmedName", () =>
+    {
+        const baseline = toRows([user(1, "ann", ["A"])]);
+        const rows     = [...baseline, newRow(1, "bob ", "pw")];
+        const merged   = mergePending([user(1, "ann", ["A"]), user(2, "bob", [])], rows, baseline);
+
+        expect(merged.map(r => r.rowKey)).toEqual(["user-1", "user-2"]);
+    });
+
+    it("authorityReorderIsNotAnUpdate", () =>
+    {
+        const baseline = toRows([user(1, "ann", ["A", "B"])]);
+
+        expect(computeChanges(baseline, [{ ...baseline[0], authorities: ["B", "A"] }]).usersToUpdate).toEqual([]);
     });
 });
 
