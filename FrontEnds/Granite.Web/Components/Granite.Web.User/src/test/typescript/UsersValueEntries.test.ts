@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it } from "vitest";
-import { createEntry, entryMessages, isActionAllowed, removeOrphanEntries, toEntries, toValues, validateEntries }
+import { createEntry, entryMessages, isActionAllowed, nextMacrotask, removeOrphanEntries, toEntries, toValues, validateEntries }
     from "../../main/typescript/EditableView/UsersValueEntries";
 
 describe("UsersValueEntries", () =>
@@ -32,6 +32,17 @@ describe("UsersValueEntries", () =>
         const result = removeOrphanEntries({ "user-1": [createEntry("a")], "new-1": [createEntry("")] }, ["user-1"]);
 
         expect(Object.keys(result)).toEqual(["user-1"]);
+    });
+
+    it("nextMacrotaskRunsAfterAlreadyQueuedTimers", async () =>
+    {
+        const order: Array<string> = [];
+
+        setTimeout(() => order.push("queued"), 0);
+        await nextMacrotask();
+        order.push("after");
+
+        expect(order).toEqual(["queued", "after"]);
     });
 
     it("blocksEveryActionWhileBusy", () =>

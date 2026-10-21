@@ -97,6 +97,11 @@ export function isActionAllowed(action: UsersAction, state: IActionState): boole
     }
 }
 
+export function nextMacrotask(): Promise<void>
+{
+    return new Promise<void>(resolve => setTimeout(resolve, 0));
+}
+
 export function entryDisplay(entry: IValueEntry): string
 {
     return displayValue(entry.value);

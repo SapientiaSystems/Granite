@@ -18,7 +18,8 @@ import { computeChanges, mergePending, normalizeAuthorities,
          toRows, validateRows }                  from "./UsersChangeSet";
 import type { IUserRow }                         from "./UsersChangeSet";
 import { toEntries, toValues, validateEntries, entryMessages,
-         removeOrphanEntries, isActionAllowed }     from "./UsersValueEntries";
+         removeOrphanEntries, isActionAllowed,
+         nextMacrotask }                            from "./UsersValueEntries";
 import type { IValueEntry, UsersAction }         from "./UsersValueEntries";
 import { ExpandCellRenderer }                    from "./ExpandCellRenderer";
 import { AuthoritiesCellRenderer }               from "./AuthoritiesCellRenderer";
@@ -129,6 +130,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     const entriesRef                      = useRef<Record<string, Array<IValueEntry>>>(entriesByKey);
     const expandedRef                     = useRef<string | null>(expandedKey);
     const busyRef                         = useRef<boolean>(false);
+    const settlingRef                     = useRef<boolean>(false);
     const newRowCounter                   = useRef<number>(0);
     const pendingVisibleKey               = useRef<string | null>(null);
     const actions                         = useRef<{ create: () => void; edit: () => void; save: () => void;
@@ -154,11 +156,12 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         {
             const fresh: Array<IUserRow> = toRows(props.users);
 
-            setRows(fresh);
+            commitRows(fresh);
+            baselineRef.current = fresh;
             setBaseline(fresh);
             setEditingKeys(new Set());
             setInvalidKeys(new Set());
-            setEntriesByKey(seedEntries(expandedKey, fresh));
+            commitEntries(seedEntries(expandedRef.current, fresh));
         }
     }, [props.users]);
 
@@ -286,7 +289,22 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     function actionAllowed(action: UsersAction): boolean
     {
-        return isActionAllowed(action, { busy: busyRef.current, isEditing, hasSelection, deleteDisabled });
+        return isActionAllowed(action, { busy: busyRef.current || settlingRef.current, isEditing, hasSelection, deleteDisabled });
+    }
+
+    async function settleOpenEdits(): Promise<void>
+    {
+        settlingRef.current = true;
+
+        try
+        {
+            gridRef.current?.api?.stopEditing();
+            await nextMacrotask();
+        }
+        finally
+        {
+            settlingRef.current = false;
+        }
     }
 
     function handleCreate(): void
@@ -318,9 +336,14 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
             return;
         }
 
-        gridRef.current?.api?.stopEditing();
+        await settleOpenEdits();
 
-        const rows:     Array<IUserRow> = rowsRef.current;
+        if (!actionAllowed("save"))
+        {
+            return;
+        }
+
+        const rows:    Array<IUserRow> = rowsRef.current;
         const baseline: Array<IUserRow> = baselineRef.current;
         const problems: Map<string, Array<string>> = collectProblems();
 
@@ -406,12 +429,19 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     {
         closeDeleteModal();
 
+        if (busyRef.current || settlingRef.current)
+        {
+            return;
+        }
+
+        await settleOpenEdits();
+
         if (busyRef.current)
         {
             return;
         }
 
-        const keys:      Set<string>     = new Set(deleteKeys);
+        const keys:     Set<string>     = new Set(deleteKeys);
         const doomed:    Array<IUserRow> = rowsRef.current.filter(r => keys.has(r.rowKey));
         const remaining: Array<IUserRow> = rowsRef.current.filter(r => !keys.has(r.rowKey));
         const ids:       Array<number>   = doomed.filter(r => !r.isNew).map(r => r.userId);
@@ -438,7 +468,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
             return;
         }
 
-        setBusy(true);
+        commitBusy(true);
 
         try
         {
