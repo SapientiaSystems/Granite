@@ -49,7 +49,7 @@ class GraniteUserFrontEndControllerConfiguration
     public IRequestProcessor
     userRequestProcessor()
     {
-        return new UserRequestProcessor();
+        return new UserRequestProcessor(userQueryServiceClient(),userCommandServiceClient());
     }
 
     @Override

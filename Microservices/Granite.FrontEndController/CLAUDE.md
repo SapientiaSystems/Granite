@@ -50,7 +50,15 @@ Each screen interaction is a `FrontEndInput` identified by its key `source->comm
 
 #### Granite.FrontEndController.Server
 
-- `server.control.user`: `UserRequestProcessor` and the view actions (`InitializeUsersView`, `UpdateUsersView`) that call the User services.
+- `server.control.user`: `UserRequestProcessor` (extends Strata `DefaultRequestProcessor`, constructed with `IUserQueryServiceClient` and `IUserCommandServiceClient`) and its three actions, registered under these keys:
+
+| Key | Action | Behavior |
+|---|---|---|
+| `User.All->UsersEditableView` (get-output) | `InitializeUsersView` | `findAllUsers`; returns `UsersOutput` with all users |
+| `User.All->Save->UsersEditableView` (handle-input) | `UpdateUsersView` | `createUsers` then `updateUsers` (each skipped when its list is empty), then re-queries all users |
+| `User.All->Delete->UsersEditableView` (handle-input) | `DeleteUsersView` | refuses the caller's own `userId`, `destroyUsers` for the rest, then re-queries all users |
+
+  Every output copies `source`/`command`/`destination` from the request. Save and delete report failed users and failed batches as `failureMessages` (`<userName or id>: <reason>`) alongside the refreshed `users` list. An unknown key fails with `IllegalArgumentException("No action found for key: ...")`.
 - `server.configuration`: `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` provide the processors, executors, User service clients and the `FrontEndJacksonModule` bean.
 
 ### Jackson subtype registration
@@ -97,7 +105,14 @@ Spring `@Configuration` classes are composed via `@Import`. `HostConfiguration` 
 
 ### FrontEndController Admin Service (`/frontendcontroller-admin-service/`)
 
-Query-side endpoints served by `AdminFrontEndControllerConfiguration`.
+Configured by `GraniteAdminFrontEndControllerConfiguration`, which extends Strata's `AdminFrontEndControllerConfiguration`.
+
+| Endpoint | Request | Reply |
+|---|---|---|
+| `POST /handle-input` | `HandleInputRequest` | `HandleInputReply` |
+| `POST /get-output` | `GetOutputRequest` | `GetOutputReply` |
+
+Both hosts route requests through the same `UserRequestProcessor`. The Admin host has request-scoped `IUserQueryServiceClient` and `IUserCommandServiceClient` beans (`user-query-service.base-url`, `user-command-service.base-url`).
 
 ## Preferred Coding Style and Idioms
 

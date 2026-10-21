@@ -4,29 +4,27 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import strata.frontendcontroller.server.application.IRequestProcessor;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
+import granite.user.client.requestreply.IUserCommandServiceClient;
+import granite.user.client.requestreply.IUserQueryServiceClient;
+import strata.frontendcontroller.server.application.DefaultRequestProcessor;
+import strata.frontendcontroller.server.application.IProcessAction;
 
-import java.util.concurrent.CompletionStage;
+import java.util.Map;
 
 public
 class UserRequestProcessor
-    implements IRequestProcessor
+    extends DefaultRequestProcessor
 {
-    @Override
-    public CompletionStage<FrontEndOutput>
-    process(HandleInputRequest handleInputRequest)
+    public
+    UserRequestProcessor(
+        IUserQueryServiceClient   queryClient,
+        IUserCommandServiceClient commandClient)
     {
-        return null;
-    }
-
-    @Override
-    public CompletionStage<FrontEndOutput>
-    process(GetOutputRequest getOutputRequest)
-    {
-        return null;
+        super(
+            Map.<String,IProcessAction>of(
+                "User.All->UsersEditableView",new InitializeUsersView(queryClient),
+                "User.All->Save->UsersEditableView",new UpdateUsersView(queryClient,commandClient),
+                "User.All->Delete->UsersEditableView",new DeleteUsersView(queryClient,commandClient)));
     }
 }
 

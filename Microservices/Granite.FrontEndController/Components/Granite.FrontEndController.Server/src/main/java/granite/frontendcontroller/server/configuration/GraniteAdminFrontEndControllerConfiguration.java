@@ -11,7 +11,9 @@ import jakarta.inject.Named;
 import jakarta.ws.rs.client.ClientBuilder;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
 import granite.frontendcontroller.server.platform.ForwardedBearerClientRequestFilter;
+import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
+import granite.user.client.requestreply.UserCommandServiceClient;
 import granite.user.client.requestreply.UserQueryServiceClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ssl.SslBundles;
@@ -47,7 +49,7 @@ class GraniteAdminFrontEndControllerConfiguration
     public IRequestProcessor
     adminRequestProcessor()
     {
-        return new UserRequestProcessor();
+        return new UserRequestProcessor(userQueryServiceClient(),userCommandServiceClient());
     }
 
     @Override
@@ -69,6 +71,17 @@ class GraniteAdminFrontEndControllerConfiguration
             new UserQueryServiceClient(
                 createClientBuilder(),
                 configuration.getProperty("user-query-service.base-url"));
+    }
+
+    @Bean
+    @RequestScoped
+    public IUserCommandServiceClient
+    userCommandServiceClient()
+    {
+        return
+            new UserCommandServiceClient(
+                createClientBuilder(),
+                configuration.getProperty("user-command-service.base-url"));
     }
 
     @Bean
