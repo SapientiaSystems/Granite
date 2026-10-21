@@ -1,10 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////
-// HomeInput.java
+// UsersInput.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.service.requestreply;
 
-import granite.user.service.requestreply.UserData;
+import granite.user.service.requestreply.CreateUserData;
+import granite.user.service.requestreply.UpdateUserData;
 import strata.frontendcontroller.service.requestreply.FrontEndInput;
 
 import java.util.ArrayList;
@@ -14,12 +15,17 @@ public
 class UsersInput
     extends FrontEndInput
 {
-    private List<UserData> users;
+    private List<CreateUserData> usersToCreate;
+    private List<UpdateUserData> usersToUpdate;
+    private List<Long>           userIdsToDelete;
 
-    public UsersInput()
+    public
+    UsersInput()
     {
         super();
-        users = new ArrayList<>();
+        usersToCreate   = new ArrayList<>();
+        usersToUpdate   = new ArrayList<>();
+        userIdsToDelete = new ArrayList<>();
     }
 
     @Override
@@ -51,14 +57,34 @@ class UsersInput
     }
 
     public UsersInput
-    setUsers(List<UserData> users)
+    setUsersToCreate(List<CreateUserData> users)
     {
-        this.users = users;
+        usersToCreate = users;
         return this;
     }
 
-    public List<UserData>
-    getUsers() { return users; }
+    public UsersInput
+    setUsersToUpdate(List<UpdateUserData> users)
+    {
+        usersToUpdate = users;
+        return this;
+    }
+
+    public UsersInput
+    setUserIdsToDelete(List<Long> ids)
+    {
+        userIdsToDelete = ids;
+        return this;
+    }
+
+    public List<CreateUserData>
+    getUsersToCreate() { return usersToCreate; }
+
+    public List<UpdateUserData>
+    getUsersToUpdate() { return usersToUpdate; }
+
+    public List<Long>
+    getUserIdsToDelete() { return userIdsToDelete; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

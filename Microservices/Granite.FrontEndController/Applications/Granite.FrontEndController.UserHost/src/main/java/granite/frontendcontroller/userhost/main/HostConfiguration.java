@@ -6,6 +6,7 @@ package granite.frontendcontroller.userhost.main;
 
 import granite.frontendcontroller.server.configuration.GraniteUserFrontEndControllerConfiguration;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
+import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.ObjectMapperProvider;
@@ -101,7 +102,11 @@ class HostConfiguration
     public ObjectMapperProvider
     objectMapperProvider(SpringDocConfigProperties properties)
     {
-        return new StrataObjectMapperProvider(properties);
+        StrataObjectMapperProvider provider = new StrataObjectMapperProvider(properties);
+
+        provider.jsonMapper().registerModule(new FrontEndJacksonModule());
+        provider.yamlMapper().registerModule(new FrontEndJacksonModule());
+        return provider;
     }
 
     @Bean

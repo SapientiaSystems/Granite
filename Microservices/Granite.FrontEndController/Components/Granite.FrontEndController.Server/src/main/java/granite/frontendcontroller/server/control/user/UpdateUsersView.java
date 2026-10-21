@@ -52,7 +52,7 @@ class UpdateUsersView
                             .updateUsers(
                                 new UpdateUsersRequest()
                                     .addHeader("Authorization",request.getHeaders().get("Authorization"))
-                                    .setUsersToUpdate(toUpdateUsers(input.getUsers())))
+                                    .setUsersToUpdate(toUpdateUsers(input.getUsersToUpdate())))
                             .thenApply(this::processReply)
                             .thenApply(this::toUsersOutput))
                 .orElseThrow();
@@ -74,7 +74,7 @@ class UpdateUsersView
     }
 
     protected List<UpdateUserData>
-    toUpdateUsers(List<UserData> users)
+    toUpdateUsers(List<UpdateUserData> users)
     {
         return null;
     }

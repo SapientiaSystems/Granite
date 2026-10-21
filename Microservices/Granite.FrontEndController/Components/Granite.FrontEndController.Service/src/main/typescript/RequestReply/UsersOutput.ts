@@ -9,7 +9,8 @@ export
 interface UsersOutput
     extends FrontEndOutput
 {
-    users:     Array<UserData>;
+    users:           Array<UserData>;
+    failureMessages: Array<string>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,4 @@
 export {HomeInput}         from "./HomeInput";
 export {HomeOutput}        from "./HomeOutput";
-export {UsersOutput} from "./UsersOutput";
+export {UsersInput}        from "./UsersInput";
+export {UsersOutput}       from "./UsersOutput";

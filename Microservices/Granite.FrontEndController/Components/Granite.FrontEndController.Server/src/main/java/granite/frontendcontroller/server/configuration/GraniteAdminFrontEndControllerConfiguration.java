@@ -5,6 +5,8 @@
 package granite.frontendcontroller.server.configuration;
 
 import granite.frontendcontroller.server.control.user.UserRequestProcessor;
+import com.fasterxml.jackson.databind.Module;
+import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.ClientBuilder;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
@@ -67,6 +69,13 @@ class GraniteAdminFrontEndControllerConfiguration
             new UserQueryServiceClient(
                 createClientBuilder(),
                 configuration.getProperty("user-query-service.base-url"));
+    }
+
+    @Bean
+    public Module
+    frontEndJacksonModule()
+    {
+        return new FrontEndJacksonModule();
     }
 
     private ClientBuilder

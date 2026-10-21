@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// HomeOutput.java
+// UsersOutput.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.service.requestreply;
@@ -15,13 +15,14 @@ class UsersOutput
     extends FrontEndOutput
 {
     private List<UserData> users;
+    private List<String>   failureMessages;
 
     public
     UsersOutput()
     {
         super();
-        users = new ArrayList<>();
-
+        users           = new ArrayList<>();
+        failureMessages = new ArrayList<>();
     }
 
     @Override
@@ -59,9 +60,18 @@ class UsersOutput
         return this;
     }
 
+    public UsersOutput
+    setFailureMessages(List<String> messages)
+    {
+        failureMessages = messages;
+        return this;
+    }
+
     public List<UserData>
     getUsers() { return users; }
 
+    public List<String>
+    getFailureMessages() { return failureMessages; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

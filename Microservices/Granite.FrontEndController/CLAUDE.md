@@ -2,99 +2,66 @@
 
 ## Overview
 
-Granite.FrontEndController is a Spring Boot microservice that manages the FrontEndController entity within the Granite system. The microservice exposes command and query REST APIs for CRUD operations on FrontEndController entities and emits domain events (FrontEndControllerCreated, FrontEndControllerUpdated, FrontEndControllerDestroyed) as frontendcontroller state changes occur. Events are propagated to external consumers via the Transactional Outbox pattern and Kafka.
+Granite.FrontEndController is a Spring Boot microservice built on the Strata FrontEndController framework. The web application sends a `FrontEndInput` to `handle-input` and reads a `FrontEndOutput` from `get-output` or `handle-input`. The service holds no persistent state of its own: request processors translate inputs into calls on the Granite.User query and command services, forwarding the caller's bearer token, and wrap the results in outputs.
 
 ## Technology Stack
 
 - **Language**: Java 23 (Amazon Corretto), TypeScript
 - **Build**: Gradle (multi-project), Yarn (TypeScript components)
 - **Framework**: Spring Boot 3.4, Spring 6.2
-- **Persistence**: JPA / Hibernate 6.4, PostgreSQL (production), H2 (testing)
-- **Object Mapping**: ModelMapper 3.2
-- **Eventing**: Kafka, Transactional Outbox (strata.outbox)
+- **Serialization**: Jackson (subtype deduction for `FrontEndInput`/`FrontEndOutput`)
 - **Containerization**: Google Jib (OCI images)
 - **Testing**: JUnit Jupiter 5
-- **Foundation Libraries**: Strata Framework Set (strata.foundation.core, strata.server.core, strata.client.core, strata.outbox.core)
+- **Foundation Libraries**: Strata Framework Set (strata.foundation.core, strata.server.core, strata.frontendcontroller)
 
 ## Project Structure
 
 ```
 Granite.FrontEndController/
 ├── Applications/
-│   ├── Granite.FrontEndController.UserHost/ # Spring Boot app for business presenter operations
-│   └── Granite.FrontEndController.AdminHost/      # Spring Boot app for query operations
+│   ├── Granite.FrontEndController.UserHost/       # Spring Boot app serving /frontendcontroller-user-service/
+│   └── Granite.FrontEndController.AdminHost/      # Spring Boot app serving /frontendcontroller-admin-service/
 ├── Components/
-│   ├── Granite.FrontEndController.Service/        # Shared interfaces, DTOs, and events (Java + TypeScript)
-│   ├── Granite.FrontEndController.Server/         # Server-side implementation (domain, application, platform)
-│   └── Granite.FrontEndController.Client/         # REST client and Kafka event receiver (Java + TypeScript)
+│   ├── Granite.FrontEndController.Service/        # Input/output types (Java + TypeScript), FrontEndJacksonModule
+│   ├── Granite.FrontEndController.Server/         # Request processors, view actions, Spring configuration
+│   └── Granite.FrontEndController.Client/         # REST client (Java + TypeScript)
 ├── Tests/
-│   ├── Granite.FrontEndController.ServiceTest/    # Test fixtures for service interfaces
-│   ├── Granite.FrontEndController.ServerTest/     # Server unit/integration tests
-│   ├── Granite.FrontEndController.ClientTest/     # Client integration tests
-│   └── Granite.FrontEndController.TestSuite/      # Aggregated test suite
-├── build.gradle                              # Root build with dependency versions
-├── settings.gradle                           # Multi-project module declarations
-└── package.json                              # Root Yarn workspace for TypeScript builds
+│   ├── Granite.FrontEndController.ServiceTest/
+│   ├── Granite.FrontEndController.ServerTest/     # Plain JUnit unit tests
+│   ├── Granite.FrontEndController.ClientTest/
+│   └── Granite.FrontEndController.TestSuite/
+├── build.gradle
+├── settings.gradle
+└── package.json
 ```
 
 ## Architecture
 
-The microservice follows a strict layered architecture with CQRS (Command Query Responsibility Segregation). Commands and queries are separated into distinct host applications, service interfaces, and controllers.
+### Request/Reply with FrontEndInput and FrontEndOutput
 
-### Layers (Granite.FrontEndController.Server)
-
-Each layer is organized into a dedicated Java package:
-
-- **`server.platform`** — Spring REST controllers, Spring configuration, JPA/Hibernate unit-of-work wiring, frontendcontroller event sender implementations. Depends on `server.application` and `server.domain`.
-- **`server.application`** — Service implementations (`BusinessPresentersService`, `FrontEndControllerQueryService`), context objects, ModelMapper configuration. Depends on `server.domain`.
-- **`server.domain`** — Domain frontendcontroller (`FrontEndController`), repository interface/implementation, domain event types. No upward dependencies.
-
-### Component Responsibilities
+Each screen interaction is a `FrontEndInput` identified by its key `source->command->destination` (for example `User.All->Save->UsersEditableView`). The request processor routes an input to an `IHandleInputAction` and a view request to an `IGetOutputAction`. Both return a `FrontEndOutput`.
 
 #### Granite.FrontEndController.Service
 
-The shared contract component. Contains no implementation logic. Defines:
-
-- **Service interfaces**: `IBusinessPresentersService`, `IFrontEndControllerQueryService`
-- **Request/Reply DTOs**: `CreateFrontEndControllerRequest`/`Reply`, `CreateFrontEndControllersRequest`/`Reply`, `UpdateFrontEndControllerRequest`/`Reply`, `DestroyFrontEndControllerRequest`/`Reply`, `DestroyFrontEndControllersRequest`/`Reply`, `FindFrontEndControllersByKeyRequest`/`Reply`, `FindFrontEndControllersByKeySetRequest`/`Reply`
-- **Data transfer objects**: `CreateFrontEndControllerData`, `UpdateFrontEndControllerData`, `FrontEndControllerData`
-- **Key types**: `FrontEndControllerKey` (single-value lookup key), `FrontEndControllerKeySet` (multi-value lookup key set)
-- **Event interfaces**: `IFrontEndControllerEventSender`, `IFrontEndControllerEventReceiver`, `IFrontEndControllerEventListener`
-- **TypeScript mirror**: All interfaces and DTOs are also defined in TypeScript under `src/main/typescript/`
+- `UsersInput`: `usersToCreate: List<CreateUserData>`, `usersToUpdate: List<UpdateUserData>`, `userIdsToDelete: List<Long>`; all default to empty lists.
+- `UsersOutput`: `users: List<UserData>`, `failureMessages: List<String>`.
+- `FrontEndJacksonModule`: Jackson module that registers every Granite subtype of `FrontEndInput` and `FrontEndOutput`.
+- TypeScript mirrors of each type live under `src/main/typescript/RequestReply/` and are exported from `index.ts`.
 
 #### Granite.FrontEndController.Server
 
-The server-side implementation:
+- `server.control.user`: `UserRequestProcessor` and the view actions (`InitializeUsersView`, `UpdateUsersView`) that call the User services.
+- `server.configuration`: `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` provide the processors, executors, User service clients and the `FrontEndJacksonModule` bean.
 
-- **Domain layer** (`server.domain`):
-  - `FrontEndController` — JPA frontendcontroller extending `AbstractEntityAndDomainEventSource`; fires domain events on create/update/destroy
-  - `IFrontEndControllerRepository` / `FrontEndControllerRepository` — Repository interface and JPA implementation with `findAllByIdIn`, `findAllByFoo`, `findAllByFooIn` queries
-  - Domain events: `FrontEndControllerCreated`, `FrontEndControllerUpdated`, `FrontEndControllerDestroyed` extending `AbstractFrontEndControllerEvent`
-  - Observer pattern: `IFrontEndControllerEventObserver`, `IFrontEndControllerEventSource`
+### Jackson subtype registration
 
-- **Application layer** (`server.application`):
-  - `BusinessPresentersService` — Implements `IBusinessPresentersService` and `IFrontEndControllerEventObserver`. Provides create, create-batch, update, destroy, and destroy-batch operations. Translates domain events into service-level frontendcontroller events via `IFrontEndControllerEventSender`.
-  - `FrontEndControllerQueryService` — Implements `IFrontEndControllerQueryService`. Provides find-by-key and find-by-key-set operations.
-  - Context objects: `CreateFrontEndControllerContext`, `CreateFrontEndControllersContext`, `UpdateFrontEndControllerContext`, `DestroyFrontEndControllerContext`, `DestroyFrontEndControllersContext`, `FindFrontEndControllersByKeyContext`, `FindFrontEndControllersByKeySetContext`
-  - `MappingModule` — ModelMapper type mappings between FrontEndController domain objects and FrontEndController DTOs
-  - `ApplicationConfiguration` — Spring `@Configuration` that wires frontendcontroller services with request scope
+Strata's abstract `FrontEndInput` and `FrontEndOutput` use `@JsonTypeInfo(use = DEDUCTION)`: no type id is written, and the concrete class is deduced from the set of properties present in the JSON. Each application must register its concrete classes, otherwise deserialization fails.
 
-- **Platform layer** (`server.platform`):
-  - `BusinessPresentersServiceController` — Spring `@RestController` exposing command endpoints under `/frontendcontroller-user-service/`
-  - `FrontEndControllerQueryServiceController` — Spring `@RestController` exposing query endpoints under `/frontendcontroller-admin-service/`
-  - `PlatformConfiguration` — Base Spring configuration for JPA EntityManagerFactory, UnitOfWork, and synchronization manager
-  - `BusinessPresentersPlatformConfiguration` — Extends `PlatformConfiguration`; wires command controller and frontendcontroller event sender with Outbox support
-  - `QueryPlatformConfiguration` — Extends `PlatformConfiguration`; wires query controller
-  - Event senders: `OnCommitFrontEndControllerEventSender` (sends after transaction commit), `OutboxEventFrontEndControllerEventSender` (persists to outbox table), `MockFrontEndControllerEventSender` (testing)
-
-#### Granite.FrontEndController.Client
-
-REST client and event receiver implementations:
-
-- **Request/Reply clients** (Java): `BusinessPresentersServiceClient`, `FrontEndControllerQueryServiceClient` extending `AbstractRestClient`
-- **Client interfaces** (Java): `IBusinessPresentersServiceClient`, `IFrontEndControllerQueryServiceClient`
-- **Event receiver**: `FrontEndControllerKafkaEventReceiver`, `FrontEndControllerKafkaAvroEventReceiver` — Kafka consumers for FrontEndController events
-- **TypeScript mirror**: `BusinessPresentersServiceClient`, `FrontEndControllerQueryServiceClient` with corresponding interfaces
+- Add every new `FrontEndInput` or `FrontEndOutput` subtype to `FrontEndJacksonModule` and nowhere else.
+- The module is registered on the Spring MVC mapper through the `frontEndJacksonModule()` bean in both Granite configurations (Spring Boot registers `Module` beans), and on the springdoc `StrataObjectMapperProvider` json and yaml mappers in both `HostConfiguration` classes.
+- Any test that builds an `ObjectMapper` for FrontEndController types must register `FrontEndJacksonModule`.
+- Deduction needs each subtype to have a distinct set of property names, so give every subtype at least one property no sibling has.
+- The TypeScript client must send all fields of an input, including empty arrays, so that deduction can match the intended subtype.
 
 ### Calling User with the caller's identity
 
@@ -102,73 +69,35 @@ User requires a valid Session-issued bearer token. The request-scoped `IUserQuer
 
 ### Applications
 
-- **FrontEndControllerUserHost** — Spring Boot application that assembles the command-side stack: `HostConfiguration` imports `ApplicationConfiguration`, `DomainConfiguration`, `BusinessPresentersPlatformConfiguration`, and `ServiceConfiguration`. Listens on port 8081.
-- **FrontEndControllerAdminHost** — Spring Boot application that assembles the query-side stack: imports `ApplicationConfiguration`, `DomainConfiguration`, `QueryPlatformConfiguration`, and `ServiceConfiguration`.
+- **FrontEndControllerUserHost**: imports `GraniteUserFrontEndControllerConfiguration` and `ServiceConfiguration`; exposes `/frontendcontroller-user-service/`. Listens on port 8081.
+- **FrontEndControllerAdminHost**: imports `GraniteAdminFrontEndControllerConfiguration` and `ServiceConfiguration`; exposes `/frontendcontroller-admin-service/`.
 
 ## Commonly Used Design Patterns
 
-### CQRS (Command Query Responsibility Segregation)
-
-Commands (create, update, destroy) and queries (find) are separated into distinct service interfaces (`IBusinessPresentersService`, `IFrontEndControllerQueryService`), distinct controllers (`BusinessPresentersServiceController`, `FrontEndControllerQueryServiceController`), and distinct host applications (`FrontEndControllerUserHost`, `FrontEndControllerAdminHost`). This allows independent scaling of command and query workloads.
-
 ### Request-Reply
 
-All service operations accept a typed request DTO and return a typed reply DTO. Requests extend `AbstractServiceRequest` (with `requestId`, `timestamp`, headers, cookies). Replies extend `AbstractServiceReply` (with `replyId`, `originatingRequestId`, `success`, `successMessage`, `failureMessage`, `exception`). Each operation has its own request/reply pair (e.g., `CreateFrontEndControllerRequest` → `CreateFrontEndControllerReply`).
+Service operations accept a typed request and return a typed reply. Requests extend `AbstractServiceRequest` (with `requestId`, `timestamp`, headers, cookies). Replies extend `AbstractServiceReply`. `handle-input` wraps a `FrontEndInput` in a `HandleInputRequest`; `get-output` returns a `GetOutputReply` carrying a `FrontEndOutput`.
 
-### Pipeline (Chain of Responsibility)
+### Asynchronous Pipeline
 
-All service methods follow an asynchronous pipeline pattern using `CompletionStage`:
-
-```
-validate → mapToContext → [operation steps] → buildReply
-                                                  ↓ (on failure)
-                                             buildReply(exception)
-```
-
-Each step receives and returns a typed context object that accumulates state through the pipeline. The pattern ensures consistent validation, error handling, and reply construction across all operations.
-
-### Observer (Domain Events)
-
-The `FrontEndController` domain object extends `AbstractEntityAndDomainEventSource` and fires domain events (`FrontEndControllerCreated`, `FrontEndControllerUpdated`, `FrontEndControllerDestroyed`) via the observer pattern. The `BusinessPresentersService` implements `IFrontEndControllerEventObserver` and attaches itself to each `FrontEndController` it retrieves from the repository. When the `FrontEndController` notifies a state change, the service translates the domain event into a service-level `FrontEndControllerEvent` and dispatches it through `IFrontEndControllerEventSender`.
-
-### Transactional Outbox
-
-Event delivery uses the Transactional Outbox pattern to guarantee at-least-once delivery. `OnCommitFrontEndControllerEventSender` defers sending until the database transaction commits. `OutboxEventFrontEndControllerEventSender` serializes the event into an outbox table within the same transaction as the frontendcontroller state change, and a separate process polls the outbox and publishes to Kafka.
-
-### Repository
-
-`IFrontEndControllerRepository` extends the Strata `IRepository<Long,FrontEndController>` interface providing standard `findById`, `save`, `delete` operations. The concrete `FrontEndControllerRepository` extends `AbstractRepository` and registers named JPA queries for `findAllByIdIn`, `findAllByFoo`, and `findAllByFooIn`.
-
-### Context Object
-
-Each service pipeline uses a typed context object (e.g., `CreateFrontEndControllerContext`, `DestroyFrontEndControllersContext`) that carries the request, intermediate FrontEndController domain objects, and results through the pipeline steps. Context objects use fluent setters and provide convenience getters that delegate to the underlying request.
-
-### Strategy (Event Sending)
-
-The `IFrontEndControllerEventSender` interface has multiple implementations (`MockFrontEndControllerEventSender`, `OnCommitFrontEndControllerEventSender`, `OutboxEventFrontEndControllerEventSender`) that are selected via Spring configuration, allowing the event delivery strategy to be swapped without changing service code.
+Actions return `CompletionStage<FrontEndOutput>` and compose User client calls with `thenApply`/`thenCompose`.
 
 ### Composable Configuration
 
-Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConfiguration` provides shared JPA/UnitOfWork beans, and `BusinessPresentersPlatformConfiguration` / `QueryPlatformConfiguration` extend it with command- or query-specific beans. `HostConfiguration` at the application level imports and assembles all required configurations.
+Spring `@Configuration` classes are composed via `@Import`. `HostConfiguration` at the application level imports and assembles the required configurations.
 
 ## REST Endpoints
 
-### FrontEndController Command Service (`/frontendcontroller-user-service/`)
+### FrontEndController User Service (`/frontendcontroller-user-service/`)
 
 | Endpoint | Request | Reply |
 |---|---|---|
-| `POST /create-frontendcontroller` | `CreateFrontEndControllerRequest` | `CreateFrontEndControllerReply` |
-| `POST /create-frontendcontrollers` | `CreateFrontEndControllersRequest` | `CreateFrontEndControllersReply` |
-| `POST /update-frontendcontroller` | `UpdateFrontEndControllerRequest` | `UpdateFrontEndControllerReply` |
-| `POST /destroy-frontendcontroller` | `DestroyFrontEndControllerRequest` | `DestroyFrontEndControllerReply` |
-| `POST /destroy-frontendcontrollers` | `DestroyFrontEndControllersRequest` | `DestroyFrontEndControllersReply` |
+| `POST /handle-input` | `HandleInputRequest` | `HandleInputReply` |
+| `POST /get-output` | `GetOutputRequest` | `GetOutputReply` |
 
-### FrontEndController Query Service (`/frontendcontroller-admin-service/`)
+### FrontEndController Admin Service (`/frontendcontroller-admin-service/`)
 
-| Endpoint | Request | Reply |
-|---|---|---|
-| `POST /find-frontendcontrollers-by-key` | `FindFrontEndControllersByKeyRequest` | `FindFrontEndControllersByKeyReply` |
-| `POST /find-frontendcontrollers-by-keyset` | `FindFrontEndControllersByKeySetRequest` | `FindFrontEndControllersByKeySetReply` |
+Query-side endpoints served by `AdminFrontEndControllerConfiguration`.
 
 ## Preferred Coding Style and Idioms
 
