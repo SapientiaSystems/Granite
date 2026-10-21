@@ -64,6 +64,17 @@ class UserQueryServiceController
         return implementation.findUsersByExternalIdentity(request);
     }
 
+    @PostMapping(
+        value = "/find-all-users",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    //@Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    public @ResponseBody CompletionStage<FindAllUsersReply>
+    findAllUsers(@RequestBody FindAllUsersRequest request)
+    {
+        logger.info("delegating findAllUsers to implementation service");
+        return implementation.findAllUsers(request);
+    }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////

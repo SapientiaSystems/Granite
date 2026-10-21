@@ -36,7 +36,10 @@ class UserRepository
                 "select e from User e where e.userName IN :userNames")
             .registerQuery(
                 "findAllByExternalIdentity",
-                "select e from User e where e.externalIdentity = :externalIdentity");
+                "select e from User e where e.externalIdentity = :externalIdentity")
+            .registerQuery(
+                "findAllUsers",
+                "select e from User e");
 
     }
 
@@ -87,6 +90,20 @@ class UserRepository
                     User.class,
                     "findAllByExternalIdentity",
                     Map.of("externalIdentity",externalIdentity))
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User>
+    findAllUsers()
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    User.class,
+                    "findAllUsers",
+                    Map.of())
                 .stream()
                 .collect(Collectors.toList());
     }

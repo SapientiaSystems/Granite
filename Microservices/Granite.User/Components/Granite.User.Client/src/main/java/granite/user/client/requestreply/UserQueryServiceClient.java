@@ -57,6 +57,17 @@ class UserQueryServiceClient
                 request);
     }
 
+    @Override
+    public CompletionStage<FindAllUsersReply>
+    findAllUsers(FindAllUsersRequest request)
+    {
+        return
+            doPostAsync(
+                "find-all-users",
+                FindAllUsersReply.class,
+                request);
+    }
+
     public UserQueryServiceClient
     setAuthorizationHeader(String accessToken)
     {

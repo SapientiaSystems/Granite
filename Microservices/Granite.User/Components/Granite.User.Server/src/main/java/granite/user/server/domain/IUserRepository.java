@@ -27,6 +27,9 @@ interface IUserRepository
 
     List<User>
     findAllByExternalIdentity(String externalIdentity);
+
+    List<User>
+    findAllUsers();
 }
 
 //////////////////////////////////////////////////////////////////////////////

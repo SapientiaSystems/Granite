@@ -5,6 +5,8 @@ import {FindUsersByKeySetRequest} from "./FindUsersByKeySetRequest";
 import {FindUsersByKeySetReply} from "./FindUsersByKeySetReply";
 import {FindUsersByExternalIdentityRequest} from "./FindUsersByExternalIdentityRequest";
 import {FindUsersByExternalIdentityReply} from "./FindUsersByExternalIdentityReply";
+import {FindAllUsersRequest} from "./FindAllUsersRequest";
+import {FindAllUsersReply} from "./FindAllUsersReply";
 
 export
 interface IUserQueryService
@@ -17,5 +19,8 @@ interface IUserQueryService
 
     findUsersByExternalIdentity(request: FindUsersByExternalIdentityRequest):
         ICompletionStage<FindUsersByExternalIdentityReply>;
+
+    findAllUsers(request: FindAllUsersRequest):
+        ICompletionStage<FindAllUsersReply>;
 }
 

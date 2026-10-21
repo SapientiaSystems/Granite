@@ -56,7 +56,7 @@ Each layer is organized into a dedicated Java package:
 The shared contract component. Contains no implementation logic. Defines:
 
 - **Service interfaces**: `IUserCommandService`, `IUserQueryService`
-- **Request/Reply DTOs**: `CreateUserRequest`/`Reply`, `CreateUsersRequest`/`Reply`, `UpdateUserRequest`/`Reply`, `DestroyUserRequest`/`Reply`, `DestroyUsersRequest`/`Reply`, `FindUsersByKeyRequest`/`Reply`, `FindUsersByKeySetRequest`/`Reply`
+- **Request/Reply DTOs**: `CreateUserRequest`/`Reply`, `CreateUsersRequest`/`Reply`, `UpdateUserRequest`/`Reply`, `DestroyUserRequest`/`Reply`, `DestroyUsersRequest`/`Reply`, `FindUsersByKeyRequest`/`Reply`, `FindUsersByKeySetRequest`/`Reply`, `FindAllUsersRequest`/`Reply`
 - **Data transfer objects**: `CreateUserData`, `UpdateUserData`, `UserData`
 - **Key types**: `UserKey` (single-value lookup key), `UserKeySet` (multi-value lookup key set)
 - **Event interfaces**: `IUserEventSender`, `IUserEventReceiver`, `IUserEventListener`
@@ -74,8 +74,8 @@ The server-side implementation:
 
 - **Application layer** (`server.application`):
   - `UserCommandService` — Implements `IUserCommandService` and `IUserEventObserver`. Provides create, create-batch, update, destroy, and destroy-batch operations. Translates domain events into service-level user events via `IUserEventSender`.
-  - `UserQueryService` — Implements `IUserQueryService`. Provides find-by-key and find-by-key-set operations.
-  - Context objects: `CreateUserContext`, `CreateUsersContext`, `UpdateUserContext`, `DestroyUserContext`, `DestroyUsersContext`, `FindUsersByKeyContext`, `FindUsersByKeySetContext`
+  - `UserQueryService` — Implements `IUserQueryService`. Provides find-by-key, find-by-key-set and find-all-users operations. `findAllUsers` returns every user ordered by `userId` ascending.
+  - Context objects: `CreateUserContext`, `CreateUsersContext`, `UpdateUserContext`, `DestroyUserContext`, `DestroyUsersContext`, `FindUsersByKeyContext`, `FindUsersByKeySetContext`, `FindAllUsersContext`
   - `MappingModule` — ModelMapper type mappings between User domain objects and User DTOs
   - `ApplicationConfiguration` — Spring `@Configuration` that wires user services with request scope
 
@@ -221,6 +221,7 @@ Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConf
 |---|---|---|
 | `POST /find-users-by-key` | `FindUsersByKeyRequest` | `FindUsersByKeyReply` |
 | `POST /find-users-by-keyset` | `FindUsersByKeySetRequest` | `FindUsersByKeySetReply` |
+| `POST /find-all-users` | `FindAllUsersRequest` | `FindAllUsersReply` |
 
 ## Preferred Coding Style and Idioms
 

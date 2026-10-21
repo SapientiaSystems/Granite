@@ -79,6 +79,20 @@ class UserQueryService
                 .exceptionally(exception -> buildReply(exception,request));
     }
 
+    @Override
+    public CompletionStage<FindAllUsersReply>
+    findAllUsers(FindAllUsersRequest request)
+    {
+        logger.debug("findAllUsers({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(findRequest -> mapToContext(findRequest))
+                .thenApply(context -> findUsers(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
     protected FindUsersByExternalIdentityRequest
     validate(FindUsersByExternalIdentityRequest request)
     {
@@ -120,6 +134,41 @@ class UserQueryService
             context.setFoundUsers(
                 repository.findAllByExternalIdentity(
                     context.getCompositeIdentity()));
+    }
+
+    protected FindAllUsersRequest
+    validate(FindAllUsersRequest request)
+    {
+        logger.debug("validate((FindAllUsers){})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request,
+            "validation failed: request was not provided");
+
+        return request;
+    }
+
+    protected FindAllUsersContext
+    mapToContext(FindAllUsersRequest request)
+    {
+        logger.debug(
+            "mapToContext((FindAllUsersRequest){})",
+            request.getRequestId());
+
+        return new FindAllUsersContext(request);
+    }
+
+    protected FindAllUsersContext
+    findUsers(FindAllUsersContext context)
+    {
+        logger.debug("find Users((FindAllUsersContext)context)");
+        return
+            context.setFoundUsers(
+                repository
+                    .findAllUsers()
+                    .stream()
+                    .sorted(Comparator.comparing(User::getPrimaryId))
+                    .toList());
     }
 
     protected FindUsersByKeyRequest
@@ -356,6 +405,34 @@ class UserQueryService
                 .setFailureMessage(
                     "Unable to find user(s) for external identity: " +
                     e.getMessage())
+                .setException(ExceptionData.of(e));
+    }
+
+    private FindAllUsersReply
+    buildReply(FindAllUsersContext context)
+    {
+        List<User> found = context.getFoundUsers();
+
+        logger.info("building successful reply");
+
+        return
+            new FindAllUsersReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Found " + found.size() + " user(s)")
+                .setUsers(
+                    mapper.map(
+                        found,
+                        new TypeToken<List<UserData>>() {}.getType()));
+    }
+
+    private FindAllUsersReply
+    buildReply(Throwable e,FindAllUsersRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new FindAllUsersReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to find users: " + e.getMessage())
                 .setException(ExceptionData.of(e));
     }
 

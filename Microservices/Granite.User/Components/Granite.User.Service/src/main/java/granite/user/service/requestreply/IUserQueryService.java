@@ -17,6 +17,9 @@ interface IUserQueryService
 
     CompletionStage<FindUsersByExternalIdentityReply>
     findUsersByExternalIdentity(FindUsersByExternalIdentityRequest request);
+
+    CompletionStage<FindAllUsersReply>
+    findAllUsers(FindAllUsersRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////
