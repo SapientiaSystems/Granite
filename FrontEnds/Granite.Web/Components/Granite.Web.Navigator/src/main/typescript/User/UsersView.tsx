@@ -12,9 +12,11 @@ import type { UsersOutput }                  from "granite.frontendcontroller.se
 import type { UserData }                     from "granite.user.service/RequestReply";
 import { Optional }                                from "strata.foundation.core/Utility";
 import { UsersEditableView }                 from "granite.web.user/EditableView";
+import { canEdit, useAuthentication }            from "granite.web.authentication/Authentication";
 
 export function UsersView(): ReactElement
 {
+    const editable: boolean = canEdit(useAuthentication().state);
     const [users, setUsers] = useState<Array<UserData>>([]);
     const [loading, setLoading]         = useState<boolean>(true);
     const [toolbar, setToolbar]         = useState<ReactElement | null>(null);
@@ -62,6 +64,13 @@ export function UsersView(): ReactElement
                     loading={loading}
                     height="grow"
                     onRenderToolbar={setToolbar}
+                    showCreate={editable}
+                    showEdit={editable}
+                    showSave={editable}
+                    showUndo={editable}
+                    showApprove={editable}
+                    showCancel={editable}
+                    showDelete={editable}
                 />
             </div>
         </Stack>

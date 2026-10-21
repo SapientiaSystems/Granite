@@ -164,25 +164,25 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     {
         const e = event.event as KeyboardEvent;
 
-        if (e.ctrlKey && e.key === "z") { e.preventDefault(); event.api.undoCellEditing(); return; }
-        if (e.ctrlKey && e.key === "y") { e.preventDefault(); event.api.redoCellEditing(); return; }
-        if (e.ctrlKey && e.key === "e") { e.preventDefault(); handleEdit();   return; }
-        if (e.ctrlKey && e.key === "n") { e.preventDefault(); handleCreate(); return; }
+        if (e.ctrlKey && e.key === "z" && (props.showUndo ?? true)) { e.preventDefault(); event.api.undoCellEditing(); return; }
+        if (e.ctrlKey && e.key === "y" && (props.showUndo ?? true)) { e.preventDefault(); event.api.redoCellEditing(); return; }
+        if (e.ctrlKey && e.key === "e" && (props.showEdit ?? true)) { e.preventDefault(); handleEdit();   return; }
+        if (e.ctrlKey && e.key === "n" && (props.showCreate ?? true)) { e.preventDefault(); handleCreate(); return; }
 
-        if (e.ctrlKey && e.key === "s" && isEditing)
+        if (e.ctrlKey && e.key === "s" && isEditing && (props.showSave ?? true))
         {
             e.preventDefault();
             handleSave();
             return;
         }
 
-        if (e.key === "Escape" && isEditing)
+        if (e.key === "Escape" && isEditing && (props.showSave ?? true))
         {
             handleSave();
             return;
         }
 
-        if (e.key === "Delete" && event.api.getEditingCells().length === 0)
+        if (e.key === "Delete" && (props.showDelete ?? true) && event.api.getEditingCells().length === 0)
         {
             handleDelete();
         }
