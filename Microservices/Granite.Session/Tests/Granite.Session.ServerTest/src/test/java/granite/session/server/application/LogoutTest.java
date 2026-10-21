@@ -69,6 +69,7 @@ class LogoutTest
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
+                new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,

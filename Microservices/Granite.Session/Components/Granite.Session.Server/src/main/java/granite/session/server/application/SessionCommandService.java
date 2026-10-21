@@ -62,6 +62,7 @@ class SessionCommandService
     private final IUserCommandServiceClient userCommandServiceClient;
     private final IUserQueryServiceClient   userQueryServiceClient;
     private final IOauth2IdTokenValidator   oauth2Validator;
+    private final ILoginGate                loginGate;
     private final ISessionEventSender       sender;
     private final ModelMapper               mapper;
     private final Duration                  sessionTtl;
@@ -78,6 +79,7 @@ class SessionCommandService
         IUserCommandServiceClient userCommandServiceClient,
         IUserQueryServiceClient   userQueryServiceClient,
         IOauth2IdTokenValidator   oauth2Validator,
+        ILoginGate                loginGate,
         ISessionEventSender       sender,
         ModelMapper               mapper,
         Duration                  sessionTtl,
@@ -90,6 +92,7 @@ class SessionCommandService
         this.userCommandServiceClient = userCommandServiceClient;
         this.userQueryServiceClient   = userQueryServiceClient;
         this.oauth2Validator          = oauth2Validator;
+        this.loginGate                = loginGate;
         this.sender                   = sender;
         this.mapper                   = mapper;
         this.sessionTtl               = sessionTtl;
@@ -110,6 +113,7 @@ class SessionCommandService
                 .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
                 .thenApply(this::mapToContext)
                 .thenApply(this::dispatch)
+                .thenApply(this::applyLoginGate)
                 .thenApply(this::createSession)
                 .thenApply(this::mintJwt)
                 .thenApply(this::save)
@@ -130,6 +134,7 @@ class SessionCommandService
                 .thenApply(this::mapToOauth2Context)
                 .thenApply(this::validateIdToken)
                 .thenApply(this::resolveUser)
+                .thenApply(this::applyOauth2LoginGate)
                 .thenApply(this::createOauth2Session)
                 .thenApply(this::mintOauth2Jwt)
                 .thenApply(this::saveOauth2)
@@ -278,6 +283,21 @@ class SessionCommandService
             default:
                 return context.setUnsupportedKind(true);
         }
+    }
+
+    protected LoginContext
+    applyLoginGate(LoginContext context)
+    {
+        logger.debug("<login> applyLoginGate");
+
+        if (context.getValidatedUserId() == null || context.isUnsupportedKind())
+            return context;
+
+        if (loginGate.permits(context.getValidatedAuthorities()))
+            return context;
+
+        logger.info("<login> refused by login gate");
+        return context.setValidatedUserId(null);
     }
 
     protected LoginContext
@@ -469,6 +489,24 @@ class SessionCommandService
     }
 
     protected LoginWithOauth2Context
+    applyOauth2LoginGate(LoginWithOauth2Context context)
+    {
+        logger.debug("<loginWithOauth2> applyLoginGate");
+
+        if (context.getUserId() == null || context.getFailureReason() != null)
+            return context;
+
+        if (loginGate.permits(context.getAuthorities()))
+            return context;
+
+        logger.info("<loginWithOauth2> refused by login gate");
+        return
+            context
+                .setUserId(null)
+                .setFailureReason("invalid credentials");
+    }
+
+    protected LoginWithOauth2Context
     createOauth2Session(LoginWithOauth2Context context)
     {
         logger.debug("<loginWithOauth2> createSession");
@@ -567,7 +605,10 @@ class SessionCommandService
         if (existing.getExpires() == null || !existing.getExpires().isAfter(now))
             return context;
 
-        return context.setValidatedUserId(existing.getUserId());
+        return
+            context
+                .setValidatedUserId(existing.getUserId())
+                .setValidatedAuthorities(existing.getAuthorities());
     }
 
     private LoginReply

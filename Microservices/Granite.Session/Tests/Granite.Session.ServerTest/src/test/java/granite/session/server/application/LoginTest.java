@@ -81,6 +81,7 @@ class LoginTest
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
+                new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
@@ -324,6 +325,147 @@ class LoginTest
         assertEquals(1,events.size(),"expected exactly one SessionCreated event");
         assertEquals(StandardEventType.CREATED,events.get(0).getEventType());
         assertEquals(500L,events.get(0).getSourceId());
+    }
+
+    @Test
+    public void
+    loginWithoutPermittedAuthorityIsRefused()
+    {
+        SessionCommandService gated = gatedSubject();
+
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_USER"));
+
+        LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+
+        assertRefused(reply);
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(Session.class));
+        Mockito.verify(jwtTokenService,Mockito.never()).mint(Mockito.any(Session.class));
+    }
+
+    @Test
+    public void
+    loginWithAuditorAuthoritySucceeds()
+    {
+        SessionCommandService gated = gatedSubject();
+
+        stubAuthenticate(
+            USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_USER","ROLE_AUDITOR"));
+
+        LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+    }
+
+    @Test
+    public void
+    loginWithNullAuthoritiesIsRefused()
+    {
+        SessionCommandService gated = gatedSubject();
+
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,null);
+
+        LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+
+        assertRefused(reply);
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(Session.class));
+        Mockito.verify(jwtTokenService,Mockito.never()).mint(Mockito.any(Session.class));
+    }
+
+    @Test
+    public void
+    loginWithAccessTokenCarriesExistingSessionAuthorities()
+    {
+        String  existingToken = "existing.jwt.token";
+        Session existing      =
+            new Session()
+                .setSessionId(400L)
+                .setUserId(USER_ID)
+                .setDeviceId(DEVICE_ID)
+                .setExpires(NOW.plus(Duration.ofMinutes(10)))
+                .setAccessToken(existingToken)
+                .setAuthorities(Set.of("ROLE_ADMIN"));
+
+        Mockito
+            .when(repository.findByAccessToken(existingToken))
+            .thenReturn(Optional.of(existing));
+
+        LoginReply reply =
+            login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+
+        ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
+        assertEquals(Set.of("ROLE_ADMIN"),captor.getValue().getAuthorities());
+    }
+
+    @Test
+    public void
+    loginWithAccessTokenWithoutPermittedAuthorityIsRefused()
+    {
+        String  existingToken = "existing.jwt.token";
+        Session existing      =
+            new Session()
+                .setSessionId(400L)
+                .setUserId(USER_ID)
+                .setDeviceId(DEVICE_ID)
+                .setExpires(NOW.plus(Duration.ofMinutes(10)))
+                .setAccessToken(existingToken)
+                .setAuthorities(Set.of("ROLE_USER"));
+
+        Mockito
+            .when(repository.findByAccessToken(existingToken))
+            .thenReturn(Optional.of(existing));
+
+        LoginReply reply =
+            login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
+
+        assertRefused(reply);
+    }
+
+    private SessionCommandService
+    gatedSubject()
+    {
+        return
+            new SessionCommandService(
+                repository,
+                jwtTokenService,
+                new RefreshTokenService(),
+                userCommandServiceClient,
+                userQueryServiceClient,
+                oauth2Validator,
+                new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
+                sender,
+                new ModelMapper().registerModule(new MappingModule()),
+                TTL,
+                Duration.ofHours(24),
+                clock);
+    }
+
+    private void
+    assertRefused(LoginReply reply)
+    {
+        assertFalse(reply.isSuccess());
+        assertEquals("invalid credentials",reply.getFailureMessage());
+        assertNull(reply.getAccessToken());
+        assertNull(reply.getRefreshToken());
+        assertNull(reply.getSessionData());
+    }
+
+    private LoginReply
+    login(SessionCommandService service,String userName,String credential,CredentialKind kind,String deviceId)
+    {
+        return
+            service
+                .login(
+                    new LoginRequest()
+                        .setUserName(userName)
+                        .setCredential(credential)
+                        .setCredentialKind(kind)
+                        .setDeviceId(deviceId))
+                .toCompletableFuture()
+                .join();
     }
 
     private LoginReply

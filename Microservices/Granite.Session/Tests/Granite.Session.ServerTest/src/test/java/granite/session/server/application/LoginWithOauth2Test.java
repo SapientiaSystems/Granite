@@ -30,6 +30,7 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -82,6 +83,7 @@ class LoginWithOauth2Test
                 userCommandServiceClient,
                 userQueryServiceClient,
                 oauth2Validator,
+                new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
@@ -327,6 +329,69 @@ class LoginWithOauth2Test
         Mockito
             .verify(userQueryServiceClient,Mockito.times(2))
             .findUsersByExternalIdentity(Mockito.any(FindUsersByExternalIdentityRequest.class));
+    }
+
+    @Test
+    public void
+    loginForKnownUserWithoutPermittedAuthorityIsRefused()
+    {
+        stubValidate(PROVIDER,ID_TOKEN,validIdentity());
+        stubFindByExternalIdentity(
+            PROVIDER,SUB,userData(EXISTING_USER_ID).setAuthorities(Set.of("ROLE_USER")));
+
+        LoginWithOauth2Reply reply = loginWithOauth2(gatedSubject(),PROVIDER,ID_TOKEN,DEVICE_ID);
+
+        assertFalse(reply.isSuccess());
+        assertEquals("invalid credentials",reply.getFailureMessage());
+        assertNull(reply.getAccessToken());
+        assertNull(reply.getSessionData());
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(Session.class));
+    }
+
+    @Test
+    public void
+    loginForKnownAdminSucceeds()
+    {
+        stubValidate(PROVIDER,ID_TOKEN,validIdentity());
+        stubFindByExternalIdentity(
+            PROVIDER,SUB,userData(EXISTING_USER_ID).setAuthorities(Set.of("ROLE_ADMIN")));
+
+        LoginWithOauth2Reply reply = loginWithOauth2(gatedSubject(),PROVIDER,ID_TOKEN,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+    }
+
+    private SessionCommandService
+    gatedSubject()
+    {
+        return
+            new SessionCommandService(
+                repository,
+                jwtTokenService,
+                new RefreshTokenService(),
+                userCommandServiceClient,
+                userQueryServiceClient,
+                oauth2Validator,
+                new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
+                sender,
+                new ModelMapper().registerModule(new MappingModule()),
+                TTL,
+                Duration.ofHours(24),
+                clock);
+    }
+
+    private LoginWithOauth2Reply
+    loginWithOauth2(SessionCommandService service,String provider,String idToken,String deviceId)
+    {
+        return
+            service
+                .loginWithOauth2(
+                    new LoginWithOauth2Request()
+                        .setProvider(provider)
+                        .setIdToken(idToken)
+                        .setDeviceId(deviceId))
+                .toCompletableFuture()
+                .join();
     }
 
     private LoginWithOauth2Reply

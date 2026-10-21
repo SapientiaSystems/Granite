@@ -6,6 +6,7 @@ package granite.session.server.configuration;
 
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
+import granite.session.server.application.ILoginGate;
 import granite.session.server.application.IOauth2IdTokenValidator;
 import granite.session.server.application.IRefreshTokenService;
 import granite.session.server.application.IServiceTokenProvider;
@@ -14,6 +15,7 @@ import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.Oauth2IdTokenValidator;
 import granite.session.server.application.Oauth2ProvidersProperties;
 import granite.session.server.application.RefreshTokenService;
+import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ServiceTokenProvider;
 import granite.session.server.platform.CommandPlatformConfiguration;
 import granite.session.server.platform.JwtKeyLoader;
@@ -153,6 +155,19 @@ class GraniteSessionCommandServerConfiguration
                     .bind("granite.session.service-token.authorities",Bindable.listOf(String.class))
                     .orElse(List.of("SCOPE_internal")),
                 Duration.parse(environment.getProperty("granite.session.service-token.ttl","PT5M")));
+    }
+
+    @Bean
+    @Scope("singleton")
+    public ILoginGate
+    loginGate(Environment environment)
+    {
+        return
+            new RequiredAuthoritiesLoginGate(
+                Binder
+                    .get(environment)
+                    .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
+                    .orElse(List.of()));
     }
 
     @Bean

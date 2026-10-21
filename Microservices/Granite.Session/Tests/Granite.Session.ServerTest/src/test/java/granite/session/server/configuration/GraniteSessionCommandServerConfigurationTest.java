@@ -5,6 +5,7 @@
 package granite.session.server.configuration;
 
 import granite.session.server.application.IJwkSetProvider;
+import granite.session.server.application.ILoginGate;
 import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.Oauth2ProviderConfig;
 import granite.session.server.application.Oauth2ProvidersProperties;
@@ -22,8 +23,10 @@ import java.security.KeyPairGenerator;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -50,6 +53,27 @@ class GraniteSessionCommandServerConfigurationTest
             env.setActiveProfiles(profile);
             assertNotNull(newJwtTokenService(env,PRIVATE_KEY,PUBLIC_KEY));
         }
+    }
+
+    @Test
+    public void
+    loginGateReadsRequiredAuthorities()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
+
+        ILoginGate gate = subject.loginGate(env);
+
+        assertFalse(gate.permits(Set.of("ROLE_USER")));
+        assertTrue(gate.permits(Set.of("ROLE_AUDITOR")));
+    }
+
+    @Test
+    public void
+    loginGateAbsentPermitsEveryone()
+    {
+        assertTrue(subject.loginGate(new MockEnvironment()).permits(Set.of("ROLE_USER")));
     }
 
     @Test
