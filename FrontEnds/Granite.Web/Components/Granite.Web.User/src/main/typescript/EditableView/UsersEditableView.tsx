@@ -14,7 +14,7 @@ import type { ColDef, CellClassParams, CellKeyDownEvent,
               CellValueChangedEvent, PostSortRowsParams,
               RowClassParams }                   from "ag-grid-community";
 import type { IUsersEditableViewProps, IUsersResult } from "./IUsersEditableViewProps";
-import { computeChanges, mergePending, normalizeAuthorities,
+import { computeChanges, isRefreshFailure, mergePending, normalizeAuthorities,
          toRows, validateRows }                  from "./UsersChangeSet";
 import type { IUserRow }                         from "./UsersChangeSet";
 import { toEntries, toValues, validateEntries, entryMessages,
@@ -255,6 +255,12 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     function applyResult(result: IUsersResult, current: Array<IUserRow>): void
     {
+        if (isRefreshFailure(result))
+        {
+            setMessages(result.failureMessages);
+            return;
+        }
+
         const refreshed: Array<IUserRow> = toRows(result.users);
         const merged:    Array<IUserRow> = mergePending(result.users, current, baselineRef.current);
         const pending                    = computeChanges(refreshed, merged);

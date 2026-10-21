@@ -13,6 +13,7 @@ import strata.frontendcontroller.server.application.IGetOutputAction;
 import strata.frontendcontroller.service.requestreply.FrontEndOutput;
 import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -35,28 +36,36 @@ class InitializeUsersView
         return
             queryClient
                 .findAllUsers(new FindAllUsersRequest())
-                .thenApply(reply -> toUsersOutput(request,processReply(reply)));
-    }
-
-    protected List<UserData>
-    processReply(FindAllUsersReply reply)
-    {
-        if (reply.isSuccess())
-            return reply.getUsers();
-
-        return List.of();
+                .thenApply(reply -> toUsersOutput(request,reply));
     }
 
     protected FrontEndOutput
-    toUsersOutput(GetOutputRequest request,List<UserData> users)
+    toUsersOutput(GetOutputRequest request,FindAllUsersReply reply)
     {
+        List<UserData> users = List.of();
+        List<String>   failures = new ArrayList<>();
+
+        if (reply.isSuccess())
+            users = reply.getUsers();
+        else
+            failures.add(refreshFailure(reply));
+
         return
             new UsersOutput()
                 .setUsers(users)
+                .setFailureMessages(failures)
                 .setUserId(request.getUserId())
                 .setSource(request.getSource())
                 .setCommand(request.getCommand())
                 .setDestination(request.getDestination());
+    }
+
+    private String
+    refreshFailure(FindAllUsersReply reply)
+    {
+        String message = reply.getFailureMessage();
+
+        return "Unable to refresh user list: " + (message == null || message.isBlank() ? "unknown error" : message);
     }
 }
 

@@ -145,7 +145,7 @@ export function computeChanges(baseline: Array<IUserRow>, rows: Array<IUserRow>)
     {
         if (row.isNew)
         {
-            usersToCreate.push({ userName:    row.userName,
+            usersToCreate.push({ userName:    (row.userName ?? "").trim(),
                                  password:    row.password,
                                  authorities: normalizeAuthorities(row.authorities ?? []),
                                  values:      trimKeys(row.values ?? {}) });
@@ -163,6 +163,11 @@ export function computeChanges(baseline: Array<IUserRow>, rows: Array<IUserRow>)
     }
 
     return { usersToCreate, usersToUpdate };
+}
+
+export function isRefreshFailure(result: { users: Array<UserData>; failureMessages: Array<string> }): boolean
+{
+    return result.users.length === 0 && (result.failureMessages ?? []).length > 0;
 }
 
 export function mergePending(refreshed: Array<UserData>, rows: Array<IUserRow>, baseline: Array<IUserRow>): Array<IUserRow>

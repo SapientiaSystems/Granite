@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { UserData } from "granite.user.service/RequestReply";
-import { computeChanges, displayValue, findDuplicateKeys, mergePending, normalizeAuthorities,
+import { computeChanges, displayValue, findDuplicateKeys, isRefreshFailure, mergePending, normalizeAuthorities,
          toRows, validateRows }                   from "../../main/typescript/EditableView/UsersChangeSet";
 import type { IUserRow }                          from "../../main/typescript/EditableView/UsersChangeSet";
 
@@ -167,6 +167,28 @@ describe("UsersChangeSet", () =>
         const baseline = toRows([user(1, "ann", ["A", "B"])]);
 
         expect(computeChanges(baseline, [{ ...baseline[0], authorities: ["B", "A"] }]).usersToUpdate).toEqual([]);
+    });
+
+    it("newRowUserNamesAreTrimmed", () =>
+    {
+        const { usersToCreate } = computeChanges([], [newRow(1, "  bob  ", "pw")]);
+
+        expect(usersToCreate[0].userName).toBe("bob");
+    });
+
+    it("emptyUsersWithMessagesIsRefreshFailure", () =>
+    {
+        expect(isRefreshFailure({ users: [], failureMessages: ["Unable to refresh user list: x"] })).toBe(true);
+    });
+
+    it("emptyUsersWithoutMessagesIsNotRefreshFailure", () =>
+    {
+        expect(isRefreshFailure({ users: [], failureMessages: [] })).toBe(false);
+    });
+
+    it("usersWithMessagesIsNotRefreshFailure", () =>
+    {
+        expect(isRefreshFailure({ users: [user(1, "ann", [])], failureMessages: ["ann: boom"] })).toBe(false);
     });
 });
 

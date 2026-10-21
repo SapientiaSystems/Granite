@@ -84,6 +84,23 @@ class DeleteUsersViewTest
         assertTrue(output.getFailureMessages().get(0).contains("9"));
     }
 
+    @Test
+    public void
+    failedRequeryReportsMessage()
+        throws Exception
+    {
+        Mockito
+            .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
+            .thenReturn(
+                CompletableFuture.completedFuture(
+                    new FindAllUsersReply().setSuccess(false).setFailureMessage("db down")));
+
+        UsersOutput output = run(new UsersInput().setUserId(1L).setUserIdsToDelete(List.of(9L)));
+
+        assertTrue(output.getUsers().isEmpty());
+        assertEquals(List.of("Unable to refresh user list: db down"),output.getFailureMessages());
+    }
+
     private UsersOutput
     run(UsersInput input)
         throws Exception

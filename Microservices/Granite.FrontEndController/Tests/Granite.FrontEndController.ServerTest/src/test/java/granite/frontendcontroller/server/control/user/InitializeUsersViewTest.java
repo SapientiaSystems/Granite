@@ -53,6 +53,28 @@ class InitializeUsersViewTest
         assertEquals("User.All",output.getSource());
         assertEquals("UsersEditableView",output.getDestination());
     }
+
+    @Test
+    public void
+    failedQueryReportsMessage()
+        throws Exception
+    {
+        IUserQueryServiceClient queryClient = Mockito.mock(IUserQueryServiceClient.class);
+        Mockito
+            .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
+            .thenReturn(
+                CompletableFuture.completedFuture(new FindAllUsersReply().setSuccess(false)));
+
+        UsersOutput output =
+            (UsersOutput)
+                new InitializeUsersView(queryClient)
+                    .apply(new GetOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
+                    .toCompletableFuture()
+                    .get();
+
+        assertTrue(output.getUsers().isEmpty());
+        assertEquals(List.of("Unable to refresh user list: unknown error"),output.getFailureMessages());
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

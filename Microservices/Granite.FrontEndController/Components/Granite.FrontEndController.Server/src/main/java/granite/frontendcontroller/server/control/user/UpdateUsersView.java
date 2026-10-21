@@ -128,7 +128,12 @@ class UpdateUsersView
     protected FrontEndOutput
     toUsersOutput(UsersInput input,FindAllUsersReply reply,List<String> failures)
     {
-        List<UserData> users = reply.isSuccess() ? reply.getUsers() : List.of();
+        List<UserData> users = List.of();
+
+        if (reply.isSuccess())
+            users = reply.getUsers();
+        else
+            failures.add(refreshFailure(reply));
 
         return
             new UsersOutput()
@@ -138,6 +143,14 @@ class UpdateUsersView
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())
                 .setDestination(input.getDestination().orElse(null));
+    }
+
+    private String
+    refreshFailure(FindAllUsersReply reply)
+    {
+        String message = reply.getFailureMessage();
+
+        return "Unable to refresh user list: " + (message == null || message.isBlank() ? "unknown error" : message);
     }
 
     private String

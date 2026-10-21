@@ -116,7 +116,13 @@ export function UsersView(): ReactElement
                 {
                     const output: Optional<UsersOutput> = mapper.mapFromReply<UsersOutput>(reply);
 
-                    output.ifPresent(data => setUsers(data.users ?? []));
+                    output.ifPresent(data =>
+                    {
+                        setUsers(data.users ?? []);
+
+                        if ((data.failureMessages ?? []).length > 0)
+                            setLoadError(data.failureMessages.join("; "));
+                    });
                 }
 
                 setLoading(false);
