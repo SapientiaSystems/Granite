@@ -1,5 +1,6 @@
 export type {AuthenticationStatus,IAuthenticationState}                              from "./IAuthenticationState";
 export {ANONYMOUS}                                                                   from "./IAuthenticationState";
+export {canEdit,hasAuthority}                                                        from "./Authorities";
 export type {ISessionApi,ITokenGrant}                                                from "./ISessionApi";
 export type {IJwtClaims}                                                             from "./JwtClaims";
 export {decodeJwtClaims,expiresAtMillis}                                             from "./JwtClaims";
