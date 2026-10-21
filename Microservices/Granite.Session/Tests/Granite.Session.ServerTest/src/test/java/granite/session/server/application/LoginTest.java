@@ -422,6 +422,8 @@ class LoginTest
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
         assertRefused(reply);
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(Session.class));
+        Mockito.verify(jwtTokenService,Mockito.never()).mint(Mockito.any(Session.class));
     }
 
     private SessionCommandService

@@ -119,6 +119,8 @@ Granite's own rules ship in `GraniteRoleRulesGatewayServerConfiguration` (`HostC
 
 The catch-all uses `pathMatchers("/**")`, not `anyExchange()`, because the base chain registers `anyExchange().authenticated()` afterwards.
 
+Example only, not part of Granite: how a downstream application declares its own rules by overriding `configureAuthorization` in its own host, distinct from Granite's built-in `GraniteRoleRulesGatewayServerConfiguration` above. Granite does not ship these rules.
+
 ```java
 @Override
 protected ServerHttpSecurity.AuthorizeExchangeSpec

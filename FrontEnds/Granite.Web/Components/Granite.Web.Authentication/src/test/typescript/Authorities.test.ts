@@ -7,7 +7,7 @@ import { canEdit, hasAuthority }                  from "../../main/typescript/Au
 import { ANONYMOUS }                              from "../../main/typescript/Authentication/IAuthenticationState";
 import type { IAuthenticationState }              from "../../main/typescript/Authentication/IAuthenticationState";
 
-const AUTHENTICATED_USER: IAuthenticationState = {
+const AUTHENTICATED_ADMIN: IAuthenticationState = {
     status:      "authenticated",
     userName:    "alice",
     authorities: ["ROLE_USER","ROLE_ADMIN"],
@@ -23,7 +23,7 @@ describe("canEdit",() =>
 {
     it("is true for an authenticated admin",() =>
     {
-        expect(canEdit(AUTHENTICATED_USER)).toBe(true);
+        expect(canEdit(AUTHENTICATED_ADMIN)).toBe(true);
     });
 
     it("is false for an authenticated auditor",() =>

@@ -104,6 +104,7 @@ Every row also allows `SCOPE_internal`, so service tokens keep the access they h
 - `UsersView` passes `showCreate/showEdit/showSave/showUndo/showDelete` (and `showApprove/showCancel`) to `UsersEditableView` as `true` only for admins. Keyboard shortcuts for those actions must follow the same flags (verify `UsersEditableView` gates shortcuts on the `show*` props; fix it if not).
 - Auditors still see every menu tab and every route.
 - If any admin-only request is refused with 403 anyway, the view shows an error rather than failing silently (builder chooses the presentation).
+  - Deferred to the Users-screen project: `UsersView` has no real write path until then, so there is no admin-only request to surface an error for.
 
 ## 5. Constraints
 
@@ -121,4 +122,5 @@ Every row also allows `SCOPE_internal`, so service tokens keep the access they h
 
 1. Ship with gate and Gateway role rules on in `local`/`development` only.
 2. In `test`, then `production`: assign `ROLE_ADMIN` (and any `ROLE_AUDITOR`) to the right users by hand, then set `granite.session.login.required-authorities=ROLE_ADMIN,ROLE_AUDITOR` and `granite.gateway.authorization.role-rules.enabled=true` and redeploy Session CommandHost and Gateway. How roles are assigned there is outside this spec.
+   - Switching the gate on does not evict live sessions: `refresh` is not re-gated and is a public Gateway path, so sessions minted before the switch keep refreshing until `granite.session.max-lifetime` (24h default) unless ended with `logout-all-for-user`.
 3. Removing Google JIT provisioning takes effect everywhere at once: in test and production, Google users who don't already have a User record can no longer sign in.

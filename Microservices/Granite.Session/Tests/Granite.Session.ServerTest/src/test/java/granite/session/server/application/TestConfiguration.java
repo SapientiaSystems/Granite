@@ -15,8 +15,6 @@ import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
-import granite.user.service.requestreply.CreateUserReply;
-import granite.user.service.requestreply.CreateUserRequest;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.UserData;
@@ -159,26 +157,6 @@ class TestConfiguration
                             .setFailureMessage("invalid credentials");
 
                     return CompletableFuture.completedFuture(reply);
-                });
-
-        Mockito
-            .when(client.createUser(any(CreateUserRequest.class)))
-            .thenAnswer(
-                invocation ->
-                {
-                    CreateUserRequest request = invocation.getArgument(0);
-
-                    return
-                        CompletableFuture.completedFuture(
-                            new CreateUserReply(request)
-                                .setCreatedUser(
-                                    new UserData()
-                                        .setUserId(next.incrementAndGet())
-                                        .setUserName(request.getUserToCreate().getUserName())
-                                        .setExternalIdentity(
-                                            request.getUserToCreate().getExternalIdentity())
-                                        .setAuthorities(java.util.Set.of("ROLE_USER")))
-                                .setSuccess(true));
                 });
 
         return client;
