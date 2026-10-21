@@ -1,0 +1,53 @@
+<h2>Users grid with value-map detail rows</h2>
+<p class="subtitle">Wireframe. White cells are read-only; yellow cells are editable while the row is in edit mode. One user expanded at a time.</p>
+
+<style>
+  .g { width:100%; border-collapse:collapse; font-size:13px; }
+  .g th, .g td { border:1px solid #ccc; padding:6px 8px; text-align:left; vertical-align:middle; }
+  .g th { background:#eef1f5; color:#333; }
+  .ed { background:#fff6d6; }
+  .new td { font-style:italic; }
+  .chip { display:inline-block; background:#dde7f7; color:#1d3d70; border-radius:10px; padding:1px 8px; margin:1px 2px; font-size:12px; }
+  .chip b { margin-left:4px; cursor:default; }
+  .addchip { color:#777; font-size:12px; }
+  .detail td { background:#fafafa; }
+  .inner { margin:6px 0 6px 40px; width:60%; border-collapse:collapse; font-size:12px; }
+  .inner th, .inner td { border:1px solid #ddd; padding:4px 6px; }
+  .inner th { background:#f0f0f0; }
+  .tb { margin:4px 0 8px; font-size:13px; color:#333; }
+  .tb span { border:1px solid #bbb; border-radius:4px; padding:2px 8px; margin-right:4px; background:#fff; }
+  .q { color:#b00; font-weight:bold; }
+</style>
+
+<div class="mockup">
+  <div class="mockup-header">Users</div>
+  <div class="mockup-body">
+    <div class="tb"><span>+ Create</span><span>Edit</span><span>Save</span><span>Undo</span><span>Delete</span></div>
+    <table class="g">
+      <tr><th></th><th>☐</th><th>Id</th><th>User Name</th><th>External Identity</th><th>Password</th><th>Authorities</th></tr>
+
+      <tr><td>▶</td><td>☐</td><td>1</td><td>admin</td><td>—</td><td>********</td><td><span class="chip">ROLE_USER</span><span class="chip">ROLE_ADMIN</span></td></tr>
+
+      <tr><td>▼</td><td>☑</td><td>2</td><td>jsmith</td><td>okta|8812</td><td>********</td>
+        <td class="ed"><span class="chip">ROLE_USER<b>×</b></span><span class="chip">ROLE_AUDITOR<b>×</b></span> <span class="addchip">type to add…</span></td></tr>
+      <tr class="detail"><td colspan="7">
+        <div class="tb" style="margin-left:40px"><span>+ Add value</span><span>Delete value</span></div>
+        <table class="inner">
+          <tr><th>☐</th><th>Key</th><th>Value</th></tr>
+          <tr><td>☐</td><td class="ed">preferredTheme</td><td class="ed">dark</td></tr>
+          <tr><td>☐</td><td class="ed">pageSize</td><td class="ed">50</td></tr>
+          <tr><td>☐</td><td class="ed"></td><td class="ed"></td></tr>
+        </table>
+      </td></tr>
+
+      <tr class="new"><td>▶</td><td>☑</td><td>(new)</td><td><span class="q">? how is this set</span></td><td>—</td><td class="ed">enter password</td><td class="ed"><span class="addchip">type to add…</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="section" style="margin-top:12px">
+  <p class="label">Editable</p>
+  <p>Existing rows: Authorities, and the Key/Value rows in the drop-down.<br>
+     New rows: the same plus Password.<br>
+     Never editable: Id, User Name, External Identity.</p>
+</div>

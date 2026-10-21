@@ -10,7 +10,7 @@
   <component name="NewModuleRootManager">
     <output url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server/.build/classes/java/main" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server/build" />
+    <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server/.build/generated-java" />
     <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server/src/main">
       <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Server/src/main/resources" type="java-resource" />

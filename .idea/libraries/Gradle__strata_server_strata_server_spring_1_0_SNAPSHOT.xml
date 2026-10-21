@@ -2,7 +2,7 @@
   <library name="Gradle: strata.server:strata-server-spring:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
     <properties groupId="strata.server" artifactId="strata-server-spring" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.server/strata-server-spring/1.0-SNAPSHOT/ca1ac921a6a7f90cb01a12e679f494f688fbf5cb/strata-server-spring-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.server/strata-server-spring/1.0-SNAPSHOT/f87332afbe8eeb73b8734056c2bb49e2f6dbcade/strata-server-spring-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

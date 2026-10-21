@@ -2,7 +2,7 @@
   <library name="Gradle: strata.outbox:strata-outbox-service:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
     <properties groupId="strata.outbox" artifactId="strata-outbox-service" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.outbox/strata-outbox-service/1.0-SNAPSHOT/26fd3e0a7e75102d37ea2260ddfc8475aa1fe55e/strata-outbox-service-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.outbox/strata-outbox-service/1.0-SNAPSHOT/e549f2311cf436a22c8fe4bfa0644b8dbae3f16/strata-outbox-service-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
