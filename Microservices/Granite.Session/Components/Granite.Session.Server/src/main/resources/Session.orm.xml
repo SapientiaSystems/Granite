@@ -7,7 +7,13 @@
     <description>Session object relational entity mappings</description>
 
     <entity class="granite.session.server.domain.Session" access="PROPERTY">
-        <table name="Session"/>
+        <table name="Session">
+            <unique-constraint name="ux_session_active_user_device">
+                <column-name>userId</column-name>
+                <column-name>deviceId</column-name>
+                <column-name>activeMarker</column-name>
+            </unique-constraint>
+        </table>
         <inheritance strategy="SINGLE_TABLE"/>
         <attributes>
             <id name="primaryId">

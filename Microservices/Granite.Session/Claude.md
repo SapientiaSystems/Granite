@@ -70,7 +70,7 @@ Each layer is organized into a dedicated Java package (`granite.session.server.*
 | `hashedHandle` | `String` | SHA-256 hex of the opaque session handle (the future `GRANITE_SID` cookie value), hashed like `refreshTokenHash`; unique. The raw handle is never stored |
 | `lastActivity` | `Instant` | Set at login; updated by `resolveSession` at most once a minute |
 | `closedReason` | `SessionClosedReason` | `null` while open. One of `LOGOUT`, `EXPIRED`, `REPLACED`, `DISPLACED`, `REVOKED_SECURITY`, `ADMIN` (enum in Granite.Session.Service, `granite.session.service.requestreply`) |
-| `activeMarker` | `Boolean` | `TRUE` while open, `NULL` once closed. Unique index `ux_session_active_user_device (userId, deviceId, activeMarker)` (in `schema.sql`) allows one active session per (user, device) |
+| `activeMarker` | `Boolean` | `TRUE` while open, `NULL` once closed. Unique index `ux_session_active_user_device (userId, deviceId, activeMarker)` (a `unique-constraint` in `Session.orm.xml`) allows one active session per (user, device) |
 | `continuityId` | `UUID` | Stays the same across replacements; exposed in `SessionData` and as the JWT claim `cid` |
 | `replacedBy`, `copiedFrom` | `Long` | Session links for audit and support (`replacedBy` on the replaced session, `copiedFrom` on the session whose `values` were copied) |
 | `version` | `Long` | Optimistic locking |

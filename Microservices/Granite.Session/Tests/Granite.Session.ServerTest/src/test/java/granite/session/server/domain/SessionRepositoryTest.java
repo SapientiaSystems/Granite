@@ -376,14 +376,14 @@ class SessionRepositoryTest
 
     @Test
     public void
-    testActiveUserDeviceIndexExists()
+    testActiveUserDeviceUniqueConstraintExists()
     {
         jakarta.persistence.EntityManager em = entityManagerFactory.createEntityManager();
         try
         {
             Number count =
                 (Number)em.createNativeQuery(
-                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(INDEX_NAME) = 'UX_SESSION_ACTIVE_USER_DEVICE'")
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE UPPER(CONSTRAINT_NAME) = 'UX_SESSION_ACTIVE_USER_DEVICE' AND CONSTRAINT_TYPE = 'UNIQUE'")
                     .getSingleResult();
 
             assertEquals(1,count.intValue());
