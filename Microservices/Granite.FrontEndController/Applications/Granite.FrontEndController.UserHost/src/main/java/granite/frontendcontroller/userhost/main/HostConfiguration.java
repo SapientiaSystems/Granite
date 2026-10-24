@@ -15,6 +15,7 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
@@ -59,10 +60,10 @@ class HostConfiguration
     @Bean
     @SingletonScoped
     public IConfiguration
-    configuration()
+    configuration(Environment environment)
     {
         return
-            new SpringConfigurationProvider().get();
+            new SpringConfigurationProvider(environment).get();
     }
 
     @Bean
