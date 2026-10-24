@@ -843,12 +843,6 @@ spec:
               value: ""
             - name: GATEWAY_URL
               value: https://granite-gateway-servicehost:443
-            - name: GOOGLE_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: granite-secrets
-                  key: GOOGLE_CLIENT_ID
-                  optional: true
           resources:
             requests:
               cpu: 100m
