@@ -8,6 +8,9 @@ import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.gateway.server.health.GatewayHealthCheckController;
+import granite.gateway.server.security.CookieCsrfProtectionMatcher;
+import granite.gateway.server.security.CsrfCookieWebFilter;
+import granite.gateway.server.security.DeviceCookieWebFilter;
 import granite.gateway.server.security.FrontEndInputKeyWebFilter;
 import granite.gateway.server.security.IServiceTokenSupplier;
 import granite.gateway.server.security.ISessionResolver;
@@ -45,6 +48,8 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
+import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
@@ -91,15 +96,23 @@ class GraniteGatewayServerConfiguration
         ISessionResolver                  sessionResolver,
         Environment                       environment)
     {
-        ServerWebExchangeMatcher publicMatcher = getPublicExchangeMatcher(environment);
+        ServerWebExchangeMatcher        publicMatcher  = getPublicExchangeMatcher(environment);
+        CookieServerCsrfTokenRepository csrfRepository = createCsrfTokenRepository();
 
         return
             http
-                .csrf(csrf -> csrf.disable())
+                .csrf(
+                    csrf ->
+                        csrf
+                            .csrfTokenRepository(csrfRepository)
+                            .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
+                            .requireCsrfProtectionMatcher(new CookieCsrfProtectionMatcher()))
                 .addFilterBefore(
                     new FrontEndInputKeyWebFilter(
                         environment.getProperty("granite.gateway.front-end-input.max-bytes",Integer.class,1048576)),
                     SecurityWebFiltersOrder.CSRF)
+                .addFilterBefore(new CsrfCookieWebFilter(csrfRepository),SecurityWebFiltersOrder.CSRF)
+                .addFilterAfter(new DeviceCookieWebFilter(Duration.ofDays(365)),SecurityWebFiltersOrder.CSRF)
                 .addFilterBefore(
                     new SessionCookieWebFilter(sessionResolver,publicMatcher),
                     SecurityWebFiltersOrder.AUTHENTICATION)
@@ -312,6 +325,16 @@ class GraniteGatewayServerConfiguration
                     "/*/v3/api-docs/**"));
 
         return paths;
+    }
+
+    protected CookieServerCsrfTokenRepository
+    createCsrfTokenRepository()
+    {
+        CookieServerCsrfTokenRepository repository = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
+
+        repository.setCookiePath("/");
+        repository.setCookieCustomizer(cookie -> cookie.httpOnly(false).sameSite("Strict"));
+        return repository;
     }
 
     protected ServerWebExchangeMatcher
