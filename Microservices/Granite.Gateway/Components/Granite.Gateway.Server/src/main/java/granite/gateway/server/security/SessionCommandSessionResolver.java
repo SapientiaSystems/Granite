@@ -36,7 +36,6 @@ class SessionCommandSessionResolver
 
     private final WebClient                    webClient;
     private final URI                          resolveUri;
-    private final IServiceTokenSupplier        tokenSupplier;
     private final Duration                     cacheTtl;
     private final Duration                     timeout;
     private final Clock                        clock;
@@ -45,16 +44,14 @@ class SessionCommandSessionResolver
 
     public
     SessionCommandSessionResolver(
-        WebClient             webClient,
-        URI                   resolveUri,
-        IServiceTokenSupplier tokenSupplier,
-        Duration              cacheTtl,
-        Duration              timeout,
-        Clock                 clock)
+        WebClient webClient,
+        URI       resolveUri,
+        Duration  cacheTtl,
+        Duration  timeout,
+        Clock     clock)
     {
         this.webClient     = Objects.requireNonNull(webClient,"webClient");
         this.resolveUri    = Objects.requireNonNull(resolveUri,"resolveUri");
-        this.tokenSupplier = Objects.requireNonNull(tokenSupplier,"tokenSupplier");
         this.cacheTtl      = Objects.requireNonNull(cacheTtl,"cacheTtl");
         this.timeout       = Objects.requireNonNull(timeout,"timeout");
         this.clock         = Objects.requireNonNull(clock,"clock");
@@ -77,9 +74,7 @@ class SessionCommandSessionResolver
             return Mono.just(cached.getAccessToken());
 
         return
-            tokenSupplier
-                .getToken()
-                .flatMap(serviceToken -> callSession(serviceToken,handle,now))
+            callSession(handle,now)
                 .timeout(timeout)
                 .flatMap(this::readAccessToken)
                 .doOnNext(accessToken -> remember(key,accessToken,now))
@@ -95,14 +90,13 @@ class SessionCommandSessionResolver
     getCacheKeys() { return Set.copyOf(cache.keySet()); }
 
     private Mono<JsonNode>
-    callSession(String serviceToken,String handle,Instant now)
+    callSession(String handle,Instant now)
     {
         return
             webClient
                 .post()
                 .uri(resolveUri)
                 .contentType(MediaType.APPLICATION_JSON)
-                .headers(headers -> headers.setBearerAuth(serviceToken))
                 .bodyValue(
                     Map.of(
                         "requestId",UUID.randomUUID().toString(),

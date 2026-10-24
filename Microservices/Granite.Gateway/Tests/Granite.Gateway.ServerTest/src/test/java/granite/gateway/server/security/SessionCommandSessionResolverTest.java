@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,7 +35,6 @@ class SessionCommandSessionResolverTest
     private static GatewayTestBackend backend;
 
     private MutableClock clock;
-    private String       serviceToken;
 
     @BeforeAll
     public static void
@@ -57,13 +56,12 @@ class SessionCommandSessionResolverTest
     setUp()
         throws Exception
     {
-        clock        = new MutableClock(Instant.now());
-        serviceToken = backend.signServiceToken(List.of("SCOPE_internal"));
+        clock = new MutableClock(Instant.now());
     }
 
     @Test
     public void
-    resolvesHandleWithServiceToken()
+    resolvesHandleWithoutAuthorizationHeader()
         throws Exception
     {
         String handle = newHandle();
@@ -71,7 +69,8 @@ class SessionCommandSessionResolverTest
 
         assertEquals(token,resolver(Duration.ofSeconds(60)).resolve(handle).block());
         assertTrue(backend.getResolveCalls().contains(handle));
-        assertTrue(backend.getResolveAuthorizations().contains("Bearer " + serviceToken));
+        assertFalse(backend.getResolveAuthorizations().isEmpty());
+        assertTrue(backend.getResolveAuthorizations().stream().allMatch("null"::equals));
     }
 
     @Test
@@ -168,34 +167,11 @@ class SessionCommandSessionResolverTest
             new SessionCommandSessionResolver(
                 WebClient.create(),
                 resolveUri(),
-                () -> Mono.just(serviceToken),
                 Duration.ofSeconds(60),
                 Duration.ofMillis(300),
                 clock);
 
         assertNull(resolver.resolve(handle).block(Duration.ofSeconds(2)));
-    }
-
-    @Test
-    public void
-    missingServiceTokenIsEmpty()
-        throws Exception
-    {
-        String handle = newHandle();
-
-        registerSession(handle,Duration.ofMinutes(5));
-
-        SessionCommandSessionResolver resolver =
-            new SessionCommandSessionResolver(
-                WebClient.create(),
-                resolveUri(),
-                () -> Mono.error(new IllegalStateException("no token")),
-                Duration.ofSeconds(60),
-                Duration.ofSeconds(2),
-                clock);
-
-        assertNull(resolver.resolve(handle).block());
-        assertEquals(0,calls(handle));
     }
 
     private SessionCommandSessionResolver
@@ -205,7 +181,6 @@ class SessionCommandSessionResolverTest
             new SessionCommandSessionResolver(
                 WebClient.create(),
                 resolveUri(),
-                () -> Mono.just(serviceToken),
                 ttl,
                 Duration.ofSeconds(2),
                 clock);

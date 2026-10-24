@@ -12,7 +12,6 @@ import granite.gateway.server.security.CookieCsrfProtectionMatcher;
 import granite.gateway.server.security.CsrfCookieWebFilter;
 import granite.gateway.server.security.DeviceCookieWebFilter;
 import granite.gateway.server.security.FrontEndInputKeyWebFilter;
-import granite.gateway.server.security.IServiceTokenSupplier;
 import granite.gateway.server.security.ISessionResolver;
 import granite.gateway.server.security.ISessionRevocationChecker;
 import granite.gateway.server.security.PublicFrontEndInputMatcher;
@@ -119,6 +118,7 @@ class GraniteGatewayServerConfiguration
                 .authorizeExchange(
                     exchanges ->
                     {
+                        exchanges.pathMatchers("/session-command-service/resolve-session").denyAll();
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
                         configureAuthorization(exchanges,environment);
@@ -178,19 +178,10 @@ class GraniteGatewayServerConfiguration
 
     @Bean
     @SingletonScoped
-    public IServiceTokenSupplier
-    serviceTokenSupplier(Environment environment)
-    {
-        return () -> Mono.error(new IllegalStateException("no Gateway service token is configured"));
-    }
-
-    @Bean
-    @SingletonScoped
     public ISessionResolver
     sessionResolver(
         ObjectProvider<SslBundles> sslBundles,
-        Environment                environment,
-        IServiceTokenSupplier      serviceTokenSupplier)
+        Environment                environment)
     {
         return
             new SessionCommandSessionResolver(
@@ -198,7 +189,6 @@ class GraniteGatewayServerConfiguration
                 URI.create(
                     environment.getRequiredProperty("granite.session-command-service.host")
                         + "/session-command-service/resolve-session"),
-                serviceTokenSupplier,
                 Duration.parse(environment.getProperty("granite.gateway.session-cache-ttl","PT60S")),
                 Duration.parse(environment.getProperty("granite.gateway.session-resolve.timeout","PT2S")),
                 Clock.systemUTC());

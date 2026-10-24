@@ -57,10 +57,6 @@ class GatewayCookieCsrfTest
     {
         backend = new GatewayTestBackend();
         backend.registerProperties(registry);
-
-        String serviceToken = backend.signServiceToken(List.of("SCOPE_internal"));
-
-        registry.add("test.gateway.service-token",() -> serviceToken);
     }
 
     @AfterAll

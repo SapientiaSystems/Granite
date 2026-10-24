@@ -59,7 +59,6 @@ class GatewaySessionCookieTest
         backend      = new GatewayTestBackend();
         serviceToken = backend.signServiceToken(List.of("SCOPE_internal"));
         backend.registerProperties(registry);
-        registry.add("test.gateway.service-token",() -> serviceToken);
     }
 
     @AfterAll
@@ -95,7 +94,30 @@ class GatewaySessionCookieTest
         assertTrue(cookies.contains("XSRF-TOKEN=" + CSRF),cookies);
         assertFalse(cookies.contains("GRANITE_SID"),cookies);
         assertFalse(cookies.contains(handle),cookies);
-        assertTrue(backend.getResolveAuthorizations().contains("Bearer " + serviceToken));
+        assertTrue(backend.getResolveAuthorizations().stream().allMatch("null"::equals));
+    }
+
+    @Test
+    public void
+    resolveSessionIsDeniedExternallyAndNeverReachesTheBackend()
+        throws Exception
+    {
+        String handle  = newHandle();
+        String device  = "device-" + UUID.randomUUID();
+        String path    = "/session-command-service/resolve-session";
+        String body    = "{\"handle\":\"" + handle + "\"}";
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String service = backend.signServiceToken(List.of("SCOPE_internal"));
+        int    before  = backend.getResolveCalls().size();
+
+        register(handle,"ROLE_ADMIN");
+        assertEquals(403,post(path,body,handle,device,admin));
+        assertEquals(403,post(path,body,handle,device,service));
+        assertEquals(before,backend.getResolveCalls().size());
+        assertEquals(401,postWithoutCookies(path,body,null));
+        assertEquals(403,postWithoutCookies(path,body,admin));
+        assertEquals(before,backend.getResolveCalls().size());
+        assertFalse(backend.getResolveCalls().contains(handle));
     }
 
     @Test
@@ -266,6 +288,27 @@ class GatewaySessionCookieTest
     users()
     {
         return GatewayPublicInputTest.output("User.All",null,"UsersEditableView");
+    }
+
+    private int
+    postWithoutCookies(String path,String body,String bearer)
+    {
+        return
+            client
+                .post()
+                .uri(path)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(
+                    headers ->
+                    {
+                        if (bearer != null)
+                            headers.setBearerAuth(bearer);
+                    })
+                .bodyValue(body)
+                .exchange()
+                .returnResult(String.class)
+                .getStatus()
+                .value();
     }
 
     private int
