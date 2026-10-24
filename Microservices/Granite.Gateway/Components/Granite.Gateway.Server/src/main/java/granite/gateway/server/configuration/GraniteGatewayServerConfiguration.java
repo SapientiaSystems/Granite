@@ -118,7 +118,12 @@ class GraniteGatewayServerConfiguration
                 .authorizeExchange(
                     exchanges ->
                     {
-                        exchanges.pathMatchers("/session-command-service/resolve-session").denyAll();
+                        exchanges
+                            .pathMatchers(
+                                "/session-command-service/resolve-session",
+                                "/session-command-service/start-okta-login",
+                                "/session-command-service/complete-okta-login")
+                            .denyAll();
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
                         configureAuthorization(exchanges,environment);
@@ -299,7 +304,6 @@ class GraniteGatewayServerConfiguration
                 List.of(
                     environment.getProperty("strata.health.base-path","/health") + "/**",
                     "/session-command-service/login",
-                    "/session-command-service/login-with-oauth2",
                     "/session-command-service/refresh",
                     "/",
                     "/index.html",

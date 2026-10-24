@@ -122,6 +122,28 @@ class GatewaySessionCookieTest
 
     @Test
     public void
+    oktaPathsAreDeniedExternallyAndNeverReachTheBackend()
+        throws Exception
+    {
+        String admin  = backend.sign(List.of("ROLE_ADMIN"));
+        String handle = newHandle();
+        String device = "device-" + UUID.randomUUID();
+
+        register(handle,"ROLE_ADMIN");
+
+        for (String path : List.of("/session-command-service/start-okta-login","/session-command-service/complete-okta-login"))
+        {
+            int before = backend.getReceivedBodies().size();
+
+            assertEquals(401,postWithoutCookies(path,"{}",null),path);
+            assertEquals(403,postWithoutCookies(path,"{}",admin),path);
+            assertEquals(403,post(path,"{}",handle,device,null),path);
+            assertEquals(before,backend.getReceivedBodies().size(),path);
+        }
+    }
+
+    @Test
+    public void
     unknownClosedOrExpiredHandleIsUnauthorized()
     {
         assertEquals(401,post(GET_OUTPUT,users(),newHandle(),null,null));

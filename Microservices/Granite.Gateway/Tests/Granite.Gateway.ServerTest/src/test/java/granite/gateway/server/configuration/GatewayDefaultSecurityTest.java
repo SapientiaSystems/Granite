@@ -68,7 +68,7 @@ class GatewayDefaultSecurityTest
     defaultChainKeepsSessionEntryPointsPublic()
     {
         post("/session-command-service/login",null).expectStatus().isOk();
-        post("/session-command-service/login-with-oauth2",null).expectStatus().isOk();
+        post("/session-command-service/login-with-oauth2",null).expectStatus().isUnauthorized();
         post("/session-command-service/refresh",null).expectStatus().isOk();
         post("/session-command-service/logout",null).expectStatus().isUnauthorized();
     }
