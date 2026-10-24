@@ -2,9 +2,9 @@
 
 ## Overview
 
-Granite.Session is a Spring Boot microservice that manages authentication and user-activity sessions within the Granite system. A Session entity is created when a user authenticates (credential-based login or OAuth2 federated login) and holds the issued access token (a signed JWT), device identifier, lifetime, and arbitrary user-activity state. Sessions are closed (with a `closedReason`) on logout, replacement, displacement, expiry, refresh-token reuse or admin logout. The microservice exposes command and query REST APIs and emits domain events (SessionCreated, SessionUpdated, SessionDestroyed) as session state changes occur. Events are propagated to external consumers via the Transactional Outbox pattern and Kafka (topic `granite.session.events`).
+Granite.Session is a Spring Boot microservice that manages authentication and user-activity sessions within the Granite system. A Session entity is created when a user authenticates (password login or enterprise Okta sign-in) and holds the issued access token (a signed JWT), device identifier, lifetime, and arbitrary user-activity state. Sessions are closed (with a `closedReason`) on logout, replacement, displacement, expiry, refresh-token reuse or admin logout. The microservice exposes command and query REST APIs and emits domain events (SessionCreated, SessionUpdated, SessionDestroyed) as session state changes occur. Events are propagated to external consumers via the Transactional Outbox pattern and Kafka (topic `granite.session.events`).
 
-Granite.Session mirrors the architecture, build layout, event delivery, and coding style of Granite.User. It depends on Granite.User.Client to authenticate passwords (`authenticateUser`) and look up OAuth2 identities (`findUsersByExternalIdentity`).
+Granite.Session mirrors the architecture, build layout, event delivery, and coding style of Granite.User. It depends on Granite.User.Client to authenticate passwords (`authenticateUser`), look up Okta identities (`findUsersByExternalIdentity`) and create first-time Okta users (`createUser`).
 
 ## Technology Stack
 
@@ -14,9 +14,9 @@ Granite.Session mirrors the architecture, build layout, event delivery, and codi
 - **Persistence**: JPA / Hibernate 6.4, PostgreSQL (production), H2 (testing)
 - **Object Mapping**: ModelMapper 3.2
 - **Eventing**: Kafka, Transactional Outbox (strata.outbox)
-- **Security**: spring-security-oauth2-jose (Nimbus JOSE JWT) for RS256 token minting and OAuth2 ID token validation
+- **Security**: spring-security-oauth2-jose (Nimbus JOSE JWT) for RS256 token minting, the Okta `private_key_jwt` client assertion and Okta ID token validation; Spring `RestClient` for the Okta discovery and token endpoints
 - **Containerization**: Google Jib (OCI images)
-- **Testing**: JUnit Jupiter 5, WireMock (OAuth2 JWKS fixture)
+- **Testing**: JUnit Jupiter 5, WireMock (`FakeOkta`: discovery, token and JWKS endpoints)
 - **Foundation Libraries**: Strata Framework Set (strata.foundation.core, strata.server.core, strata.client.core, strata.outbox.core)
 
 ## Project Structure
@@ -49,7 +49,7 @@ The microservice follows a strict layered architecture with CQRS (Command Query 
 Each layer is organized into a dedicated Java package (`granite.session.server.*`):
 
 - **`server.platform`** — Spring REST controllers, Spring configuration, JPA/Hibernate unit-of-work wiring, session event sender implementations. Depends on `server.application` and `server.domain`.
-- **`server.application`** — Service implementations (`SessionCommandService`, `SessionQueryService`), context objects, JWT minting, OAuth2 ID token validation, ModelMapper configuration. Depends on `server.domain`.
+- **`server.application`** — Service implementations (`SessionCommandService`, `SessionQueryService`), context objects, JWT minting, the Okta client, ModelMapper configuration. Depends on `server.domain`.
 - **`server.domain`** — Domain entity (`Session`), repository interface/implementation, domain event types. No upward dependencies.
 
 ### Domain Entity
@@ -73,9 +73,14 @@ Each layer is organized into a dedicated Java package (`granite.session.server.*
 | `activeMarker` | `Boolean` | `TRUE` while open, `NULL` once closed. Unique index `ux_session_active_user_device (userId, deviceId, activeMarker)` (a `unique-constraint` in `Session.orm.xml`) allows one active session per (user, device) |
 | `continuityId` | `UUID` | Stays the same across replacements; exposed in `SessionData` and as the JWT claim `cid` |
 | `replacedBy`, `copiedFrom` | `Long` | Session links for audit and support (`replacedBy` on the replaced session, `copiedFrom` on the session whose `values` were copied) |
+| `signInMethod` | `SignInMethod` | `PASSWORD`, `ACCESS_TOKEN` or `OKTA` (`server.domain`) |
+| `oktaIdToken` | `String` (TEXT) | The Okta `id_token` of an Okta session, kept for the logout `id_token_hint`; cleared when the session closes; never in `SessionData` |
+| `oktaGroups` | `Set<String>` | Groups from this session's own Okta ID token; used to recalculate authorities at re-mint; never copied to another session |
 | `version` | `Long` | Optimistic locking |
 
-Closing (`Session.close(reason,at)`) sets `closedReason`, clears `activeMarker`, sets `expires = min(expires,at)` and fires one `SessionUpdated`. Closed rows stay until `SessionPurgeJob` deletes them (their `expires` is in the past). Because `expires` is truncated, the Gateway's `jti` revocation check (`sessions` non-empty and `expires > now`) treats a closed session as revoked; `SessionJwtValidator` also rejects a non-null `closedReason`.
+Closing (`Session.close(reason,at)`) sets `closedReason`, clears `activeMarker`, clears `oktaIdToken`, sets `expires = min(expires,at)` and fires one `SessionUpdated`. Closed rows stay until `SessionPurgeJob` deletes them (their `expires` is in the past). Because `expires` is truncated, the Gateway's `jti` revocation check (`sessions` non-empty and `expires > now`) treats a closed session as revoked; `SessionJwtValidator` also rejects a non-null `closedReason`.
+
+`OktaLoginTransaction` extends `AbstractEntity` (table `OktaLoginTransaction`, mapped in `Session.orm.xml`; the schema comes from the ORM mapping, `schema.sql` is not involved): `hashedTransactionId` (SHA-256 hex of the random transaction id, unique; the raw id lives only in the `GRANITE_LOGIN` cookie), `state`, `nonce`, `codeVerifier` (PKCE), `returnTo`, `deviceId`, `expires` (`created + granite.session.okta.transaction-ttl`, `PT5M`). A row is deleted by the first completion attempt that finds it, and `SessionPurgeJob` deletes expired rows. Repository: `IOktaLoginTransactionRepository` (`findByHashedTransactionId`, `findExpiredBefore`).
 
 ### Component Responsibilities
 
@@ -84,7 +89,7 @@ Closing (`Session.close(reason,at)`) sets `closedReason`, clears `activeMarker`,
 The shared contract component. Contains no implementation logic. Defines:
 
 - **Service interfaces**: `ISessionCommandService`, `ISessionQueryService`
-- **Request/Reply DTOs**: `LoginRequest`/`Reply`, `LoginWithOauth2Request`/`Reply`, `LogoutRequest`/`Reply`, `LogoutAllForUserRequest`/`Reply`, `RefreshRequest`/`Reply`, `ResolveSessionRequest`/`Reply`, `FindSessionsByKeyRequest`/`Reply`, `FindSessionsByKeySetRequest`/`Reply`, `FindSessionByUserIdAndDeviceIdRequest`/`Reply`
+- **Request/Reply DTOs**: `LoginRequest`/`Reply`, `StartOktaLoginRequest`/`Reply`, `CompleteOktaLoginRequest`/`Reply`, `LogoutRequest`/`Reply` (the reply carries `endSessionUrl`), `LogoutAllForUserRequest`/`Reply`, `RefreshRequest`/`Reply`, `ResolveSessionRequest`/`Reply`, `FindSessionsByKeyRequest`/`Reply`, `FindSessionsByKeySetRequest`/`Reply`, `FindSessionByUserIdAndDeviceIdRequest`/`Reply`
 - **Data transfer objects**: `SessionData`
 - **Key types**: `SessionKey` (names `SESSION_ID`, `USER_ID`), `SessionKeySet` (names `SESSION_IDS`, `USER_IDS`). Lookup by access token is deliberately not offered, so tokens never appear in query requests.
 - **Credentials**: carried as sibling scalar fields `credential: String` and `credentialKind: CredentialKind`. `CredentialKind` (`PASSWORD`, `ACCESS_TOKEN`, `SECURITY_CODE`) lives in Granite.User.Service.
@@ -100,7 +105,7 @@ The shared contract component. Contains no implementation logic. Defines:
   - Observer pattern: `ISessionEventObserver`, `ISessionEventSource`
 
 - **Application layer** (`server.application`):
-  - `SessionCommandService` — Implements `ISessionCommandService` and `ISessionEventObserver`. Provides login, loginWithOauth2, logout, logoutAllForUser, and refresh. Translates domain events into service-level session events via `ISessionEventSender`.
+  - `SessionCommandService` — Implements `ISessionCommandService` and `ISessionEventObserver`. Provides login, startOktaLogin, completeOktaLogin, logout, logoutAllForUser, refresh and resolveSession. Translates domain events into service-level session events via `ISessionEventSender`.
   - `SessionQueryService` — Implements `ISessionQueryService`. Provides find-by-key, find-by-key-set, and find-by-user-id-and-device-id (open session only) operations.
   - Context objects for each operation
   - `MappingModule` — ModelMapper type mappings between Session domain objects and Session DTOs
@@ -109,13 +114,14 @@ The shared contract component. Contains no implementation logic. Defines:
 - **Platform layer** (`server.platform`):
   - `SessionCommandServiceController` — Spring `@RestController` exposing command endpoints under `/session-command-service/`
   - `SessionQueryServiceController` — Spring `@RestController` exposing query endpoints under `/session-query-service/`
-  - `PlatformConfiguration` (JPA/UnitOfWork, health), `CommandPlatformConfiguration` (command controller, outbox repository, `Oauth2ProvidersProperties`), `QueryPlatformConfiguration` (query controller)
+  - `PlatformConfiguration` (JPA/UnitOfWork, health), `CommandPlatformConfiguration` (command controller, outbox repository), `QueryPlatformConfiguration` (query controller)
+  - `OktaKeyLoader` — loads the Okta client-assertion key from `granite.session.okta.keystore.*`; a classpath key store is allowed only in `local` and `development`
   - `JwtKeyLoader` — loads the RSA key pair from configured locations; classpath keys are allowed only in the `local` and `development` environments (and never with `test`/`production`)
   - Event senders: `OnCommitSessionEventSender`, `OutboxEventSessionEventSender`, `MockSessionEventSender` (testing)
 
 - **Configuration layer** (`server.configuration`): the entry configurations that hosts extend, following the Strata.Outbox → Granite.Outbox pattern.
   - `AbstractGraniteSessionServerConfiguration` — imports `ApplicationConfiguration`, `DomainConfiguration`, `ServiceConfiguration`, and springdoc support. It declares the shared seam beans and the host plumbing: SecurityContextHolder strategy, request-scope registration, and the springdoc `ObjectMapperProvider`/`SpringDocConfigProperties`.
-  - `GraniteSessionCommandServerConfiguration` — adds `CommandPlatformConfiguration` and the command seams: event sender, JWT, OAuth2, User clients.
+  - `GraniteSessionCommandServerConfiguration` — adds `CommandPlatformConfiguration` and the command seams: event sender, JWT, Okta, User clients.
   - `GraniteSessionQueryServerConfiguration` — adds `QueryPlatformConfiguration`.
 
 #### Granite.Session.Client
@@ -155,20 +161,21 @@ Downstream application systems reuse Granite.Session by depending on `granite-se
 | `schemaInitializer(EntityManagerFactory)` | Abstract | runs `schema.sql` against the persistence unit's DataSource |
 | `requestLoggingFilter()` | Abstract | query string only |
 | `openApi()` | Abstract | group `Session`, service path + `/health/**` |
-| `securityFilterChain(HttpSecurity,JwtDecoder,GraniteJwtAuthenticationConverter,Environment)` | Abstract | stateless JWT resource server; public paths come from `getPublicPathPatterns(Environment)`: `OPTIONS`, `${strata.health.base-path}/**`, `/error` (and the springdoc paths outside `production`), plus on the Command side `login`, `login-with-oauth2`, `refresh`, `resolve-session` and `/.well-known/jwks.json` |
+| `securityFilterChain(HttpSecurity,JwtDecoder,GraniteJwtAuthenticationConverter,Environment)` | Abstract | stateless JWT resource server; public paths come from `getPublicPathPatterns(Environment)`: `OPTIONS`, `${strata.health.base-path}/**`, `/error` (and the springdoc paths outside `production`), plus on the Command side `login`, `start-okta-login`, `complete-okta-login`, `refresh`, `resolve-session` and `/.well-known/jwks.json` |
 | `jwtDecoder(Environment,ObjectProvider<IJwkSetProvider>)` | Abstract | CommandHost validates in-process against its own `IJwkSetProvider`. QueryHost (or any host with `granite.security.jwt.jwk-set-uri` set) fetches the JWKS remotely |
 | `jwtAuthenticationConverter()` | Abstract | `GraniteJwtAuthenticationConverter` (`sub` principal, `authorities` claim) |
 | `sessionEventSender(IOutboxEventRepository)` | Command | `OutboxEventSessionEventSender` |
 | `jwtTokenService(Environment,ResourceLoader)` | Command | `JwtTokenService` with keys from `JwtKeyLoader` and `granite.session.jwt.*` |
 | `jwkSetProvider(Environment,ResourceLoader)` | Command | `JwkSetProvider` with the public key at `granite.session.jwt.public-key-location`, plus `granite.session.jwt.previous-public-key-location` when set (key rotation) |
 | `refreshTokenService()` | Command | `RefreshTokenService`: 256-bit SecureRandom base64url tokens, SHA-256 hex hashes |
-| `oauth2IdTokenValidator(Oauth2ProvidersProperties)` | Command | `Oauth2IdTokenValidator` |
-| `sessionPurgeJob(ObjectProvider<ISessionRepository>,ObjectProvider<ISpringUnitOfWorkManager>,Clock,Environment)` | Command | `SessionPurgeJob` (`SmartLifecycle`): every `granite.session.purge.interval` (`PT15M`) it deletes up to `granite.session.purge.batch-size` (500) expired sessions, oldest first, in its own request scope and transaction, without firing `SessionDestroyed`. `granite.session.purge.enabled=false` disables the schedule; `purgeExpired()` can still be called directly |
+| `oktaSettings(Environment)` | Command | `OktaSettings` from `granite.session.login.okta.enabled` (default `false`) and `granite.session.okta.*`: `issuer`, `client-id`, `redirect-uri`, `post-logout-redirect-uri`, `authorities-source` (`USER` default, `OKTA_GROUPS`, `BOTH`), `group-mapping.<group>=ROLE_X` (use `group-mapping[Group Name]` for names with spaces), `transaction-ttl` (`PT5M`), `discovery-cache-ttl` (`PT1H`), `clock-skew` (`PT60S`), `http-timeout` (`PT5S`); scope is always `openid profile email groups` |
+| `oktaClient(OktaSettings,Environment,ResourceLoader,Clock)` | Command | `OktaClient`; when Okta is enabled the client-assertion key comes from `OktaKeyLoader` (`granite.session.okta.keystore.{location,password,type (PKCS12),alias,key-password,key-id}`; `kid` = `key-id` or the RFC 7638 thumbprint). Disabled: no key store is read |
+| `sessionPurgeJob(ObjectProvider<ISessionRepository>,ObjectProvider<IOktaLoginTransactionRepository>,ObjectProvider<ISpringUnitOfWorkManager>,Clock,Environment)` | Command | `SessionPurgeJob` (`SmartLifecycle`): every `granite.session.purge.interval` (`PT15M`) it deletes up to `granite.session.purge.batch-size` (500) expired sessions and, separately, up to the same number of expired Okta login transactions (`purgeExpiredOktaTransactions()`), oldest first, in its own request scope and transaction, without firing `SessionDestroyed`. `granite.session.purge.enabled=false` disables the schedule; `purgeExpired()` can still be called directly |
 | `serviceTokenProvider(IJwtTokenService,Clock,Environment)` | Command | `ServiceTokenProvider`: a cached service JWT (`granite.session.service-token.subject` default `service:granite-session`, `.authorities` default `SCOPE_internal`, `.ttl` default `PT5M`), renewed a minute before expiry |
 | `loginGate(Environment)` | Command | `RequiredAuthoritiesLoginGate` bound to `granite.session.login.required-authorities` (comma-separated). A login is permitted only when the user holds at least one listed authority; unset or empty permits everyone. Set to `ROLE_ADMIN,ROLE_AUDITOR` in the CommandHost `local` and `development` profiles only |
 | `userCommandServiceClient(...)` / `userQueryServiceClient(...)` | Command | REST clients to `granite.user-{command,query}-service.host`, with optional SSL bundle `granite.session.user-client.ssl-bundle`. `createClientBuilder(sslBundles,environment,serviceTokenProvider)` is a protected hook; it registers `ServiceTokenClientRequestFilter`, so every User call carries `Authorization: Bearer <service token>` |
 
-Security: Session only authenticates. Authorization rules belong to the Gateway's `securityWebFilterChain`. The one authorization-style decision made outside the Gateway is the login gate (`ILoginGate`): it is applied at login only, to `login` (PASSWORD and ACCESS_TOKEN) and `loginWithOauth2`, and refresh is not re-gated. Switching the login gate on does not evict live sessions: `refresh` is a public Gateway path, so sessions minted before the switch keep refreshing until `granite.session.max-lifetime` (24h default) unless ended with `logout-all-for-user`. Every refused login replies `success=false` with `invalid credentials`, revealing nothing about roles or account existence. `SecurityAutoConfiguration` stays excluded in the host mains, because the entry configuration enables web security itself. The SecurityContextHolder strategy is set in `beanFactoryPostProcessor()`, before any security filter captures it.
+Security: Session only authenticates. Authorization rules belong to the Gateway's `securityWebFilterChain`. The one authorization-style decision made outside the Gateway is the login gate (`ILoginGate`): it is applied at login only, to `login` (PASSWORD and ACCESS_TOKEN) and `completeOktaLogin` (on the calculated Okta authorities), and refresh is not re-gated. Switching the login gate on does not evict live sessions: `refresh` is a public Gateway path, so sessions minted before the switch keep refreshing until `granite.session.max-lifetime` (24h default) unless ended with `logout-all-for-user`. Every refused login replies `success=false` with `invalid credentials`, revealing nothing about roles or account existence. `SecurityAutoConfiguration` stays excluded in the host mains, because the entry configuration enables web security itself. The SecurityContextHolder strategy is set in `beanFactoryPostProcessor()`, before any security filter captures it.
 
 Domain extension is done through the `Session` values map (`setValue`/`getValue`) together with `Session.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
 
@@ -177,26 +184,38 @@ Plain (non-Boot) Spring contexts, such as the ServerTest configurations, must su
 ## Login and JWT
 
 - `login` dispatches on `credentialKind`: `PASSWORD` calls `IUserCommandServiceClient.authenticateUser` and mints a Session on success; `ACCESS_TOKEN` validates against Session's own store (a closed or expired session fails) and mints a new Session for the same user, with authorities re-read through `IUserQueryServiceClient.findUsersByKey` (a missing user fails); `SECURITY_CODE` returns a not-supported failure in v1.
-- Every login path that creates a session (`login` with either credential, `loginWithOauth2`) applies the lifecycle for user U on device D after the login gate: open sessions on D that are past `expires`/`max-lifetime` close as `EXPIRED`; another user's session closes as `DISPLACED` (nothing is copied); U's own session closes as `REPLACED` and is the source (new session keeps its `continuityId` and copies `values`; the old one gets `replacedBy`, the new one `copiedFrom`). With nothing to replace, U's most recently active (`lastActivity`) live open session on another device is the source ("start from latest": `values` copied, new `continuityId`); otherwise the session starts empty with a new `continuityId`. Authorities are never copied.
-- Concurrency: after the closes, the pipeline re-queries open sessions on D (which also flushes the closes before the new row is inserted); a concurrent winner, a unique-index violation or an optimistic-lock failure completes the login stage exceptionally (rolled back by Spring). `ConcurrencyRetryingSessionCommandService`, wrapped around the service by the controller bean, retries `login`/`loginWithOauth2` once in a new transaction, so the retry replaces the winner; a second failure replies `success=false`, `Unable to log in`.
-- `loginWithOauth2` validates the ID token with `NimbusJwtDecoder` against the configured provider's JWKS (`granite.session.oauth2.providers.<name>.{issuer-uri,audience,jwks-uri}`), finds the user via `findUsersByExternalIdentity`; an unknown identity is refused with `invalid credentials` and no user is ever created. Otherwise it applies the login gate and mints a Session.
-- Every successful `login`/`loginWithOauth2` reply carries `accessToken` and an opaque `refreshToken`. Only the refresh token's SHA-256 hash is stored on the Session.
-- Every successful `login`/`loginWithOauth2` reply also carries `sessionHandle`: a 256-bit SecureRandom base64url handle generated by `IRefreshTokenService`. It is returned once; only its hash (`hashedHandle`) is stored.
-- `resolveSession` takes `{handle}` and returns `{session, accessToken}`. It hashes the handle and looks up `hashedHandle`; a blank, unknown or closed handle fails, and a session past `expires` or `created + max-lifetime` is closed as `EXPIRED` (fires `SessionUpdated`) and fails. Every failure replies `success=false` with exactly `invalid session`. When the stored JWT expires within `granite.session.token.renewal-margin` (default `PT2M`), or its expiry cannot be read, the user is re-read through `IUserQueryServiceClient.findUsersByKey` (authorities recalculated; a missing user fails), a new JWT is minted (never past `expires`) and `SessionUpdated` fires. `lastActivity` is written at most once a minute (no event). `ResolveSessionRequest.toString()` and `ResolveSessionReply.toString()` never print the handle or the token, and the pipeline logs only session IDs. `/resolve-session` is a public path (the handle is the credential, like the refresh token for `refresh`); the Gateway calls it without an `Authorization` header and denies external requests to it.
+- Every login path that creates a session (`login` with either credential, `completeOktaLogin`) applies the lifecycle for user U on device D after the login gate: open sessions on D that are past `expires`/`max-lifetime` close as `EXPIRED`; another user's session closes as `DISPLACED` (nothing is copied); U's own session closes as `REPLACED` and is the source (new session keeps its `continuityId` and copies `values`; the old one gets `replacedBy`, the new one `copiedFrom`). With nothing to replace, U's most recently active (`lastActivity`) live open session on another device is the source ("start from latest": `values` copied, new `continuityId`); otherwise the session starts empty with a new `continuityId`. Authorities are never copied.
+- Concurrency: after the closes, the pipeline re-queries open sessions on D (which also flushes the closes before the new row is inserted); a concurrent winner, a unique-index violation or an optimistic-lock failure completes the login stage exceptionally (rolled back by Spring). `ConcurrencyRetryingSessionCommandService`, wrapped around the service by the controller bean, retries `login`/`completeOktaLogin` once in a new transaction, so the retry replaces the winner; a second failure replies `success=false`, `Unable to log in`.
+- Okta sign-in: see "Okta login" below.
+- Every successful `login` reply carries `accessToken` and an opaque `refreshToken`. Only the refresh token's SHA-256 hash is stored on the Session.
+- Every successful `login` and `completeOktaLogin` reply also carries `sessionHandle`: a 256-bit SecureRandom base64url handle generated by `IRefreshTokenService`. It is returned once; only its hash (`hashedHandle`) is stored.
+- `resolveSession` takes `{handle}` and returns `{session, accessToken}`. It hashes the handle and looks up `hashedHandle`; a blank, unknown or closed handle fails, and a session past `expires` or `created + max-lifetime` is closed as `EXPIRED` (fires `SessionUpdated`) and fails. Every failure replies `success=false` with exactly `invalid session`. When the stored JWT expires within `granite.session.token.renewal-margin` (default `PT2M`), or its expiry cannot be read, the user is re-read through `IUserQueryServiceClient.findUsersByKey` (authorities recalculated; for an `OKTA` session through `OktaAuthorities` over the User authorities and that session's own `oktaGroups`; a missing user fails), a new JWT is minted (never past `expires`) and `SessionUpdated` fires. `lastActivity` is written at most once a minute (no event). `ResolveSessionRequest.toString()` and `ResolveSessionReply.toString()` never print the handle or the token, and the pipeline logs only session IDs. `/resolve-session` is a public path (the handle is the credential, like the refresh token for `refresh`); the Gateway calls it without an `Authorization` header and denies external requests to it.
 - `refresh` takes `{refreshToken}` (not a sessionId). It looks the session up by the token's hash, rejects a closed session (`session closed`) or one past `expires` or `created + granite.session.max-lifetime` (default `PT24H`, `session expired`), rotates the refresh token (the current hash becomes `previousRefreshTokenHash`), mints a new JWT, and fires `SessionUpdated`. `expires` does not change. The reply carries the new `accessToken` and `refreshToken`.
 - Presenting a refresh token that matches a session's `previousRefreshTokenHash` is treated as theft: the session is closed as `REVOKED_SECURITY` (an already-closed session keeps its reason) and the refresh fails. Each refresh token is therefore single-use.
-- `logout` closes the session as `LOGOUT` (already closed: success, no change); `logoutAllForUser` closes every open session of the user as `ADMIN`. Neither deletes rows.
+- `logout` closes the session as `LOGOUT` (already closed: success, no change); for an open `OKTA` session it first builds `LogoutReply.endSessionUrl` = `end_session_endpoint?id_token_hint=<id_token>[&post_logout_redirect_uri=...]` (a discovery failure only omits the URL), and `LogoutReply.toString()` never prints it; `logoutAllForUser` closes every open session of the user as `ADMIN`. Neither deletes rows.
 - Close and revocation events are `UPDATED` service events whose Avro field `closedReason` names the reason (`null` on other events).
 - Lifetime is `granite.session.max-lifetime` only; there is no idle timeout and `granite.session.session-ttl` is no longer read.
 - Access tokens are RS256 JWTs (private key at `granite.session.jwt.private-key-location`). The header carries `typ=JWT` and `kid` (the RFC 7638 thumbprint of the public key). Claims: `iss=granite-session`, `sub=userId`, `jti=sessionId`, `iat`, `exp`, `aud`, `did=deviceId`, `cid=continuityId` (when set), `authorities`.
 - Access tokens are short-lived: `exp = min(now + granite.session.jwt.ttl, session.expires)`, where `jwt.ttl` defaults to `PT15M`. Clients get a new one via `refresh`. Revocation relies on this short lifetime: after logout, an outstanding access token stays valid until its `exp`.
 - Consumers validate the signature/claims locally, then check revocation via `ISessionQueryServiceClient.findSessionsByKey(SessionKey.ofSessionId(jti))`.
 
+## Okta login
+
+Server-side authorization-code flow with PKCE `S256`; Session is a confidential client using `private_key_jwt`. Okta tokens never leave Session except the `id_token` in the logout `id_token_hint`. The FEC is the only caller: both operations are public at Session (the FEC calls them before there is a session) and denied externally at the Gateway.
+
+- `startOktaLogin({deviceId, returnTo})` → `{authorizeUrl, transactionId}`. Refused (`Okta login is not available`) when `granite.session.login.okta.enabled=false`. Generates a 256-bit transaction id, `state`, `nonce` and PKCE verifier, stores an `OktaLoginTransaction` (hash of the id only, `returnTo` kept only when it is a local path, else `/`), and builds the authorize URL from the discovery document (`response_type=code`, `client_id`, `redirect_uri`, `scope=openid profile email groups`, `state`, `nonce`, `code_challenge`, `code_challenge_method=S256`, plus `prompt=login` when any live session is open on the device, because the signing-in user is not known yet). The raw transaction id is returned once; the FEC puts it in `GRANITE_LOGIN`.
+- `completeOktaLogin({code, state, transactionId, deviceId})` → `{sessionData, sessionHandle, userName, returnTo}` (no Granite access or refresh token). Pipeline: consume the transaction (deleted on every attempt that finds it; unknown, expired, other device, wrong or missing `state`, missing `code` → reject) → exchange the code at the token endpoint (`grant_type=authorization_code`, `code_verifier`, `redirect_uri`, `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer`, RS256 `client_assertion` with `iss=sub=client-id`, `aud=token endpoint`, 5-minute `exp`, random `jti`) → validate the ID token (signature against the discovered JWKS, RS256 only, `iss`, `aud` contains the client id, `exp` present and not past (60 s skew), `nonce` equals the transaction's) → `findUsersByExternalIdentity(provider="okta", externalId=sub)`, creating the User when missing with `externalIdentity=okta:<sub>`, `authorities={ROLE_USER}`, no password and `userName` = `preferred_username`, else `email`, else `okta:<sub>` → authorities via `OktaAuthorities` → login gate → Step 2 lifecycle (`prepareLifecycle`/`newSession`) → session with `signInMethod=OKTA`, `oktaIdToken`, `oktaGroups`.
+- Every rejection replies `success=false`, `invalid credentials`; an unexpected error replies `Unable to log in` without exception data. A new Okta user refused by the login gate stays created with `ROLE_USER` until an admin grants a gated role.
+- Retry: `ConcurrencyRetryingSessionCommandService` retries `completeOktaLogin` once on a conflict. The command service is request-scoped, so the retry runs on the same instance, which remembers the validated identity per hashed transaction id and does not exchange the (single-use) code again; the rollback of the first attempt restores the transaction row.
+- Authorities (`granite.session.okta.authorities-source`): `USER` = the User's authorities; `OKTA_GROUPS` = the mapped groups only (`granite.session.okta.group-mapping.<group>=ROLE_X`; unmapped groups are dropped); `BOTH` = the union. Recalculated at login and at every `resolveSession` re-mint, the group part from the session's own `oktaGroups`.
+- Discovery (`<issuer>/.well-known/openid-configuration`) is cached for `discovery-cache-ttl`; a document whose `issuer` differs from the configured one is rejected. JWKS keys are cached by Nimbus and refetched on an unknown `kid`.
+- Never logged or in any `toString`: the code, the verifier, `state`, `nonce`, the transaction id, the ID token, the client assertion and the session handle (`CompleteOktaLoginTest.neverLogsSecrets`, `OktaRequestReplyTest`).
+
 ## Commonly Used Design Patterns
 
 ### CQRS (Command Query Responsibility Segregation)
 
-Commands (login, loginWithOauth2, logout, logoutAllForUser, refresh, resolveSession) and queries (find) are separated into distinct service interfaces (`ISessionCommandService`, `ISessionQueryService`), distinct controllers (`SessionCommandServiceController`, `SessionQueryServiceController`), and distinct host applications (`SessionCommandHost`, `SessionQueryHost`).
+Commands (login, startOktaLogin, completeOktaLogin, logout, logoutAllForUser, refresh, resolveSession) and queries (find) are separated into distinct service interfaces (`ISessionCommandService`, `ISessionQueryService`), distinct controllers (`SessionCommandServiceController`, `SessionQueryServiceController`), and distinct host applications (`SessionCommandHost`, `SessionQueryHost`).
 
 ### Request-Reply
 
@@ -245,7 +264,8 @@ Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConf
 | Endpoint | Request | Reply |
 |---|---|---|
 | `POST /login` | `LoginRequest` | `LoginReply` |
-| `POST /login-with-oauth2` | `LoginWithOauth2Request` | `LoginWithOauth2Reply` |
+| `POST /start-okta-login` | `StartOktaLoginRequest` | `StartOktaLoginReply` |
+| `POST /complete-okta-login` | `CompleteOktaLoginRequest` | `CompleteOktaLoginReply` |
 | `POST /logout` | `LogoutRequest` | `LogoutReply` |
 | `POST /logout-all-for-user` | `LogoutAllForUserRequest` | `LogoutAllForUserReply` |
 | `POST /refresh` | `RefreshRequest` | `RefreshReply` |
