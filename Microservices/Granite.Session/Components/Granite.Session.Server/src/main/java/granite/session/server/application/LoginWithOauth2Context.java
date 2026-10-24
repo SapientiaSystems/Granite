@@ -20,6 +20,7 @@ class LoginWithOauth2Context
     private Session                 created;
     private String                  jwt;
     private String                  refreshToken;
+    private String                  sessionHandle;
     private String                  failureReason;
 
     public
@@ -32,6 +33,7 @@ class LoginWithOauth2Context
         created           = null;
         jwt               = null;
         refreshToken      = null;
+        sessionHandle     = null;
         failureReason     = null;
     }
 
@@ -78,6 +80,13 @@ class LoginWithOauth2Context
     }
 
     public LoginWithOauth2Context
+    setSessionHandle(String value)
+    {
+        sessionHandle = value;
+        return this;
+    }
+
+    public LoginWithOauth2Context
     setFailureReason(String value)
     {
         failureReason = value;
@@ -113,6 +122,9 @@ class LoginWithOauth2Context
 
     public String
     getRefreshToken() { return refreshToken; }
+
+    public String
+    getSessionHandle() { return sessionHandle; }
 
     public String
     getFailureReason() { return failureReason; }

@@ -135,6 +135,50 @@ class LoginTest
 
     @Test
     public void
+    loginIssuesSessionHandleAndStoresOnlyItsHash()
+    {
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID);
+
+        LoginReply reply = login(USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertNotNull(reply.getSessionHandle());
+        assertTrue(
+            reply.getSessionHandle().matches("[A-Za-z0-9_-]{43}"),
+            "handle should be 256-bit base64url without padding");
+        assertNotEquals(reply.getRefreshToken(),reply.getSessionHandle());
+
+        ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
+
+        Session saved = captor.getValue();
+
+        assertEquals(
+            new RefreshTokenService().hash(reply.getSessionHandle()),
+            saved.getHashedHandle());
+        assertNotEquals(reply.getSessionHandle(),saved.getHashedHandle());
+        assertNull(saved.getClosedReason());
+    }
+
+    @Test
+    public void
+    loginSetsLastActivity()
+    {
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID);
+
+        LoginReply reply = login(USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+
+        ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
+        assertEquals(NOW,captor.getValue().getLastActivity());
+    }
+
+    @Test
+    public void
     loginWithWrongPasswordReturnsSuccessFalse()
     {
         stubAuthenticate(USER_NAME,"wrong",CredentialKind.PASSWORD,false,null);

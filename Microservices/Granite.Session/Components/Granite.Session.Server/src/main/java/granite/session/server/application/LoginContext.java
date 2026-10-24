@@ -21,6 +21,7 @@ class LoginContext
     private Session      created;
     private String       jwt;
     private String       refreshToken;
+    private String       sessionHandle;
 
     public
     LoginContext(LoginRequest req)
@@ -32,6 +33,7 @@ class LoginContext
         created              = null;
         jwt                  = null;
         refreshToken         = null;
+        sessionHandle        = null;
     }
 
     public LoginContext
@@ -76,6 +78,13 @@ class LoginContext
         return this;
     }
 
+    public LoginContext
+    setSessionHandle(String value)
+    {
+        sessionHandle = value;
+        return this;
+    }
+
     public LoginRequest
     getRequest() { return request; }
 
@@ -108,6 +117,9 @@ class LoginContext
 
     public String
     getRefreshToken() { return refreshToken; }
+
+    public String
+    getSessionHandle() { return sessionHandle; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

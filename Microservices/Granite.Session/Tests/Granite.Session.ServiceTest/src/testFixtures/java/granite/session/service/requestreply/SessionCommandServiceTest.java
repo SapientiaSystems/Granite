@@ -35,6 +35,8 @@ class SessionCommandServiceTest
         Assertions.assertNotNull(reply.getSessionData().getExpires());
         Assertions.assertNotNull(reply.getSessionData().getAuthorities());
         Assertions.assertFalse(reply.getSessionData().getAuthorities().isEmpty());
+        Assertions.assertNotNull(reply.getSessionHandle());
+        Assertions.assertFalse(reply.getSessionHandle().isBlank());
     }
 
     @Test

@@ -18,6 +18,7 @@ import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 
@@ -109,6 +110,28 @@ class LoginWithOauth2Test
         Mockito
             .verify(userCommandServiceClient,Mockito.never())
             .createUser(Mockito.any(CreateUserRequest.class));
+    }
+
+    @Test
+    public void
+    loginWithOauth2IssuesSessionHandleAndStoresOnlyItsHash()
+    {
+        stubValidate(PROVIDER,ID_TOKEN,validIdentity());
+        stubFindByExternalIdentity(PROVIDER,SUB,userData(EXISTING_USER_ID));
+
+        LoginWithOauth2Reply reply = loginWithOauth2(PROVIDER,ID_TOKEN,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertNotNull(reply.getSessionHandle());
+        assertTrue(reply.getSessionHandle().matches("[A-Za-z0-9_-]{43}"));
+
+        ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
+        assertEquals(
+            new RefreshTokenService().hash(reply.getSessionHandle()),
+            captor.getValue().getHashedHandle());
+        assertEquals(NOW,captor.getValue().getLastActivity());
     }
 
     @Test

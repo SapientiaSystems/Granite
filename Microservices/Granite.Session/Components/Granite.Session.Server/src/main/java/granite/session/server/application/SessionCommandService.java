@@ -305,22 +305,26 @@ class SessionCommandService
         if (context.getValidatedUserId() == null || context.isUnsupportedKind())
             return context;
 
-        Instant now          = Instant.now(clock);
-        String  refreshToken = refreshTokenService.generate();
-        Session session      =
+        Instant now           = Instant.now(clock);
+        String  refreshToken  = refreshTokenService.generate();
+        String  sessionHandle = refreshTokenService.generate();
+        Session session       =
             new Session()
                 .setUserId(context.getValidatedUserId())
                 .setDeviceId(context.getDeviceId())
                 .setExpires(capExpires(now,now))
                 .setAccessToken("")
                 .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
+                .setHashedHandle(refreshTokenService.hash(sessionHandle))
+                .setLastActivity(now)
                 .setAuthorities(context.getValidatedAuthorities());
 
         session.setCreated(now);
         return
             context
                 .setCreated(session)
-                .setRefreshToken(refreshToken);
+                .setRefreshToken(refreshToken)
+                .setSessionHandle(sessionHandle);
     }
 
     protected LoginContext
@@ -454,22 +458,26 @@ class SessionCommandService
         if (context.getUserId() == null)
             return context;
 
-        Instant now          = Instant.now(clock);
-        String  refreshToken = refreshTokenService.generate();
-        Session session      =
+        Instant now           = Instant.now(clock);
+        String  refreshToken  = refreshTokenService.generate();
+        String  sessionHandle = refreshTokenService.generate();
+        Session session       =
             new Session()
                 .setUserId(context.getUserId())
                 .setDeviceId(context.getDeviceId())
                 .setExpires(capExpires(now,now))
                 .setAccessToken("")
                 .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
+                .setHashedHandle(refreshTokenService.hash(sessionHandle))
+                .setLastActivity(now)
                 .setAuthorities(context.getAuthorities());
 
         session.setCreated(now);
         return
             context
                 .setCreated(session)
-                .setRefreshToken(refreshToken);
+                .setRefreshToken(refreshToken)
+                .setSessionHandle(sessionHandle);
     }
 
     protected LoginWithOauth2Context
@@ -585,7 +593,8 @@ class SessionCommandService
                 .setSuccessMessage("Session: " + session.getSessionId() + " created")
                 .setSessionData(data)
                 .setAccessToken(session.getAccessToken())
-                .setRefreshToken(context.getRefreshToken());
+                .setRefreshToken(context.getRefreshToken())
+                .setSessionHandle(context.getSessionHandle());
     }
 
     private LoginReply
@@ -1023,7 +1032,8 @@ class SessionCommandService
                 .setSuccessMessage("Session: " + session.getSessionId() + " created")
                 .setSessionData(data)
                 .setAccessToken(session.getAccessToken())
-                .setRefreshToken(context.getRefreshToken());
+                .setRefreshToken(context.getRefreshToken())
+                .setSessionHandle(context.getSessionHandle());
     }
 
     private LoginWithOauth2Reply

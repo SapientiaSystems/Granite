@@ -8,4 +8,5 @@ interface LoginWithOauth2Reply
     sessionData?: SessionData;
     accessToken?: string;
     refreshToken?: string;
+    sessionHandle?: string;
 }

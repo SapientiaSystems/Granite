@@ -17,6 +17,7 @@ class LoginWithOauth2Reply
     private SessionData sessionData;
     private String accessToken;
     private String refreshToken;
+    private String sessionHandle;
 
     public
     LoginWithOauth2Reply()
@@ -25,6 +26,7 @@ class LoginWithOauth2Reply
         sessionData = null;
         accessToken = null;
         refreshToken = null;
+        sessionHandle = null;
     }
 
     public
@@ -34,6 +36,7 @@ class LoginWithOauth2Reply
         sessionData = null;
         accessToken = null;
         refreshToken = null;
+        sessionHandle = null;
     }
 
     @Override
@@ -114,6 +117,16 @@ class LoginWithOauth2Reply
 
     public String
     getRefreshToken() { return refreshToken; }
+
+    public LoginWithOauth2Reply
+    setSessionHandle(String sessionHandle)
+    {
+        this.sessionHandle = sessionHandle;
+        return this;
+    }
+
+    public String
+    getSessionHandle() { return sessionHandle; }
 }
 
 //////////////////////////////////////////////////////////////////////////////
