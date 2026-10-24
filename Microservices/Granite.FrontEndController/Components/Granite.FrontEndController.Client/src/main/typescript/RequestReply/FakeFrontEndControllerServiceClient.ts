@@ -16,6 +16,8 @@ import type {
 } from "strata.frontendcontroller.service/RequestReply";
 import type {
     HomeOutput,
+    LoginMethodsOutput,
+    SessionOutput,
     UsersOutput
 } from "granite.frontendcontroller.service/RequestReply";
 import type { UserData } from "granite.user.service/RequestReply";
@@ -58,6 +60,25 @@ class FakeFrontEndControllerServiceClient
             command:      null,
             users:  fakeUsers,
         } as UsersOutput);
+
+        this.outputs.set("Session.New", {
+            userId:          0,
+            source:          "Session.New",
+            destination:     "LoginView",
+            command:         null,
+            passwordEnabled: true,
+            oktaEnabled:     false,
+        } as LoginMethodsOutput);
+
+        this.outputs.set("Session.Current", {
+            userId:       1,
+            source:       "Session.Current",
+            destination:  "SessionView",
+            command:      null,
+            userName:     "sample.user",
+            authorities:  ["ROLE_USER"],
+            status:       "AUTHENTICATED",
+        } as SessionOutput);
     }
 
     getOutputs(): Map<string, FrontEndOutput>

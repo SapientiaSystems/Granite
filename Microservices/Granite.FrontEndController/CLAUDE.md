@@ -2,7 +2,7 @@
 
 ## Overview
 
-Granite.FrontEndController is a Spring Boot microservice built on the Strata FrontEndController framework. The web application sends a `FrontEndInput` to `handle-input` and reads a `FrontEndOutput` from `get-output` or `handle-input`. The service holds no persistent state of its own: request processors translate inputs into calls on the Granite.User query and command services, forwarding the caller's bearer token, and wrap the results in outputs.
+Granite.FrontEndController is a Spring Boot microservice built on the Strata FrontEndController framework. The web application sends a `FrontEndInput` to `handle-input` and reads a `FrontEndOutput` from `get-output` or `handle-input`. The service holds no persistent state of its own: request processors translate inputs into calls on the Granite.User and Granite.Session services, forwarding the caller's bearer token, and wrap the results in outputs. It is also the only place that sets and clears the `GRANITE_SID` session cookie.
 
 ## Technology Stack
 
@@ -45,6 +45,7 @@ Each screen interaction is a `FrontEndInput` identified by its key `source->comm
 
 - `UsersInput`: `usersToCreate: List<CreateUserData>`, `usersToUpdate: List<UpdateUserData>`, `userIdsToDelete: List<Long>`; all default to empty lists.
 - `UsersOutput`: `users: List<UserData>`, `failureMessages: List<String>`.
+- Session types (all registered in `FrontEndJacksonModule`): `LoginMethodsOutput {passwordEnabled, oktaEnabled}`, `LoginInput {userName, password}` (`password` is write-only: never serialized, never in `toString`), `SessionOutput {userName, authorities, status}` (`status` is `AUTHENTICATED` or `UNAUTHENTICATED`), `LogoutInput {logout}` (default `true`; the marker property keeps Jackson deduction unambiguous), `LogoutOutput {loggedOut, endSessionUrl}`, plus `StartOktaLoginInput {returnTo}`, `RedirectOutput {url}` and `CompleteOktaLoginInput {code, state}` (defined for Step 5, no actions yet).
 - `FrontEndJacksonModule`: Jackson module that registers every Granite subtype of `FrontEndInput` and `FrontEndOutput`.
 - TypeScript mirrors of each type live under `src/main/typescript/RequestReply/` and are exported from `index.ts`.
 
@@ -59,7 +60,19 @@ Each screen interaction is a `FrontEndInput` identified by its key `source->comm
 | `User.All->Delete->UsersEditableView` (handle-input) | `DeleteUsersView` | refuses the caller's own `userId`, `destroyUsers` for the rest, then re-queries all users |
 
   Every output copies `source`/`command`/`destination` from the request. Save and delete report failed users and failed batches as `failureMessages` (`<userName or id>: <reason>`) alongside the refreshed `users` list. An unknown key fails with `IllegalArgumentException("No action found for key: ...")`.
-- `server.configuration`: `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` provide the processors, executors, User service clients and the `FrontEndJacksonModule` bean.
+- `server.control.session`: `SessionRequestProcessor` (clients `ISessionCommandServiceClient`, `ISessionQueryServiceClient`, `IUserQueryServiceClient`, a `SessionRequestContext` and `SessionLoginSettings`) with these keys. The login and logout outputs never carry a token or the handle.
+
+| Key | Action | Behavior |
+|---|---|---|
+| `Session.New->LoginView` (get-output, public) | `LoginMethodsView` | `LoginMethodsOutput` from `granite.session.login.password.enabled` (default `true`) and `granite.session.login.okta.enabled` (default `false`) |
+| `Session.New->Login->LoginView` (handle-input, public) | `LoginView` | Session `login` (`PASSWORD`, `deviceId` from the `GRANITE_DID` cookie). Success adds `Set-Cookie: GRANITE_SID=<handle>; HttpOnly; Secure; SameSite=Strict; Path=/` (`Max-Age` = remaining session lifetime) and returns `SessionOutput` `AUTHENTICATED`. A failed login, disabled password login, blank field, missing `GRANITE_DID` or Session error all return `UNAUTHENTICATED` with no cookie and no hint why |
+| `Session.Current->SessionView` (get-output) | `SessionStatusView` | Session id is the `jti` of the forwarded bearer; Session query `findSessionsByKey` (open, unexpired, same user) and User `findUsersByKey` for `userName`; `authorities` from the session |
+| `Session.Current->Logout->LoginView` (handle-input) | `LogoutView` | Session `logout` for the bearer's `jti` (closes as `LOGOUT`), then `Set-Cookie: GRANITE_SID=; Max-Age=0`. On failure `loggedOut=false` and the cookie is kept. `endSessionUrl` stays null until Step 5 |
+
+  `Session.New->StartOktaLogin->LoginView` and `...CompleteOktaLogin...` have no action yet. Strata validates a non-null `userId` on every `get-output`, so the SPA sends a placeholder (for example `0`) for the public `Session.New->LoginView`.
+- `server.platform`: `SessionRequestContext` is captured on the request thread when the processor is built (inbound cookies, the bearer's `jti` and `sub`, and a list of `Set-Cookie` values) and stored as a request attribute. Strata's reply cookies never reach HTTP, so `ResponseCookieAdvice` (a `ResponseBodyAdvice`, bean in both configurations) copies the list to `Set-Cookie` response headers (plus `Cache-Control: no-store`) on the container thread. `SessionCookies` builds the `GRANITE_SID` header values.
+- `server.control.PrefixRoutingRequestProcessor`: each host has one `IRequestProcessor`; sources starting with `Session.` go to `SessionRequestProcessor`, everything else to `UserRequestProcessor`.
+- `server.configuration`: `GraniteRequestProcessorFactory` builds the routing processor and **concrete** User and Session clients (each registering `ForwardedBearerClientRequestFilter.fromCurrentRequest()`). Never pass the request-scoped client beans to a processor: a continuation that runs off the request thread would fail (the Users Save bug). `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` provide the processors, executors, User service clients and the `FrontEndJacksonModule` bean.
 
 ### Jackson subtype registration
 
@@ -112,7 +125,7 @@ Configured by `GraniteAdminFrontEndControllerConfiguration`, which extends Strat
 | `POST /handle-input` | `HandleInputRequest` | `HandleInputReply` |
 | `POST /get-output` | `GetOutputRequest` | `GetOutputReply` |
 
-Both hosts route requests through the same `UserRequestProcessor`. The Admin host has request-scoped `IUserQueryServiceClient` and `IUserCommandServiceClient` beans (`user-query-service.base-url`, `user-command-service.base-url`).
+Both hosts route requests through the same `PrefixRoutingRequestProcessor`. Base URLs: `user-query-service.base-url`, `user-command-service.base-url`, `session-command-service.base-url`, `session-query-service.base-url`. Both `HostConfiguration` request-logging filters have payload and header logging turned off, because bodies carry passwords and headers carry `Cookie` and `Authorization`.
 
 ## Preferred Coding Style and Idioms
 
