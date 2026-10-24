@@ -3,9 +3,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $Namespace = "granite"
-$Port      = if ([string]::IsNullOrWhiteSpace($env:GRANITE_OAUTH2_MOCK_PORT)) { "8090" } else { $env:GRANITE_OAUTH2_MOCK_PORT }
+$Port      = "8090"
 $IssuerId  = "default"
-$Issuer    = "http://host.docker.internal:$Port/$IssuerId"
+$Issuer    = "http://oauth2-mock.localhost:$Port/$IssuerId"
 
 # =============================================================================
 # Verify prerequisites
@@ -36,5 +36,5 @@ Write-Host "  Issuer:    $Issuer" -ForegroundColor DarkGray
 Write-Host "  Discovery: $Issuer/.well-known/openid-configuration" -ForegroundColor DarkGray
 Write-Host "  Session:   granite.session.okta.issuer=$Issuer" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "Port-forwarding 0.0.0.0:$Port -> svc/granite-oauth2-mock:8080 (Ctrl+C to stop)..." -ForegroundColor Green
-kubectl -n $Namespace port-forward --address 0.0.0.0 svc/granite-oauth2-mock "${Port}:8080"
+Write-Host "Port-forwarding 127.0.0.1:$Port -> svc/granite-oauth2-mock:$Port (Ctrl+C to stop)..." -ForegroundColor Green
+kubectl -n $Namespace port-forward --address 127.0.0.1 svc/granite-oauth2-mock "${Port}:${Port}"

@@ -82,5 +82,5 @@ spec:
   selector:
     app: granite-oauth2-mock
   ports:
-    - port: 8080
+    - port: 8090
       targetPort: 8080

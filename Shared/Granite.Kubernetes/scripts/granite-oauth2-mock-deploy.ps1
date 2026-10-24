@@ -105,6 +105,15 @@ if ($sessionExists) {
     Write-Host "Configuring granite-session-commandhost for the mock issuer..." -ForegroundColor Cyan
     kubectl -n $Namespace patch deployment granite-session-commandhost --type=strategic --patch-file="$patchFile"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $mockIp = kubectl -n $Namespace get service granite-oauth2-mock -o jsonpath="{.spec.clusterIP}"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "  Mapping oauth2-mock.localhost to $mockIp inside granite-session-commandhost..." -ForegroundColor DarkGray
+    $aliasPatch = [System.IO.Path]::GetTempFileName()
+    Set-Content -Path $aliasPatch -Encoding ascii -Value ('{"spec":{"template":{"spec":{"hostAliases":[{"ip":"' + $mockIp + '","hostnames":["oauth2-mock.localhost"]}]}}}}')
+    kubectl -n $Namespace patch deployment granite-session-commandhost --type=merge --patch-file="$aliasPatch"
+    $aliasExit = $LASTEXITCODE
+    Remove-Item -Force -ErrorAction SilentlyContinue $aliasPatch
+    if ($aliasExit -ne 0) { exit $aliasExit }
 }
 else {
     Write-Host "  granite-session-commandhost not deployed; skipping (re-run after granite-system-deploy.ps1)." -ForegroundColor Yellow

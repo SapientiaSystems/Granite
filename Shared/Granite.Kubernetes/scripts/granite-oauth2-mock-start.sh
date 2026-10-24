@@ -2,9 +2,9 @@
 set -euo pipefail
 
 NAMESPACE="granite"
-PORT="${GRANITE_OAUTH2_MOCK_PORT:-8090}"
+PORT="8090"
 ISSUER_ID="default"
-ISSUER="http://host.docker.internal:$PORT/$ISSUER_ID"
+ISSUER="http://oauth2-mock.localhost:$PORT/$ISSUER_ID"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; CYAN=$'\033[36m'; GRAY=$'\033[90m'; RESET=$'\033[0m'
 say() { printf '%s%s%s\n' "$2" "$1" "$RESET"; }
@@ -35,5 +35,5 @@ say "  Issuer:    $ISSUER" "$GRAY"
 say "  Discovery: $ISSUER/.well-known/openid-configuration" "$GRAY"
 say "  Session:   granite.session.okta.issuer=$ISSUER" "$GRAY"
 echo ""
-say "Port-forwarding 0.0.0.0:$PORT -> svc/granite-oauth2-mock:8080 (Ctrl+C to stop)..." "$GREEN"
-kubectl -n "$NAMESPACE" port-forward --address 0.0.0.0 svc/granite-oauth2-mock "$PORT:8080"
+say "Port-forwarding 127.0.0.1:$PORT -> svc/granite-oauth2-mock:$PORT (Ctrl+C to stop)..." "$GREEN"
+kubectl -n "$NAMESPACE" port-forward --address 127.0.0.1 svc/granite-oauth2-mock "$PORT:$PORT"
