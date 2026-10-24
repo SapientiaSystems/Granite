@@ -80,6 +80,17 @@ class SessionCommandServiceClient
     }
 
     @Override
+    public CompletionStage<ResolveSessionReply>
+    resolveSession(ResolveSessionRequest request)
+    {
+        return
+            doPostAsync(
+                "resolve-session",
+                ResolveSessionReply.class,
+                request);
+    }
+
+    @Override
     public SessionCommandServiceClient
     setAuthorizationHeader(String accessToken)
     {

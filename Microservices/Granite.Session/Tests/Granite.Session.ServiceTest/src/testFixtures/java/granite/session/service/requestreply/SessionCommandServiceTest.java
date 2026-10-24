@@ -165,8 +165,79 @@ class SessionCommandServiceTest
         Assertions.assertNull(reply.getRefreshToken());
     }
 
+    @Test
+    public void
+    testResolveSession()
+    {
+        LoginReply loginReply =
+            getSubject()
+                .login(newLoginRequest(uniqueUserName(),uniqueDeviceId()))
+                .toCompletableFuture()
+                .join();
+
+        Assertions.assertTrue(loginReply.isSuccess(),loginReply.getFailureMessage());
+
+        ResolveSessionReply reply = resolveSession(loginReply.getSessionHandle());
+
+        Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        Assertions.assertNotNull(reply.getAccessToken());
+        Assertions.assertFalse(reply.getAccessToken().isBlank());
+        Assertions.assertNotNull(reply.getSession());
+        Assertions.assertEquals(
+            loginReply.getSessionData().getSessionId(),
+            reply.getSession().getSessionId());
+        Assertions.assertEquals(
+            loginReply.getSessionData().getUserId(),
+            reply.getSession().getUserId());
+    }
+
+    @Test
+    public void
+    testResolveSessionWithUnknownHandleFails()
+    {
+        ResolveSessionReply reply = resolveSession("unknown-" + UUID.randomUUID());
+
+        Assertions.assertFalse(reply.isSuccess());
+        Assertions.assertEquals("invalid session",reply.getFailureMessage());
+        Assertions.assertNull(reply.getAccessToken());
+        Assertions.assertNull(reply.getSession());
+    }
+
+    @Test
+    public void
+    testResolveSessionAfterLogoutFails()
+    {
+        LoginReply loginReply =
+            getSubject()
+                .login(newLoginRequest(uniqueUserName(),uniqueDeviceId()))
+                .toCompletableFuture()
+                .join();
+
+        Assertions.assertTrue(loginReply.isSuccess(),loginReply.getFailureMessage());
+        getSubject()
+            .logout(new LogoutRequest().setSessionId(loginReply.getSessionData().getSessionId()))
+            .toCompletableFuture()
+            .join();
+
+        ResolveSessionReply reply = resolveSession(loginReply.getSessionHandle());
+
+        Assertions.assertFalse(reply.isSuccess());
+        Assertions.assertEquals("invalid session",reply.getFailureMessage());
+        Assertions.assertNull(reply.getAccessToken());
+    }
+
     protected abstract ISessionCommandService
     getSubject();
+
+    protected ResolveSessionReply
+    resolveSession(String handle)
+    {
+        return
+            getSubject()
+                .resolveSession(new ResolveSessionRequest().setHandle(handle))
+                .toCompletableFuture()
+                .join();
+    }
 
     protected RefreshReply
     refresh(String refreshToken)

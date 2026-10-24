@@ -81,6 +81,16 @@ class SessionCommandServiceController
         logger.info("delegating refresh to implementation service");
         return implementation.refresh(request);
     }
+
+    @PostMapping(
+        value = "/resolve-session",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<ResolveSessionReply>
+    resolveSession(@RequestBody ResolveSessionRequest request)
+    {
+        logger.debug("delegating resolveSession to implementation service");
+        return implementation.resolveSession(request);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

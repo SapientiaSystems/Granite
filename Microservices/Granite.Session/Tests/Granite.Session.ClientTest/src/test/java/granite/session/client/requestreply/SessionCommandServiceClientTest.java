@@ -75,6 +75,22 @@ class SessionCommandServiceClientTest
     }
 
     @Override
+    @Test
+    public void
+    testResolveSession()
+    {
+        super.testResolveSession();
+    }
+
+    @Override
+    @Test
+    public void
+    testResolveSessionWithUnknownHandleFails()
+    {
+        super.testResolveSessionWithUnknownHandleFails();
+    }
+
+    @Override
     protected ISessionCommandService
     getSubject()
     {

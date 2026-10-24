@@ -24,6 +24,8 @@ interface ISessionCommandService
     CompletionStage<RefreshReply>
     refresh(RefreshRequest request);
 
+    CompletionStage<ResolveSessionReply>
+    resolveSession(ResolveSessionRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////

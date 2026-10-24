@@ -9,6 +9,8 @@ import {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
 import {LogoutAllForUserReply} from "./LogoutAllForUserReply";
 import {RefreshRequest} from "./RefreshRequest";
 import {RefreshReply} from "./RefreshReply";
+import {ResolveSessionRequest} from "./ResolveSessionRequest";
+import {ResolveSessionReply} from "./ResolveSessionReply";
 
 export
 interface ISessionCommandService
@@ -27,4 +29,7 @@ interface ISessionCommandService
 
     refresh(request: RefreshRequest):
         ICompletionStage<RefreshReply>;
+
+    resolveSession(request: ResolveSessionRequest):
+        ICompletionStage<ResolveSessionReply>;
 }

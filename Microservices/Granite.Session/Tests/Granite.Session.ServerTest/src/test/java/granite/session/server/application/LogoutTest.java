@@ -74,6 +74,7 @@ class LogoutTest
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
                 Duration.ofHours(24),
+                Duration.ofMinutes(2),
                 clock);
     }
 

@@ -86,6 +86,7 @@ class LoginTest
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
                 Duration.ofHours(24),
+                Duration.ofMinutes(2),
                 clock);
 
         stubSaveAssignsSessionId(500L);
@@ -486,6 +487,7 @@ class LoginTest
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
                 Duration.ofHours(24),
+                Duration.ofMinutes(2),
                 clock);
     }
 

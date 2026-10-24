@@ -8,6 +8,7 @@ import granite.session.server.domain.ISessionEvent;
 import granite.session.server.domain.ISessionEventObserver;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
+import granite.session.server.domain.SessionClosedReason;
 import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LoginReply;
@@ -20,6 +21,8 @@ import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.LogoutRequest;
 import granite.session.service.requestreply.RefreshReply;
 import granite.session.service.requestreply.RefreshRequest;
+import granite.session.service.requestreply.ResolveSessionReply;
+import granite.session.service.requestreply.ResolveSessionRequest;
 import granite.session.service.requestreply.SessionData;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -27,7 +30,10 @@ import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
+import granite.user.service.requestreply.FindUsersByKeyReply;
+import granite.user.service.requestreply.FindUsersByKeyRequest;
 import granite.user.service.requestreply.UserData;
+import granite.user.service.requestreply.UserKey;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +46,7 @@ import strata.foundation.core.transfer.ExceptionData;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -64,8 +71,12 @@ class SessionCommandService
     private final ModelMapper               mapper;
     private final Duration                  sessionTtl;
     private final Duration                  maxLifetime;
+    private final Duration                  renewalMargin;
     private final Clock                     clock;
     private final Logger                    logger;
+
+    private static final Duration ACTIVITY_INTERVAL = Duration.ofMinutes(1);
+    private static final String   INVALID_SESSION   = "invalid session";
 
     @Inject
     public
@@ -81,6 +92,7 @@ class SessionCommandService
         ModelMapper               mapper,
         Duration                  sessionTtl,
         Duration                  maxLifetime,
+        Duration                  renewalMargin,
         Clock                     clock)
     {
         this.repository               = repository;
@@ -94,6 +106,7 @@ class SessionCommandService
         this.mapper                   = mapper;
         this.sessionTtl               = sessionTtl;
         this.maxLifetime              = maxLifetime;
+        this.renewalMargin            = renewalMargin;
         this.clock                    = clock;
         this.logger                   = LogManager.getLogger(SessionCommandService.class);
     }
@@ -193,6 +206,26 @@ class SessionCommandService
                 .thenApply(this::saveRefreshed)
                 .thenApply(this::buildRefreshReply)
                 .exceptionally(e -> buildRefreshReply(e,request));
+    }
+
+    @Override
+    public CompletionStage<ResolveSessionReply>
+    resolveSession(ResolveSessionRequest request)
+    {
+        logger.debug(
+            "resolveSession({})",
+            request != null ? request.getRequestId() : null);
+        return
+            CompletableFuture
+                .supplyAsync(() -> validateResolve(request),new CurrentThreadExecutor())
+                .thenApply(this::mapToResolveContext)
+                .thenApply(this::loadForResolve)
+                .thenApply(this::checkLifetime)
+                .thenApply(this::renew)
+                .thenApply(this::recordActivity)
+                .thenApply(this::saveResolved)
+                .thenApply(this::buildResolveReply)
+                .exceptionally(e -> buildResolveReply(e,request));
     }
 
     @Override
@@ -847,6 +880,129 @@ class SessionCommandService
         return context.setLoaded(session);
     }
 
+    protected ResolveSessionRequest
+    validateResolve(ResolveSessionRequest request)
+    {
+        logger.debug("<resolveSession> validate");
+
+        Objects.requireNonNull(request,"request");
+        Objects.requireNonNull(
+            request.getHandle(),
+            "validation failed: handle was not provided");
+
+        if (request.getHandle().isBlank())
+            throw new IllegalArgumentException("validation failed: handle was blank");
+
+        return request;
+    }
+
+    protected ResolveSessionContext
+    mapToResolveContext(ResolveSessionRequest request)
+    {
+        logger.debug("<resolveSession> mapToContext({})",request.getRequestId());
+        return new ResolveSessionContext(request);
+    }
+
+    protected ResolveSessionContext
+    loadForResolve(ResolveSessionContext context)
+    {
+        logger.debug("<resolveSession> load");
+
+        Optional<Session> found =
+            repository.findByHashedHandle(refreshTokenService.hash(context.getHandle()));
+
+        if (found.isEmpty())
+            return context.setRejected(true);
+
+        return context.setLoaded(found.get());
+    }
+
+    protected ResolveSessionContext
+    checkLifetime(ResolveSessionContext context)
+    {
+        logger.debug("<resolveSession> checkLifetime");
+
+        if (context.isRejected())
+            return context;
+
+        Session session = context.getLoaded();
+        Instant now     = Instant.now(clock);
+
+        if (session.isClosed())
+            return context.setRejected(true);
+
+        if (isLive(session,now))
+            return context;
+
+        session.attach(this);
+        session.close(SessionClosedReason.EXPIRED);
+        return
+            context
+                .setClosed(true)
+                .setRejected(true);
+    }
+
+    protected ResolveSessionContext
+    renew(ResolveSessionContext context)
+    {
+        logger.debug("<resolveSession> renew");
+
+        if (context.isRejected())
+            return context;
+
+        Session session = context.getLoaded();
+        Instant now     = Instant.now(clock);
+        Instant exp     = jwtTokenService.getExpiration(session.getAccessToken());
+
+        if (exp != null && exp.minus(renewalMargin).isAfter(now))
+            return context;
+
+        UserData user = findUserById(session.getUserId());
+
+        if (user == null)
+            return context.setRejected(true);
+
+        session.attach(this);
+        session
+            .setAuthorities(
+                user.getAuthorities() != null
+                    ? new LinkedHashSet<>(user.getAuthorities())
+                    : new LinkedHashSet<>())
+            .setExpires(capExpires(session.getCreated(),now));
+        session.setAccessToken(jwtTokenService.mint(session));
+        return context.setRenewed(true);
+    }
+
+    protected ResolveSessionContext
+    recordActivity(ResolveSessionContext context)
+    {
+        logger.debug("<resolveSession> recordActivity");
+
+        if (context.isRejected())
+            return context;
+
+        Session session = context.getLoaded();
+        Instant now     = Instant.now(clock);
+        Instant last    = session.getLastActivity();
+
+        if (last != null && last.plus(ACTIVITY_INTERVAL).isAfter(now))
+            return context;
+
+        session.setLastActivity(now);
+        return context.setActivityRecorded(true);
+    }
+
+    protected ResolveSessionContext
+    saveResolved(ResolveSessionContext context)
+    {
+        logger.debug("<resolveSession> save");
+
+        if (context.getLoaded() == null || !context.isChanged())
+            return context;
+
+        return context.setLoaded(repository.save(context.getLoaded()));
+    }
+
     private LogoutReply
     buildLogoutReply(LogoutContext context)
     {
@@ -959,6 +1115,79 @@ class SessionCommandService
                 .setSuccess(false)
                 .setFailureMessage("Unable to refresh")
                 .setException(ExceptionData.of(e));
+    }
+
+    private ResolveSessionReply
+    buildResolveReply(ResolveSessionContext context)
+    {
+        if (context.isRejected())
+        {
+            if (context.isClosed())
+                logger.info(
+                    "<resolveSession> session: {} closed as expired",
+                    context.getLoaded().getSessionId());
+            else
+                logger.info("<resolveSession> invalid session");
+
+            return
+                new ResolveSessionReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage(INVALID_SESSION);
+        }
+
+        Session     session = context.getLoaded();
+        SessionData data    = mapper.map(session,SessionData.class);
+
+        logger.debug(
+            "<resolveSession> session: {} resolved (renewed={})",
+            session.getSessionId(),
+            context.isRenewed());
+        return
+            new ResolveSessionReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Session: " + session.getSessionId() + " resolved")
+                .setSession(data)
+                .setAccessToken(session.getAccessToken());
+    }
+
+    private ResolveSessionReply
+    buildResolveReply(Throwable e,ResolveSessionRequest request)
+    {
+        logger.info("<resolveSession> exception reply: {}",e.getMessage());
+        return
+            new ResolveSessionReply(request)
+                .setSuccess(false)
+                .setFailureMessage(INVALID_SESSION);
+    }
+
+    private boolean
+    isLive(Session session,Instant now)
+    {
+        if (session.getExpires() == null || !session.getExpires().isAfter(now))
+            return false;
+
+        return session.getCreated() != null && session.getCreated().plus(maxLifetime).isAfter(now);
+    }
+
+    private UserData
+    findUserById(Long userId)
+    {
+        FindUsersByKeyReply reply =
+            userQueryServiceClient
+                .findUsersByKey(
+                    new FindUsersByKeyRequest()
+                        .setKey(UserKey.ofUserId(userId)))
+                .toCompletableFuture()
+                .join();
+
+        if (reply == null || !reply.isSuccess() || reply.getFoundUsers() == null)
+            return null;
+
+        for (UserData user : reply.getFoundUsers())
+            if (userId.equals(user.getUserId()))
+                return user;
+
+        return null;
     }
 
     private Instant

@@ -85,6 +85,7 @@ class LoginWithOauth2Test
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
                 Duration.ofHours(24),
+                Duration.ofMinutes(2),
                 clock);
 
         stubSaveAssignsSessionId(600L);
@@ -241,6 +242,7 @@ class LoginWithOauth2Test
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
                 Duration.ofHours(24),
+                Duration.ofMinutes(2),
                 clock);
     }
 

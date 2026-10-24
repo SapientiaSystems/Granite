@@ -14,7 +14,9 @@ import {
     LogoutAllForUserReply,
     LogoutAllForUserRequest,
     RefreshReply,
-    RefreshRequest
+    RefreshRequest,
+    ResolveSessionReply,
+    ResolveSessionRequest
 } from "granite.session.service/RequestReply";
 
 export
@@ -80,6 +82,14 @@ class SessionCommandServiceClient
         console.log("SessionCommandServiceClient.refresh");
         return this.doPost<RefreshReply,RefreshRequest>(
             "refresh",
+            this.initializeRequest(request));
+    }
+
+    resolveSession(request: ResolveSessionRequest): ICompletionStage<ResolveSessionReply>
+    {
+        console.log("SessionCommandServiceClient.resolveSession");
+        return this.doPost<ResolveSessionReply,ResolveSessionRequest>(
+            "resolve-session",
             this.initializeRequest(request));
     }
 

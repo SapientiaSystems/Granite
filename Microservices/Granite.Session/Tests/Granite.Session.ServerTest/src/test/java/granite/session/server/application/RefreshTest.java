@@ -84,6 +84,7 @@ class RefreshTest
                 new ModelMapper().registerModule(new MappingModule()),
                 TTL,
                 MAX_LIFETIME,
+                Duration.ofMinutes(2),
                 clock);
 
         Mockito
