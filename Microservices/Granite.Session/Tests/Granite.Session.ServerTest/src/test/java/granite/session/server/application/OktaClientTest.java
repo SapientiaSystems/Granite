@@ -168,7 +168,7 @@ class OktaClientTest
 
         okta.stubTokenReturning(
             okta.idToken(SUB,NONCE,builder -> builder.claim("preferred_username",null).claim("email",null)));
-        assertEquals("okta:" + SUB,subject.exchange("c","v",NONCE).getUserName());
+        assertEquals(SUB,subject.exchange("c","v",NONCE).getUserName());
     }
 
     @Test

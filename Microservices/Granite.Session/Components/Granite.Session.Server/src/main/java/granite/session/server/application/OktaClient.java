@@ -45,7 +45,6 @@ class OktaClient
     private static final String GROUPS_CLAIM        = "groups";
     private static final String USER_NAME_CLAIM     = "preferred_username";
     private static final String EMAIL_CLAIM         = "email";
-    private static final String SUBJECT_PREFIX      = "okta:";
 
     private final OktaSettings                           settings;
     private final OktaClientAssertionSigner              signer;
@@ -304,7 +303,7 @@ class OktaClient
         if (email != null && !email.isBlank())
             return email;
 
-        return SUBJECT_PREFIX + jwt.getSubject();
+        return jwt.getSubject();
     }
 
     private Set<String>
