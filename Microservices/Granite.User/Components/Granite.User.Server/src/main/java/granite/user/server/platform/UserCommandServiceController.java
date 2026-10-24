@@ -86,6 +86,16 @@ class UserCommandServiceController
     }
 
     @PostMapping(
+        value = "/destroy-users",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<DestroyUsersReply>
+    destroyUsers(@RequestBody DestroyUsersRequest request)
+    {
+        logger.info("delegating destroyUsers to implementation service");
+        return implementation.destroyUsers(request);
+    }
+
+    @PostMapping(
         value = "/authenticate-user",
         produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody CompletionStage<AuthenticateUserReply>
