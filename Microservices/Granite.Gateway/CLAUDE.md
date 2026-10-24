@@ -67,6 +67,8 @@ Routes are defined in `GraniteGatewayServerConfiguration.configureRoutes(...)` a
 
 No path stripping is applied — backend controllers are mounted at these exact path prefixes.
 
+When the `production` profile is active, `configureRoutes` adds only `frontendcontroller-user-route` and `frontendcontroller-admin-route`; `local`, `development` and `test` keep all seven.
+
 ### Route Host Configuration
 
 Backend host URIs are parameterized via Spring properties (`granite.<service>.host`). Following `Templates/__System__`, every environment (`local` = docker-compose network, `development`/`test`/`production` = cluster) uses the same service names:
@@ -91,9 +93,13 @@ Downstream application systems reuse the gateway by depending on `granite-gatewa
 |---|---|
 | `routeLocator(RouteLocatorBuilder,Environment)` → `configureRoutes(Builder,Environment)` | adds the seven Granite routes above |
 | `addRoute(Builder,id,pathPattern,hostProperty,Environment)` | helper: one route whose URI comes from the required property `hostProperty` |
-| `securityWebFilterChain(ServerHttpSecurity,ReactiveJwtDecoder,GraniteJwtAuthenticationConverter,Environment)` | reactive JWT resource server: CSRF off. `OPTIONS` and the `getPublicPathPatterns(Environment)` paths are public (`/health/**` plus Session `login`, `login-with-oauth2`, `refresh`, plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production`). Then come the `configureAuthorization(...)` rules, then `anyExchange().authenticated()` |
+| `securityWebFilterChain(ServerHttpSecurity,ReactiveJwtDecoder,GraniteJwtAuthenticationConverter,ISessionResolver,Environment)` | reactive JWT resource server with the cookie path (see "Browser cookies"). `OPTIONS` and `getPublicExchangeMatcher(Environment)` are public. Then come the `configureAuthorization(...)` rules, then `anyExchange().authenticated()` |
 | `configureAuthorization(AuthorizeExchangeSpec,Environment)` | hook where an application declares its authorization rules; the default declares none (authentication only) |
-| `getPublicPathPatterns(Environment)` | hook: paths reachable without a token |
+| `getPublicPathPatterns(Environment)` | hook: paths reachable without a token: `/health/**`, Session `login`, `login-with-oauth2`, `refresh`, the static app (`/`, `/index.html`, `/config.js`, `/favicon.ico`, `/assets/**`), plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production` |
+| `getPublicExchangeMatcher(Environment)` | hook: the public paths OR `PublicFrontEndInputMatcher` (the `LoginView` FEC inputs) |
+| `createCsrfTokenRepository()` | hook: `CookieServerCsrfTokenRepository` (`XSRF-TOKEN`, readable by JavaScript, `Path=/`, `SameSite=Strict`) |
+| `serviceTokenSupplier(Environment)` | `IServiceTokenSupplier` used to authenticate `resolveSession` calls. **The default fails closed** (no Gateway service token exists yet), so every cookie request gets 401 until a host overrides it |
+| `sessionResolver(ObjectProvider<SslBundles>,Environment,IServiceTokenSupplier)` | `SessionCommandSessionResolver`: `POST {granite.session-command-service.host}/session-command-service/resolve-session` with the service token. Cached by SHA-256 of the handle for the smaller of `granite.gateway.session-cache-ttl` (`PT60S`) and the token's remaining life; failures, errors and timeouts (`granite.gateway.session-resolve.timeout`, `PT2S`) are not cached. TTL only: close events do not evict. TLS trust from `granite.gateway.session-resolve.ssl-bundle` (defaults to the gateway HTTP client bundle) via `createSessionResolveWebClient(...)` |
 | `jwtDecoder(Environment,ISessionRevocationChecker)` | `RevocationCheckingReactiveJwtDecoder` wrapping `createJwtDecoder(Environment)`. The inner decoder is a `NimbusReactiveJwtDecoder` against `granite.security.jwt.jwk-set-uri` (Session's JWKS) with the Foundation `iss`/`aud`/`exp` validators |
 | `revocationChecker(ObjectProvider<SslBundles>,Environment)` | `SessionQueryRevocationChecker`: after signature validation, looks up the token's `jti` (session id) via Session Query's `find-sessions-by-key`, using the caller's own bearer. Live results are cached for `granite.gateway.revocation.cache-ttl` (`PT30S`); revoked results are cached until the token's `exp`. Lookup errors and timeouts (`granite.gateway.revocation.timeout`, `PT2S`) reject the request and are not cached. Tokens whose `sub` starts with `service:` skip the lookup. `granite.gateway.revocation.enabled=false` turns the check off |
 | `createRevocationWebClient(ObjectProvider<SslBundles>,Environment)` | hook: the WebClient for lookups. It trusts `granite.gateway.revocation.ssl-bundle`, which defaults to `spring.cloud.gateway.httpclient.ssl.bundle` |
@@ -104,6 +110,18 @@ Production no longer uses `useInsecureTrustManager`. The `granite-services` bund
 After logout, a token is rejected at the Gateway within the live-cache window (30 seconds by default) instead of lasting until its `exp`.
 | `jwtAuthenticationConverter()` | `GraniteJwtAuthenticationConverter` (`sub` principal, `authorities` claim) |
 | `healthCheckController()` | `GatewayHealthCheckController` |
+
+### Browser cookies (server-side sessions)
+
+The browser holds only `GRANITE_SID` (session handle), `GRANITE_DID` (device) and `XSRF-TOKEN`. Filters run inside the security chain in this order (none is a Spring bean, so none runs outside the chain):
+
+1. `FrontEndInputKeyWebFilter` (before `CSRF`): for `POST /frontendcontroller-{user,admin}-service/{get-output,handle-input}` without an `Authorization` header, buffers the body (`granite.gateway.front-end-input.max-bytes`, default `1048576`; larger is 413), records the FEC key `source->command->destination` (top level for `get-output`, under `input` for `handle-input`) and replays the body unchanged.
+2. `CsrfCookieWebFilter` (before `CSRF`): issues `XSRF-TOKEN` when absent, on every non-bearer request (a 403 also carries a fresh one).
+3. Spring `CsrfWebFilter`: required by `CookieCsrfProtectionMatcher` = method not `GET`/`HEAD`/`TRACE`/`OPTIONS`, no `Authorization` header, at least one cookie. The SPA echoes the raw `XSRF-TOKEN` cookie value in the `X-XSRF-TOKEN` header (plain `ServerCsrfTokenRequestAttributeHandler`, no masking). Missing or wrong → 403.
+4. `DeviceCookieWebFilter` (after `CSRF`): when a non-bearer request has no `GRANITE_DID`, issues 256-bit base64url `GRANITE_DID` (`HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=31536000`) and adds it to the forwarded `Cookie` header.
+5. `SessionCookieWebFilter` (before `AUTHENTICATION`): with `GRANITE_SID` present it always strips it from the forwarded `Cookie` header. A request with an `Authorization` header keeps the bearer path unchanged (bearer wins, cookie ignored). A public request is not resolved. Otherwise the handle is resolved through `ISessionResolver` and `Authorization: Bearer <jwt>` is injected; any failure is 401.
+
+The injected JWT then goes through the ordinary bearer authentication, `jti` revocation check and role rules. Public FEC inputs (`PublicFrontEndInputMatcher`), on both hosts: `get-output` with `Session.New->LoginView`; `handle-input` with `Session.New->Login->LoginView`, `Session.New->StartOktaLogin->LoginView`, `Session.New->CompleteOktaLogin->LoginView`. The handle, tokens and CSRF token are never logged.
 
 Authorization rules live here and only here: User and Session only authenticate. Each application that instantiates a Gateway declares its rules by overriding `configureAuthorization`. Rules match on path and method, so they cannot inspect request bodies. The caller's `Authorization` header is relayed to the routed service unchanged.
 

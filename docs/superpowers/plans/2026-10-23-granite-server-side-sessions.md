@@ -182,12 +182,12 @@ Each subtype must have at least one property name no sibling has, and must be re
 
 **Component:** Granite.Gateway. **Model:** Opus.
 
-- [ ] A `WebFilter` that reads `GRANITE_SID`, calls `resolveSession` (Session client with the service token), injects `Authorization: Bearer`, removes `GRANITE_SID` from the forwarded request, caches the result (the smaller of the token's remaining life and `granite.gateway.session-cache-ttl`), and fails closed with 401.
-- [ ] Issue `GRANITE_DID` on the first visit when it's missing.
-- [ ] CSRF double-submit for state-changing requests that carry cookies.
-- [ ] Public paths: the Session login and `LoginView` inputs, the health endpoints and the static app.
-- [ ] Routes by environment: non-production unchanged; production only `/frontendcontroller-*`.
-- [ ] Bearer-header requests keep the existing JWT plus `jti` revocation path.
+- [x] A `WebFilter` that reads `GRANITE_SID`, calls `resolveSession` (Session client with the service token), injects `Authorization: Bearer`, removes `GRANITE_SID` from the forwarded request, caches the result (the smaller of the token's remaining life and `granite.gateway.session-cache-ttl`), and fails closed with 401.
+- [x] Issue `GRANITE_DID` on the first visit when it's missing.
+- [x] CSRF double-submit for state-changing requests that carry cookies.
+- [x] Public paths: the Session login and `LoginView` inputs, the health endpoints and the static app.
+- [x] Routes by environment: non-production unchanged; production only `/frontendcontroller-*`.
+- [x] Bearer-header requests keep the existing JWT plus `jti` revocation path.
 
 **Acceptance criteria:**
 - A cookie request reaches the FEC with a valid JWT and without `GRANITE_SID`.
@@ -285,6 +285,7 @@ Each subtype must have at least one property name no sibling has, and must be re
 2. Gateway handle cache — **decided 2026-10-24:** TTL only (at most 60 seconds). Session close events do not evict the cache.
 3. Okta back-channel logout: out of scope for now, a candidate follow-up.
 4. Revoking all of a user's sessions when the account is locked or deleted: a candidate follow-up.
+5. Gateway service token — **open (found in Step 3):** the Gateway has no Phase 2 service token (only Session can mint one; the `jti` check forwards the caller's own bearer). Step 3 added the `serviceTokenSupplier` seam, whose default fails closed, so cookie requests get 401 until this is decided (e.g. Session trusts a Gateway signing key, a client-credentials exchange, or making `/resolve-session` reachable only in-cluster).
 
 ## Out of scope
 
