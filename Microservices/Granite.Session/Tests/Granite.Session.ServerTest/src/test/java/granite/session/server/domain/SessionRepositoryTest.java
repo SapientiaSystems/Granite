@@ -178,6 +178,49 @@ class SessionRepositoryTest
 
     @Test
     public void
+    testFindByHashedHandle() throws Exception
+    {
+        final String  hash         = String.format("%064d",unique());
+        final Instant lastActivity = Instant.parse("2026-10-06T12:00:00Z");
+        final AtomicReference<Session> saved = new AtomicReference<>();
+
+        transaction.executeWithoutResult(
+            status ->
+                saved.set(
+                    target.save(
+                        new Session()
+                            .setUserId(500L + unique())
+                            .setAccessToken("token-" + unique())
+                            .setDeviceId("device-" + unique())
+                            .setExpires(Instant.parse("2026-10-07T12:00:00Z"))
+                            .setHashedHandle(hash)
+                            .setLastActivity(lastActivity)
+                            .setClosedReason(SessionClosedReason.EXPIRED))));
+
+        Optional<Session> result =
+            transaction.execute(status -> target.findByHashedHandle(hash));
+
+        assertNotNull(result);
+        assertTrue(result.isPresent());
+        assertEquals(saved.get().getPrimaryId(),result.get().getPrimaryId());
+        assertEquals(hash,result.get().getHashedHandle());
+        assertEquals(lastActivity,result.get().getLastActivity());
+        assertEquals(SessionClosedReason.EXPIRED,result.get().getClosedReason());
+    }
+
+    @Test
+    public void
+    testFindByHashedHandleUnknownReturnsEmpty() throws Exception
+    {
+        Optional<Session> result =
+            transaction.execute(status -> target.findByHashedHandle("unknown-" + unique()));
+
+        assertNotNull(result);
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    public void
     testFindAllByUserId() throws Exception
     {
         final Long userId = 400L + unique();

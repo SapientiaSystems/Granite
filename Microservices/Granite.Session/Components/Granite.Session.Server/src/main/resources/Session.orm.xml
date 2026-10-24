@@ -46,12 +46,23 @@
                 <column name="sessionValues" column-definition="TEXT"/>
                 <convert converter="strata.server.spring.value.StringMapConverter"/>
             </basic>
+            <basic name="hashedHandle">
+                <column name="hashedHandle" unique="true" column-definition="VARCHAR(64)"/>
+            </basic>
+            <basic name="lastActivity">
+                <column name="lastActivity"/>
+            </basic>
+            <basic name="closedReason">
+                <column name="closedReason" column-definition="VARCHAR(32)"/>
+                <enumerated>STRING</enumerated>
+            </basic>
             <version name="version">
                 <column name="version"/>
             </version>
             <transient name="self"/>
             <transient name="observers"/>
             <transient name="sessionId"/>
+            <transient name="closed"/>
         </attributes>
     </entity>
 

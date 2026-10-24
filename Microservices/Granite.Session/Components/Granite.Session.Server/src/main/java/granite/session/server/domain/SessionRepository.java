@@ -42,6 +42,9 @@ class SessionRepository
                 "findByPreviousRefreshTokenHash",
                 "select e from Session e where e.previousRefreshTokenHash = :hash")
             .registerQuery(
+                "findByHashedHandle",
+                "select e from Session e where e.hashedHandle = :hash")
+            .registerQuery(
                 "findAllByUserId",
                 "select e from Session e where e.userId = :userId")
             .registerQuery(
@@ -123,6 +126,18 @@ class SessionRepository
                 .findOneByQuery(
                     Session.class,
                     "findByPreviousRefreshTokenHash",
+                    Map.of("hash",hash));
+    }
+
+    @Override
+    public Optional<Session>
+    findByHashedHandle(String hash)
+    {
+        return
+            getUnitOfWork()
+                .findOneByQuery(
+                    Session.class,
+                    "findByHashedHandle",
                     Map.of("hash",hash));
     }
 

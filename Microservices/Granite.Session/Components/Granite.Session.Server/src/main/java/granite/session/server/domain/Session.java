@@ -33,6 +33,9 @@ class Session
     private String                     deviceId;
     private Set<String>                authorities;
     private Map<String,Object>         values;
+    private String                     hashedHandle;
+    private Instant                    lastActivity;
+    private SessionClosedReason        closedReason;
 
     private static final StringMapperRegistry registry = StringMapperRegistry.of();
 
@@ -48,6 +51,9 @@ class Session
         deviceId                 = null;
         authorities              = new LinkedHashSet<>();
         values                   = new LinkedHashMap<>();
+        hashedHandle             = null;
+        lastActivity             = null;
+        closedReason             = null;
     }
 
     @Override
@@ -128,6 +134,34 @@ class Session
         return this;
     }
 
+    public Session
+    setHashedHandle(String hash)
+    {
+        hashedHandle = hash;
+        return this;
+    }
+
+    public Session
+    setLastActivity(Instant time)
+    {
+        lastActivity = time;
+        return this;
+    }
+
+    public Session
+    setClosedReason(SessionClosedReason reason)
+    {
+        closedReason = reason;
+        return this;
+    }
+
+    public Session
+    close(SessionClosedReason reason)
+    {
+        closedReason = reason;
+        return notifyUpdated();
+    }
+
     public <T> Session
     setValue(String key,T value)
     {
@@ -170,6 +204,18 @@ class Session
 
     public Map<String,Object>
     getValues() { return values; }
+
+    public String
+    getHashedHandle() { return hashedHandle; }
+
+    public Instant
+    getLastActivity() { return lastActivity; }
+
+    public SessionClosedReason
+    getClosedReason() { return closedReason; }
+
+    public boolean
+    isClosed() { return closedReason != null; }
 
     public <T> Optional<T>
     getValue(Class<T> type,String key)

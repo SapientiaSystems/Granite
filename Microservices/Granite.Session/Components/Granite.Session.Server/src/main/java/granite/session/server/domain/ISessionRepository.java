@@ -32,6 +32,9 @@ interface ISessionRepository
     Optional<Session>
     findByPreviousRefreshTokenHash(String hash);
 
+    Optional<Session>
+    findByHashedHandle(String hash);
+
     List<Session>
     findAllByUserId(Long userId);
 

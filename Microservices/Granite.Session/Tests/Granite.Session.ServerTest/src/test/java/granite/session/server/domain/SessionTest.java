@@ -199,6 +199,38 @@ class SessionTest
 
     @Test
     public void
+    testCloseSetsReasonAndFiresSessionUpdated()
+    {
+        Session           target   = new Session();
+        CapturingObserver observer = new CapturingObserver();
+
+        assertFalse(target.isClosed());
+        target.attach(observer);
+        assertSame(target,target.close(SessionClosedReason.EXPIRED));
+
+        assertTrue(target.isClosed());
+        assertEquals(SessionClosedReason.EXPIRED,target.getClosedReason());
+        assertEquals(1,observer.events.size());
+        assertTrue(observer.events.get(0) instanceof SessionUpdated);
+    }
+
+    @Test
+    public void
+    testHashedHandleAndLastActivityAreFluent()
+    {
+        Session target = new Session();
+        Instant now    = Instant.parse("2026-10-06T12:00:00Z");
+
+        assertNull(target.getHashedHandle());
+        assertNull(target.getLastActivity());
+        assertSame(target,target.setHashedHandle("abc"));
+        assertSame(target,target.setLastActivity(now));
+        assertEquals("abc",target.getHashedHandle());
+        assertEquals(now,target.getLastActivity());
+    }
+
+    @Test
+    public void
     testSetValueFluentlyAndReadByType()
     {
         Session target = new Session();
