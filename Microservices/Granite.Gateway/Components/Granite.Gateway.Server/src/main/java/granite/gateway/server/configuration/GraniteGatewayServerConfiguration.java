@@ -15,6 +15,7 @@ import granite.gateway.server.security.ISessionRevocationChecker;
 import granite.gateway.server.security.PublicFrontEndInputMatcher;
 import granite.gateway.server.security.RevocationCheckingReactiveJwtDecoder;
 import granite.gateway.server.security.SessionCommandSessionResolver;
+import granite.gateway.server.security.SessionCookieWebFilter;
 import granite.gateway.server.security.SessionQueryRevocationChecker;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -87,6 +88,7 @@ class GraniteGatewayServerConfiguration
         ServerHttpSecurity                http,
         ReactiveJwtDecoder                jwtDecoder,
         GraniteJwtAuthenticationConverter jwtAuthenticationConverter,
+        ISessionResolver                  sessionResolver,
         Environment                       environment)
     {
         ServerWebExchangeMatcher publicMatcher = getPublicExchangeMatcher(environment);
@@ -98,6 +100,9 @@ class GraniteGatewayServerConfiguration
                     new FrontEndInputKeyWebFilter(
                         environment.getProperty("granite.gateway.front-end-input.max-bytes",Integer.class,1048576)),
                     SecurityWebFiltersOrder.CSRF)
+                .addFilterBefore(
+                    new SessionCookieWebFilter(sessionResolver,publicMatcher),
+                    SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(
                     exchanges ->
                     {
