@@ -223,8 +223,8 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: at.yawk.lz4:lz4-java:1.10.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.xerial.snappy:snappy-java:1.1.10.7" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.thoughtworks.paranamer:paranamer:2.8.3" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.errorprone:error_prone_annotations:2.48.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.code.gson:gson:2.14.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.errorprone:error_prone_annotations:2.50.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.code.gson:gson:2.15.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: jakarta.activation:jakarta.activation-api:2.1.2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.eclipse.angus:angus-activation:2.0.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.2" level="project" />
@@ -248,7 +248,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.eclipse.jetty:jetty-io:9.4.56.v20240826" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.eclipse.jetty:jetty-continuation:9.4.56.v20240826" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.eclipse.jetty:jetty-util:9.4.56.v20240826" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.squareup.okhttp3:okhttp-jvm:5.5.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.squareup.okhttp3:okhttp-jvm:5.5.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish.jaxb:jaxb-core:4.0.2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish.hk2.external:jakarta.inject:2.6.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish.jersey.core:jersey-client:2.39.1" level="project" />
