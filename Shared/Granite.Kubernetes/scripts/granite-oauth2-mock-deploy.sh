@@ -100,7 +100,7 @@ fi
 for dep in granite-frontendcontroller-userhost granite-frontendcontroller-adminhost; do
     if kubectl -n "$NAMESPACE" get deployment "$dep" >/dev/null 2>&1; then
         say "Enabling Okta login on $dep..." "$CYAN"
-        kubectl -n "$NAMESPACE" set env "deployment/$dep" GRANITE_SESSION_LOGIN_OKTA_ENABLED=true
+        kubectl -n "$NAMESPACE" set env "deployment/$dep" OKTA_ENABLED=true GRANITE_SESSION_LOGIN_OKTA_ENABLED-
     else
         say "  $dep not deployed; skipping (re-run after granite-system-deploy.sh)." "$YELLOW"
     fi

@@ -126,7 +126,7 @@ foreach ($dep in @("granite-frontendcontroller-userhost","granite-frontendcontro
     $ErrorActionPreference = "Stop"
     if ($depExists) {
         Write-Host "Enabling Okta login on $dep..." -ForegroundColor Cyan
-        kubectl -n $Namespace set env "deployment/$dep" GRANITE_SESSION_LOGIN_OKTA_ENABLED=true
+        kubectl -n $Namespace set env "deployment/$dep" OKTA_ENABLED=true GRANITE_SESSION_LOGIN_OKTA_ENABLED-
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     else {
