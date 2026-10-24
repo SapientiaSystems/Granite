@@ -1,4 +1,3 @@
 window.__GRANITE_CONFIG__ = {
-    apiBaseUrl: "${API_BASE_URL}",
-    googleClientId: "${GOOGLE_CLIENT_ID}"
+    apiBaseUrl: "${API_BASE_URL}"
 };

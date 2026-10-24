@@ -85,7 +85,7 @@ export function MenuBar(): ReactElement
                         </Menu.Target>
                         <Menu.Dropdown>
                             {signedIn
-                                ? <Menu.Item onClick={() => { void logout().then(() => navigate("/login")); }}>Logout</Menu.Item>
+                                ? <Menu.Item onClick={() => { void logout().then((done: boolean) => { if (done) navigate("/login"); }); }}>Logout</Menu.Item>
                                 : <Menu.Item onClick={() => navigate("/login")}>Login</Menu.Item>}
                             <Menu.Item onClick={() => navigate("/user")}>
                                 Manage Preferences

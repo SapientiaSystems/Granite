@@ -15,7 +15,6 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 ENV API_BASE_URL=""
-ENV GOOGLE_CLIENT_ID=""
 ENV GATEWAY_URL="https://granite-gateway-servicehost:8181"
 
 EXPOSE 443
