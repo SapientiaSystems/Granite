@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Tag("IntegrationStage")
@@ -127,8 +128,9 @@ class SessionCommandServiceTest
         Assertions.assertNotNull(refreshReply.getRefreshToken());
         Assertions.assertNotEquals(loginReply.getRefreshToken(),refreshReply.getRefreshToken());
         Assertions.assertNotNull(refreshReply.getSessionData());
-        Assertions.assertFalse(
-            refreshReply.getSessionData().getExpires().isBefore(loginReply.getSessionData().getExpires()));
+        Assertions.assertEquals(
+            loginReply.getSessionData().getExpires().truncatedTo(ChronoUnit.MILLIS),
+            refreshReply.getSessionData().getExpires().truncatedTo(ChronoUnit.MILLIS));
     }
 
     @Test

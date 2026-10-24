@@ -46,6 +46,8 @@ import strata.foundation.core.transfer.ExceptionData;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -55,6 +57,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 public
 class SessionCommandService
@@ -121,8 +124,10 @@ class SessionCommandService
                 .thenApply(this::mapToContext)
                 .thenApply(this::dispatch)
                 .thenApply(this::applyLoginGate)
+                .thenApply(this::applyLifecycle)
                 .thenApply(this::createSession)
                 .thenApply(this::mintJwt)
+                .thenApply(this::linkReplaced)
                 .thenApply(this::save)
                 .thenApply(this::buildReply)
                 .exceptionally(e -> buildReply(e,request));
@@ -142,8 +147,10 @@ class SessionCommandService
                 .thenApply(this::validateIdToken)
                 .thenApply(this::resolveUser)
                 .thenApply(this::applyOauth2LoginGate)
+                .thenApply(this::applyOauth2Lifecycle)
                 .thenApply(this::createOauth2Session)
                 .thenApply(this::mintOauth2Jwt)
+                .thenApply(this::linkOauth2Replaced)
                 .thenApply(this::saveOauth2)
                 .thenApply(this::buildOauth2Reply)
                 .exceptionally(e -> buildOauth2Reply(e,request));
@@ -328,6 +335,19 @@ class SessionCommandService
     }
 
     protected LoginContext
+    applyLifecycle(LoginContext context)
+    {
+        logger.debug("<login> applyLifecycle");
+
+        if (context.getValidatedUserId() == null || context.isUnsupportedKind())
+            return context;
+
+        return
+            context.setLifecycle(
+                prepareLifecycle(context.getValidatedUserId(),context.getDeviceId()));
+    }
+
+    protected LoginContext
     createSession(LoginContext context)
     {
         logger.debug("<login> createSession");
@@ -335,24 +355,19 @@ class SessionCommandService
         if (context.getValidatedUserId() == null || context.isUnsupportedKind())
             return context;
 
-        Instant now           = Instant.now(clock);
-        String  refreshToken  = refreshTokenService.generate();
-        String  sessionHandle = refreshTokenService.generate();
-        Session session       =
-            new Session()
-                .setUserId(context.getValidatedUserId())
-                .setDeviceId(context.getDeviceId())
-                .setExpires(now.plus(maxLifetime))
-                .setAccessToken("")
-                .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
-                .setHashedHandle(refreshTokenService.hash(sessionHandle))
-                .setLastActivity(now)
-                .setAuthorities(context.getValidatedAuthorities());
+        String refreshToken  = refreshTokenService.generate();
+        String sessionHandle = refreshTokenService.generate();
 
-        session.setCreated(now);
         return
             context
-                .setCreated(session)
+                .setCreated(
+                    newSession(
+                        context.getLifecycle(),
+                        context.getValidatedUserId(),
+                        context.getDeviceId(),
+                        context.getValidatedAuthorities(),
+                        refreshToken,
+                        sessionHandle))
                 .setRefreshToken(refreshToken)
                 .setSessionHandle(sessionHandle);
     }
@@ -373,6 +388,17 @@ class SessionCommandService
             context
                 .setCreated(session)
                 .setJwt(token);
+    }
+
+    protected LoginContext
+    linkReplaced(LoginContext context)
+    {
+        logger.debug("<login> linkReplaced");
+
+        if (context.getCreated() != null)
+            linkReplacedSource(context.getLifecycle(),context.getCreated());
+
+        return context;
     }
 
     protected LoginContext
@@ -481,6 +507,19 @@ class SessionCommandService
     }
 
     protected LoginWithOauth2Context
+    applyOauth2Lifecycle(LoginWithOauth2Context context)
+    {
+        logger.debug("<loginWithOauth2> applyLifecycle");
+
+        if (context.getUserId() == null || context.getFailureReason() != null)
+            return context;
+
+        return
+            context.setLifecycle(
+                prepareLifecycle(context.getUserId(),context.getDeviceId()));
+    }
+
+    protected LoginWithOauth2Context
     createOauth2Session(LoginWithOauth2Context context)
     {
         logger.debug("<loginWithOauth2> createSession");
@@ -488,24 +527,19 @@ class SessionCommandService
         if (context.getUserId() == null)
             return context;
 
-        Instant now           = Instant.now(clock);
-        String  refreshToken  = refreshTokenService.generate();
-        String  sessionHandle = refreshTokenService.generate();
-        Session session       =
-            new Session()
-                .setUserId(context.getUserId())
-                .setDeviceId(context.getDeviceId())
-                .setExpires(now.plus(maxLifetime))
-                .setAccessToken("")
-                .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
-                .setHashedHandle(refreshTokenService.hash(sessionHandle))
-                .setLastActivity(now)
-                .setAuthorities(context.getAuthorities());
+        String refreshToken  = refreshTokenService.generate();
+        String sessionHandle = refreshTokenService.generate();
 
-        session.setCreated(now);
         return
             context
-                .setCreated(session)
+                .setCreated(
+                    newSession(
+                        context.getLifecycle(),
+                        context.getUserId(),
+                        context.getDeviceId(),
+                        context.getAuthorities(),
+                        refreshToken,
+                        sessionHandle))
                 .setRefreshToken(refreshToken)
                 .setSessionHandle(sessionHandle);
     }
@@ -526,6 +560,17 @@ class SessionCommandService
             context
                 .setCreated(session)
                 .setJwt(token);
+    }
+
+    protected LoginWithOauth2Context
+    linkOauth2Replaced(LoginWithOauth2Context context)
+    {
+        logger.debug("<loginWithOauth2> linkReplaced");
+
+        if (context.getCreated() != null)
+            linkReplacedSource(context.getLifecycle(),context.getCreated());
+
+        return context;
     }
 
     protected LoginWithOauth2Context
@@ -1197,6 +1242,124 @@ class SessionCommandService
                 return user;
 
         return null;
+    }
+
+    private LoginLifecycle
+    prepareLifecycle(Long userId,String deviceId)
+    {
+        Instant        now       = Instant.now(clock);
+        LoginLifecycle lifecycle = new LoginLifecycle();
+        List<Session>  mine      = new ArrayList<>();
+
+        for (Session open : repository.findOpenByDeviceId(deviceId))
+        {
+            if (open.isClosed())
+                continue;
+
+            if (!isLive(open,now))
+                closeSession(open,SessionClosedReason.EXPIRED,now);
+            else if (!userId.equals(open.getUserId()))
+                closeSession(open,SessionClosedReason.DISPLACED,now);
+            else
+                mine.add(open);
+        }
+
+        Session replaced = latest(mine);
+
+        for (Session session : mine)
+            closeSession(session,SessionClosedReason.REPLACED,now);
+
+        if (replaced != null)
+            lifecycle
+                .setSource(replaced)
+                .setReplacing(true);
+        else
+            lifecycle.setSource(latest(liveSessions(repository.findOpenByUserId(userId),now)));
+
+        for (Session remaining : repository.findOpenByDeviceId(deviceId))
+            if (!remaining.isClosed() && userId.equals(remaining.getUserId()))
+                throw new ConcurrentLoginException("concurrent login for user: " + userId);
+
+        logger.debug(
+            "<login> lifecycle(user={},replacing={},source={})",
+            userId,
+            lifecycle.isReplacing(),
+            lifecycle.getSource() != null ? lifecycle.getSource().getSessionId() : null);
+        return lifecycle;
+    }
+
+    private Session
+    newSession(
+        LoginLifecycle lifecycle,
+        Long           userId,
+        String         deviceId,
+        Set<String>    authorities,
+        String         refreshToken,
+        String         sessionHandle)
+    {
+        Instant now     = Instant.now(clock);
+        Session source  = lifecycle != null ? lifecycle.getSource() : null;
+        Session session =
+            new Session()
+                .setUserId(userId)
+                .setDeviceId(deviceId)
+                .setExpires(now.plus(maxLifetime))
+                .setAccessToken("")
+                .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
+                .setHashedHandle(refreshTokenService.hash(sessionHandle))
+                .setLastActivity(now)
+                .setAuthorities(
+                    authorities != null
+                        ? new LinkedHashSet<>(authorities)
+                        : new LinkedHashSet<>())
+                .setContinuityId(
+                    lifecycle != null && lifecycle.isReplacing() && source.getContinuityId() != null
+                        ? source.getContinuityId()
+                        : UUID.randomUUID());
+
+        if (source != null)
+            session
+                .setValues(source.getValues())
+                .setCopiedFrom(source.getSessionId());
+
+        session.setCreated(now);
+        return session;
+    }
+
+    private void
+    linkReplacedSource(LoginLifecycle lifecycle,Session created)
+    {
+        if (lifecycle == null || !lifecycle.isReplacing())
+            return;
+
+        Session source = lifecycle.getSource();
+
+        source.setReplacedBy(created.getSessionId());
+        repository.save(source);
+    }
+
+    private List<Session>
+    liveSessions(List<Session> sessions,Instant now)
+    {
+        return
+            sessions
+                .stream()
+                .filter(session -> !session.isClosed())
+                .filter(session -> isLive(session,now))
+                .collect(Collectors.toList());
+    }
+
+    private Session
+    latest(List<Session> sessions)
+    {
+        return
+            sessions
+                .stream()
+                .max(
+                    Comparator.comparing(
+                        Session::getLastActivity,
+                        Comparator.nullsFirst(Comparator.<Instant>naturalOrder())))
+                .orElse(null);
     }
 
     private void

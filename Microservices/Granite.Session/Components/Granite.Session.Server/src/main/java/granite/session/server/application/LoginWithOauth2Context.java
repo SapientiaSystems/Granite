@@ -21,6 +21,7 @@ class LoginWithOauth2Context
     private String                  jwt;
     private String                  refreshToken;
     private String                  sessionHandle;
+    private LoginLifecycle          lifecycle;
     private String                  failureReason;
 
     public
@@ -34,6 +35,7 @@ class LoginWithOauth2Context
         jwt               = null;
         refreshToken      = null;
         sessionHandle     = null;
+        lifecycle         = null;
         failureReason     = null;
     }
 
@@ -93,6 +95,13 @@ class LoginWithOauth2Context
         return this;
     }
 
+    public LoginWithOauth2Context
+    setLifecycle(LoginLifecycle value)
+    {
+        lifecycle = value;
+        return this;
+    }
+
     public LoginWithOauth2Request
     getRequest() { return request; }
 
@@ -125,6 +134,9 @@ class LoginWithOauth2Context
 
     public String
     getSessionHandle() { return sessionHandle; }
+
+    public LoginLifecycle
+    getLifecycle() { return lifecycle; }
 
     public String
     getFailureReason() { return failureReason; }

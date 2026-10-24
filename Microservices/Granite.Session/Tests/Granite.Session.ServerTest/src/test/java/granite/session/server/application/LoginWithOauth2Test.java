@@ -225,6 +225,39 @@ class LoginWithOauth2Test
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
     }
 
+    @Test
+    public void
+    oauth2LoginReplacesExistingSession()
+    {
+        java.util.UUID cid = java.util.UUID.randomUUID();
+        Session        old =
+            new Session()
+                .setSessionId(450L)
+                .setUserId(EXISTING_USER_ID)
+                .setDeviceId(DEVICE_ID)
+                .setExpires(NOW.plus(Duration.ofHours(1)))
+                .setAccessToken("old.jwt")
+                .setContinuityId(cid)
+                .setAuthorities(Set.of("ROLE_ADMIN"))
+                .setValue("k","v");
+
+        old.setCreated(NOW.minus(Duration.ofHours(1)));
+        Mockito.when(repository.findOpenByDeviceId(DEVICE_ID)).thenReturn(List.of(old));
+        stubValidate(PROVIDER,ID_TOKEN,validIdentity());
+        stubFindByExternalIdentity(PROVIDER,SUB,userData(EXISTING_USER_ID).setAuthorities(Set.of("ROLE_USER")));
+
+        LoginWithOauth2Reply reply = loginWithOauth2(PROVIDER,ID_TOKEN,DEVICE_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(cid,reply.getSessionData().getContinuityId());
+        assertEquals(java.util.Map.of("k","v"),reply.getSessionData().getValues());
+        assertEquals(Set.of("ROLE_USER"),reply.getSessionData().getAuthorities());
+        assertEquals(
+            granite.session.service.requestreply.SessionClosedReason.REPLACED,
+            old.getClosedReason());
+        assertEquals(reply.getSessionData().getSessionId(),old.getReplacedBy());
+    }
+
     private SessionCommandService
     gatedSubject()
     {

@@ -14,14 +14,15 @@ import java.util.Set;
 public
 class LoginContext
 {
-    private LoginRequest request;
-    private Long         validatedUserId;
-    private Set<String>  validatedAuthorities;
-    private boolean      unsupportedKind;
-    private Session      created;
-    private String       jwt;
-    private String       refreshToken;
-    private String       sessionHandle;
+    private LoginRequest   request;
+    private Long           validatedUserId;
+    private Set<String>    validatedAuthorities;
+    private boolean        unsupportedKind;
+    private Session        created;
+    private String         jwt;
+    private String         refreshToken;
+    private String         sessionHandle;
+    private LoginLifecycle lifecycle;
 
     public
     LoginContext(LoginRequest req)
@@ -34,6 +35,7 @@ class LoginContext
         jwt                  = null;
         refreshToken         = null;
         sessionHandle        = null;
+        lifecycle            = null;
     }
 
     public LoginContext
@@ -85,6 +87,13 @@ class LoginContext
         return this;
     }
 
+    public LoginContext
+    setLifecycle(LoginLifecycle value)
+    {
+        lifecycle = value;
+        return this;
+    }
+
     public LoginRequest
     getRequest() { return request; }
 
@@ -120,6 +129,9 @@ class LoginContext
 
     public String
     getSessionHandle() { return sessionHandle; }
+
+    public LoginLifecycle
+    getLifecycle() { return lifecycle; }
 }
 
 //////////////////////////////////////////////////////////////////////////////
