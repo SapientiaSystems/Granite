@@ -43,6 +43,12 @@ interface ISessionRepository
 
     Optional<Session>
     findByUserIdAndDeviceId(Long userId,String deviceId);
+
+    List<Session>
+    findOpenByDeviceId(String deviceId);
+
+    List<Session>
+    findOpenByUserId(Long userId);
 }
 
 //////////////////////////////////////////////////////////////////////////////

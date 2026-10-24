@@ -5,6 +5,7 @@
 package granite.session.server.domain;
 
 import granite.foundation.core.mapper.StringMapperRegistry;
+import granite.session.service.requestreply.SessionClosedReason;
 import strata.foundation.core.mapper.IMapper;
 import strata.server.core.entity.AbstractEntityAndDomainEventSource;
 
@@ -14,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 public
 class Session
@@ -36,6 +38,10 @@ class Session
     private String                     hashedHandle;
     private Instant                    lastActivity;
     private SessionClosedReason        closedReason;
+    private Boolean                    activeMarker;
+    private UUID                       continuityId;
+    private Long                       replacedBy;
+    private Long                       copiedFrom;
 
     private static final StringMapperRegistry registry = StringMapperRegistry.of();
 
@@ -54,6 +60,10 @@ class Session
         hashedHandle             = null;
         lastActivity             = null;
         closedReason             = null;
+        activeMarker             = Boolean.TRUE;
+        continuityId             = null;
+        replacedBy               = null;
+        copiedFrom               = null;
     }
 
     @Override
@@ -156,9 +166,49 @@ class Session
     }
 
     public Session
-    close(SessionClosedReason reason)
+    setActiveMarker(Boolean marker)
+    {
+        activeMarker = marker;
+        return this;
+    }
+
+    public Session
+    setContinuityId(UUID id)
+    {
+        continuityId = id;
+        return this;
+    }
+
+    public Session
+    setReplacedBy(Long id)
+    {
+        replacedBy = id;
+        return this;
+    }
+
+    public Session
+    setCopiedFrom(Long id)
+    {
+        copiedFrom = id;
+        return this;
+    }
+
+    public Session
+    setValues(Map<String,Object> source)
+    {
+        values = source != null ? new LinkedHashMap<>(source) : new LinkedHashMap<>();
+        return this;
+    }
+
+    public Session
+    close(SessionClosedReason reason,Instant at)
     {
         closedReason = reason;
+        activeMarker = null;
+
+        if (expires == null || expires.isAfter(at))
+            expires = at;
+
         return notifyUpdated();
     }
 
@@ -213,6 +263,18 @@ class Session
 
     public SessionClosedReason
     getClosedReason() { return closedReason; }
+
+    public Boolean
+    getActiveMarker() { return activeMarker; }
+
+    public UUID
+    getContinuityId() { return continuityId; }
+
+    public Long
+    getReplacedBy() { return replacedBy; }
+
+    public Long
+    getCopiedFrom() { return copiedFrom; }
 
     public boolean
     isClosed() { return closedReason != null; }

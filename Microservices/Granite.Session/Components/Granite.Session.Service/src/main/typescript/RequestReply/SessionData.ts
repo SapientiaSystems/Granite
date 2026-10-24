@@ -1,3 +1,5 @@
+import {SessionClosedReason} from "./SessionClosedReason";
+
 export
 interface SessionData
 {
@@ -8,4 +10,8 @@ interface SessionData
     deviceId?: string;
     values?: Map<string,unknown>;
     authorities?: Array<string>;
+    continuityId?: string;
+    closedReason?: SessionClosedReason;
+    replacedBy?: number;
+    copiedFrom?: number;
 }

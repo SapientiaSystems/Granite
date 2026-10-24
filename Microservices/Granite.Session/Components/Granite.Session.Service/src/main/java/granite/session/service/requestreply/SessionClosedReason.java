@@ -2,12 +2,17 @@
 // SessionClosedReason.java
 //////////////////////////////////////////////////////////////////////////////
 
-package granite.session.server.domain;
+package granite.session.service.requestreply;
 
 public
 enum SessionClosedReason
 {
-    EXPIRED
+    LOGOUT,
+    EXPIRED,
+    REPLACED,
+    DISPLACED,
+    REVOKED_SECURITY,
+    ADMIN
 }
 
 //////////////////////////////////////////////////////////////////////////////

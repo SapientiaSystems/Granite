@@ -1,4 +1,5 @@
 export {SessionData} from "./SessionData";
+export {SessionClosedReason} from "./SessionClosedReason";
 export {SessionKey} from "./SessionKey";
 export {SessionKeySet} from "./SessionKeySet";
 export {LoginRequest} from "./LoginRequest";

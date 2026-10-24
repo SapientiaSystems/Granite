@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public
 class SessionData
@@ -22,17 +23,25 @@ class SessionData
     private String              deviceId;
     private Map<String,Object>  values;
     private Set<String>         authorities;
+    private UUID                continuityId;
+    private SessionClosedReason closedReason;
+    private Long                replacedBy;
+    private Long                copiedFrom;
 
     public
     SessionData()
     {
-        sessionId   = null;
-        userId      = null;
-        created     = null;
-        expires     = null;
-        deviceId    = null;
-        values      = new LinkedHashMap<>();
-        authorities = new LinkedHashSet<>();
+        sessionId    = null;
+        userId       = null;
+        created      = null;
+        expires      = null;
+        deviceId     = null;
+        values       = new LinkedHashMap<>();
+        authorities  = new LinkedHashSet<>();
+        continuityId = null;
+        closedReason = null;
+        replacedBy   = null;
+        copiedFrom   = null;
     }
 
     public SessionData
@@ -84,6 +93,34 @@ class SessionData
         return this;
     }
 
+    public SessionData
+    setContinuityId(UUID id)
+    {
+        continuityId = id;
+        return this;
+    }
+
+    public SessionData
+    setClosedReason(SessionClosedReason reason)
+    {
+        closedReason = reason;
+        return this;
+    }
+
+    public SessionData
+    setReplacedBy(Long id)
+    {
+        replacedBy = id;
+        return this;
+    }
+
+    public SessionData
+    setCopiedFrom(Long id)
+    {
+        copiedFrom = id;
+        return this;
+    }
+
     public Long
     getSessionId() { return sessionId; }
 
@@ -104,6 +141,18 @@ class SessionData
 
     public Set<String>
     getAuthorities() { return authorities; }
+
+    public UUID
+    getContinuityId() { return continuityId; }
+
+    public SessionClosedReason
+    getClosedReason() { return closedReason; }
+
+    public Long
+    getReplacedBy() { return replacedBy; }
+
+    public Long
+    getCopiedFrom() { return copiedFrom; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

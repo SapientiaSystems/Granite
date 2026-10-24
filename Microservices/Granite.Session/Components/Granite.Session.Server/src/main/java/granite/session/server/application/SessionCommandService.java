@@ -8,7 +8,7 @@ import granite.session.server.domain.ISessionEvent;
 import granite.session.server.domain.ISessionEventObserver;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
-import granite.session.server.domain.SessionClosedReason;
+import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LoginReply;
@@ -935,7 +935,7 @@ class SessionCommandService
             return context;
 
         session.attach(this);
-        session.close(SessionClosedReason.EXPIRED);
+        session.close(SessionClosedReason.EXPIRED,now);
         return
             context
                 .setClosed(true)

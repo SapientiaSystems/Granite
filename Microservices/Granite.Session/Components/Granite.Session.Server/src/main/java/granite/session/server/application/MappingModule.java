@@ -25,7 +25,11 @@ class MappingModule
             .addMapping(Session::getExpires,SessionData::setExpires)
             .addMapping(Session::getDeviceId,SessionData::setDeviceId)
             .addMapping(Session::getValues,SessionData::setValues)
-            .addMapping(Session::getAuthorities,SessionData::setAuthorities);
+            .addMapping(Session::getAuthorities,SessionData::setAuthorities)
+            .addMapping(Session::getContinuityId,SessionData::setContinuityId)
+            .addMapping(Session::getClosedReason,SessionData::setClosedReason)
+            .addMapping(Session::getReplacedBy,SessionData::setReplacedBy)
+            .addMapping(Session::getCopiedFrom,SessionData::setCopiedFrom);
     }
 }
 

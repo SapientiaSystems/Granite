@@ -4,6 +4,7 @@
 
 package granite.session.server.domain;
 
+import granite.session.service.requestreply.SessionClosedReason;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -203,15 +204,79 @@ class SessionTest
     {
         Session           target   = new Session();
         CapturingObserver observer = new CapturingObserver();
+        Instant           at       = Instant.parse("2026-10-06T12:00:00Z");
 
+        target.setExpires(at.plusSeconds(3600));
         assertFalse(target.isClosed());
+        assertEquals(Boolean.TRUE,target.getActiveMarker());
         target.attach(observer);
-        assertSame(target,target.close(SessionClosedReason.EXPIRED));
+        assertSame(target,target.close(SessionClosedReason.EXPIRED,at));
 
         assertTrue(target.isClosed());
         assertEquals(SessionClosedReason.EXPIRED,target.getClosedReason());
+        assertNull(target.getActiveMarker());
+        assertEquals(at,target.getExpires());
         assertEquals(1,observer.events.size());
         assertTrue(observer.events.get(0) instanceof SessionUpdated);
+    }
+
+    @Test
+    public void
+    testCloseKeepsEarlierExpires()
+    {
+        Session target  = new Session();
+        Instant at      = Instant.parse("2026-10-06T12:00:00Z");
+        Instant earlier = at.minusSeconds(60);
+
+        target.setExpires(earlier);
+        target.close(SessionClosedReason.LOGOUT,at);
+
+        assertEquals(earlier,target.getExpires());
+        assertEquals(SessionClosedReason.LOGOUT,target.getClosedReason());
+    }
+
+    @Test
+    public void
+    testNewSessionIsActiveWithoutLifecycleLinks()
+    {
+        Session target = new Session();
+
+        assertEquals(Boolean.TRUE,target.getActiveMarker());
+        assertNull(target.getContinuityId());
+        assertNull(target.getReplacedBy());
+        assertNull(target.getCopiedFrom());
+    }
+
+    @Test
+    public void
+    testSetValuesCopiesMap()
+    {
+        Session                         target = new Session();
+        java.util.Map<String,Object>    source = new java.util.LinkedHashMap<>();
+
+        source.put("k","v");
+        target.setValues(source);
+        source.put("other","x");
+
+        assertEquals(java.util.Map.of("k","v"),target.getValues());
+        target.setValue("mine","y");
+        assertFalse(source.containsKey("mine"));
+    }
+
+    @Test
+    public void
+    testLifecycleLinksAreFluent()
+    {
+        UUID    cid    = UUID.randomUUID();
+        Session target =
+            new Session()
+                .setContinuityId(cid)
+                .setReplacedBy(9L)
+                .setCopiedFrom(7L);
+
+        assertEquals(cid,target.getContinuityId());
+        assertEquals(9L,target.getReplacedBy());
+        assertEquals(7L,target.getCopiedFrom());
     }
 
     @Test

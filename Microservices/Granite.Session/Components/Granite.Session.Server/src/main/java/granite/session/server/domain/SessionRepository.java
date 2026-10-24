@@ -52,7 +52,13 @@ class SessionRepository
                 "select e from Session e where e.userId IN :userIds")
             .registerQuery(
                 "findByUserIdAndDeviceId",
-                "select e from Session e where e.userId = :userId and e.deviceId = :deviceId");
+                "select e from Session e where e.userId = :userId and e.deviceId = :deviceId and e.closedReason is null")
+            .registerQuery(
+                "findOpenByDeviceId",
+                "select e from Session e where e.deviceId = :deviceId and e.closedReason is null")
+            .registerQuery(
+                "findOpenByUserId",
+                "select e from Session e where e.userId = :userId and e.closedReason is null");
     }
 
     @Override
@@ -187,6 +193,34 @@ class SessionRepository
                     Session.class,
                     "findByUserIdAndDeviceId",
                     Map.of("userId",userId,"deviceId",deviceId));
+    }
+
+    @Override
+    public List<Session>
+    findOpenByDeviceId(String deviceId)
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findOpenByDeviceId",
+                    Map.of("deviceId",deviceId))
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Session>
+    findOpenByUserId(Long userId)
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findOpenByUserId",
+                    Map.of("userId",userId))
+                .stream()
+                .collect(Collectors.toList());
     }
 }
 

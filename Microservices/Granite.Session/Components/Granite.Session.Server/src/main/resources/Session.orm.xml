@@ -56,6 +56,18 @@
                 <column name="closedReason" column-definition="VARCHAR(32)"/>
                 <enumerated>STRING</enumerated>
             </basic>
+            <basic name="activeMarker">
+                <column name="activeMarker"/>
+            </basic>
+            <basic name="continuityId">
+                <column name="continuityId"/>
+            </basic>
+            <basic name="replacedBy">
+                <column name="replacedBy"/>
+            </basic>
+            <basic name="copiedFrom">
+                <column name="copiedFrom"/>
+            </basic>
             <version name="version">
                 <column name="version"/>
             </version>

@@ -4,6 +4,7 @@
 
 package granite.session.server.domain;
 
+import granite.session.service.requestreply.SessionClosedReason;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -273,6 +275,134 @@ class SessionRepositoryTest
         {
             em.close();
         }
+    }
+
+    @Test
+    public void
+    testSecondActiveSessionForSamePairIsRejected()
+    {
+        final Long   userId   = 9000L + unique();
+        final String deviceId = "device-unique-" + unique();
+
+        transaction.executeWithoutResult(status -> target.save(newSession(userId,deviceId)));
+
+        assertThrows(
+            RuntimeException.class,
+            () -> transaction.executeWithoutResult(status -> target.save(newSession(userId,deviceId))));
+    }
+
+    @Test
+    public void
+    testClosedSessionDoesNotBlockNewActiveSession()
+    {
+        final Long    userId   = 9100L + unique();
+        final String  deviceId = "device-closed-" + unique();
+        final Instant now      = Instant.parse("2026-10-07T11:00:00Z");
+        final AtomicReference<Session> first = new AtomicReference<>();
+
+        transaction.executeWithoutResult(status -> first.set(target.save(newSession(userId,deviceId))));
+        transaction.executeWithoutResult(
+            status ->
+            {
+                Session loaded = target.findById(first.get().getPrimaryId()).orElseThrow();
+
+                loaded.close(SessionClosedReason.REPLACED,now);
+                target.save(loaded);
+                assertTrue(target.findOpenByDeviceId(deviceId).isEmpty());
+                target.save(newSession(userId,deviceId));
+            });
+
+        List<Session> all =
+            transaction.execute(status -> target.findAllByUserId(userId));
+
+        assertEquals(2,all.size());
+    }
+
+    @Test
+    public void
+    testFindOpenQueriesExcludeClosed()
+    {
+        final Long    userId   = 9200L + unique();
+        final String  deviceA  = "device-open-a-" + unique();
+        final String  deviceB  = "device-open-b-" + unique();
+        final Instant now      = Instant.parse("2026-10-07T11:00:00Z");
+        final AtomicReference<Session> closed = new AtomicReference<>();
+        final AtomicReference<Session> open   = new AtomicReference<>();
+
+        transaction.executeWithoutResult(
+            status ->
+            {
+                closed.set(target.save(newSession(userId,deviceA).close(SessionClosedReason.LOGOUT,now)));
+                open.set(target.save(newSession(userId,deviceB)));
+            });
+
+        List<Session>     byUser    = transaction.execute(status -> target.findOpenByUserId(userId));
+        List<Session>     byDeviceA = transaction.execute(status -> target.findOpenByDeviceId(deviceA));
+        List<Session>     byDeviceB = transaction.execute(status -> target.findOpenByDeviceId(deviceB));
+        Optional<Session> pairA     =
+            transaction.execute(status -> target.findByUserIdAndDeviceId(userId,deviceA));
+
+        assertEquals(1,byUser.size());
+        assertEquals(open.get().getPrimaryId(),byUser.get(0).getPrimaryId());
+        assertTrue(byDeviceA.isEmpty());
+        assertEquals(1,byDeviceB.size());
+        assertFalse(pairA.isPresent());
+    }
+
+    @Test
+    public void
+    testLifecycleFieldsRoundTrip()
+    {
+        final UUID    cid = UUID.randomUUID();
+        final AtomicReference<Session> saved = new AtomicReference<>();
+
+        transaction.executeWithoutResult(
+            status ->
+                saved.set(
+                    target.save(
+                        newSession(9300L + unique(),"device-rt-" + unique())
+                            .setContinuityId(cid)
+                            .setReplacedBy(11L)
+                            .setCopiedFrom(10L))));
+
+        Session result =
+            transaction.execute(status -> target.findById(saved.get().getPrimaryId()).orElseThrow());
+
+        assertEquals(cid,result.getContinuityId());
+        assertEquals(11L,result.getReplacedBy());
+        assertEquals(10L,result.getCopiedFrom());
+        assertEquals(Boolean.TRUE,result.getActiveMarker());
+    }
+
+    @Test
+    public void
+    testActiveUserDeviceIndexExists()
+    {
+        jakarta.persistence.EntityManager em = entityManagerFactory.createEntityManager();
+        try
+        {
+            Number count =
+                (Number)em.createNativeQuery(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE UPPER(INDEX_NAME) = 'UX_SESSION_ACTIVE_USER_DEVICE'")
+                    .getSingleResult();
+
+            assertEquals(1,count.intValue());
+        }
+        finally
+        {
+            em.close();
+        }
+    }
+
+    private Session
+    newSession(Long userId,String deviceId)
+    {
+        return
+            new Session()
+                .setUserId(userId)
+                .setAccessToken("token-" + UUID.randomUUID())
+                .setDeviceId(deviceId)
+                .setExpires(Instant.parse("2026-10-07T12:00:00Z"));
     }
 
     private static long unique = 0L;
