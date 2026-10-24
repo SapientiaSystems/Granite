@@ -326,6 +326,32 @@ class LoginLifecycleTest
         assertEquals(Map.of("k","v"),reply.getSessionData().getValues());
     }
 
+    @Test
+    public void
+    concurrentWinnerVisibleAfterCloseFailsTheStageForRetry()
+    {
+        Session winner = session(470L,USER_ID,DEVICE_ID,NOW);
+
+        Mockito
+            .when(repository.findOpenByDeviceId(DEVICE_ID))
+            .thenReturn(List.of())
+            .thenReturn(List.of(winner));
+
+        CompletableFuture<LoginReply> stage =
+            subject
+                .login(
+                    new LoginRequest()
+                        .setUserName(USER_NAME)
+                        .setCredential(PASSWORD)
+                        .setCredentialKind(CredentialKind.PASSWORD)
+                        .setDeviceId(DEVICE_ID))
+                .toCompletableFuture();
+
+        assertTrue(stage.isCompletedExceptionally());
+        assertTrue(new ConflictDetector().isConflict(stage.handle((r,e) -> e).join()));
+        Mockito.verify(jwtTokenService,Mockito.never()).mint(Mockito.any(Session.class));
+    }
+
     private Session
     session(Long id,Long userId,String deviceId,Instant lastActivity)
     {

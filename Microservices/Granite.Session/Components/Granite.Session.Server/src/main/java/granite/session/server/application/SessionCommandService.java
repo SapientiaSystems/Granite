@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
@@ -75,6 +76,7 @@ class SessionCommandService
     private final Duration                  maxLifetime;
     private final Duration                  renewalMargin;
     private final Clock                     clock;
+    private final ConflictDetector          conflictDetector;
     private final Logger                    logger;
 
     private static final Duration ACTIVITY_INTERVAL = Duration.ofMinutes(1);
@@ -108,6 +110,7 @@ class SessionCommandService
         this.maxLifetime              = maxLifetime;
         this.renewalMargin            = renewalMargin;
         this.clock                    = clock;
+        this.conflictDetector         = new ConflictDetector();
         this.logger                   = LogManager.getLogger(SessionCommandService.class);
     }
 
@@ -683,6 +686,9 @@ class SessionCommandService
     private LoginReply
     buildReply(Throwable e,LoginRequest request)
     {
+        if (conflictDetector.isConflict(e))
+            throw new CompletionException(e);
+
         logger.info("<login> exception reply: {}",e.getMessage());
         return
             new LoginReply(request)
@@ -1440,6 +1446,9 @@ class SessionCommandService
     private LoginWithOauth2Reply
     buildOauth2Reply(Throwable e,LoginWithOauth2Request request)
     {
+        if (conflictDetector.isConflict(e))
+            throw new CompletionException(e);
+
         logger.info("<loginWithOauth2> exception reply: {}",e.getMessage());
         return
             new LoginWithOauth2Reply(request)

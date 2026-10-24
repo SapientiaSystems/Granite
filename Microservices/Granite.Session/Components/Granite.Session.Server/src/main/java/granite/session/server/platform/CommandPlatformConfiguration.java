@@ -4,6 +4,7 @@
 
 package granite.session.server.platform;
 
+import granite.session.server.application.ConcurrencyRetryingSessionCommandService;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.Oauth2ProvidersProperties;
 import granite.session.service.requestreply.ISessionCommandService;
@@ -28,7 +29,7 @@ class CommandPlatformConfiguration
     public SessionCommandServiceController
     sessionCommandServiceController(ISessionCommandService service)
     {
-        return new SessionCommandServiceController(service);
+        return new SessionCommandServiceController(new ConcurrencyRetryingSessionCommandService(service));
     }
 
     @Bean
