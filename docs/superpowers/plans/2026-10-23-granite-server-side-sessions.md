@@ -111,7 +111,7 @@ Okta ◄── private_key_jwt code exchange, JWKS, end-session ── Session (
 | Behavior | 1. Reject a blank handle. 2. Hash it and look up `hashedHandle`. 3. Fail if the session is missing or closed. If `max-lifetime` has passed, close it as `EXPIRED` and fail. 4. Inside the renewal margin, re-mint the JWT (never beyond `max-lifetime`) and recalculate authorities. 5. Update `lastActivity` (at most once a minute). 6. Return the reply. |
 | Reply | `ResolveSessionReply extends AbstractServiceReply { session: SessionData, accessToken: String }`. `SessionData` gains `continuityId` and never carries a token. |
 | Failure | `success=false` with a generic `failureMessage` ("invalid session"). Don't reveal whether the handle was unknown, closed or expired. |
-| Caller | The Gateway, authenticated with the Phase 2 service token |
+| Caller | The Gateway calls it unauthenticated: the handle is the credential, like the refresh token for `refresh`. It is public at Session (`getPublicPathPatterns`) and denied externally at the Gateway (`denyAll` on `/session-command-service/resolve-session`) |
 
 ## FrontEndController inputs and outputs
 
@@ -285,7 +285,7 @@ Each subtype must have at least one property name no sibling has, and must be re
 2. Gateway handle cache — **decided 2026-10-24:** TTL only (at most 60 seconds). Session close events do not evict the cache.
 3. Okta back-channel logout: out of scope for now, a candidate follow-up.
 4. Revoking all of a user's sessions when the account is locked or deleted: a candidate follow-up.
-5. Gateway service token — **open (found in Step 3):** the Gateway has no Phase 2 service token (only Session can mint one; the `jti` check forwards the caller's own bearer). Step 3 added the `serviceTokenSupplier` seam, whose default fails closed, so cookie requests get 401 until this is decided (e.g. Session trusts a Gateway signing key, a client-credentials exchange, or making `/resolve-session` reachable only in-cluster).
+5. Gateway service token — **decided 2026-10-24:** no service token. The opaque handle is itself the credential, exactly like the refresh token for `/refresh`. `/session-command-service/resolve-session` is a public path at Session (Command side), the Gateway calls it without an `Authorization` header (the `serviceTokenSupplier` seam is removed), and the Gateway denies external requests to that path (`denyAll`: 403 when authenticated, 401 when not; production exposes only `/frontendcontroller-*`).
 
 ## Out of scope
 
