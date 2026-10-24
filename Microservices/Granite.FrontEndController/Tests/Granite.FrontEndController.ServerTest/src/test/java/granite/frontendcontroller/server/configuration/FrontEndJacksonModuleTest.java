@@ -190,6 +190,17 @@ class FrontEndJacksonModuleTest
         assertEquals("https://x",assertInstanceOf(RedirectOutput.class,roundTrip(new RedirectOutput().setUrl("https://x"))).getUrl());
     }
 
+    @Test
+    public void
+    loginInputPasswordIsNeverSerialized()
+        throws Exception
+    {
+        String json = mapper.writeValueAsString(new LoginInput().setUserName("amy").setPassword("pw-secret"));
+
+        assertFalse(json.contains("pw-secret"));
+        assertFalse(json.contains("password"));
+    }
+
     private FrontEndOutput
     roundTrip(FrontEndOutput output)
         throws Exception

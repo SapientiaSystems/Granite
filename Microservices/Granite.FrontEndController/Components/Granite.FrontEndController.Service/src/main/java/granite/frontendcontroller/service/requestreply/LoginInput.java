@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.service.requestreply;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import strata.frontendcontroller.service.requestreply.FrontEndInput;
 
 public
@@ -11,6 +12,8 @@ class LoginInput
     extends FrontEndInput
 {
     private String userName;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     public

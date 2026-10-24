@@ -4,17 +4,13 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.frontendcontroller.server.control.user.UserRequestProcessor;
 import com.fasterxml.jackson.databind.Module;
+import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
 import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
 import jakarta.inject.Named;
-import jakarta.ws.rs.client.ClientBuilder;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
-import granite.frontendcontroller.server.platform.ForwardedBearerClientRequestFilter;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
-import granite.user.client.requestreply.UserCommandServiceClient;
-import granite.user.client.requestreply.UserQueryServiceClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
@@ -49,7 +45,7 @@ class GraniteUserFrontEndControllerConfiguration
     public IRequestProcessor
     userRequestProcessor()
     {
-        return new UserRequestProcessor(userQueryServiceClient(),userCommandServiceClient());
+        return requestProcessorFactory().create();
     }
 
     @Override
@@ -67,10 +63,7 @@ class GraniteUserFrontEndControllerConfiguration
     public IUserQueryServiceClient
     userQueryServiceClient()
     {
-        return
-            new UserQueryServiceClient(
-                createClientBuilder(),
-                configuration.getProperty("user-query-service.base-url"));
+        return requestProcessorFactory().userQueryClient();
     }
 
     @Bean
@@ -78,10 +71,7 @@ class GraniteUserFrontEndControllerConfiguration
     public IUserCommandServiceClient
     userCommandServiceClient()
     {
-        return
-            new UserCommandServiceClient(
-                createClientBuilder(),
-                configuration.getProperty("user-command-service.base-url"));
+        return requestProcessorFactory().userCommandClient();
     }
 
     @Bean
@@ -91,17 +81,17 @@ class GraniteUserFrontEndControllerConfiguration
         return new FrontEndJacksonModule();
     }
 
-    private ClientBuilder
-    createClientBuilder()
+    @Bean
+    public ResponseCookieAdvice
+    responseCookieAdvice()
     {
-        return
-            ClientBuilder
-                .newBuilder()
-                .register(ForwardedBearerClientRequestFilter.fromCurrentRequest())
-                .sslContext(
-                    sslBundles
-                        .getBundle("granite-services")
-                        .createSslContext());
+        return new ResponseCookieAdvice();
+    }
+
+    private GraniteRequestProcessorFactory
+    requestProcessorFactory()
+    {
+        return new GraniteRequestProcessorFactory(configuration,sslBundles);
     }
 }
 
