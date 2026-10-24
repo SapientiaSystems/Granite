@@ -40,6 +40,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -96,6 +97,30 @@ class JwtTokenServiceTest
         assertEquals("2002",result.getJwtId());
         assertEquals("device-A",result.getDeviceId());
         assertTrue(result.getAudience().contains(AUDIENCE));
+    }
+
+    @Test
+    public void
+    getExpirationReturnsExpOfMintedToken()
+        throws JwtVerificationException
+    {
+        JwtTokenService target  = newService();
+        String          token   = target.mint(newSession(1001L,2002L,"device-A"));
+
+        assertEquals(
+            target.verifySignatureAndExp(token).getExpiresAt(),
+            target.getExpiration(token));
+    }
+
+    @Test
+    public void
+    getExpirationReturnsNullForUnparseableToken()
+    {
+        JwtTokenService target = newService();
+
+        assertNull(target.getExpiration("not.a.jwt"));
+        assertNull(target.getExpiration(""));
+        assertNull(target.getExpiration(null));
     }
 
     @Test

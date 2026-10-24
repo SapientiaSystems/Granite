@@ -7,6 +7,7 @@ package granite.session.server.application;
 import granite.session.server.domain.Session;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 
 public
@@ -20,6 +21,9 @@ interface IJwtTokenService
 
     JwtVerificationResult
     verifySignatureAndExp(String jwt) throws JwtVerificationException;
+
+    Instant
+    getExpiration(String jwt);
 }
 
 //////////////////////////////////////////////////////////////////////////////

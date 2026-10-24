@@ -186,6 +186,25 @@ class JwtTokenService
                 .setAuthorities(readStringListClaim(claims,AUTHORITIES_CLAIM));
     }
 
+    @Override
+    public Instant
+    getExpiration(String jwt)
+    {
+        if (jwt == null || jwt.isBlank())
+            return null;
+
+        try
+        {
+            Date expirationTime = SignedJWT.parse(jwt).getJWTClaimsSet().getExpirationTime();
+
+            return expirationTime != null ? expirationTime.toInstant() : null;
+        }
+        catch (ParseException e)
+        {
+            return null;
+        }
+    }
+
     public String
     getKeyId() { return keyId; }
 
