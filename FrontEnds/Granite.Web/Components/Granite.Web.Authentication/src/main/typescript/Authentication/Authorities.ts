@@ -6,7 +6,7 @@ import type { IAuthenticationState } from "./IAuthenticationState";
 
 export function hasAuthority(state: IAuthenticationState,authority: string): boolean
 {
-    return state.status === "authenticated" && state.authorities.includes(authority);
+    return (state.status === "authenticated" || state.status === "reauthenticating") && state.authorities.includes(authority);
 }
 
 export function canEdit(state: IAuthenticationState): boolean

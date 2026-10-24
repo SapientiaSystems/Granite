@@ -2,162 +2,243 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { beforeEach, describe, expect, it }                                                   from "vitest";
-import { AuthenticationManager, REFRESH_MARGIN_MILLIS }                                       from "../../main/typescript/Authentication/AuthenticationManager";
-import { completed, failed, fakeApi, flush, grant, makeJwt, ManualTimer, MemoryTokenStorage } from "./TestSupport";
-import type { IFakeSessionApi }                                                               from "./TestSupport";
-
-const NOW_SECONDS: number = 1_800_000_000;
-const NOW_MILLIS:  number = NOW_SECONDS * 1000;
+import { describe, expect, it }                                                    from "vitest";
+import { AuthenticationManager }                                                   from "../../main/typescript/Authentication/AuthenticationManager";
+import { FakeNavigator, KEYS, logoutOutput, managerFor, redirectOutput,
+         scriptedFrontEnd, serviceError, sessionOutput, flush }                    from "./TestSupport";
 
 describe("AuthenticationManager",() =>
 {
-    let api:     IFakeSessionApi;
-    let storage: MemoryTokenStorage;
-    let timer:   ManualTimer;
-
-    beforeEach(() =>
+    it("starts restoring and becomes anonymous when SessionView says unauthenticated",async () =>
     {
-        api     = fakeApi();
-        storage = new MemoryTokenStorage();
-        timer   = new ManualTimer(NOW_MILLIS);
+        const manager = managerFor(scriptedFrontEnd());
+
+        expect(manager.getState().status).toBe("restoring");
+
+        await manager.restore();
+
+        expect(manager.getState().status).toBe("anonymous");
     });
 
-    it("starts anonymous without a stored session",() =>
+    it("restores an authenticated session",async () =>
     {
-        expect(new AuthenticationManager(api,storage,timer).getState().status).toBe("anonymous");
+        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_ADMIN"]));
+        const manager  = managerFor(frontEnd);
+
+        await manager.restore();
+
+        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_ADMIN"] });
     });
 
-    it("starts restoring when a refresh token is stored",() =>
+    it("treats a 401 from SessionView as anonymous",async () =>
     {
-        storage.stored = { refreshToken: "refresh-0", sessionId: 2002 };
+        const manager = managerFor(scriptedFrontEnd().respond(KEYS.current,() => serviceError(401)));
 
-        expect(new AuthenticationManager(api,storage,timer).getState().status).toBe("restoring");
+        await manager.restore();
+
+        expect(manager.getState().status).toBe("anonymous");
     });
 
-    it("login stores the refresh token and publishes the authenticated state",async () =>
+    it("becomes anonymous with an error when SessionView cannot be reached",async () =>
     {
-        const manager = new AuthenticationManager(api,storage,timer);
-        const seen: Array<string> = [];
+        const manager = managerFor(scriptedFrontEnd().respond(KEYS.current,() => new Error("offline")));
 
-        manager.subscribe(state => seen.push(state.status));
-        api.login.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
+        await manager.restore();
+
+        expect(manager.getState()).toMatchObject({ status: "anonymous", error: "offline" });
+    });
+
+    it("signs in with a password",async () =>
+    {
+        const frontEnd = scriptedFrontEnd();
+        const manager  = managerFor(frontEnd);
 
         await manager.login("alice","secret");
 
-        expect(api.login).toHaveBeenCalledWith("alice","secret","device-1");
-        expect(seen).toEqual(["authenticating","authenticated"]);
-        expect(manager.getState()).toMatchObject({
-            status:               "authenticated",
-            userName:             "alice",
-            userId:               1001,
-            sessionId:            2002,
-            authorities:          ["ROLE_USER"],
-            accessTokenExpiresAt: (NOW_SECONDS + 900) * 1000,
-        });
-        expect(storage.stored).toEqual({ refreshToken: "refresh-1", sessionId: 2002, userName: "alice" });
+        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_USER"] });
+        expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userId: 0, userName: "alice", password: "secret" });
     });
 
-    it("failed login clears storage, reports the error and rethrows",async () =>
+    it("refuses a wrong password without saying why",async () =>
     {
-        const manager = new AuthenticationManager(api,storage,timer);
+        const manager = managerFor(scriptedFrontEnd());
 
-        api.login.mockReturnValue(failed(new Error("invalid credentials")));
-
-        await expect(manager.login("alice","wrong")).rejects.toThrow("invalid credentials");
-        expect(manager.getState()).toMatchObject({ status: "anonymous", error: "invalid credentials" });
-        expect(storage.stored).toBeNull();
+        await manager.restore();
+        await expect(manager.login("alice","nope")).rejects.toThrow("Sign-in failed");
+        expect(manager.getState()).toMatchObject({ status: "anonymous", error: "Sign-in failed" });
     });
 
-    it("refreshes one margin before the access token expires and rotates both tokens",async () =>
+    it("sends the user to Okta with the return path",async () =>
     {
-        const manager = new AuthenticationManager(api,storage,timer);
-        const expiry: number = NOW_SECONDS + 900;
+        const frontEnd  = scriptedFrontEnd().respond(KEYS.start,() => redirectOutput("https://okta.example/authorize?x=1"));
+        const navigator = new FakeNavigator();
 
-        api.login.mockReturnValue(completed(grant(1,expiry)));
-        api.refresh.mockReturnValue(completed(grant(2,expiry + 900)));
+        await managerFor(frontEnd,navigator).startOktaLogin("/users");
+
+        expect(navigator.assigned).toEqual(["https://okta.example/authorize?x=1"]);
+        expect(frontEnd.callsFor(KEYS.start)[0].payload).toMatchObject({ returnTo: "/users" });
+    });
+
+    it("throws when Okta start is refused",async () =>
+    {
+        const frontEnd  = scriptedFrontEnd().respond(KEYS.start,() => sessionOutput(false));
+        const navigator = new FakeNavigator();
+
+        await expect(managerFor(frontEnd,navigator).startOktaLogin("/")).rejects.toThrow("Sign-in failed");
+        expect(navigator.assigned).toEqual([]);
+    });
+
+    it("completes the Okta callback and returns the local path",async () =>
+    {
+        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_ADMIN"],"/users?tab=1"));
+        const manager  = managerFor(frontEnd);
+
+        expect(await manager.completeOktaLogin("c0de","st8")).toBe("/users?tab=1");
+        expect(manager.getState().userName).toBe("okta.user");
+        expect(frontEnd.callsFor(KEYS.complete)[0].payload).toMatchObject({ code: "c0de", state: "st8" });
+    });
+
+    it.each(["https://evil.example","//evil.example","/\\evil.example","users",""])("ignores a non-local returnTo (%s)",async (returnTo: string) =>
+    {
+        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(true,"okta.user",[],returnTo));
+
+        expect(await managerFor(frontEnd).completeOktaLogin("c","s")).toBe("/");
+    });
+
+    it("rejects a failed Okta completion",async () =>
+    {
+        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(false));
+
+        await expect(managerFor(frontEnd).completeOktaLogin("c","s")).rejects.toThrow("Sign-in failed");
+    });
+
+    it("logs out and goes anonymous",async () =>
+    {
+        const frontEnd = scriptedFrontEnd();
+        const manager  = managerFor(frontEnd);
+
         await manager.login("alice","secret");
 
-        timer.advanceTo(expiry * 1000 - REFRESH_MARGIN_MILLIS - 1);
-        expect(api.refresh).not.toHaveBeenCalled();
+        expect(await manager.logout()).toBe(true);
+        expect(manager.getState().status).toBe("anonymous");
+        expect(frontEnd.callsFor(KEYS.logout)[0].payload).toMatchObject({ logout: true });
+    });
 
-        timer.advanceTo(expiry * 1000 - REFRESH_MARGIN_MILLIS);
+    it("navigates to the Okta end-session URL after logout",async () =>
+    {
+        const frontEnd  = scriptedFrontEnd().respond(KEYS.logout,() => logoutOutput(true,"https://okta.example/logout?id_token_hint=x"));
+        const navigator = new FakeNavigator();
+
+        await managerFor(frontEnd,navigator).logout();
+
+        expect(navigator.assigned).toEqual(["https://okta.example/logout?id_token_hint=x"]);
+    });
+
+    it("keeps the session when logout fails",async () =>
+    {
+        const frontEnd = scriptedFrontEnd().respond(KEYS.logout,() => logoutOutput(false));
+        const manager  = managerFor(frontEnd);
+
+        await manager.login("alice","secret");
+
+        expect(await manager.logout()).toBe(false);
+        expect(manager.getState().status).toBe("authenticated");
+    });
+
+    it("treats a 401 on logout as already signed out",async () =>
+    {
+        const frontEnd = scriptedFrontEnd().respond(KEYS.logout,() => serviceError(401));
+        const manager  = managerFor(frontEnd);
+
+        await manager.login("alice","secret");
+
+        expect(await manager.logout()).toBe(true);
+        expect(manager.getState().status).toBe("anonymous");
+    });
+});
+
+describe("AuthenticationManager.handleUnauthorized",() =>
+{
+    async function signedIn(frontEnd = scriptedFrontEnd()): Promise<AuthenticationManager>
+    {
+        const manager = managerFor(frontEnd);
+
+        await manager.login("alice","secret");
+        return manager;
+    }
+
+    it("retries without a prompt when SessionView shows another tab signed in",async () =>
+    {
+        const frontEnd = scriptedFrontEnd();
+        const manager  = await signedIn(frontEnd);
+
+        frontEnd.respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_USER"]));
+
+        expect(await manager.handleUnauthorized()).toBe(true);
+        expect(manager.getState().status).toBe("authenticated");
+    });
+
+    it("prompts, then resolves true after a password sign-in",async () =>
+    {
+        const manager = await signedIn();
+        const result  = manager.handleUnauthorized();
+
+        await flush();
+        expect(manager.getState()).toMatchObject({ status: "reauthenticating", userName: "alice" });
+
+        await manager.login("alice","secret");
+
+        expect(await result).toBe(true);
+        expect(manager.getState().status).toBe("authenticated");
+    });
+
+    it("stays in the prompt after a refused password",async () =>
+    {
+        const manager = await signedIn();
+
+        void manager.handleUnauthorized();
         await flush();
 
-        expect(api.refresh).toHaveBeenCalledWith("refresh-1");
-        expect(storage.stored?.refreshToken).toBe("refresh-2");
-        expect(manager.getState().accessTokenExpiresAt).toBe((expiry + 900) * 1000);
-        expect(timer.pending).toHaveLength(1);
+        await expect(manager.login("alice","nope")).rejects.toThrow();
+        expect(manager.getState().status).toBe("reauthenticating");
     });
 
-    it("a failed refresh signs the user out",async () =>
+    it("shares one prompt between concurrent 401s",async () =>
     {
-        const manager = new AuthenticationManager(api,storage,timer);
+        const frontEnd = scriptedFrontEnd();
+        const manager  = await signedIn(frontEnd);
+        const before   = frontEnd.callsFor(KEYS.current).length;
+        const first    = manager.handleUnauthorized();
+        const second   = manager.handleUnauthorized();
 
-        api.login.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
-        api.refresh.mockReturnValue(failed(new Error("refresh token reused; session revoked")));
+        await flush();
         await manager.login("alice","secret");
 
-        await manager.refreshNow();
-
-        expect(manager.getState().status).toBe("anonymous");
-        expect(storage.stored).toBeNull();
-        expect(timer.pending).toHaveLength(0);
+        expect(await first).toBe(true);
+        expect(await second).toBe(true);
+        expect(frontEnd.callsFor(KEYS.current).length - before).toBe(1);
     });
 
-    it("restore exchanges the stored refresh token and keeps the user name",async () =>
+    it("resolves false and signs out when the prompt is cancelled",async () =>
     {
-        storage.stored = { refreshToken: "refresh-0", sessionId: 2002, userName: "alice" };
-        api.refresh.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
+        const manager = await signedIn();
+        const result  = manager.handleUnauthorized();
 
-        const manager = new AuthenticationManager(api,storage,timer);
+        await flush();
+        manager.cancelReauthentication();
+
+        expect(await result).toBe(false);
+        expect(manager.getState().status).toBe("anonymous");
+    });
+
+    it("resolves false for a caller that was never signed in",async () =>
+    {
+        const manager = managerFor(scriptedFrontEnd());
 
         await manager.restore();
 
-        expect(api.refresh).toHaveBeenCalledWith("refresh-0");
-        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice" });
-    });
-
-    it("restore with a rejected refresh token ends anonymous",async () =>
-    {
-        storage.stored = { refreshToken: "stale", sessionId: 2002 };
-        api.refresh.mockReturnValue(failed(new Error("invalid refresh token")));
-
-        const manager = new AuthenticationManager(api,storage,timer);
-
-        await manager.restore();
-
+        expect(await manager.handleUnauthorized()).toBe(false);
         expect(manager.getState().status).toBe("anonymous");
-        expect(storage.stored).toBeNull();
-    });
-
-    it("logout clears local state first and then revokes the session",async () =>
-    {
-        const manager = new AuthenticationManager(api,storage,timer);
-        const issued  = grant(1,NOW_SECONDS + 900);
-
-        api.login.mockReturnValue(completed(issued));
-        await manager.login("alice","secret");
-
-        await manager.logout();
-
-        expect(manager.getState().status).toBe("anonymous");
-        expect(storage.stored).toBeNull();
-        expect(timer.pending).toHaveLength(0);
-        expect(api.logout).toHaveBeenCalledWith(2002,issued.accessToken);
-    });
-
-    it("google sign-in sends the ID token and shows the Google email",async () =>
-    {
-        const manager = new AuthenticationManager(api,storage,timer);
-        const idToken = makeJwt({ email: "alice@example.com", sub: "google-sub" });
-
-        api.loginWithOauth2.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
-
-        await manager.loginWithGoogle(idToken);
-
-        expect(api.loginWithOauth2).toHaveBeenCalledWith("google",idToken,"device-1");
-        expect(manager.getState().userName).toBe("alice@example.com");
     });
 });
 

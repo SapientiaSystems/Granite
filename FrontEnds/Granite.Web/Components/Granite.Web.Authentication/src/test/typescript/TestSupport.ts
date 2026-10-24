@@ -2,126 +2,163 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { vi }                                 from "vitest";
-import { CompletableObservable }              from "strata.foundation.core/Concurrent";
-import type { ICompletionStage }              from "strata.foundation.core/Concurrent";
-import type { ISessionApi, ITokenGrant }      from "../../main/typescript/Authentication/ISessionApi";
-import type { ITimer }                        from "../../main/typescript/Authentication/AuthenticationManager";
-import type { IStoredSession, ITokenStorage } from "../../main/typescript/Authentication/TokenStorage";
+import { vi }                                                                   from "vitest";
+import { CompletableObservable }                                                from "strata.foundation.core/Concurrent";
+import type { ICompletionStage }                                                from "strata.foundation.core/Concurrent";
+import { ServiceError, StandardResponse }                                       from "strata.client.core/Service";
+import type { IFrontEndControllerServiceClient }                                from "strata.frontendcontroller.client/RequestReply";
+import type { FrontEndOutput, GetOutputReply, GetOutputRequest,
+              HandleInputReply, HandleInputRequest }                            from "strata.frontendcontroller.service/RequestReply";
+import { AuthenticationManager }                                                from "../../main/typescript/Authentication/AuthenticationManager";
+import type { INavigator }                                                      from "../../main/typescript/Authentication/AuthenticationManager";
+import { FrontEndSessionService }                                               from "../../main/typescript/Authentication/FrontEndSessionService";
+import { createAuthentication }                                                 from "../../main/typescript/Authentication/createAuthentication";
+import type { IAuthentication }                                                 from "../../main/typescript/Authentication/createAuthentication";
 
-export function base64Url(value: string): string
+export interface IRecordedCall
 {
-    const bytes: Uint8Array = new TextEncoder().encode(value);
-
-    return btoa(String.fromCharCode(...bytes)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+    key:     string;
+    payload: Record<string,unknown>;
 }
 
-export function makeJwt(claims: Record<string,unknown>): string
+export type Responder = (payload: Record<string,unknown>) => FrontEndOutput | Error;
+
+export class FakeFrontEnd
+    implements IFrontEndControllerServiceClient
 {
-    return base64Url(JSON.stringify({ alg: "RS256" })) + "." + base64Url(JSON.stringify(claims)) + ".signature";
+    readonly calls: Array<IRecordedCall> = [];
+    private readonly responders: Map<string,Responder> = new Map();
+
+    respond(key: string,responder: Responder): FakeFrontEnd
+    {
+        this.responders.set(key,responder);
+        return this;
+    }
+
+    callsFor(key: string): Array<IRecordedCall>
+    {
+        return this.calls.filter(call => call.key === key);
+    }
+
+    setAuthorization(): IFrontEndControllerServiceClient
+    {
+        throw new Error("the SPA must not set Authorization");
+    }
+
+    close(): void {}
+
+    getOutput(request: GetOutputRequest): ICompletionStage<GetOutputReply>
+    {
+        return this.answer(request.source + "->" + request.destination,request as unknown as Record<string,unknown>) as ICompletionStage<GetOutputReply>;
+    }
+
+    handleInput(request: HandleInputRequest): ICompletionStage<HandleInputReply>
+    {
+        const input = request.input as unknown as Record<string,unknown>;
+
+        return this.answer(input.source + "->" + input.command + "->" + input.destination,input) as ICompletionStage<HandleInputReply>;
+    }
+
+    private answer(key: string,payload: Record<string,unknown>): ICompletionStage<unknown>
+    {
+        this.calls.push({ key, payload });
+
+        const responder: Responder | undefined = this.responders.get(key);
+
+        if (!responder)
+            return CompletableObservable.fromError(new Error("no fake response for " + key));
+
+        const result: FrontEndOutput | Error = responder(payload);
+
+        return result instanceof Error
+            ? CompletableObservable.fromError(result)
+            : CompletableObservable.fromResult({ success: true, output: result });
+    }
 }
 
-export function grant(n: number,expiresAtSeconds: number): ITokenGrant
+export function serviceError(status: number): ServiceError
+{
+    return new ServiceError(new StandardResponse("/s","p",new Response("",{ status })));
+}
+
+export class FakeNavigator
+    implements INavigator
+{
+    readonly assigned: Array<string> = [];
+
+    assign(url: string): void { this.assigned.push(url); }
+}
+
+export function sessionOutput(authenticated: boolean,userName: string | null = null,authorities: Array<string> = [],returnTo?: string): FrontEndOutput
 {
     return {
-        accessToken:  makeJwt({ sub: "1001", jti: "2002", exp: expiresAtSeconds }),
-        refreshToken: "refresh-" + n,
-        sessionId:    2002,
-        userId:       1001,
-        authorities:  ["ROLE_USER"],
-    };
+        userId:      0,
+        source:      "Session.Current",
+        destination: "SessionView",
+        command:     null,
+        userName,
+        authorities,
+        status:      authenticated ? "AUTHENTICATED" : "UNAUTHENTICATED",
+        ...(returnTo !== undefined ? { returnTo } : {}),
+    } as FrontEndOutput;
 }
 
-export interface IFakeSessionApi extends ISessionApi
+export function methodsOutput(passwordEnabled: boolean,oktaEnabled: boolean): FrontEndOutput
 {
-    login:           ReturnType<typeof vi.fn>;
-    loginWithOauth2: ReturnType<typeof vi.fn>;
-    refresh:         ReturnType<typeof vi.fn>;
-    logout:          ReturnType<typeof vi.fn>;
+    return { userId: 0, source: "Session.New", destination: "LoginView", command: null, passwordEnabled, oktaEnabled } as FrontEndOutput;
 }
 
-export function fakeApi(): IFakeSessionApi
+export function logoutOutput(loggedOut: boolean,endSessionUrl: string | null = null): FrontEndOutput
 {
-    return {
-        login:           vi.fn(),
-        loginWithOauth2: vi.fn(),
-        refresh:         vi.fn(),
-        logout:          vi.fn().mockImplementation(() => completed(undefined)),
-    };
+    return { userId: 0, source: "Session.Current", destination: "LoginView", command: "Logout", loggedOut, endSessionUrl } as FrontEndOutput;
 }
 
-export function completed<T>(value: T): ICompletionStage<T>
+export function redirectOutput(url: string): FrontEndOutput
 {
-    return CompletableObservable.fromResult(value);
+    return { userId: 0, source: "Session.New", destination: "LoginView", command: "StartOktaLogin", url } as FrontEndOutput;
 }
 
-export function failed<T>(error: Error): ICompletionStage<T>
+export const KEYS =
 {
-    return CompletableObservable.fromError<T>(error);
+    methods:  "Session.New->LoginView",
+    login:    "Session.New->Login->LoginView",
+    start:    "Session.New->StartOktaLogin->LoginView",
+    complete: "Session.New->CompleteOktaLogin->LoginView",
+    current:  "Session.Current->SessionView",
+    logout:   "Session.Current->Logout->LoginView",
+};
+
+export function scriptedFrontEnd(): FakeFrontEnd
+{
+    return new FakeFrontEnd()
+        .respond(KEYS.methods,() => methodsOutput(true,false))
+        .respond(KEYS.current,() => sessionOutput(false))
+        .respond(KEYS.login,(payload) => payload.password === "secret" ? sessionOutput(true,String(payload.userName),["ROLE_USER"]) : sessionOutput(false))
+        .respond(KEYS.logout,() => logoutOutput(true));
 }
 
-export class MemoryTokenStorage
-    implements ITokenStorage
+export function managerFor(frontEnd: FakeFrontEnd,navigator: FakeNavigator = new FakeNavigator()): AuthenticationManager
 {
-    stored: IStoredSession | null;
-
-    constructor(initial: IStoredSession | null = null)
-    {
-        this.stored = initial;
-    }
-
-    load(): IStoredSession | null { return this.stored; }
-
-    save(session: IStoredSession): void { this.stored = session; }
-
-    clear(): void { this.stored = null; }
-
-    getDeviceId(): string { return "device-1"; }
+    return new AuthenticationManager(new FrontEndSessionService(() => frontEnd),navigator);
 }
 
-export class ManualTimer
-    implements ITimer
+export function authenticationFor(
+    frontEnd:      FakeFrontEnd,
+    fetchFunction: (input: RequestInfo | URL,init?: RequestInit) => Promise<Response> = vi.fn(),
+    navigator:     FakeNavigator = new FakeNavigator()): IAuthentication
 {
-    current: number;
-    pending: Array<{ handle: number; at: number; callback: () => void }>;
-    private next: number;
-
-    constructor(now: number)
-    {
-        this.current = now;
-        this.pending = [];
-        this.next    = 1;
-    }
-
-    set(callback: () => void,delayMillis: number): unknown
-    {
-        const handle: number = this.next++;
-
-        this.pending.push({ handle, at: this.current + delayMillis, callback });
-        return handle;
-    }
-
-    clear(handle: unknown): void
-    {
-        this.pending = this.pending.filter(entry => entry.handle !== handle);
-    }
-
-    now(): number { return this.current; }
-
-    advanceTo(time: number): void
-    {
-        this.current = time;
-
-        const due = this.pending.filter(entry => entry.at <= time);
-
-        this.pending = this.pending.filter(entry => entry.at > time);
-        due.forEach(entry => entry.callback());
-    }
+    return createAuthentication({
+        apiBaseUrl:    "",
+        fetchFunction,
+        navigator,
+        cookieReader:  () => "csrf-token",
+        service:       new FrontEndSessionService(() => frontEnd),
+    });
 }
 
 export async function flush(): Promise<void>
 {
-    for (let i = 0;i < 5;i++)
+    for (let i = 0;i < 10;i++)
         await Promise.resolve();
 }
 

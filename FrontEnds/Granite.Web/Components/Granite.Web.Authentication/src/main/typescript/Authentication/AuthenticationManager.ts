@@ -2,52 +2,47 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { ANONYMOUS }                        from "./IAuthenticationState";
-import type { IAuthenticationState }        from "./IAuthenticationState";
-import type { ISessionApi, ITokenGrant }    from "./ISessionApi";
-import type { ITokenStorage }               from "./TokenStorage";
-import { decodeJwtClaims, expiresAtMillis } from "./JwtClaims";
-import type { ICompletionStage }            from "strata.foundation.core/Concurrent";
+import { ANONYMOUS, RESTORING }                           from "./IAuthenticationState";
+import type { IAuthenticationState }                      from "./IAuthenticationState";
+import type { ILoginMethods, ISessionService, ISessionStatus } from "./ISessionService";
+import { UNAUTHENTICATED }                                from "./FrontEndSessionService";
 
 export type AuthenticationListener = (state: IAuthenticationState) => void;
 
-export interface ITimer
+export interface INavigator
 {
-    set(callback: () => void,delayMillis: number): unknown;
-
-    clear(handle: unknown): void;
-
-    now(): number;
+    assign(url: string): void;
 }
 
-export const browserTimer: ITimer =
+export const browserNavigator: INavigator =
 {
-    set:   (callback: () => void,delayMillis: number) => setTimeout(callback,delayMillis),
-    clear: (handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>),
-    now:   () => Date.now(),
+    assign: (url: string) => window.location.assign(url),
 };
 
-export const REFRESH_MARGIN_MILLIS: number = 60_000;
+interface IPrompt
+{
+    promise: Promise<boolean>;
+    resolve: (retry: boolean) => void;
+}
+
+const SIGN_IN_FAILED:  string = "Sign-in failed";
+const SIGN_OUT_FAILED: string = "Sign-out failed";
 
 export class AuthenticationManager
 {
-    private readonly api:       ISessionApi;
-    private readonly storage:   ITokenStorage;
-    private readonly timer:     ITimer;
+    private readonly service:   ISessionService;
+    private readonly navigator: INavigator;
     private readonly listeners: Set<AuthenticationListener>;
     private state:              IAuthenticationState;
-    private refreshToken:       string | undefined;
-    private refreshHandle:      unknown;
+    private prompt:             IPrompt | undefined;
 
-    constructor(api: ISessionApi,storage: ITokenStorage,timer: ITimer = browserTimer)
+    constructor(service: ISessionService,navigator: INavigator = browserNavigator)
     {
-        this.api           = api;
-        this.storage       = storage;
-        this.timer         = timer;
-        this.listeners     = new Set();
-        this.state         = storage.load() ? { status: "restoring", authorities: [] } : ANONYMOUS;
-        this.refreshToken  = undefined;
-        this.refreshHandle = undefined;
+        this.service   = service;
+        this.navigator = navigator;
+        this.listeners = new Set();
+        this.state     = RESTORING;
+        this.prompt    = undefined;
     }
 
     getState(): IAuthenticationState
@@ -61,136 +56,186 @@ export class AuthenticationManager
         return () => { this.listeners.delete(listener); };
     }
 
-    async login(userName: string,password: string): Promise<void>
+    getLoginMethods(): Promise<ILoginMethods>
     {
-        await this.authenticate(userName,() => this.api.login(userName,password,this.storage.getDeviceId()));
-    }
-
-    async loginWithGoogle(idToken: string): Promise<void>
-    {
-        const claims = decodeJwtClaims(idToken);
-
-        await this.authenticate(
-            claims.email ?? claims.name ?? "Google user",
-            () => this.api.loginWithOauth2("google",idToken,this.storage.getDeviceId()));
+        return this.service.getLoginMethods();
     }
 
     async restore(): Promise<void>
     {
-        const stored = this.storage.load();
-
-        if (!stored)
-        {
-            this.setState(ANONYMOUS);
-            return;
-        }
-
         try
         {
-            this.accept(stored.userName,await this.api.refresh(stored.refreshToken));
-        }
-        catch
-        {
-            this.reset();
-        }
-    }
-
-    async refreshNow(): Promise<void>
-    {
-        if (!this.refreshToken)
-            return;
-
-        try
-        {
-            this.accept(this.state.userName,await this.api.refresh(this.refreshToken));
-        }
-        catch
-        {
-            this.reset();
-        }
-    }
-
-    async logout(): Promise<void>
-    {
-        const { sessionId, accessToken } = this.state;
-
-        this.reset();
-
-        if (sessionId !== undefined && accessToken !== undefined)
-        {
-            try
-            {
-                await this.api.logout(sessionId,accessToken);
-            }
-            catch
-            {
-                return;
-            }
-        }
-    }
-
-    private async authenticate(userName: string,grant: () => ICompletionStage<ITokenGrant>): Promise<void>
-    {
-        this.setState({ ...ANONYMOUS, status: "authenticating" });
-
-        try
-        {
-            this.accept(userName,await grant());
+            this.apply(await this.service.getCurrent());
         }
         catch (error)
         {
-            this.cancelRefresh();
-            this.refreshToken = undefined;
-            this.storage.clear();
-            this.setState({ ...ANONYMOUS, error: error instanceof Error ? error.message : String(error) });
-            throw error;
+            this.setState({ ...ANONYMOUS, error: messageOf(error) });
         }
     }
 
-    private accept(userName: string | undefined,grant: ITokenGrant): void
+    async login(userName: string,password: string): Promise<void>
     {
-        const expiresAt: number | undefined = expiresAtMillis(grant.accessToken);
+        let status: ISessionStatus;
 
-        this.refreshToken = grant.refreshToken;
-        this.storage.save({ refreshToken: grant.refreshToken, sessionId: grant.sessionId, userName });
-        this.setState({
-            status:               "authenticated",
-            userId:               grant.userId,
-            userName,
-            sessionId:            grant.sessionId,
-            authorities:          grant.authorities,
-            accessToken:          grant.accessToken,
-            accessTokenExpiresAt: expiresAt,
-        });
-        this.scheduleRefresh(expiresAt);
+        try
+        {
+            status = await this.service.login(userName,password);
+        }
+        catch (error)
+        {
+            this.recordError(messageOf(error));
+            throw error;
+        }
+
+        this.requireAuthenticated(status);
+        this.accept(status);
     }
 
-    private scheduleRefresh(expiresAt: number | undefined): void
+    async startOktaLogin(returnTo: string): Promise<void>
     {
-        this.cancelRefresh();
+        let url: string | undefined;
 
-        if (expiresAt === undefined)
+        try
+        {
+            url = await this.service.startOktaLogin(localPath(returnTo));
+        }
+        catch (error)
+        {
+            this.recordError(messageOf(error));
+            throw error;
+        }
+
+        if (!url)
+        {
+            this.recordError(SIGN_IN_FAILED);
+            throw new Error(SIGN_IN_FAILED);
+        }
+
+        this.navigator.assign(url);
+    }
+
+    async completeOktaLogin(code: string,state: string): Promise<string>
+    {
+        let status: ISessionStatus;
+
+        try
+        {
+            status = await this.service.completeOktaLogin(code,state);
+        }
+        catch (error)
+        {
+            this.recordError(messageOf(error));
+            throw error;
+        }
+
+        this.requireAuthenticated(status);
+        this.accept(status);
+
+        return localPath(status.returnTo);
+    }
+
+    async logout(): Promise<boolean>
+    {
+        try
+        {
+            const result = await this.service.logout();
+
+            if (!result.loggedOut)
+            {
+                this.recordError(SIGN_OUT_FAILED);
+                return false;
+            }
+
+            this.settle(false);
+            this.setState(ANONYMOUS);
+
+            if (result.endSessionUrl)
+                this.navigator.assign(result.endSessionUrl);
+
+            return true;
+        }
+        catch (error)
+        {
+            this.recordError(messageOf(error));
+            return false;
+        }
+    }
+
+    async handleUnauthorized(): Promise<boolean>
+    {
+        if (this.prompt)
+            return this.prompt.promise;
+
+        const prompt: IPrompt = newPrompt();
+        let current: ISessionStatus;
+
+        this.prompt = prompt;
+
+        try
+        {
+            current = await this.service.getCurrent();
+        }
+        catch
+        {
+            current = UNAUTHENTICATED;
+        }
+
+        if (this.prompt !== prompt)
+            return prompt.promise;
+
+        if (current.authenticated)
+            this.accept(current);
+        else if (this.state.status === "authenticated" || this.state.status === "reauthenticating")
+            this.setState({ ...this.state, status: "reauthenticating", error: undefined });
+        else
+            this.settle(false);
+
+        return prompt.promise;
+    }
+
+    cancelReauthentication(): void
+    {
+        if (this.state.status !== "reauthenticating")
             return;
 
-        const delay: number = Math.max(0,expiresAt - this.timer.now() - REFRESH_MARGIN_MILLIS);
-
-        this.refreshHandle = this.timer.set(() => { void this.refreshNow(); },delay);
-    }
-
-    private cancelRefresh(): void
-    {
-        if (this.refreshHandle !== undefined)
-            this.timer.clear(this.refreshHandle);
-
-        this.refreshHandle = undefined;
-    }
-
-    private reset(): void
-    {
-        this.cancelRefresh();
-        this.refreshToken = undefined;
-        this.storage.clear();
+        this.settle(false);
         this.setState(ANONYMOUS);
+    }
+
+    private apply(status: ISessionStatus): void
+    {
+        if (status.authenticated)
+            this.accept(status);
+        else
+            this.setState(ANONYMOUS);
+    }
+
+    private accept(status: ISessionStatus): void
+    {
+        this.setState({ status: "authenticated", userName: status.userName, authorities: status.authorities });
+        this.settle(true);
+    }
+
+    private requireAuthenticated(status: ISessionStatus): void
+    {
+        if (status.authenticated)
+            return;
+
+        this.recordError(SIGN_IN_FAILED);
+        throw new Error(SIGN_IN_FAILED);
+    }
+
+    private settle(retry: boolean): void
+    {
+        const prompt: IPrompt | undefined = this.prompt;
+
+        this.prompt = undefined;
+        prompt?.resolve(retry);
+    }
+
+    private recordError(error: string): void
+    {
+        this.setState({ ...this.state, error });
     }
 
     private setState(state: IAuthenticationState): void
@@ -198,6 +243,24 @@ export class AuthenticationManager
         this.state = state;
         this.listeners.forEach((listener: AuthenticationListener) => listener(state));
     }
+}
+
+function newPrompt(): IPrompt
+{
+    let resolve: (retry: boolean) => void = () => undefined;
+    const promise: Promise<boolean>       = new Promise<boolean>(done => { resolve = done; });
+
+    return { promise, resolve };
+}
+
+function localPath(value: string | undefined): string
+{
+    return value && value.startsWith("/") && !value.startsWith("//") && !value.startsWith("/\\") ? value : "/";
+}
+
+function messageOf(error: unknown): string
+{
+    return error instanceof Error ? error.message : String(error);
 }
 
 //////////////////////////////////////////////////////////////////////////////

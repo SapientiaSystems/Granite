@@ -31,6 +31,11 @@ describe("canEdit",() =>
         expect(canEdit(AUTHENTICATED_AUDITOR)).toBe(false);
     });
 
+    it("keeps the last known authorities while re-authenticating",() =>
+    {
+        expect(canEdit({ ...AUTHENTICATED_ADMIN, status: "reauthenticating" })).toBe(true);
+    });
+
     it("is false when anonymous even if ROLE_ADMIN is listed",() =>
     {
         expect(canEdit({ ...ANONYMOUS, authorities: ["ROLE_ADMIN"] })).toBe(false);

@@ -21,8 +21,8 @@ export function RequireAuthentication({ children, loginPath = "/login" }: IRequi
     if (state.status === "restoring")
         return <Center p="xl"><Loader aria-label="Restoring session" /></Center>;
 
-    if (state.status !== "authenticated")
-        return <Navigate to={loginPath} replace state={{ from: location.pathname }} />;
+    if (state.status === "anonymous")
+        return <Navigate to={loginPath} replace state={{ from: location.pathname + location.search }} />;
 
     return <>{children}</>;
 }

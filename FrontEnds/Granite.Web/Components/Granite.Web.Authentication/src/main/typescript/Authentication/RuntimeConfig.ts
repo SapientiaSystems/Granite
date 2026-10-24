@@ -4,8 +4,7 @@
 
 export interface IRuntimeConfig
 {
-    apiBaseUrl:     string;
-    googleClientId: string;
+    apiBaseUrl: string;
 }
 
 declare global
@@ -21,8 +20,7 @@ export function getRuntimeConfig(): IRuntimeConfig
     const config: Partial<IRuntimeConfig> = window.__GRANITE_CONFIG__ ?? {};
 
     return {
-        apiBaseUrl:     (config.apiBaseUrl ?? "").replace(/\/+$/,""),
-        googleClientId: config.googleClientId ?? "",
+        apiBaseUrl: (config.apiBaseUrl ?? "").replace(/\/+$/,""),
     };
 }
 
