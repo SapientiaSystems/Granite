@@ -237,11 +237,11 @@ Each subtype must have at least one property name no sibling has, and must be re
 
 **Component:** Granite.Web (Authentication and Navigator). **Model:** Sonnet.
 
-- [ ] Replace the internals of `Granite.Web.Authentication` with a session-status hook built on `SessionView` (the FEC client).
-- [ ] Login view showing the enabled methods (from `LoginMethodsOutput`), the password form, the Okta button and the `/login/callback` route that sends `CompleteOktaLogin`.
-- [ ] Password re-authentication dialog that retries the failed request; retry once after a 401 when `GRANITE_SID` has changed; Okta `returnTo`.
-- [ ] Remove `SessionApi`, `ISessionApi`, `TokenStorage`, the refresh scheduler, the Google SDK and `getRuntimeConfig().googleClientId`.
-- [ ] Remove the `Authorization` header handling from the Navigator's FEC clients (the Gateway injects it).
+- [x] Replace the internals of `Granite.Web.Authentication` with a session-status hook built on `SessionView` (the FEC client).
+- [x] Login view showing the enabled methods (from `LoginMethodsOutput`), the password form, the Okta button and the `/login/callback` route that sends `CompleteOktaLogin`.
+- [x] Password re-authentication dialog that retries the failed request; after a 401 ask `SessionView` (the handle is HttpOnly and unreadable) and retry once when it is AUTHENTICATED, otherwise re-authenticate; Okta `returnTo`.
+- [x] Remove `SessionApi`, `ISessionApi`, `TokenStorage`, the refresh scheduler, the Google SDK and `getRuntimeConfig().googleClientId`.
+- [x] Remove the `Authorization` header handling from the Navigator's FEC clients (the Gateway injects it).
 
 **Acceptance criteria:**
 - Vitest: no tokens in browser storage.
