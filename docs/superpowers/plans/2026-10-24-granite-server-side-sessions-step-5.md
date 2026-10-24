@@ -58,8 +58,8 @@
 
 **Interfaces:** `ISessionCommandService.startOktaLogin(StartOktaLoginRequest)`, `completeOktaLogin(CompleteOktaLoginRequest)` returning `CompletionStage<…Reply>`; TS `ICompletionStage`.
 
-- [ ] Step 1: Failing `OktaRequestReplyTest.toStringHidesSecrets` (code, state, transactionId, handle, endSessionUrl absent from `toString`) and JSON round-trip of each type.
-- [ ] Step 2: Implement; remove `loginWithOauth2` everywhere it no longer compiles (service, controller, retry wrapper, clients, fixtures) as part of Tasks 1-4 landing together.
+- [x] Step 1: Failing `OktaRequestReplyTest.toStringHidesSecrets` (code, state, transactionId, handle, endSessionUrl absent from `toString`) and JSON round-trip of each type.
+- [x] Step 2: Implement; remove `loginWithOauth2` everywhere it no longer compiles (service, controller, retry wrapper, clients, fixtures) as part of Tasks 1-4 landing together.
 
 ### Task 2: Domain — transaction entity, Session Okta fields
 
@@ -73,33 +73,33 @@
 
 **Interfaces:** `IOktaClient`: `String buildAuthorizeUrl(String state,String nonce,String codeChallenge,boolean promptLogin)`, `OktaIdentity exchange(String code,String codeVerifier,String nonce) throws OktaLoginException`, `Optional<String> buildEndSessionUrl(String idToken)`. `OktaAuthorities.calculate(Set<String> userAuthorities,Set<String> groups): Set<String>`.
 
-- [ ] Tests: discovery fetched once and cached; issuer mismatch in the discovery document rejected; authorize URL has `response_type=code`, `client_id`, `redirect_uri`, `scope=openid profile email groups`, `state`, `nonce`, `code_challenge`, `code_challenge_method=S256`, and `prompt=login` only when asked; token request is form-encoded with `grant_type=authorization_code`, `code`, `code_verifier`, `redirect_uri`, `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer` and a client assertion that verifies with the public key (RS256, `iss=sub=clientId`, `aud=token endpoint`, `exp` ≤ 5 min, `jti`); ID-token rejections for wrong `iss`, wrong `aud`, wrong/missing `nonce`, expired, missing `exp`, foreign signature, `alg=none`/HS256, token endpoint error; groups and user name extracted; end-session URL with `id_token_hint` and optional `post_logout_redirect_uri`.
+- [x] Tests: discovery fetched once and cached; issuer mismatch in the discovery document rejected; authorize URL has `response_type=code`, `client_id`, `redirect_uri`, `scope=openid profile email groups`, `state`, `nonce`, `code_challenge`, `code_challenge_method=S256`, and `prompt=login` only when asked; token request is form-encoded with `grant_type=authorization_code`, `code`, `code_verifier`, `redirect_uri`, `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer` and a client assertion that verifies with the public key (RS256, `iss=sub=clientId`, `aud=token endpoint`, `exp` ≤ 5 min, `jti`); ID-token rejections for wrong `iss`, wrong `aud`, wrong/missing `nonce`, expired, missing `exp`, foreign signature, `alg=none`/HS256, token endpoint error; groups and user name extracted; end-session URL with `id_token_hint` and optional `post_logout_redirect_uri`.
 
 ### Task 4: Session operations — start, complete, re-mint authorities, logout URL, purge
 
 **Files:** Create `StartOktaLoginContext`, `CompleteOktaLoginContext`. Modify `SessionCommandService` (constructor drops `IOauth2IdTokenValidator`, adds `IOktaLoginTransactionRepository`, `IOktaClient`, `OktaSettings`), `ConcurrencyRetryingSessionCommandService`, `ApplicationConfiguration`, `SessionCommandServiceController`, `CommandPlatformConfiguration`, `GraniteSessionCommandServerConfiguration` (seams `oktaSettings(Environment)`, `oktaClient(OktaSettings,Environment,ResourceLoader,Clock)`; public paths), `SessionPurgeJob`. Delete `LoginWithOauth2Context`, `Oauth2*`, `IOauth2IdTokenValidator`. Tests: `StartOktaLoginTest`, `CompleteOktaLoginTest` (real `OktaClient` against WireMock, mocked repositories and User clients), `ResolveSessionTest` additions, `LogoutTest` additions, `SessionCommandServiceServerTest` Okta end-to-end on H2, `SessionPurgeJobTest` addition; update the other test constructors; delete `LoginWithOauth2Test`, `Oauth2IdTokenValidatorTest`.
 
-- [ ] Tests (each Okta rejection asserts `invalid credentials`, no session saved, no User call where applicable): wrong state, missing state, unknown transaction, expired transaction, reused transaction, device mismatch, wrong nonce, wrong aud, wrong iss, foreign signature, disabled; first login creates the User with exactly `{ROLE_USER}` and `externalIdentity=okta:<sub>`; existing user not re-created; `USER`/`OKTA_GROUPS`/`BOTH`; gate refuses an ungated new user (user still created); lifecycle: re-login replaces with same `continuityId`, another user displaced; retry after a conflict does not exchange the code twice; `prompt=login` when a live session is on the device; logout of an Okta session returns `end_session_endpoint?id_token_hint=<id token>&post_logout_redirect_uri=…` and clears the stored token; password logout has no URL; re-mint of an Okta session under `BOTH` uses the session's stored groups.
+- [x] Tests (each Okta rejection asserts `invalid credentials`, no session saved, no User call where applicable): wrong state, missing state, unknown transaction, expired transaction, reused transaction, device mismatch, wrong nonce, wrong aud, wrong iss, foreign signature, disabled; first login creates the User with exactly `{ROLE_USER}` and `externalIdentity=okta:<sub>`; existing user not re-created; `USER`/`OKTA_GROUPS`/`BOTH`; gate refuses an ungated new user (user still created); lifecycle: re-login replaces with same `continuityId`, another user displaced; retry after a conflict does not exchange the code twice; `prompt=login` when a live session is on the device; logout of an Okta session returns `end_session_endpoint?id_token_hint=<id token>&post_logout_redirect_uri=…` and clears the stored token; password logout has no URL; re-mint of an Okta session under `BOTH` uses the session's stored groups.
 
 ### Task 5: Clients (Java + TS), configuration, docs
 
 **Files:** `SessionCommandServiceClient` (Java, TS), `ClientTest`, ServiceTest fixture (`testLoginWithOauth2` removed), all CommandHost `application-*.properties` (+ test resources), `Microservices/Granite.Session/Claude.md`.
 
-- [ ] Properties per environment: `granite.session.login.okta.enabled=false`; `granite.session.okta.issuer`, `.client-id`, `.redirect-uri`, `.post-logout-redirect-uri`, `.authorities-source=USER`, `.keystore.*` — `local`/`development` with example placeholders commented by value only (`https://localhost:5173/login/callback`), `test`/`production` as `${OKTA_*}` placeholders. Remove `granite.session.oauth2.providers.*`.
+- [x] Properties per environment: `granite.session.login.okta.enabled=false`; `granite.session.okta.issuer`, `.client-id`, `.redirect-uri`, `.post-logout-redirect-uri`, `.authorities-source=USER`, `.keystore.*` — `local`/`development` with example placeholders commented by value only (`https://localhost:5173/login/callback`), `test`/`production` as `${OKTA_*}` placeholders. Remove `granite.session.oauth2.providers.*`.
 
 ### Task 6: Gateway deny rule
 
 **Files:** `GraniteGatewayServerConfiguration` (deny `start-okta-login`, `complete-okta-login`; drop `login-with-oauth2` public path), `GatewayDefaultSecurityTest`, `GatewaySessionCookieTest`, `Microservices/Granite.Gateway/CLAUDE.md`.
 
-- [ ] Tests: both Okta paths → 401 anonymous, 403 with an admin bearer, never reach the backend; `login-with-oauth2` → 401.
+- [x] Tests: both Okta paths → 401 anonymous, 403 with an admin bearer, never reach the backend; `login-with-oauth2` → 401.
 
 ### Task 7: FEC actions
 
-**Files:** Create `control/session/StartOktaLoginView`, `CompleteOktaLoginView`. Modify `SessionRequestProcessor`, `LogoutView` (`endSessionUrl` from the reply), `SessionCookies` (`LOGIN_COOKIE="GRANITE_LOGIN"`, `issueLogin(String)`, `clearLogin()`), `SessionOutput` (+`returnTo`, Java + TS), FEC `application-*.properties` (`granite.session.login.okta.enabled=false`), `CLAUDE.md`. Tests: `StartOktaLoginViewTest`, `CompleteOktaLoginViewTest`, `LogoutSessionTest.oktaLogoutCarriesEndSessionUrl`, `SessionRequestProcessorTest` (Okta keys route), `SessionHttpTest` (Okta start sets `GRANITE_LOGIN` with `SameSite=Lax`, `Max-Age=300`; complete sets `GRANITE_SID` and `GRANITE_LOGIN=; Max-Age=0`), `FrontEndJacksonModuleTest` (`SessionOutput` with `returnTo`).
+**Files:** Create `control/session/StartOktaLoginView`, `CompleteOktaLoginView`. Modify `SessionRequestProcessor`, `LogoutView` (`endSessionUrl` from the reply), `SessionCookies` (`LOGIN_COOKIE="GRANITE_LOGIN"`, `issueLogin(String)`, `clearLogin()`), `SessionOutput` (+`returnTo`, Java + TS), FEC `application-*.properties` (`granite.session.login.okta.enabled=false`), `CLAUDE.md`. Tests: `StartOktaLoginViewTest`, `CompleteOktaLoginViewTest`, `LogoutSessionTest.oktaLogoutCarriesTheEndSessionUrl`, `SessionRequestProcessorTest` (Okta keys route), `SessionHttpTest` (Okta start sets `GRANITE_LOGIN` with `SameSite=Lax`, `Max-Age=300`; complete sets `GRANITE_SID` and `GRANITE_LOGIN=; Max-Age=0`), `FrontEndJacksonModuleTest` (`SessionOutput` with `returnTo`).
 
 ### Task 8: TS builds, roadmap tick, final verification
 
-- [ ] `yarn run build-granite-session`, `yarn run build-granite-frontendcontroller`; commit bumps. Run Session (Service, Server, Client), FEC ServerTest, Gateway ServerTest. Tick Step 5 in the roadmap.
+- [x] `yarn run build-granite-session`, `yarn run build-granite-frontendcontroller`; commit bumps. Run Session (Service, Server, Client), FEC ServerTest, Gateway ServerTest. Tick Step 5 in the roadmap.
 
 ## Acceptance Criteria Map
 
@@ -110,7 +110,7 @@
 | First login creates the User with only `ROLE_USER` | `CompleteOktaLoginTest.firstLoginCreatesUserWithOnlyRoleUser`, `SessionCommandServiceServerTest.testCompleteOktaLoginEndToEnd` |
 | `USER`, `OKTA_GROUPS`, `BOTH` | `OktaAuthoritiesTest`, `CompleteOktaLoginTest` |
 | Gate refuses an ungated new user | `CompleteOktaLoginTest.gateRefusesUngatedNewUser` |
-| Step 2 lifecycle applies | `CompleteOktaLoginTest.reloginReplaces`, `.otherUserIsDisplaced`, `SessionCommandServiceServerTest` |
+| Step 2 lifecycle applies | `CompleteOktaLoginTest.reloginOnTheSameDeviceReplacesAndKeepsContinuity`, `.otherUserOnTheDeviceIsDisplaced`, `SessionCommandServiceServerTest.testOktaReloginReplacesAndKeepsContinuity`, `SessionCommandServiceServerTest` |
 | Logout returns end-session URL with `id_token_hint` | `LogoutTest.oktaLogoutReturnsEndSessionUrl`, `LogoutSessionTest`, `SessionCommandServiceServerTest` |
 | FEC cookies set/cleared, disabled flag | `StartOktaLoginViewTest`, `CompleteOktaLoginViewTest`, `SessionHttpTest` |
-| Gateway denies the Okta paths externally | `GatewaySessionCookieTest.oktaPathsAreDeniedExternally` |
+| Gateway denies the Okta paths externally | `GatewaySessionCookieTest.oktaPathsAreDeniedExternallyAndNeverReachTheBackend` |

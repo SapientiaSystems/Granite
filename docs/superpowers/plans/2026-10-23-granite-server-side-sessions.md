@@ -215,16 +215,16 @@ Each subtype must have at least one property name no sibling has, and must be re
 
 **Components:** Granite.Session and Granite.FrontEndController. **Model:** Opus.
 
-- [ ] Before starting, confirm that User `CreateUserData` and `createUsers` support `externalIdentity`. If they don't, add that as a first task.
-- [ ] Session: an Okta login transaction (`state`, `nonce`, PKCE verifier, `returnTo`, 5-minute expiry, stored on the server and bound to `GRANITE_LOGIN`).
-- [ ] Authorize URL (`response_type=code`, `S256`, `prompt=login` when another user is active on the device).
-- [ ] Code exchange with a `private_key_jwt` client assertion.
-- [ ] ID-token validation: `iss`, `aud`, `nonce`, `exp` and signature through Okta's JWKS.
-- [ ] Map `okta:{sub}` through `externalIdentity`, creating the User with `ROLE_USER` if it doesn't exist.
-- [ ] Authorities mode and group mapping.
-- [ ] Keep the Okta `id_token` for logout and build the end-session URL.
-- [ ] FEC: `StartOktaLogin` and `CompleteOktaLogin` with `GRANITE_LOGIN`, honoring `granite.session.login.okta.enabled`.
-- [ ] Remove the Google sign-in path from Session (the `loginWithOauth2` Google validation).
+- [x] Before starting, confirm that User `CreateUserData` and `createUsers` support `externalIdentity`. If they don't, add that as a first task.
+- [x] Session: an Okta login transaction (`state`, `nonce`, PKCE verifier, `returnTo`, 5-minute expiry, stored on the server and bound to `GRANITE_LOGIN`).
+- [x] Authorize URL (`response_type=code`, `S256`, `prompt=login` when another user is active on the device).
+- [x] Code exchange with a `private_key_jwt` client assertion.
+- [x] ID-token validation: `iss`, `aud`, `nonce`, `exp` and signature through Okta's JWKS.
+- [x] Map `okta:{sub}` through `externalIdentity`, creating the User with `ROLE_USER` if it doesn't exist.
+- [x] Authorities mode and group mapping.
+- [x] Keep the Okta `id_token` for logout and build the end-session URL.
+- [x] FEC: `StartOktaLogin` and `CompleteOktaLogin` with `GRANITE_LOGIN`, honoring `granite.session.login.okta.enabled`.
+- [x] Remove the Google sign-in path from Session (the `loginWithOauth2` Google validation).
 
 **Acceptance criteria:**
 - Against a mocked Okta (authorize, token and JWKS endpoints), a wrong or missing `state`, `nonce`, `aud`, `iss` or signature is rejected.
@@ -271,7 +271,7 @@ Each subtype must have at least one property name no sibling has, and must be re
 
 ## Interactions with earlier work
 
-- **Login gate** (`docs/superpowers/plans/2026-10-21-granite-login-roles.md`): `granite.session.login.required-authorities=ROLE_ADMIN,ROLE_AUDITOR` is set in local and development. Automatically created Okta users with only `ROLE_USER` will be refused there unless an admin assigns a role first, or the gate configuration changes. **Decide this before Step 5.**
+- **Login gate** (`docs/superpowers/plans/2026-10-21-granite-login-roles.md`): `granite.session.login.required-authorities=ROLE_ADMIN,ROLE_AUDITOR` is set in local and development. Automatically created Okta users with only `ROLE_USER` will be refused there unless an admin assigns a role first, or the gate configuration changes. **Decide this before Step 5.** Decided (Open item 1): the gate applies to Okta logins too; implemented in Step 5.
 - **Google sign-in removal:** the 2026-10-21 change stopped automatic user creation on first Google sign-in. Okta reintroduces automatic creation with `ROLE_USER`, as decided above.
 - **Phase 1 to 3 security work:**
   - Refresh-token rotation and reuse detection remain inside Session; reuse closes the session as `REVOKED_SECURITY`.
