@@ -74,6 +74,17 @@
             <basic name="copiedFrom">
                 <column name="copiedFrom"/>
             </basic>
+            <basic name="signInMethod">
+                <column name="signInMethod" column-definition="VARCHAR(32)"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="oktaIdToken">
+                <column name="oktaIdToken" column-definition="TEXT"/>
+            </basic>
+            <basic name="oktaGroups">
+                <column name="oktaGroups" column-definition="VARCHAR(4096)"/>
+                <convert converter="strata.server.spring.value.StringSetConverter"/>
+            </basic>
             <version name="version">
                 <column name="version"/>
             </version>
@@ -81,6 +92,46 @@
             <transient name="observers"/>
             <transient name="sessionId"/>
             <transient name="closed"/>
+        </attributes>
+    </entity>
+
+    <entity class="granite.session.server.domain.OktaLoginTransaction" access="PROPERTY">
+        <table name="OktaLoginTransaction"/>
+        <attributes>
+            <id name="primaryId">
+                <column name="oktaLoginTransactionId"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="created">
+                <column name="created"/>
+            </basic>
+            <basic name="lastModified">
+                <column name="lastModified"/>
+            </basic>
+            <basic name="hashedTransactionId" optional="false">
+                <column name="hashedTransactionId" unique="true" nullable="false" column-definition="VARCHAR(64)"/>
+            </basic>
+            <basic name="state" optional="false">
+                <column name="state" nullable="false" column-definition="VARCHAR(128)"/>
+            </basic>
+            <basic name="nonce" optional="false">
+                <column name="nonce" nullable="false" column-definition="VARCHAR(128)"/>
+            </basic>
+            <basic name="codeVerifier" optional="false">
+                <column name="codeVerifier" nullable="false" column-definition="VARCHAR(128)"/>
+            </basic>
+            <basic name="returnTo">
+                <column name="returnTo" column-definition="VARCHAR(2048)"/>
+            </basic>
+            <basic name="deviceId" optional="false">
+                <column name="deviceId" nullable="false" column-definition="VARCHAR(255)"/>
+            </basic>
+            <basic name="expires" optional="false">
+                <column name="expires" nullable="false"/>
+            </basic>
+            <version name="version">
+                <column name="version"/>
+            </version>
         </attributes>
     </entity>
 

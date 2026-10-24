@@ -376,6 +376,29 @@ class SessionRepositoryTest
 
     @Test
     public void
+    testOktaFieldsRoundTrip()
+    {
+        final AtomicReference<Session> saved = new AtomicReference<>();
+
+        transaction.executeWithoutResult(
+            status ->
+                saved.set(
+                    target.save(
+                        newSession(9400L + unique(),"device-okta-" + unique())
+                            .setSignInMethod(SignInMethod.OKTA)
+                            .setOktaIdToken("header.payload.signature")
+                            .setOktaGroups(java.util.Set.of("Admins","Auditors")))));
+
+        Session result =
+            transaction.execute(status -> target.findById(saved.get().getPrimaryId()).orElseThrow());
+
+        assertEquals(SignInMethod.OKTA,result.getSignInMethod());
+        assertEquals("header.payload.signature",result.getOktaIdToken());
+        assertEquals(java.util.Set.of("Admins","Auditors"),result.getOktaGroups());
+    }
+
+    @Test
+    public void
     testActiveUserDeviceUniqueConstraintExists()
     {
         jakarta.persistence.EntityManager em = entityManagerFactory.createEntityManager();

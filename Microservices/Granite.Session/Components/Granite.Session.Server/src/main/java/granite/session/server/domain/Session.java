@@ -42,6 +42,9 @@ class Session
     private UUID                       continuityId;
     private Long                       replacedBy;
     private Long                       copiedFrom;
+    private SignInMethod               signInMethod;
+    private String                     oktaIdToken;
+    private Set<String>                oktaGroups;
 
     private static final StringMapperRegistry registry = StringMapperRegistry.of();
 
@@ -64,6 +67,9 @@ class Session
         continuityId             = null;
         replacedBy               = null;
         copiedFrom               = null;
+        signInMethod             = null;
+        oktaIdToken              = null;
+        oktaGroups               = new LinkedHashSet<>();
     }
 
     @Override
@@ -194,6 +200,27 @@ class Session
     }
 
     public Session
+    setSignInMethod(SignInMethod method)
+    {
+        signInMethod = method;
+        return this;
+    }
+
+    public Session
+    setOktaIdToken(String token)
+    {
+        oktaIdToken = token;
+        return this;
+    }
+
+    public Session
+    setOktaGroups(Set<String> groups)
+    {
+        oktaGroups = groups != null ? new LinkedHashSet<>(groups) : new LinkedHashSet<>();
+        return this;
+    }
+
+    public Session
     setValues(Map<String,Object> source)
     {
         values = source != null ? new LinkedHashMap<>(source) : new LinkedHashMap<>();
@@ -205,6 +232,7 @@ class Session
     {
         closedReason = reason;
         activeMarker = null;
+        oktaIdToken  = null;
 
         if (expires == null || expires.isAfter(at))
             expires = at;
@@ -275,6 +303,15 @@ class Session
 
     public Long
     getCopiedFrom() { return copiedFrom; }
+
+    public SignInMethod
+    getSignInMethod() { return signInMethod; }
+
+    public String
+    getOktaIdToken() { return oktaIdToken; }
+
+    public Set<String>
+    getOktaGroups() { return oktaGroups; }
 
     public boolean
     isClosed() { return closedReason != null; }

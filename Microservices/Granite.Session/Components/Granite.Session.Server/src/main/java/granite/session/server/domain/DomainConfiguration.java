@@ -22,6 +22,14 @@ class DomainConfiguration
     {
         return new SessionRepository(unitOfWork);
     }
+
+    @Bean
+    @RequestScope
+    public IOktaLoginTransactionRepository
+    oktaLoginTransactionRepository(IUnitOfWork unitOfWork)
+    {
+        return new OktaLoginTransactionRepository(unitOfWork);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
