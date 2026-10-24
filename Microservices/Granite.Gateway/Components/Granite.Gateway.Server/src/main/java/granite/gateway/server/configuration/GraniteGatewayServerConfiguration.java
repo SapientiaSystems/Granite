@@ -8,9 +8,11 @@ import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.gateway.server.health.GatewayHealthCheckController;
+import granite.gateway.server.security.FrontEndInputKeyWebFilter;
 import granite.gateway.server.security.IServiceTokenSupplier;
 import granite.gateway.server.security.ISessionResolver;
 import granite.gateway.server.security.ISessionRevocationChecker;
+import granite.gateway.server.security.PublicFrontEndInputMatcher;
 import granite.gateway.server.security.RevocationCheckingReactiveJwtDecoder;
 import granite.gateway.server.security.SessionCommandSessionResolver;
 import granite.gateway.server.security.SessionQueryRevocationChecker;
@@ -40,7 +42,11 @@ import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import strata.foundation.spring.inject.ScopeConfiguration;
 import strata.foundation.spring.inject.SingletonScoped;
 
@@ -83,16 +89,20 @@ class GraniteGatewayServerConfiguration
         GraniteJwtAuthenticationConverter jwtAuthenticationConverter,
         Environment                       environment)
     {
-        List<String> publicPaths = getPublicPathPatterns(environment);
+        ServerWebExchangeMatcher publicMatcher = getPublicExchangeMatcher(environment);
 
         return
             http
                 .csrf(csrf -> csrf.disable())
+                .addFilterBefore(
+                    new FrontEndInputKeyWebFilter(
+                        environment.getProperty("granite.gateway.front-end-input.max-bytes",Integer.class,1048576)),
+                    SecurityWebFiltersOrder.CSRF)
                 .authorizeExchange(
                     exchanges ->
                     {
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
-                        exchanges.pathMatchers(publicPaths.toArray(String[]::new)).permitAll();
+                        exchanges.matchers(publicMatcher).permitAll();
                         configureAuthorization(exchanges,environment);
                         exchanges.anyExchange().authenticated();
                     })
@@ -282,7 +292,12 @@ class GraniteGatewayServerConfiguration
                     environment.getProperty("strata.health.base-path","/health") + "/**",
                     "/session-command-service/login",
                     "/session-command-service/login-with-oauth2",
-                    "/session-command-service/refresh"));
+                    "/session-command-service/refresh",
+                    "/",
+                    "/index.html",
+                    "/config.js",
+                    "/favicon.ico",
+                    "/assets/**"));
 
         if (!environment.acceptsProfiles(Profiles.of("production")))
             paths.addAll(
@@ -292,6 +307,15 @@ class GraniteGatewayServerConfiguration
                     "/*/v3/api-docs/**"));
 
         return paths;
+    }
+
+    protected ServerWebExchangeMatcher
+    getPublicExchangeMatcher(Environment environment)
+    {
+        return
+            new OrServerWebExchangeMatcher(
+                ServerWebExchangeMatchers.pathMatchers(getPublicPathPatterns(environment).toArray(String[]::new)),
+                new PublicFrontEndInputMatcher());
     }
 
     protected ServerHttpSecurity.AuthorizeExchangeSpec
