@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// OktaLoginException.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.session.server.application;
+
+public
+class OktaLoginException
+    extends RuntimeException
+{
+    public
+    OktaLoginException(String message)
+    {
+        super(message);
+    }
+
+    public
+    OktaLoginException(String message,Throwable cause)
+    {
+        super(message,cause);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
