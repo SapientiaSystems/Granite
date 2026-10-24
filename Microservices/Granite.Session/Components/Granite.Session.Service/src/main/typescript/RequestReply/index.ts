@@ -11,6 +11,8 @@ export {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
 export {LogoutAllForUserReply} from "./LogoutAllForUserReply";
 export {RefreshRequest} from "./RefreshRequest";
 export {RefreshReply} from "./RefreshReply";
+export {ResolveSessionRequest} from "./ResolveSessionRequest";
+export {ResolveSessionReply} from "./ResolveSessionReply";
 export {FindSessionsByKeyRequest} from "./FindSessionsByKeyRequest";
 export {FindSessionsByKeyReply} from "./FindSessionsByKeyReply";
 export {FindSessionsByKeySetRequest} from "./FindSessionsByKeySetRequest";
