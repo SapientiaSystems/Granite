@@ -1,0 +1,37 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: commandhost
+          env:
+            - name: GRANITE_SESSION_LOGIN_OKTA_ENABLED
+              value: "true"
+            - name: GRANITE_SESSION_OKTA_ISSUER
+              value: http://host.docker.internal:8090/default
+            - name: GRANITE_SESSION_OKTA_CLIENT_ID
+              value: granite-session-local
+            - name: GRANITE_SESSION_OKTA_REDIRECT_URI
+              value: https://granite.localhost/login/callback
+            - name: GRANITE_SESSION_OKTA_POST_LOGOUT_REDIRECT_URI
+              value: https://granite.localhost/
+            - name: GRANITE_SESSION_OKTA_AUTHORITIES_SOURCE
+              value: USER
+            - name: GRANITE_SESSION_OKTA_KEYSTORE_LOCATION
+              value: file:/mnt/okta/okta-client.p12
+            - name: GRANITE_SESSION_OKTA_KEYSTORE_TYPE
+              value: PKCS12
+            - name: GRANITE_SESSION_OKTA_KEYSTORE_ALIAS
+              value: okta-client
+            - name: GRANITE_SESSION_OKTA_KEYSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: granite-session-okta
+                  key: keystore-password
+          volumeMounts:
+            - name: session-okta
+              mountPath: /mnt/okta
+              readOnly: true
+      volumes:
+        - name: session-okta
+          secret:
+            secretName: granite-session-okta

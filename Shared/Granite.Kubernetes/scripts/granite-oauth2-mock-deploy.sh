@@ -46,5 +46,59 @@ kubectl apply -k "$MANIFEST_DIR"
 say "Waiting for granite-oauth2-mock to become ready..." "$CYAN"
 kubectl -n "$NAMESPACE" rollout status deployment/granite-oauth2-mock --timeout=180s
 
+# =============================================================================
+# Okta client key store
+# =============================================================================
+OKTA_KEYSTORE_FILE="${GRANITE_OKTA_KEYSTORE_FILE:-$HOME/.granite/dev-keys/okta-client.p12}"
+OKTA_KEYSTORE_PASSWORD="${OKTA_KEYSTORE_PASSWORD:-granite-local}"
+
+say "Checking Okta client key store..." "$CYAN"
+if [[ -e "$OKTA_KEYSTORE_FILE" ]]; then
+    say "  Using existing key store:" "$GREEN"
+else
+    keytool_cmd="$(command -v keytool 2>/dev/null || true)"
+    if [[ -z "$keytool_cmd" && -n "${JAVA_HOME-}" && -x "$JAVA_HOME/bin/keytool" ]]; then
+        keytool_cmd="$JAVA_HOME/bin/keytool"
+    fi
+    if [[ -z "$keytool_cmd" ]]; then
+        say "Error: 'keytool' (JDK) is required to generate the Okta client key store but not found on PATH or in JAVA_HOME." "$RED"
+        exit 1
+    fi
+    say "  Generating RSA 2048-bit Okta client key store..." "$YELLOW"
+    mkdir -p "$(dirname "$OKTA_KEYSTORE_FILE")"
+    "$keytool_cmd" -genkeypair -alias okta-client -keyalg RSA -keysize 2048 -validity 3650 \
+        -dname "CN=granite-session-local" -storetype PKCS12 \
+        -keystore "$OKTA_KEYSTORE_FILE" -storepass "$OKTA_KEYSTORE_PASSWORD" >/dev/null
+    chmod 600 "$OKTA_KEYSTORE_FILE"
+    say "  Generated:" "$GREEN"
+fi
+say "    $OKTA_KEYSTORE_FILE" "$GRAY"
+
+say "Deploying granite-session-okta..." "$CYAN"
+kubectl create secret generic granite-session-okta \
+    --namespace="$NAMESPACE" \
+    --from-file=okta-client.p12="$OKTA_KEYSTORE_FILE" \
+    --from-literal=keystore-password="$OKTA_KEYSTORE_PASSWORD" \
+    --dry-run=client -o yaml | kubectl apply -f -
+
+# =============================================================================
+# Point Session and the FrontEndControllers at the mock
+# =============================================================================
+if kubectl -n "$NAMESPACE" get deployment granite-session-commandhost >/dev/null 2>&1; then
+    say "Configuring granite-session-commandhost for the mock issuer..." "$CYAN"
+    kubectl -n "$NAMESPACE" patch deployment granite-session-commandhost \
+        --type=strategic --patch-file="$MANIFEST_DIR/session-commandhost-okta-patch.yaml"
+else
+    say "  granite-session-commandhost not deployed; skipping (re-run after granite-system-deploy.sh)." "$YELLOW"
+fi
+for dep in granite-frontendcontroller-userhost granite-frontendcontroller-adminhost; do
+    if kubectl -n "$NAMESPACE" get deployment "$dep" >/dev/null 2>&1; then
+        say "Enabling Okta login on $dep..." "$CYAN"
+        kubectl -n "$NAMESPACE" set env "deployment/$dep" GRANITE_SESSION_LOGIN_OKTA_ENABLED=true
+    else
+        say "  $dep not deployed; skipping (re-run after granite-system-deploy.sh)." "$YELLOW"
+    fi
+done
+
 echo ""
 say "Deployment complete. Run granite-oauth2-mock-start.sh to expose it on the host." "$GREEN"
