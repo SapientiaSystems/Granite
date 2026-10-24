@@ -53,7 +53,6 @@ class ResolveSessionTest
     private static final Long     SESSION_ID     = 900L;
     private static final Long     USER_ID        = 101L;
     private static final String   DEVICE_ID      = "device-A";
-    private static final Duration SESSION_TTL    = Duration.ofHours(8);
     private static final Duration MAX_LIFETIME   = Duration.ofHours(24);
     private static final Duration RENEWAL_MARGIN = Duration.ofMinutes(2);
     private static final String   HANDLE         = "Zk3v0mJb9q1tQnVZ8yJt7m2bQ3o0n9Xc4uV5sWdA1eE";
@@ -91,7 +90,6 @@ class ResolveSessionTest
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                SESSION_TTL,
                 MAX_LIFETIME,
                 RENEWAL_MARGIN,
                 Clock.fixed(NOW,ZoneOffset.UTC));
@@ -193,8 +191,8 @@ class ResolveSessionTest
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertEquals(NEW_JWT,reply.getAccessToken());
         assertEquals(NEW_JWT,session.getAccessToken());
-        assertEquals(NOW.plus(SESSION_TTL),session.getExpires());
-        assertEquals(NOW.plus(SESSION_TTL),reply.getSession().getExpires());
+        assertEquals(NOW.plus(Duration.ofHours(7)),session.getExpires());
+        assertEquals(NOW.plus(Duration.ofHours(7)),reply.getSession().getExpires());
         Mockito.verify(jwtTokenService).mint(session);
         Mockito.verify(repository).save(session);
 
@@ -504,6 +502,8 @@ class ResolveSessionTest
 
         assertEquals(1,events.size());
         assertEquals(StandardEventType.UPDATED,events.get(0).getEventType());
+        assertEquals("EXPIRED",events.get(0).getClosedReason());
+        assertNull(session.getActiveMarker());
     }
 
     private void

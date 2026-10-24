@@ -72,7 +72,8 @@ class SessionJwtValidator
 
             SessionData session = reply.getSessions().get(0);
 
-            if (session.getExpires() == null ||
+            if (session.getClosedReason() != null ||
+                session.getExpires() == null ||
                 !session.getExpires().isAfter(clock.instant()))
                 return Optional.empty();
 

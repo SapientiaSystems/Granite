@@ -83,7 +83,6 @@ class LoginWithOauth2Test
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock);
@@ -107,7 +106,7 @@ class LoginWithOauth2Test
         assertNotNull(reply.getSessionData());
         assertEquals(EXISTING_USER_ID,reply.getSessionData().getUserId());
         assertEquals(DEVICE_ID,reply.getSessionData().getDeviceId());
-        assertEquals(NOW.plus(TTL),reply.getSessionData().getExpires());
+        assertEquals(NOW.plus(Duration.ofHours(24)),reply.getSessionData().getExpires());
         Mockito
             .verify(userCommandServiceClient,Mockito.never())
             .createUser(Mockito.any(CreateUserRequest.class));
@@ -240,7 +239,6 @@ class LoginWithOauth2Test
                 new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock);

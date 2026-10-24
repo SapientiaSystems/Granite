@@ -10,6 +10,7 @@ import granite.session.server.domain.Session;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LogoutAllForUserReply;
 import granite.session.service.requestreply.LogoutAllForUserRequest;
+import granite.session.service.requestreply.SessionClosedReason;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +71,6 @@ class LogoutAllForUserTest
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock);
@@ -103,7 +103,7 @@ class LogoutAllForUserTest
                 .setAccessToken("token.C");
 
         Mockito
-            .when(repository.findAllByUserId(USER_ID))
+            .when(repository.findOpenByUserId(USER_ID))
             .thenReturn(List.of(sessionA,sessionB,sessionC));
 
         LogoutAllForUserReply reply = logoutAllForUser(USER_ID);
@@ -111,15 +111,22 @@ class LogoutAllForUserTest
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertNotNull(reply.getDestroyed());
         assertEquals(Set.of(801L,802L,803L),reply.getDestroyed());
-        Mockito.verify(repository).delete(sessionA);
-        Mockito.verify(repository).delete(sessionB);
-        Mockito.verify(repository).delete(sessionC);
+        Mockito.verify(repository,Mockito.never()).delete(Mockito.any(Session.class));
+
+        for (Session session : List.of(sessionA,sessionB,sessionC))
+        {
+            Mockito.verify(repository).save(session);
+            assertEquals(SessionClosedReason.ADMIN,session.getClosedReason());
+        }
 
         List<SessionEvent> events = sender.getEvents();
 
-        assertEquals(3,events.size(),"expected one SessionDestroyed event per session");
+        assertEquals(3,events.size(),"expected one close event per session");
         for (SessionEvent event : events)
-            assertEquals(StandardEventType.DESTROYED,event.getEventType());
+        {
+            assertEquals(StandardEventType.UPDATED,event.getEventType());
+            assertEquals("ADMIN",event.getClosedReason());
+        }
         assertEquals(
             Set.of(801L,802L,803L),
             Set.of(events.get(0).getSourceId(),events.get(1).getSourceId(),events.get(2).getSourceId()));
@@ -130,7 +137,7 @@ class LogoutAllForUserTest
     logoutAllForUserWhenNoneExistReturnsEmptyDestroyedSet()
     {
         Mockito
-            .when(repository.findAllByUserId(USER_ID))
+            .when(repository.findOpenByUserId(USER_ID))
             .thenReturn(Collections.emptyList());
 
         LogoutAllForUserReply reply = logoutAllForUser(USER_ID);

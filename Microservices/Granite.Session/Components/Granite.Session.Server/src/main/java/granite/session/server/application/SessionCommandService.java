@@ -69,7 +69,6 @@ class SessionCommandService
     private final ILoginGate                loginGate;
     private final ISessionEventSender       sender;
     private final ModelMapper               mapper;
-    private final Duration                  sessionTtl;
     private final Duration                  maxLifetime;
     private final Duration                  renewalMargin;
     private final Clock                     clock;
@@ -90,7 +89,6 @@ class SessionCommandService
         ILoginGate                loginGate,
         ISessionEventSender       sender,
         ModelMapper               mapper,
-        Duration                  sessionTtl,
         Duration                  maxLifetime,
         Duration                  renewalMargin,
         Clock                     clock)
@@ -104,7 +102,6 @@ class SessionCommandService
         this.loginGate                = loginGate;
         this.sender                   = sender;
         this.mapper                   = mapper;
-        this.sessionTtl               = sessionTtl;
         this.maxLifetime              = maxLifetime;
         this.renewalMargin            = renewalMargin;
         this.clock                    = clock;
@@ -164,7 +161,7 @@ class SessionCommandService
                 .supplyAsync(() -> validateLogout(request),new CurrentThreadExecutor())
                 .thenApply(this::mapToLogoutContext)
                 .thenApply(this::loadForLogout)
-                .thenApply(this::destroy)
+                .thenApply(this::close)
                 .thenApply(this::buildLogoutReply)
                 .exceptionally(e -> buildLogoutReply(e,request));
     }
@@ -181,7 +178,7 @@ class SessionCommandService
                 .supplyAsync(() -> validateLogoutAllForUser(request),new CurrentThreadExecutor())
                 .thenApply(this::mapToLogoutAllForUserContext)
                 .thenApply(this::loadAllForLogout)
-                .thenApply(this::destroyAll)
+                .thenApply(this::closeAll)
                 .thenApply(this::buildLogoutAllForUserReply)
                 .exceptionally(e -> buildLogoutAllForUserReply(e,request));
     }
@@ -200,7 +197,7 @@ class SessionCommandService
                 .thenApply(this::loadForRefresh)
                 .thenApply(this::revokeOnReuse)
                 .thenApply(this::verifyLive)
-                .thenApply(this::updateExpires)
+                .thenApply(this::markUpdated)
                 .thenApply(this::rotateRefreshToken)
                 .thenApply(this::remintJwt)
                 .thenApply(this::saveRefreshed)
@@ -345,7 +342,7 @@ class SessionCommandService
             new Session()
                 .setUserId(context.getValidatedUserId())
                 .setDeviceId(context.getDeviceId())
-                .setExpires(capExpires(now,now))
+                .setExpires(now.plus(maxLifetime))
                 .setAccessToken("")
                 .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .setHashedHandle(refreshTokenService.hash(sessionHandle))
@@ -498,7 +495,7 @@ class SessionCommandService
             new Session()
                 .setUserId(context.getUserId())
                 .setDeviceId(context.getDeviceId())
-                .setExpires(capExpires(now,now))
+                .setExpires(now.plus(maxLifetime))
                 .setAccessToken("")
                 .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .setHashedHandle(refreshTokenService.hash(sessionHandle))
@@ -583,13 +580,21 @@ class SessionCommandService
         Session existing = found.get();
         Instant now      = Instant.now(clock);
 
-        if (existing.getExpires() == null || !existing.getExpires().isAfter(now))
+        if (existing.isClosed() || existing.getExpires() == null || !existing.getExpires().isAfter(now))
+            return context;
+
+        UserData user = findUserById(existing.getUserId());
+
+        if (user == null)
             return context;
 
         return
             context
                 .setValidatedUserId(existing.getUserId())
-                .setValidatedAuthorities(existing.getAuthorities());
+                .setValidatedAuthorities(
+                    user.getAuthorities() != null
+                        ? new LinkedHashSet<>(user.getAuthorities())
+                        : new LinkedHashSet<>());
     }
 
     private LoginReply
@@ -674,18 +679,14 @@ class SessionCommandService
     }
 
     protected LogoutContext
-    destroy(LogoutContext context)
+    close(LogoutContext context)
     {
-        logger.debug("<logout> destroy");
+        logger.debug("<logout> close");
 
-        if (context.isNotFound() || context.getLoaded() == null)
+        if (context.isNotFound() || context.getLoaded() == null || context.getLoaded().isClosed())
             return context;
 
-        Session session = context.getLoaded();
-
-        session.attach(this);
-        session.destroy();
-        repository.delete(session);
+        closeSession(context.getLoaded(),SessionClosedReason.LOGOUT,Instant.now(clock));
         return context;
     }
 
@@ -713,27 +714,26 @@ class SessionCommandService
     {
         logger.debug("<logoutAllForUser> loadAll({})",context.getUserId());
 
-        List<Session> sessions = repository.findAllByUserId(context.getUserId());
+        List<Session> sessions = repository.findOpenByUserId(context.getUserId());
 
         return context.setLoaded(sessions);
     }
 
     protected LogoutAllForUserContext
-    destroyAll(LogoutAllForUserContext context)
+    closeAll(LogoutAllForUserContext context)
     {
-        logger.debug("<logoutAllForUser> destroyAll(count={})",context.getLoaded().size());
+        logger.debug("<logoutAllForUser> closeAll(count={})",context.getLoaded().size());
 
-        Set<Long> destroyed = new TreeSet<>();
+        Set<Long> closed = new TreeSet<>();
+        Instant   now    = Instant.now(clock);
 
         for (Session session : context.getLoaded())
         {
-            session.attach(this);
-            session.destroy();
-            repository.delete(session);
-            destroyed.add(session.getSessionId());
+            closeSession(session,SessionClosedReason.ADMIN,now);
+            closed.add(session.getSessionId());
         }
 
-        return context.setDestroyed(destroyed);
+        return context.setDestroyed(closed);
     }
 
     protected RefreshRequest
@@ -792,11 +792,12 @@ class SessionCommandService
         Session session = context.getLoaded();
 
         logger.warn(
-            "<refresh> refresh token reuse detected; destroying session: {}",
+            "<refresh> refresh token reuse detected; revoking session: {}",
             session.getSessionId());
-        session.attach(this);
-        session.destroy();
-        repository.delete(session);
+
+        if (!session.isClosed())
+            closeSession(session,SessionClosedReason.REVOKED_SECURITY,Instant.now(clock));
+
         return context;
     }
 
@@ -811,28 +812,27 @@ class SessionCommandService
         Session session = context.getLoaded();
         Instant now     = Instant.now(clock);
 
-        if (session.getExpires() == null || session.getExpires().isBefore(now))
-            return context.setExpired(true);
+        if (session.isClosed())
+            return context.setClosed(true);
 
-        if (session.getCreated() == null || !session.getCreated().plus(maxLifetime).isAfter(now))
+        if (!isLive(session,now))
             return context.setExpired(true);
 
         return context;
     }
 
     protected RefreshContext
-    updateExpires(RefreshContext context)
+    markUpdated(RefreshContext context)
     {
-        logger.debug("<refresh> updateExpires");
+        logger.debug("<refresh> markUpdated");
 
         if (context.isRejected())
             return context;
 
-        Session session = context.getLoaded();
-        Instant now     = Instant.now(clock);
-
-        session.attach(this);
-        session.setExpires(capExpires(session.getCreated(),now));
+        context
+            .getLoaded()
+            .attach(this)
+            .notifyUpdated();
         return context;
     }
 
@@ -968,8 +968,8 @@ class SessionCommandService
                 user.getAuthorities() != null
                     ? new LinkedHashSet<>(user.getAuthorities())
                     : new LinkedHashSet<>())
-            .setExpires(capExpires(session.getCreated(),now));
-        session.setAccessToken(jwtTokenService.mint(session));
+            .setAccessToken(jwtTokenService.mint(session))
+            .notifyUpdated();
         return context.setRenewed(true);
     }
 
@@ -1015,11 +1015,11 @@ class SessionCommandService
                     .setFailureMessage("session not found");
         }
 
-        logger.info("<logout> session: {} destroyed",context.getSessionId());
+        logger.info("<logout> session: {} closed",context.getSessionId());
         return
             new LogoutReply(context.getRequest())
                 .setSuccess(true)
-                .setSuccessMessage("Session: " + context.getSessionId() + " destroyed");
+                .setSuccessMessage("Session: " + context.getSessionId() + " closed");
     }
 
     private LogoutReply
@@ -1037,7 +1037,7 @@ class SessionCommandService
     buildLogoutAllForUserReply(LogoutAllForUserContext context)
     {
         logger.info(
-            "<logoutAllForUser> user: {} destroyed {} session(s)",
+            "<logoutAllForUser> user: {} closed {} session(s)",
             context.getUserId(),
             context.getDestroyed().size());
         return
@@ -1046,7 +1046,7 @@ class SessionCommandService
                 .setSuccessMessage(
                     "User: "
                         + context.getUserId()
-                        + " destroyed "
+                        + " closed "
                         + context.getDestroyed().size()
                         + " session(s)")
                 .setDestroyed(context.getDestroyed());
@@ -1082,6 +1082,15 @@ class SessionCommandService
                 new RefreshReply(context.getRequest())
                     .setSuccess(false)
                     .setFailureMessage("refresh token reused; session revoked");
+        }
+
+        if (context.isClosed())
+        {
+            logger.info("<refresh> session closed: {}",context.getLoaded().getSessionId());
+            return
+                new RefreshReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage("session closed");
         }
 
         if (context.isExpired())
@@ -1190,13 +1199,13 @@ class SessionCommandService
         return null;
     }
 
-    private Instant
-    capExpires(Instant created,Instant now)
+    private void
+    closeSession(Session session,SessionClosedReason reason,Instant now)
     {
-        Instant sliding  = now.plus(sessionTtl);
-        Instant absolute = created.plus(maxLifetime);
-
-        return sliding.isBefore(absolute) ? sliding : absolute;
+        session
+            .attach(this)
+            .close(reason,now);
+        repository.save(session);
     }
 
     private Long
@@ -1299,6 +1308,10 @@ class SessionCommandService
                     domainEvent
                         .getSource()
                         .getPrimaryId())
+                .setClosedReason(
+                    domainEvent.getSource().getClosedReason() != null
+                        ? domainEvent.getSource().getClosedReason().name()
+                        : null)
                 .build();
     }
 }

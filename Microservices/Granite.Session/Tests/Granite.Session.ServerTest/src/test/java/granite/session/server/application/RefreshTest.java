@@ -10,6 +10,7 @@ import granite.session.server.domain.Session;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.RefreshReply;
 import granite.session.service.requestreply.RefreshRequest;
+import granite.session.service.requestreply.SessionClosedReason;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +42,6 @@ class RefreshTest
     private static final Long     SESSION_ID    = 900L;
     private static final Long     USER_ID       = 101L;
     private static final String   DEVICE_ID     = "device-A";
-    private static final Duration TTL           = Duration.ofMinutes(15);
     private static final Duration MAX_LIFETIME  = Duration.ofHours(24);
     private static final String   OLD_JWT       = "old.jwt.token";
     private static final String   NEW_JWT       = "new.jwt.token";
@@ -82,7 +82,6 @@ class RefreshTest
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 MAX_LIFETIME,
                 Duration.ofMinutes(2),
                 clock);
@@ -97,7 +96,7 @@ class RefreshTest
 
     @Test
     public void
-    refreshIssuesNewJwtAndUpdatesExpires()
+    refreshIssuesNewJwtAndKeepsExpires()
     {
         Session existing = stubCurrent(session(NOW.minus(Duration.ofHours(1)),NOW.plus(Duration.ofMinutes(5))));
 
@@ -108,16 +107,46 @@ class RefreshTest
         assertNotNull(reply.getSessionData());
         assertEquals(SESSION_ID,reply.getSessionData().getSessionId());
         assertEquals(USER_ID,reply.getSessionData().getUserId());
-        assertEquals(NOW.plus(TTL),reply.getSessionData().getExpires());
+        assertEquals(NOW.plus(Duration.ofMinutes(5)),reply.getSessionData().getExpires());
 
         ArgumentCaptor<Session> mintCaptor = ArgumentCaptor.forClass(Session.class);
 
         Mockito.verify(jwtTokenService).mint(mintCaptor.capture());
-        assertEquals(
-            NOW.plus(TTL),
-            mintCaptor.getValue().getExpires(),
-            "jwt should be minted using the refreshed expires");
+        assertEquals(NOW.plus(Duration.ofMinutes(5)),mintCaptor.getValue().getExpires());
         Mockito.verify(repository).save(existing);
+    }
+
+    @Test
+    public void
+    refreshOnClosedSessionFails()
+    {
+        stubCurrent(
+            session(NOW.minus(Duration.ofHours(1)),NOW.plus(Duration.ofMinutes(5)))
+                .setClosedReason(SessionClosedReason.REPLACED));
+
+        RefreshReply reply = refresh(REFRESH_TOKEN);
+
+        assertRejected(reply,"session closed");
+    }
+
+    @Test
+    public void
+    reuseOnClosedSessionKeepsOriginalReason()
+    {
+        Session existing =
+            session(NOW.minus(Duration.ofHours(1)),NOW.plus(Duration.ofMinutes(5)))
+                .setClosedReason(SessionClosedReason.LOGOUT);
+
+        Mockito
+            .when(repository.findByPreviousRefreshTokenHash(refreshTokenService.hash(PRIOR_TOKEN)))
+            .thenReturn(Optional.of(existing));
+
+        RefreshReply reply = refresh(PRIOR_TOKEN);
+
+        assertFalse(reply.isSuccess());
+        assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
+        assertTrue(sender.getEvents().isEmpty(),"expected no events");
+        Mockito.verify(repository,Mockito.never()).delete(Mockito.any(Session.class));
     }
 
     @Test
@@ -154,11 +183,11 @@ class RefreshTest
 
     @Test
     public void
-    refreshCapsExpiresAtMaxLifetime()
+    refreshDoesNotSlideExpires()
     {
         Instant created = NOW.minus(MAX_LIFETIME).plus(Duration.ofMinutes(5));
 
-        stubCurrent(session(created,NOW.plus(Duration.ofMinutes(1))));
+        stubCurrent(session(created,created.plus(MAX_LIFETIME)));
 
         RefreshReply reply = refresh(REFRESH_TOKEN);
 
@@ -218,16 +247,20 @@ class RefreshTest
             "expected failure message to mention reuse but was: " + reply.getFailureMessage());
         assertNull(reply.getAccessToken());
         assertNull(reply.getRefreshToken());
-        Mockito.verify(repository).delete(existing);
+        Mockito.verify(repository,Mockito.never()).delete(Mockito.any(Session.class));
+        Mockito.verify(repository).save(existing);
+        assertEquals(SessionClosedReason.REVOKED_SECURITY,existing.getClosedReason());
+        assertEquals(NOW,existing.getExpires());
         Mockito
             .verify(jwtTokenService,Mockito.never())
             .mint(Mockito.any(Session.class));
 
         List<SessionEvent> events = sender.getEvents();
 
-        assertEquals(1,events.size(),"expected exactly one SessionDestroyed event");
-        assertEquals(StandardEventType.DESTROYED,events.get(0).getEventType());
+        assertEquals(1,events.size(),"expected exactly one close event");
+        assertEquals(StandardEventType.UPDATED,events.get(0).getEventType());
         assertEquals(SESSION_ID,events.get(0).getSourceId());
+        assertEquals("REVOKED_SECURITY",events.get(0).getClosedReason());
     }
 
     @Test

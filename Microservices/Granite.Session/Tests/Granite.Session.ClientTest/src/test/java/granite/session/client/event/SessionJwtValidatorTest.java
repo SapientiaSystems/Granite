@@ -107,6 +107,18 @@ class SessionJwtValidatorTest
         assertTrue(validator.validate(mint(privateKey,Duration.ofHours(1))).isEmpty());
     }
 
+    @Test
+    public void
+    jwtWithClosedSessionReturnsEmpty()
+        throws Exception
+    {
+        stubSessions(
+            List.of(
+                session(Instant.now().plus(Duration.ofHours(1)))
+                    .setClosedReason(granite.session.service.requestreply.SessionClosedReason.REPLACED)));
+        assertTrue(validator.validate(mint(privateKey,Duration.ofHours(1))).isEmpty());
+    }
+
     private KeyPair
     newKeyPair()
         throws Exception

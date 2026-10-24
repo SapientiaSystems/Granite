@@ -36,7 +36,6 @@ class ApplicationConfiguration
         ILoginGate                loginGate,
         ISessionEventSender       sender,
         ModelMapper               mapper,
-        @Value("${granite.session.session-ttl:PT8H}") String sessionTtl,
         @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,
         @Value("${granite.session.token.renewal-margin:PT2M}") String renewalMargin,
         Clock                     clock)
@@ -52,7 +51,6 @@ class ApplicationConfiguration
                 loginGate,
                 sender,
                 mapper,
-                Duration.parse(sessionTtl),
                 Duration.parse(maxLifetime),
                 Duration.parse(renewalMargin),
                 clock);

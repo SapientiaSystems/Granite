@@ -10,6 +10,7 @@ import granite.session.server.domain.Session;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.LogoutRequest;
+import granite.session.service.requestreply.SessionClosedReason;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +73,6 @@ class LogoutTest
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock);
@@ -80,7 +80,42 @@ class LogoutTest
 
     @Test
     public void
-    logoutDestroysSessionAndFiresEvent()
+    logoutClosesSessionAsLogoutAndFiresEvent()
+    {
+        Session existing = stubExisting();
+
+        LogoutReply reply = logout(SESSION_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        Mockito.verify(repository,Mockito.never()).delete(Mockito.any(Session.class));
+        Mockito.verify(repository).save(existing);
+        assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
+        assertEquals(NOW,existing.getExpires());
+
+        List<SessionEvent> events = sender.getEvents();
+
+        assertEquals(1,events.size(),"expected exactly one close event");
+        assertEquals(StandardEventType.UPDATED,events.get(0).getEventType());
+        assertEquals(SESSION_ID,events.get(0).getSourceId());
+        assertEquals("LOGOUT",events.get(0).getClosedReason());
+    }
+
+    @Test
+    public void
+    logoutOfClosedSessionSucceedsWithoutChange()
+    {
+        Session existing = stubExisting().setClosedReason(SessionClosedReason.REPLACED);
+
+        LogoutReply reply = logout(SESSION_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(SessionClosedReason.REPLACED,existing.getClosedReason());
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(Session.class));
+        assertTrue(sender.getEvents().isEmpty(),"expected no events");
+    }
+
+    private Session
+    stubExisting()
     {
         Session existing =
             new Session()
@@ -93,17 +128,7 @@ class LogoutTest
         Mockito
             .when(repository.findById(SESSION_ID))
             .thenReturn(Optional.of(existing));
-
-        LogoutReply reply = logout(SESSION_ID);
-
-        assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        Mockito.verify(repository).delete(existing);
-
-        List<SessionEvent> events = sender.getEvents();
-
-        assertEquals(1,events.size(),"expected exactly one SessionDestroyed event");
-        assertEquals(StandardEventType.DESTROYED,events.get(0).getEventType());
-        assertEquals(SESSION_ID,events.get(0).getSourceId());
+        return existing;
     }
 
     @Test

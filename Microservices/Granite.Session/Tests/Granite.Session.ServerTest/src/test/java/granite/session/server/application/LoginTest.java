@@ -10,11 +10,14 @@ import granite.session.server.domain.Session;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
+import granite.session.service.requestreply.SessionClosedReason;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
 import granite.user.service.requestreply.CredentialKind;
+import granite.user.service.requestreply.FindUsersByKeyReply;
+import granite.user.service.requestreply.FindUsersByKeyRequest;
 import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -84,7 +87,6 @@ class LoginTest
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock);
@@ -106,7 +108,7 @@ class LoginTest
         assertNotNull(reply.getSessionData());
         assertEquals(USER_ID,reply.getSessionData().getUserId());
         assertEquals(DEVICE_ID,reply.getSessionData().getDeviceId());
-        assertEquals(NOW.plus(TTL),reply.getSessionData().getExpires());
+        assertEquals(NOW.plus(Duration.ofHours(24)),reply.getSessionData().getExpires());
     }
 
     @Test
@@ -287,6 +289,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -295,6 +298,54 @@ class LoginTest
         assertNotNull(reply.getSessionData());
         assertEquals(USER_ID,reply.getSessionData().getUserId());
         assertEquals(500L,reply.getSessionData().getSessionId());
+    }
+
+    @Test
+    public void
+    loginWithClosedSessionAccessTokenFails()
+    {
+        String  existingToken = "closed.jwt.token";
+        Session existing      =
+            new Session()
+                .setSessionId(402L)
+                .setUserId(USER_ID)
+                .setDeviceId(DEVICE_ID)
+                .setExpires(NOW.plus(Duration.ofMinutes(10)))
+                .setAccessToken(existingToken)
+                .setClosedReason(SessionClosedReason.LOGOUT);
+
+        Mockito
+            .when(repository.findByAccessToken(existingToken))
+            .thenReturn(Optional.of(existing));
+        stubUser(Set.of("ROLE_USER"));
+
+        LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
+
+        assertRefused(reply);
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(Session.class));
+    }
+
+    @Test
+    public void
+    loginWithAccessTokenFailsWhenUserMissing()
+    {
+        String  existingToken = "orphan.jwt.token";
+        Session existing      =
+            new Session()
+                .setSessionId(403L)
+                .setUserId(USER_ID)
+                .setDeviceId(DEVICE_ID)
+                .setExpires(NOW.plus(Duration.ofMinutes(10)))
+                .setAccessToken(existingToken);
+
+        Mockito
+            .when(repository.findByAccessToken(existingToken))
+            .thenReturn(Optional.of(existing));
+        stubUsers(List.of());
+
+        LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
+
+        assertRefused(reply);
     }
 
     @Test
@@ -313,6 +364,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -418,7 +470,7 @@ class LoginTest
 
     @Test
     public void
-    loginWithAccessTokenCarriesExistingSessionAuthorities()
+    loginWithAccessTokenRecalculatesAuthoritiesFromUser()
     {
         String  existingToken = "existing.jwt.token";
         Session existing      =
@@ -433,6 +485,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
+        stubUser(Set.of("ROLE_AUDITOR"));
 
         LoginReply reply =
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
@@ -442,7 +495,7 @@ class LoginTest
         ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
 
         Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
-        assertEquals(Set.of("ROLE_ADMIN"),captor.getValue().getAuthorities());
+        assertEquals(Set.of("ROLE_AUDITOR"),captor.getValue().getAuthorities());
     }
 
     @Test
@@ -457,11 +510,12 @@ class LoginTest
                 .setDeviceId(DEVICE_ID)
                 .setExpires(NOW.plus(Duration.ofMinutes(10)))
                 .setAccessToken(existingToken)
-                .setAuthorities(Set.of("ROLE_USER"));
+                .setAuthorities(Set.of("ROLE_ADMIN"));
 
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply =
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
@@ -485,7 +539,6 @@ class LoginTest
                 new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
-                TTL,
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock);
@@ -596,6 +649,30 @@ class LoginTest
 
                 return s;
             });
+    }
+
+    private void
+    stubUser(Set<String> authorities)
+    {
+        stubUsers(
+            List.of(
+                new UserData()
+                    .setUserId(USER_ID)
+                    .setUserName(USER_NAME)
+                    .setAuthorities(authorities)));
+    }
+
+    private void
+    stubUsers(List<UserData> users)
+    {
+        Mockito
+            .when(userQueryServiceClient.findUsersByKey(Mockito.any(FindUsersByKeyRequest.class)))
+            .thenAnswer(
+                invocation ->
+                    CompletableFuture.completedFuture(
+                        new FindUsersByKeyReply(invocation.getArgument(0))
+                            .setFoundUsers(users)
+                            .setSuccess(true)));
     }
 }
 

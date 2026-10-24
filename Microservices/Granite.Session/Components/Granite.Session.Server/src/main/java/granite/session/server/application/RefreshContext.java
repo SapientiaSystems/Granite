@@ -15,6 +15,7 @@ class RefreshContext
     private boolean        notFound;
     private boolean        reused;
     private boolean        expired;
+    private boolean        closed;
     private String         jwt;
     private String         refreshToken;
 
@@ -26,6 +27,7 @@ class RefreshContext
         notFound     = false;
         reused       = false;
         expired      = false;
+        closed       = false;
         jwt          = null;
         refreshToken = null;
     }
@@ -55,6 +57,13 @@ class RefreshContext
     setExpired(boolean value)
     {
         expired = value;
+        return this;
+    }
+
+    public RefreshContext
+    setClosed(boolean value)
+    {
+        closed = value;
         return this;
     }
 
@@ -91,7 +100,10 @@ class RefreshContext
     isExpired() { return expired; }
 
     public boolean
-    isRejected() { return notFound || reused || expired || loaded == null; }
+    isClosed() { return closed; }
+
+    public boolean
+    isRejected() { return notFound || reused || expired || closed || loaded == null; }
 
     public String
     getJwt() { return jwt; }
