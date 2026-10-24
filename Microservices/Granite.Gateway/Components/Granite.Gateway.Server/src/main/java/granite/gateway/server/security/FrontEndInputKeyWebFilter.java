@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -32,6 +31,7 @@ class FrontEndInputKeyWebFilter
     public static final String KEY_ATTRIBUTE = "granite.gateway.front-end-input-key";
     public static final String GET_OUTPUT    = "/get-output";
     public static final String HANDLE_INPUT  = "/handle-input";
+    public static final String SEPARATOR     = "->";
 
     public static final Set<String> PATHS =
         Set.of(
@@ -57,9 +57,7 @@ class FrontEndInputKeyWebFilter
         ServerHttpRequest request = exchange.getRequest();
         String            path    = request.getPath().pathWithinApplication().value();
 
-        if (!HttpMethod.POST.equals(request.getMethod())
-            || request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
-            || !PATHS.contains(path))
+        if (!HttpMethod.POST.equals(request.getMethod()) || !PATHS.contains(path))
             return chain.filter(exchange);
 
         return
@@ -139,10 +137,21 @@ class FrontEndInputKeyWebFilter
             List<String> parts = new ArrayList<>();
 
             for (String name : List.of("source","command","destination"))
-                if (node.path(name).isTextual())
-                    parts.add(node.path(name).asText());
+            {
+                JsonNode part = node.path(name);
 
-            return parts.isEmpty() ? null : String.join("->",parts);
+                if (part.isTextual())
+                {
+                    if (part.asText().contains(SEPARATOR))
+                        return null;
+
+                    parts.add(part.asText());
+                }
+                else if (!part.isMissingNode() && !part.isNull())
+                    return null;
+            }
+
+            return parts.isEmpty() ? null : String.join(SEPARATOR,parts);
         }
         catch (IOException e)
         {

@@ -10,6 +10,7 @@ import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.gateway.server.health.GatewayHealthCheckController;
 import granite.gateway.server.security.CookieCsrfProtectionMatcher;
 import granite.gateway.server.security.CsrfCookieWebFilter;
+import granite.gateway.server.security.CurrentSessionFrontEndInputMatcher;
 import granite.gateway.server.security.DeviceCookieWebFilter;
 import granite.gateway.server.security.FrontEndInputKeyWebFilter;
 import granite.gateway.server.security.ISessionResolver;
@@ -126,6 +127,7 @@ class GraniteGatewayServerConfiguration
                             .denyAll();
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
+                        exchanges.matchers(getAuthenticatedExchangeMatcher(environment)).authenticated();
                         configureAuthorization(exchanges,environment);
                         exchanges.anyExchange().authenticated();
                     })
@@ -338,6 +340,12 @@ class GraniteGatewayServerConfiguration
             new OrServerWebExchangeMatcher(
                 ServerWebExchangeMatchers.pathMatchers(getPublicPathPatterns(environment).toArray(String[]::new)),
                 new PublicFrontEndInputMatcher());
+    }
+
+    protected ServerWebExchangeMatcher
+    getAuthenticatedExchangeMatcher(Environment environment)
+    {
+        return new CurrentSessionFrontEndInputMatcher();
     }
 
     protected ServerHttpSecurity.AuthorizeExchangeSpec
