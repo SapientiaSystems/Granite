@@ -8,8 +8,11 @@ import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.gateway.server.health.GatewayHealthCheckController;
+import granite.gateway.server.security.IServiceTokenSupplier;
+import granite.gateway.server.security.ISessionResolver;
 import granite.gateway.server.security.ISessionRevocationChecker;
 import granite.gateway.server.security.RevocationCheckingReactiveJwtDecoder;
+import granite.gateway.server.security.SessionCommandSessionResolver;
 import granite.gateway.server.security.SessionQueryRevocationChecker;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -147,6 +150,34 @@ class GraniteGatewayServerConfiguration
 
     @Bean
     @SingletonScoped
+    public IServiceTokenSupplier
+    serviceTokenSupplier(Environment environment)
+    {
+        return () -> Mono.error(new IllegalStateException("no Gateway service token is configured"));
+    }
+
+    @Bean
+    @SingletonScoped
+    public ISessionResolver
+    sessionResolver(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenSupplier      serviceTokenSupplier)
+    {
+        return
+            new SessionCommandSessionResolver(
+                createSessionResolveWebClient(sslBundles,environment),
+                URI.create(
+                    environment.getRequiredProperty("granite.session-command-service.host")
+                        + "/session-command-service/resolve-session"),
+                serviceTokenSupplier,
+                Duration.parse(environment.getProperty("granite.gateway.session-cache-ttl","PT60S")),
+                Duration.parse(environment.getProperty("granite.gateway.session-resolve.timeout","PT2S")),
+                Clock.systemUTC());
+    }
+
+    @Bean
+    @SingletonScoped
     public GraniteJwtAuthenticationConverter
     jwtAuthenticationConverter()
     {
@@ -195,6 +226,17 @@ class GraniteGatewayServerConfiguration
                 sslBundles,
                 environment.getProperty(
                     "granite.gateway.revocation.ssl-bundle",
+                    environment.getProperty("spring.cloud.gateway.httpclient.ssl.bundle","")));
+    }
+
+    protected WebClient
+    createSessionResolveWebClient(ObjectProvider<SslBundles> sslBundles,Environment environment)
+    {
+        return
+            createTrustingWebClient(
+                sslBundles,
+                environment.getProperty(
+                    "granite.gateway.session-resolve.ssl-bundle",
                     environment.getProperty("spring.cloud.gateway.httpclient.ssl.bundle","")));
     }
 
