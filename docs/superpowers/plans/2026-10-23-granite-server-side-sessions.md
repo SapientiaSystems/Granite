@@ -281,8 +281,8 @@ Each subtype must have at least one property name no sibling has, and must be re
 
 ## Open items (decide when the relevant step starts)
 
-1. Login gate versus Okta automatic creation (see above), before Step 5.
-2. Whether session close events should also clear the Gateway's handle cache, or whether the cache TTL (60 seconds at most) is enough for security closures. Decide in Step 3.
+1. Login gate versus Okta automatic creation — **decided 2026-10-24:** keep the gate. Okta still creates the User with `ROLE_USER`, but login is refused until an admin grants a gated role. The gate applies equally to password and Okta login.
+2. Gateway handle cache — **decided 2026-10-24:** TTL only (at most 60 seconds). Session close events do not evict the cache.
 3. Okta back-channel logout: out of scope for now, a candidate follow-up.
 4. Revoking all of a user's sessions when the account is locked or deleted: a candidate follow-up.
 
