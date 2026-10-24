@@ -9,6 +9,7 @@ import type { IAuthenticationContext }              from "./AuthenticationContex
 import type { IAuthenticationState }                from "./IAuthenticationState";
 import { createAuthentication }                     from "./createAuthentication";
 import type { IAuthentication }                     from "./createAuthentication";
+import { ReauthenticationDialog }                   from "../Login/ReauthenticationDialog";
 
 export interface IAuthenticationProviderProps
 {
@@ -31,10 +32,9 @@ export function AuthenticationProvider({ children, authentication }: IAuthentica
             void manager.restore();
     },[manager]);
 
-    const value: IAuthenticationContext =
+    const actions =
         useMemo(
             () => ({
-                state,
                 login:                  (userName: string,password: string) => manager.login(userName,password),
                 startOktaLogin:         (returnTo: string) => manager.startOktaLogin(returnTo),
                 completeOktaLogin:      (code: string,oktaState: string) => manager.completeOktaLogin(code,oktaState),
@@ -43,11 +43,14 @@ export function AuthenticationProvider({ children, authentication }: IAuthentica
                 cancelReauthentication: () => manager.cancelReauthentication(),
                 createFrontEndClient,
             }),
-            [manager,state,createFrontEndClient]);
+            [manager,createFrontEndClient]);
+
+    const value: IAuthenticationContext = useMemo(() => ({ state, ...actions }),[state,actions]);
 
     return (
         <AuthenticationContext.Provider value={value}>
             {children}
+            {state.status === "reauthenticating" && <ReauthenticationDialog />}
         </AuthenticationContext.Provider>
     );
 }

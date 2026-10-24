@@ -1,4 +1,5 @@
-export type {IGoogleSignInButtonProps}         from "./GoogleSignInButton";
-export {GoogleSignInButton,loadGoogleIdentity} from "./GoogleSignInButton";
-export type {ILoginViewProps}                  from "./LoginView";
-export {LoginView}                             from "./LoginView";
+export type {ISignInFormProps}              from "./SignInForm";
+export {SignInForm}                         from "./SignInForm";
+export {LoginView}                          from "./LoginView";
+export {LoginCallbackView}                  from "./LoginCallbackView";
+export {ReauthenticationDialog}             from "./ReauthenticationDialog";
