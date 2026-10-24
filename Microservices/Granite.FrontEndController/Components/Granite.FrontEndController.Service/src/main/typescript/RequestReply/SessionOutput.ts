@@ -11,6 +11,7 @@ interface SessionOutput
     userName:    string | null;
     authorities: Array<string>;
     status:      string;
+    returnTo?:   string | null;
 }
 
 //////////////////////////////////////////////////////////////////////////////

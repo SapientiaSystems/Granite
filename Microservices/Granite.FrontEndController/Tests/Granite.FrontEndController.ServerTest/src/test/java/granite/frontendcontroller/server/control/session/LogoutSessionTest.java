@@ -75,6 +75,25 @@ class LogoutSessionTest
 
     @Test
     public void
+    oktaLogoutCarriesTheEndSessionUrl()
+        throws Exception
+    {
+        SessionRequestContext context = SessionTestSupport.context("d",11L,7L);
+        String                url     = "https://okta.example.com/oauth2/default/v1/logout?id_token_hint=x";
+
+        Mockito
+            .when(commandClient.logout(Mockito.any(LogoutRequest.class)))
+            .thenReturn(CompletableFuture.completedFuture(new LogoutReply().setSuccess(true).setEndSessionUrl(url)));
+
+        LogoutOutput output = run(context);
+
+        assertTrue(output.isLoggedOut());
+        assertEquals(url,output.getEndSessionUrl());
+        assertTrue(context.getSetCookies().get(0).contains("Max-Age=0"));
+    }
+
+    @Test
+    public void
     noSessionIdClearsTheCookieWithoutCallingSession()
         throws Exception
     {

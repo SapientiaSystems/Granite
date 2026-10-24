@@ -9,8 +9,10 @@ import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
 import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
 import granite.session.service.requestreply.LoginReply;
+import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.SessionData;
+import granite.session.service.requestreply.StartOktaLoginReply;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +38,7 @@ import strata.frontendcontroller.service.requestreply.IFrontEndControllerService
 
 import javax.net.ssl.SSLContext;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,6 +70,7 @@ class SessionHttpTest
         SslBundle      bundle        = Mockito.mock(SslBundle.class);
 
         Mockito.when(configuration.getProperty(Mockito.anyString(),Mockito.anyString())).thenAnswer(i -> i.getArgument(1));
+        Mockito.when(configuration.getProperty("granite.session.login.okta.enabled","false")).thenReturn("true");
         for (String key : new String[] {"user-query-service.base-url","user-command-service.base-url","session-command-service.base-url","session-query-service.base-url"})
             Mockito.when(configuration.getProperty(key)).thenReturn(backend.baseUrl());
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
@@ -185,6 +189,69 @@ class SessionHttpTest
         assertTrue(backend.paths().get(0).endsWith("/session-command-service/logout"));
         assertTrue(backend.bodies().get(0).contains("\"sessionId\":11"));
         assertEquals(1,backend.paths().size());
+    }
+    @Test
+    public void
+    startOktaLoginSetsTheLoginCookieAndReturnsTheRedirect()
+        throws Exception
+    {
+        backend.respond(
+            "start-okta-login",
+            new StartOktaLoginReply()
+                .setAuthorizeUrl("https://okta.example.com/authorize?state=s")
+                .setTransactionId("transaction-secret")
+                .setSuccess(true));
+
+        MvcResult result =
+            send(
+                post("/frontendcontroller-user-service/handle-input")
+                    .content(
+                        "{\"input\":{\"userId\":0,\"source\":\"Session.New\",\"command\":\"StartOktaLogin\","
+                            + "\"destination\":\"LoginView\",\"returnTo\":\"/users\"}}"));
+        String    cookie = result.getResponse().getHeader("Set-Cookie");
+        String    body   = result.getResponse().getContentAsString();
+
+        assertTrue(cookie.startsWith("GRANITE_LOGIN=transaction-secret;"),cookie);
+        assertTrue(cookie.contains("HttpOnly") && cookie.contains("Secure") && cookie.contains("SameSite=Lax"),cookie);
+        assertTrue(cookie.contains("Path=/") && cookie.contains("Max-Age=300"),cookie);
+        assertTrue(body.contains("https://okta.example.com/authorize?state=s"),body);
+        assertFalse(body.contains("transaction-secret"),body);
+        assertTrue(backend.paths().get(0).endsWith("/session-command-service/start-okta-login"));
+        assertTrue(backend.bodies().get(0).contains("\"deviceId\":\"device-1\""));
+    }
+
+    @Test
+    public void
+    completeOktaLoginSetsTheSessionCookieAndClearsTheLoginCookie()
+        throws Exception
+    {
+        backend.respond(
+            "complete-okta-login",
+            new CompleteOktaLoginReply()
+                .setSessionData(
+                    new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(1800)).setAuthorities(Set.of("ROLE_ADMIN")))
+                .setSessionHandle(HANDLE)
+                .setUserName("alice")
+                .setReturnTo("/users")
+                .setSuccess(true));
+
+        MvcResult    result  =
+            send(
+                post("/frontendcontroller-user-service/handle-input")
+                    .cookie(new Cookie("GRANITE_LOGIN","transaction-secret"))
+                    .content(
+                        "{\"input\":{\"userId\":0,\"source\":\"Session.New\",\"command\":\"CompleteOktaLogin\","
+                            + "\"destination\":\"LoginView\",\"code\":\"code-secret\",\"state\":\"state-1\"}}"));
+        List<String> cookies = result.getResponse().getHeaders("Set-Cookie");
+        String       body    = result.getResponse().getContentAsString();
+
+        assertTrue(cookies.stream().anyMatch(c -> c.startsWith("GRANITE_SID=" + HANDLE + ";")),String.valueOf(cookies));
+        assertTrue(cookies.stream().anyMatch(c -> c.startsWith("GRANITE_LOGIN=;") && c.contains("Max-Age=0")),String.valueOf(cookies));
+        assertTrue(body.contains("\"returnTo\":\"/users\""),body);
+        assertTrue(body.contains("AUTHENTICATED"),body);
+        assertFalse(body.contains(HANDLE),body);
+        assertTrue(backend.bodies().get(0).contains("\"transactionId\":\"transaction-secret\""));
+        assertTrue(backend.bodies().get(0).contains("\"code\":\"code-secret\""));
     }
 }
 

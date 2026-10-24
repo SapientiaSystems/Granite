@@ -14,6 +14,9 @@ class SessionCookies
 {
     public static final String SESSION_COOKIE = "GRANITE_SID";
     public static final String DEVICE_COOKIE  = "GRANITE_DID";
+    public static final String LOGIN_COOKIE   = "GRANITE_LOGIN";
+
+    private static final Duration LOGIN_LIFETIME = Duration.ofMinutes(5);
 
     private
     SessionCookies() {}
@@ -35,6 +38,18 @@ class SessionCookies
         return builder("").maxAge(0).build().toString();
     }
 
+    public static String
+    issueLogin(String transactionId)
+    {
+        return loginBuilder(transactionId).maxAge(LOGIN_LIFETIME).build().toString();
+    }
+
+    public static String
+    clearLogin()
+    {
+        return loginBuilder("").maxAge(0).build().toString();
+    }
+
     private static ResponseCookie.ResponseCookieBuilder
     builder(String value)
     {
@@ -44,6 +59,18 @@ class SessionCookies
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
+                .path("/");
+    }
+
+    private static ResponseCookie.ResponseCookieBuilder
+    loginBuilder(String value)
+    {
+        return
+            ResponseCookie
+                .from(LOGIN_COOKIE,value)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
                 .path("/");
     }
 }

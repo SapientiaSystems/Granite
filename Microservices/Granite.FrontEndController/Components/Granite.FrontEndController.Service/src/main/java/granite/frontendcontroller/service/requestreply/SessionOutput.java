@@ -16,6 +16,7 @@ class SessionOutput
     private String      userName;
     private Set<String> authorities;
     private String      status;
+    private String      returnTo;
 
     public
     SessionOutput()
@@ -24,6 +25,7 @@ class SessionOutput
         userName    = null;
         authorities = new HashSet<>();
         status      = null;
+        returnTo    = null;
     }
 
     @Override
@@ -75,6 +77,13 @@ class SessionOutput
         return this;
     }
 
+    public SessionOutput
+    setReturnTo(String value)
+    {
+        returnTo = value;
+        return this;
+    }
+
     public String
     getUserName() { return userName; }
 
@@ -83,6 +92,9 @@ class SessionOutput
 
     public String
     getStatus() { return status; }
+
+    public String
+    getReturnTo() { return returnTo; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

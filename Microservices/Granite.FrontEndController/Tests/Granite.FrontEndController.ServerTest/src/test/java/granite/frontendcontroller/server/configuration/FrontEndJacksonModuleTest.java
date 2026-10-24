@@ -182,6 +182,8 @@ class FrontEndJacksonModuleTest
         assertEquals(Set.of("ROLE_ADMIN"),session.getAuthorities());
         assertEquals("AUTHENTICATED",session.getStatus());
         assertEquals(Set.of(),assertInstanceOf(SessionOutput.class,roundTrip(new SessionOutput())).getAuthorities());
+        assertEquals("/users",assertInstanceOf(SessionOutput.class,roundTrip(new SessionOutput().setStatus("AUTHENTICATED").setReturnTo("/users"))).getReturnTo());
+        assertNull(session.getReturnTo());
 
         LogoutOutput logout = assertInstanceOf(LogoutOutput.class,roundTrip(new LogoutOutput().setLoggedOut(true)));
 

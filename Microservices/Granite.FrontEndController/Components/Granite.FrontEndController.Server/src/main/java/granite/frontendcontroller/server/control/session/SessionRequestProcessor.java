@@ -29,6 +29,8 @@ class SessionRequestProcessor
             Map.<String,IProcessAction>of(
                 "Session.New->LoginView",new LoginMethodsView(settings),
                 "Session.New->Login->LoginView",new LoginView(commandClient,context,settings),
+                "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(commandClient,context,settings),
+                "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(commandClient,context,settings),
                 "Session.Current->SessionView",new SessionStatusView(queryClient,userQueryClient,context),
                 "Session.Current->Logout->LoginView",new LogoutView(commandClient,context)));
     }
