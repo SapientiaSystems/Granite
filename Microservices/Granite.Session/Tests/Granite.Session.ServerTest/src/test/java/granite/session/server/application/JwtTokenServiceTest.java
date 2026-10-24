@@ -85,6 +85,32 @@ class JwtTokenServiceTest
 
     @Test
     public void
+    mintedJwtCarriesContinuityId()
+        throws ParseException
+    {
+        JwtTokenService  target  = newService();
+        java.util.UUID   cid     = java.util.UUID.randomUUID();
+        Session          session = newSession(1001L,2002L,"device-A").setContinuityId(cid);
+        JWTClaimsSet     claims  = SignedJWT.parse(target.mint(session)).getJWTClaimsSet();
+
+        assertEquals(cid.toString(),claims.getStringClaim("cid"));
+    }
+
+    @Test
+    public void
+    mintedJwtOmitsCidWhenAbsent()
+        throws ParseException
+    {
+        JwtTokenService target  = newService();
+        Session         session = newSession(1001L,2002L,"device-A");
+        JWTClaimsSet    claims  = SignedJWT.parse(target.mint(session)).getJWTClaimsSet();
+
+        assertNull(claims.getClaim("cid"));
+        assertTrue(claims.getAudience().contains(AUDIENCE));
+    }
+
+    @Test
+    public void
     verifyAcceptsValidJwt()
         throws JwtVerificationException
     {

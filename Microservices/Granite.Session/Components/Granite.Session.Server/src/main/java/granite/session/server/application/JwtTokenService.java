@@ -35,6 +35,7 @@ class JwtTokenService
 {
     private static final String DEVICE_ID_CLAIM   = "did";
     private static final String AUTHORITIES_CLAIM = "authorities";
+    private static final String CONTINUITY_CLAIM  = "cid";
 
     private final RSASSASigner    signer;
     private final RSASSAVerifier  verifier;
@@ -87,6 +88,9 @@ class JwtTokenService
                 .expirationTime(Date.from(exp))
                 .audience(audience)
                 .claim(DEVICE_ID_CLAIM,session.getDeviceId())
+                .claim(
+                    CONTINUITY_CLAIM,
+                    session.getContinuityId() != null ? session.getContinuityId().toString() : null)
                 .claim(
                     AUTHORITIES_CLAIM,
                     authorities != null ? new ArrayList<>(authorities) : List.of())
