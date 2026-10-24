@@ -273,6 +273,10 @@ class GraniteGatewayServerConfiguration
             "/frontendcontroller-admin-service/**",
             "granite.frontendcontroller-admin-service.host",
             environment);
+
+        if (environment.acceptsProfiles(Profiles.of("production")))
+            return routes;
+
         addRoute(
             routes,
             "user-command-route",
