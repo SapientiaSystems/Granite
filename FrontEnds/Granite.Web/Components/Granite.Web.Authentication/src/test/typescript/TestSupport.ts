@@ -3,6 +3,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { vi }                                 from "vitest";
+import { CompletableObservable }              from "strata.foundation.core/Concurrent";
+import type { ICompletionStage }              from "strata.foundation.core/Concurrent";
 import type { ISessionApi, ITokenGrant }      from "../../main/typescript/Authentication/ISessionApi";
 import type { ITimer }                        from "../../main/typescript/Authentication/AuthenticationManager";
 import type { IStoredSession, ITokenStorage } from "../../main/typescript/Authentication/TokenStorage";
@@ -44,8 +46,18 @@ export function fakeApi(): IFakeSessionApi
         login:           vi.fn(),
         loginWithOauth2: vi.fn(),
         refresh:         vi.fn(),
-        logout:          vi.fn().mockResolvedValue(undefined),
+        logout:          vi.fn().mockImplementation(() => completed(undefined)),
     };
+}
+
+export function completed<T>(value: T): ICompletionStage<T>
+{
+    return CompletableObservable.fromResult(value);
+}
+
+export function failed<T>(error: Error): ICompletionStage<T>
+{
+    return CompletableObservable.fromError<T>(error);
 }
 
 export class MemoryTokenStorage

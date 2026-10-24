@@ -2,7 +2,7 @@
   <library name="Gradle: strata.frontendcontroller:strata-frontendcontroller-service:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
     <properties groupId="strata.frontendcontroller" artifactId="strata-frontendcontroller-service" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.frontendcontroller/strata-frontendcontroller-service/1.0-SNAPSHOT/8b854dc19fd404ffa986f327414ff326d4ab2355/strata-frontendcontroller-service-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.frontendcontroller/strata-frontendcontroller-service/1.0-SNAPSHOT/b2012a26160f0fcfad922c22c94fdc8e92a2b831/strata-frontendcontroller-service-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

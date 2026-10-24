@@ -2,18 +2,18 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                            from "vitest";
-import { render, screen, waitFor }                         from "@testing-library/react";
-import userEvent                                           from "@testing-library/user-event";
-import { MantineProvider }                                 from "@mantine/core";
-import { MemoryRouter, Route, Routes }                     from "react-router-dom";
-import type { ReactElement }                               from "react";
-import { AuthenticationManager }                           from "../../main/typescript/Authentication/AuthenticationManager";
-import { AuthenticationProvider, useAuthentication }       from "../../main/typescript/Authentication/AuthenticationContext";
-import { RequireAuthentication }                           from "../../main/typescript/Authentication/RequireAuthentication";
-import { LoginView }                                       from "../../main/typescript/Login/LoginView";
-import { fakeApi, grant, ManualTimer, MemoryTokenStorage } from "./TestSupport";
-import type { IFakeSessionApi }                            from "./TestSupport";
+import { describe, expect, it }                                               from "vitest";
+import { render, screen, waitFor }                                            from "@testing-library/react";
+import userEvent                                                              from "@testing-library/user-event";
+import { MantineProvider }                                                    from "@mantine/core";
+import { MemoryRouter, Route, Routes }                                        from "react-router-dom";
+import type { ReactElement }                                                  from "react";
+import { AuthenticationManager }                                              from "../../main/typescript/Authentication/AuthenticationManager";
+import { AuthenticationProvider, useAuthentication }                          from "../../main/typescript/Authentication/AuthenticationContext";
+import { RequireAuthentication }                                              from "../../main/typescript/Authentication/RequireAuthentication";
+import { LoginView }                                                          from "../../main/typescript/Login/LoginView";
+import { completed, failed, fakeApi, grant, ManualTimer, MemoryTokenStorage } from "./TestSupport";
+import type { IFakeSessionApi }                                               from "./TestSupport";
 
 const NOW_SECONDS: number = 1_800_000_000;
 
@@ -57,7 +57,7 @@ describe("RequireAuthentication and LoginView",() =>
     {
         const api = fakeApi();
 
-        api.login.mockResolvedValue(grant(1,NOW_SECONDS + 900));
+        api.login.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
         renderApp(manager(api),"/users");
 
         await userEvent.type(screen.getByLabelText(/User name/),"alice");
@@ -72,7 +72,7 @@ describe("RequireAuthentication and LoginView",() =>
     {
         const api = fakeApi();
 
-        api.login.mockRejectedValue(new Error("account locked"));
+        api.login.mockReturnValue(failed(new Error("account locked")));
         renderApp(manager(api),"/login");
 
         await userEvent.type(screen.getByLabelText(/User name/),"alice");
@@ -87,7 +87,7 @@ describe("RequireAuthentication and LoginView",() =>
         const api     = fakeApi();
         const storage = new MemoryTokenStorage({ refreshToken: "refresh-0", sessionId: 2002, userName: "alice" });
 
-        api.refresh.mockResolvedValue(grant(1,NOW_SECONDS + 900));
+        api.refresh.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
         renderApp(manager(api,storage),"/users");
 
         await waitFor(() => expect(screen.getByText("signed in as alice")).toBeTruthy());

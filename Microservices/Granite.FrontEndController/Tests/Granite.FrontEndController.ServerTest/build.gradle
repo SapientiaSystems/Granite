@@ -14,8 +14,6 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter:$springboot_version"
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springboot_version"
 
-    testImplementation "org.postgresql:postgresql:$postgresql_version"
-    testImplementation "com.h2database:h2:$h2_version"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter_version"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter_version"
 }

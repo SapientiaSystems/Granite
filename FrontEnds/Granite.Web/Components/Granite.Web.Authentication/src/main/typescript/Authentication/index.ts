@@ -8,7 +8,7 @@ export type {IRuntimeConfig}                                                    
 export {getRuntimeConfig}                                                            from "./RuntimeConfig";
 export type {IStoredSession,ITokenStorage}                                           from "./TokenStorage";
 export {BrowserTokenStorage}                                                         from "./TokenStorage";
-export {SessionApi,toGrant,toPromise}                                                from "./SessionApi";
+export {SessionApi,toGrant}                                                          from "./SessionApi";
 export type {AuthenticationListener,ITimer}                                          from "./AuthenticationManager";
 export {AuthenticationManager,browserTimer,REFRESH_MARGIN_MILLIS}                    from "./AuthenticationManager";
 export type {IAuthenticationContext,IAuthenticationProviderProps}                    from "./AuthenticationContext";

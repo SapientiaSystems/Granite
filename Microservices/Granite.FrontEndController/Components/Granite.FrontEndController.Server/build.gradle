@@ -16,6 +16,4 @@ dependencies {
     api "strata.frontendcontroller:strata-frontendcontroller-server:$strata_frontendcontroller_version"
     api "org.springframework.boot:spring-boot-starter-security:$springboot_version"
     api "org.springframework.security:spring-security-core:$spring_security_version"
-    api "org.postgresql:postgresql:$postgresql_version"
-    api "com.h2database:h2:$h2_version"
 }

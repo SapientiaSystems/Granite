@@ -13,9 +13,6 @@ ext {
     springboot_version = "3.4.1"
     spring_security_version = "6.2.1"
 
-    postgresql_version = "42.7.3"
-    h2_version = "2.1.214"
-
     junit_jupiter_version = "5.13.3"
     junit_platform_version = "1.13.3"
 

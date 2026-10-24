@@ -2,6 +2,8 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
+import type { ICompletionStage } from "strata.foundation.core/Concurrent";
+
 export interface ITokenGrant
 {
     accessToken:  string;
@@ -13,13 +15,13 @@ export interface ITokenGrant
 
 export interface ISessionApi
 {
-    login(userName: string,password: string,deviceId: string): Promise<ITokenGrant>;
+    login(userName: string,password: string,deviceId: string): ICompletionStage<ITokenGrant>;
 
-    loginWithOauth2(provider: string,idToken: string,deviceId: string): Promise<ITokenGrant>;
+    loginWithOauth2(provider: string,idToken: string,deviceId: string): ICompletionStage<ITokenGrant>;
 
-    refresh(refreshToken: string): Promise<ITokenGrant>;
+    refresh(refreshToken: string): ICompletionStage<ITokenGrant>;
 
-    logout(sessionId: number,accessToken: string): Promise<void>;
+    logout(sessionId: number,accessToken: string): ICompletionStage<void>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

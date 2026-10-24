@@ -7,6 +7,7 @@ import type { IAuthenticationState }        from "./IAuthenticationState";
 import type { ISessionApi, ITokenGrant }    from "./ISessionApi";
 import type { ITokenStorage }               from "./TokenStorage";
 import { decodeJwtClaims, expiresAtMillis } from "./JwtClaims";
+import type { ICompletionStage }            from "strata.foundation.core/Concurrent";
 
 export type AuthenticationListener = (state: IAuthenticationState) => void;
 
@@ -128,7 +129,7 @@ export class AuthenticationManager
         }
     }
 
-    private async authenticate(userName: string,grant: () => Promise<ITokenGrant>): Promise<void>
+    private async authenticate(userName: string,grant: () => ICompletionStage<ITokenGrant>): Promise<void>
     {
         this.setState({ ...ANONYMOUS, status: "authenticating" });
 

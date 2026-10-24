@@ -5,7 +5,7 @@
 package granite.user.server.application;
 
 import granite.user.service.requestreply.IUserQueryService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 public

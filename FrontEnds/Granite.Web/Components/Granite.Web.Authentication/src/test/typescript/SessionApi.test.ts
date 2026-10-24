@@ -2,11 +2,79 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }             from "vitest";
-import { toGrant }                          from "../../main/typescript/Authentication/SessionApi";
-import { decodeJwtClaims, expiresAtMillis } from "../../main/typescript/Authentication/JwtClaims";
-import { getRuntimeConfig }                 from "../../main/typescript/Authentication/RuntimeConfig";
-import { makeJwt }                          from "./TestSupport";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SessionApi, toGrant }                  from "../../main/typescript/Authentication/SessionApi";
+import { decodeJwtClaims, expiresAtMillis }     from "../../main/typescript/Authentication/JwtClaims";
+import { getRuntimeConfig }                     from "../../main/typescript/Authentication/RuntimeConfig";
+import { makeJwt }                              from "./TestSupport";
+
+const client = vi.hoisted(() => ({ baseUrl: "", reply: undefined as unknown, error: undefined as Error | undefined, close: vi.fn() }));
+
+vi.mock("granite.session.client/RequestReply",async () =>
+{
+    const { CompletableObservable } = await import("strata.foundation.core/Concurrent");
+
+    return {
+        SessionCommandServiceClient: class
+        {
+            constructor(baseUrl: string)
+            {
+                client.baseUrl = baseUrl;
+            }
+
+            login()
+            {
+                return client.error !== undefined
+                    ? CompletableObservable.fromError(client.error)
+                    : CompletableObservable.fromResult(client.reply);
+            }
+
+            close()
+            {
+                client.close();
+            }
+        },
+    };
+});
+
+describe("SessionApi",() =>
+{
+    beforeEach(() =>
+    {
+        client.reply = undefined;
+        client.error = undefined;
+        client.close.mockClear();
+    });
+
+    it("login completes with the grant and closes the client",async () =>
+    {
+        client.reply = { success: true, accessToken: "access", refreshToken: "refresh",
+                         sessionData: { sessionId: 7, userId: 9, authorities: ["ROLE_ADMIN"] } };
+
+        await expect(new SessionApi("https://granite.example").login("alice","secret","device-1"))
+            .resolves.toEqual({ accessToken: "access", refreshToken: "refresh", sessionId: 7, userId: 9, authorities: ["ROLE_ADMIN"] });
+        expect(client.baseUrl).toBe("https://granite.example/session-command-service");
+        expect(client.close).toHaveBeenCalledTimes(1);
+    });
+
+    it("login rejects with the Session failure message and closes the client",async () =>
+    {
+        client.reply = { success: false, failureMessage: "invalid credentials" };
+
+        await expect(new SessionApi("https://granite.example").login("alice","wrong","device-1"))
+            .rejects.toThrow("invalid credentials");
+        expect(client.close).toHaveBeenCalledTimes(1);
+    });
+
+    it("login rejects and closes the client when the request fails",async () =>
+    {
+        client.error = new Error("network down");
+
+        await expect(new SessionApi("https://granite.example").login("alice","secret","device-1"))
+            .rejects.toThrow("network down");
+        expect(client.close).toHaveBeenCalledTimes(1);
+    });
+});
 
 describe("toGrant",() =>
 {

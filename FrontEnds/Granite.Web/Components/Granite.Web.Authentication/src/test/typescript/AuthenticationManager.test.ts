@@ -2,10 +2,10 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { beforeEach, describe, expect, it }                                from "vitest";
-import { AuthenticationManager, REFRESH_MARGIN_MILLIS }                    from "../../main/typescript/Authentication/AuthenticationManager";
-import { fakeApi, flush, grant, makeJwt, ManualTimer, MemoryTokenStorage } from "./TestSupport";
-import type { IFakeSessionApi }                                            from "./TestSupport";
+import { beforeEach, describe, expect, it }                                                   from "vitest";
+import { AuthenticationManager, REFRESH_MARGIN_MILLIS }                                       from "../../main/typescript/Authentication/AuthenticationManager";
+import { completed, failed, fakeApi, flush, grant, makeJwt, ManualTimer, MemoryTokenStorage } from "./TestSupport";
+import type { IFakeSessionApi }                                                               from "./TestSupport";
 
 const NOW_SECONDS: number = 1_800_000_000;
 const NOW_MILLIS:  number = NOW_SECONDS * 1000;
@@ -41,7 +41,7 @@ describe("AuthenticationManager",() =>
         const seen: Array<string> = [];
 
         manager.subscribe(state => seen.push(state.status));
-        api.login.mockResolvedValue(grant(1,NOW_SECONDS + 900));
+        api.login.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
 
         await manager.login("alice","secret");
 
@@ -62,7 +62,7 @@ describe("AuthenticationManager",() =>
     {
         const manager = new AuthenticationManager(api,storage,timer);
 
-        api.login.mockRejectedValue(new Error("invalid credentials"));
+        api.login.mockReturnValue(failed(new Error("invalid credentials")));
 
         await expect(manager.login("alice","wrong")).rejects.toThrow("invalid credentials");
         expect(manager.getState()).toMatchObject({ status: "anonymous", error: "invalid credentials" });
@@ -74,8 +74,8 @@ describe("AuthenticationManager",() =>
         const manager = new AuthenticationManager(api,storage,timer);
         const expiry: number = NOW_SECONDS + 900;
 
-        api.login.mockResolvedValue(grant(1,expiry));
-        api.refresh.mockResolvedValue(grant(2,expiry + 900));
+        api.login.mockReturnValue(completed(grant(1,expiry)));
+        api.refresh.mockReturnValue(completed(grant(2,expiry + 900)));
         await manager.login("alice","secret");
 
         timer.advanceTo(expiry * 1000 - REFRESH_MARGIN_MILLIS - 1);
@@ -94,8 +94,8 @@ describe("AuthenticationManager",() =>
     {
         const manager = new AuthenticationManager(api,storage,timer);
 
-        api.login.mockResolvedValue(grant(1,NOW_SECONDS + 900));
-        api.refresh.mockRejectedValue(new Error("refresh token reused; session revoked"));
+        api.login.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
+        api.refresh.mockReturnValue(failed(new Error("refresh token reused; session revoked")));
         await manager.login("alice","secret");
 
         await manager.refreshNow();
@@ -108,7 +108,7 @@ describe("AuthenticationManager",() =>
     it("restore exchanges the stored refresh token and keeps the user name",async () =>
     {
         storage.stored = { refreshToken: "refresh-0", sessionId: 2002, userName: "alice" };
-        api.refresh.mockResolvedValue(grant(1,NOW_SECONDS + 900));
+        api.refresh.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
 
         const manager = new AuthenticationManager(api,storage,timer);
 
@@ -121,7 +121,7 @@ describe("AuthenticationManager",() =>
     it("restore with a rejected refresh token ends anonymous",async () =>
     {
         storage.stored = { refreshToken: "stale", sessionId: 2002 };
-        api.refresh.mockRejectedValue(new Error("invalid refresh token"));
+        api.refresh.mockReturnValue(failed(new Error("invalid refresh token")));
 
         const manager = new AuthenticationManager(api,storage,timer);
 
@@ -136,7 +136,7 @@ describe("AuthenticationManager",() =>
         const manager = new AuthenticationManager(api,storage,timer);
         const issued  = grant(1,NOW_SECONDS + 900);
 
-        api.login.mockResolvedValue(issued);
+        api.login.mockReturnValue(completed(issued));
         await manager.login("alice","secret");
 
         await manager.logout();
@@ -152,7 +152,7 @@ describe("AuthenticationManager",() =>
         const manager = new AuthenticationManager(api,storage,timer);
         const idToken = makeJwt({ email: "alice@example.com", sub: "google-sub" });
 
-        api.loginWithOauth2.mockResolvedValue(grant(1,NOW_SECONDS + 900));
+        api.loginWithOauth2.mockReturnValue(completed(grant(1,NOW_SECONDS + 900)));
 
         await manager.loginWithGoogle(idToken);
 

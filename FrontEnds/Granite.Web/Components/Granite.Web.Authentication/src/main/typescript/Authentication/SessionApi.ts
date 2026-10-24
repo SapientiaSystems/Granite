@@ -32,62 +32,38 @@ export class SessionApi
         this.baseUrl = apiBaseUrl + "/session-command-service";
     }
 
-    async login(userName: string,password: string,deviceId: string): Promise<ITokenGrant>
+    login(userName: string,password: string,deviceId: string): ICompletionStage<ITokenGrant>
     {
         const client: ISessionCommandServiceClient = this.createClient();
 
-        try
-        {
-            return toGrant(
-                await toPromise(
-                    client.login({ ...newRequest(), userName, credential: password, credentialKind: "PASSWORD", deviceId })));
-        }
-        finally
-        {
-            client.close();
-        }
+        return closeOnCompletion(
+                client,
+                client.login({ ...newRequest(), userName, credential: password, credentialKind: "PASSWORD", deviceId }))
+            .thenApply(reply => toGrant(reply));
     }
 
-    async loginWithOauth2(provider: string,idToken: string,deviceId: string): Promise<ITokenGrant>
+    loginWithOauth2(provider: string,idToken: string,deviceId: string): ICompletionStage<ITokenGrant>
     {
         const client: ISessionCommandServiceClient = this.createClient();
 
-        try
-        {
-            return toGrant(await toPromise(client.loginWithOauth2({ ...newRequest(), provider, idToken, deviceId })));
-        }
-        finally
-        {
-            client.close();
-        }
+        return closeOnCompletion(client,client.loginWithOauth2({ ...newRequest(), provider, idToken, deviceId }))
+            .thenApply(reply => toGrant(reply));
     }
 
-    async refresh(refreshToken: string): Promise<ITokenGrant>
+    refresh(refreshToken: string): ICompletionStage<ITokenGrant>
     {
         const client: ISessionCommandServiceClient = this.createClient();
 
-        try
-        {
-            return toGrant(await toPromise(client.refresh({ ...newRequest(), refreshToken })));
-        }
-        finally
-        {
-            client.close();
-        }
+        return closeOnCompletion(client,client.refresh({ ...newRequest(), refreshToken }))
+            .thenApply(reply => toGrant(reply));
     }
 
-    async logout(sessionId: number,accessToken: string): Promise<void>
+    logout(sessionId: number,accessToken: string): ICompletionStage<void>
     {
         const client: ISessionCommandServiceClient = this.createClient().setAuthorization(accessToken);
 
-        try
-        {
-            await toPromise(client.logout({ ...newRequest(), sessionId }));
-        }
-        finally
-        {
-            client.close();
-        }
+        return closeOnCompletion(client,client.logout({ ...newRequest(), sessionId }))
+            .thenApply(() => undefined);
     }
 
     private createClient(): ISessionCommandServiceClient
@@ -101,23 +77,9 @@ export function newRequest(): AbstractServiceRequest
     return { requestId: crypto.randomUUID(), timestamp: new Date().toISOString() };
 }
 
-export function toPromise<T>(stage: ICompletionStage<T>): Promise<T>
+function closeOnCompletion<T>(client: ISessionCommandServiceClient,stage: ICompletionStage<T>): ICompletionStage<T>
 {
-    return new Promise<T>((resolve,reject) =>
-    {
-        stage
-            .thenApply((value: T) =>
-            {
-                resolve(value);
-                return value;
-            })
-            .exceptionally((error: Error) =>
-            {
-                reject(error);
-                return undefined as unknown as T;
-            })
-            .subscribe();
-    });
+    return stage.thenAccept(() => client.close(),() => client.close());
 }
 
 export function toGrant(reply: IGrantReply): ITokenGrant
