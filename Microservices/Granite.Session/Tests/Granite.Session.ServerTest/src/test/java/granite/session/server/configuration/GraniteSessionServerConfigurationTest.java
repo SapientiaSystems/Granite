@@ -61,6 +61,31 @@ class GraniteSessionServerConfigurationTest
             assertFalse(paths.contains(path),path);
     }
 
+    @Test
+    public void
+    testCommandSidePublicPathsIncludeResolveSession()
+    {
+        List<String> paths = new GraniteSessionCommandServerConfiguration().getPublicPathPatterns(environment("production"));
+
+        assertTrue(
+            paths.containsAll(
+                List.of(
+                    "/session-command-service/login",
+                    "/session-command-service/login-with-oauth2",
+                    "/session-command-service/refresh",
+                    "/session-command-service/resolve-session")));
+    }
+
+    @Test
+    public void
+    testQuerySidePublicPathsExcludeResolveSession()
+    {
+        assertFalse(
+            new GraniteSessionQueryServerConfiguration()
+                .getPublicPathPatterns(environment("production"))
+                .contains("/session-command-service/resolve-session"));
+    }
+
     private static AnnotationConfigApplicationContext defaultContext;
     private static AnnotationConfigApplicationContext extendedContext;
 

@@ -209,6 +209,7 @@ class GraniteSessionCommandServerConfiguration
                 "/session-command-service/login",
                 "/session-command-service/login-with-oauth2",
                 "/session-command-service/refresh",
+                "/session-command-service/resolve-session",
                 "/.well-known/jwks.json"));
         return paths;
     }
