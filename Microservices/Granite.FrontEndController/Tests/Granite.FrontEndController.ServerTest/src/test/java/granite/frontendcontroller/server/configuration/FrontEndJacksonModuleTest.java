@@ -5,7 +5,15 @@
 package granite.frontendcontroller.server.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import granite.frontendcontroller.service.requestreply.CompleteOktaLoginInput;
 import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
+import granite.frontendcontroller.service.requestreply.LoginInput;
+import granite.frontendcontroller.service.requestreply.LoginMethodsOutput;
+import granite.frontendcontroller.service.requestreply.LogoutInput;
+import granite.frontendcontroller.service.requestreply.LogoutOutput;
+import granite.frontendcontroller.service.requestreply.RedirectOutput;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
+import granite.frontendcontroller.service.requestreply.StartOktaLoginInput;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.service.requestreply.UserData;
@@ -22,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
@@ -112,6 +122,79 @@ class FrontEndJacksonModuleTest
         assertEquals(List.of("bad user"),actual.getFailureMessages());
         assertFalse(json.contains("@class"));
         assertFalse(json.contains("@type"));
+    }
+
+    private static final String BASE =
+        "\"userId\":0,\"source\":\"Session.New\",\"command\":\"X\",\"destination\":\"LoginView\"";
+
+    @Test
+    public void
+    sessionInputsDeduceTheirOwnTypes()
+        throws Exception
+    {
+        LoginInput login =
+            assertInstanceOf(
+                LoginInput.class,
+                mapper.readValue("{" + BASE + ",\"userName\":\"amy\",\"password\":\"pw\"}",FrontEndInput.class));
+
+        assertEquals("amy",login.getUserName());
+        assertEquals("pw",login.getPassword());
+        assertFalse(login.toString().contains("pw"));
+
+        assertTrue(
+            assertInstanceOf(
+                LogoutInput.class,
+                mapper.readValue("{" + BASE + ",\"logout\":true}",FrontEndInput.class)).isLogout());
+        assertEquals(
+            "/home",
+            assertInstanceOf(
+                StartOktaLoginInput.class,
+                mapper.readValue("{" + BASE + ",\"returnTo\":\"/home\"}",FrontEndInput.class)).getReturnTo());
+
+        CompleteOktaLoginInput complete =
+            assertInstanceOf(
+                CompleteOktaLoginInput.class,
+                mapper.readValue("{" + BASE + ",\"code\":\"c\",\"state\":\"s\"}",FrontEndInput.class));
+
+        assertEquals("c",complete.getCode());
+        assertEquals("s",complete.getState());
+    }
+
+    @Test
+    public void
+    sessionOutputsRoundTripToTheirOwnTypes()
+        throws Exception
+    {
+        LoginMethodsOutput methods =
+            assertInstanceOf(
+                LoginMethodsOutput.class,
+                roundTrip(new LoginMethodsOutput().setPasswordEnabled(true).setOktaEnabled(false)));
+
+        assertTrue(methods.isPasswordEnabled());
+        assertFalse(methods.isOktaEnabled());
+
+        SessionOutput session =
+            assertInstanceOf(
+                SessionOutput.class,
+                roundTrip(new SessionOutput().setUserName("amy").setAuthorities(Set.of("ROLE_ADMIN")).setStatus("AUTHENTICATED")));
+
+        assertEquals("amy",session.getUserName());
+        assertEquals(Set.of("ROLE_ADMIN"),session.getAuthorities());
+        assertEquals("AUTHENTICATED",session.getStatus());
+        assertEquals(Set.of(),assertInstanceOf(SessionOutput.class,roundTrip(new SessionOutput())).getAuthorities());
+
+        LogoutOutput logout = assertInstanceOf(LogoutOutput.class,roundTrip(new LogoutOutput().setLoggedOut(true)));
+
+        assertTrue(logout.isLoggedOut());
+        assertNull(logout.getEndSessionUrl());
+        assertEquals("https://x",assertInstanceOf(RedirectOutput.class,roundTrip(new RedirectOutput().setUrl("https://x"))).getUrl());
+    }
+
+    private FrontEndOutput
+    roundTrip(FrontEndOutput output)
+        throws Exception
+    {
+        return mapper.readValue(mapper.writeValueAsString(output),FrontEndOutput.class);
     }
 
     @Test

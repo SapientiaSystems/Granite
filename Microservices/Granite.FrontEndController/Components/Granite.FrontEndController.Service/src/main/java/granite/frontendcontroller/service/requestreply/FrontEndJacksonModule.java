@@ -14,7 +14,17 @@ class FrontEndJacksonModule
     FrontEndJacksonModule()
     {
         super("GraniteFrontEndJacksonModule");
-        registerSubtypes(UsersInput.class,UsersOutput.class);
+        registerSubtypes(
+            UsersInput.class,
+            UsersOutput.class,
+            LoginMethodsOutput.class,
+            LoginInput.class,
+            SessionOutput.class,
+            LogoutInput.class,
+            LogoutOutput.class,
+            StartOktaLoginInput.class,
+            RedirectOutput.class,
+            CompleteOktaLoginInput.class);
     }
 }
 
