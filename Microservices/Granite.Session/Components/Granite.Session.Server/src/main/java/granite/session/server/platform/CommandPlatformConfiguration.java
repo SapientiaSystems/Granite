@@ -6,9 +6,7 @@ package granite.session.server.platform;
 
 import granite.session.server.application.ConcurrencyRetryingSessionCommandService;
 import granite.session.server.application.IJwkSetProvider;
-import granite.session.server.application.Oauth2ProvidersProperties;
 import granite.session.service.requestreply.ISessionCommandService;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -18,7 +16,6 @@ import strata.outbox.core.repository.RequestScopedRepositoryConfiguration;
 
 @Configuration
 @EnableTransactionManagement
-@EnableConfigurationProperties(Oauth2ProvidersProperties.class)
 @Import({RequestScopedRepositoryConfiguration.class})
 public
 class CommandPlatformConfiguration

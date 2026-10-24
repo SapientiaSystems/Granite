@@ -1,8 +1,10 @@
 import {ICompletionStage} from "strata.foundation.core/Concurrent";
 import {LoginRequest} from "./LoginRequest";
 import {LoginReply} from "./LoginReply";
-import {LoginWithOauth2Request} from "./LoginWithOauth2Request";
-import {LoginWithOauth2Reply} from "./LoginWithOauth2Reply";
+import {StartOktaLoginRequest} from "./StartOktaLoginRequest";
+import {StartOktaLoginReply} from "./StartOktaLoginReply";
+import {CompleteOktaLoginRequest} from "./CompleteOktaLoginRequest";
+import {CompleteOktaLoginReply} from "./CompleteOktaLoginReply";
 import {LogoutRequest} from "./LogoutRequest";
 import {LogoutReply} from "./LogoutReply";
 import {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
@@ -18,8 +20,11 @@ interface ISessionCommandService
     login(request: LoginRequest):
         ICompletionStage<LoginReply>;
 
-    loginWithOauth2(request: LoginWithOauth2Request):
-        ICompletionStage<LoginWithOauth2Reply>;
+    startOktaLogin(request: StartOktaLoginRequest):
+        ICompletionStage<StartOktaLoginReply>;
+
+    completeOktaLogin(request: CompleteOktaLoginRequest):
+        ICompletionStage<CompleteOktaLoginReply>;
 
     logout(request: LogoutRequest):
         ICompletionStage<LogoutReply>;

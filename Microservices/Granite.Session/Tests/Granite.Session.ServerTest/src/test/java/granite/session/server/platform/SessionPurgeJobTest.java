@@ -5,7 +5,9 @@
 package granite.session.server.platform;
 
 import granite.session.server.application.TestConfiguration;
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
+import granite.session.server.domain.OktaLoginTransaction;
 import granite.session.server.domain.Session;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,6 +92,7 @@ class SessionPurgeJobTest
         SessionPurgeJob batchOfOne =
             new SessionPurgeJob(
                 context.getBeanProvider(ISessionRepository.class),
+                context.getBeanProvider(IOktaLoginTransactionRepository.class),
                 context.getBeanProvider(ISpringUnitOfWorkManager.class),
                 Clock.systemUTC(),
                 Duration.ofMinutes(15),
@@ -117,6 +120,18 @@ class SessionPurgeJobTest
 
     @Test
     public void
+    purgeDeletesOnlyExpiredOktaTransactions()
+    {
+        String expired = saveTransaction(Instant.now().minus(Duration.ofMinutes(1)));
+        String live    = saveTransaction(Instant.now().plus(Duration.ofMinutes(5)));
+
+        assertTrue(job.purgeExpiredOktaTransactions() >= 1);
+        assertFalse(transactionExists(expired));
+        assertTrue(transactionExists(live));
+    }
+
+    @Test
+    public void
     scheduleIsDisabledByProperty()
     {
         assertFalse(job.isAutoStartup());
@@ -138,6 +153,39 @@ class SessionPurgeJobTest
                                 .setAccessToken("purge-" + UUID.randomUUID())
                                 .setExpires(expires))
                         .getSessionId());
+    }
+
+    private String
+    saveTransaction(Instant expires)
+    {
+        String hash = (UUID.randomUUID().toString() + UUID.randomUUID()).replace("-","");
+
+        transaction.executeWithoutResult(
+            status ->
+                context
+                    .getBean(IOktaLoginTransactionRepository.class)
+                    .save(
+                        new OktaLoginTransaction()
+                            .setHashedTransactionId(hash)
+                            .setState("s")
+                            .setNonce("n")
+                            .setCodeVerifier("v")
+                            .setDeviceId("purge-device")
+                            .setExpires(expires)));
+        return hash;
+    }
+
+    private boolean
+    transactionExists(String hash)
+    {
+        return
+            Boolean.TRUE.equals(
+                transaction.execute(
+                    status ->
+                        context
+                            .getBean(IOktaLoginTransactionRepository.class)
+                            .findByHashedTransactionId(hash)
+                            .isPresent()));
     }
 
     private boolean

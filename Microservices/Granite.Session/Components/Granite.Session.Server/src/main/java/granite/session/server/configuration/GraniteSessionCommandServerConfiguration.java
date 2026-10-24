@@ -7,21 +7,24 @@ package granite.session.server.configuration;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
 import granite.session.server.application.ILoginGate;
-import granite.session.server.application.IOauth2IdTokenValidator;
+import granite.session.server.application.IOktaClient;
 import granite.session.server.application.IRefreshTokenService;
 import granite.session.server.application.IServiceTokenProvider;
 import granite.session.server.application.JwkSetProvider;
 import granite.session.server.application.JwtTokenService;
-import granite.session.server.application.Oauth2IdTokenValidator;
-import granite.session.server.application.Oauth2ProvidersProperties;
+import granite.session.server.application.OktaAuthoritiesSource;
+import granite.session.server.application.OktaClient;
+import granite.session.server.application.OktaSettings;
 import granite.session.server.application.RefreshTokenService;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ServiceTokenProvider;
 import granite.session.server.platform.CommandPlatformConfiguration;
 import granite.session.server.platform.JwtKeyLoader;
+import granite.session.server.platform.OktaKeyLoader;
 import granite.session.server.platform.OutboxEventSessionEventSender;
 import granite.session.server.platform.ServiceTokenClientRequestFilter;
 import granite.session.server.platform.SessionPurgeJob;
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 import granite.session.service.event.ISessionEventSender;
@@ -50,6 +53,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @Import({CommandPlatformConfiguration.class})
@@ -115,24 +119,56 @@ class GraniteSessionCommandServerConfiguration
 
     @Bean
     @Scope("singleton")
-    public IOauth2IdTokenValidator
-    oauth2IdTokenValidator(Oauth2ProvidersProperties properties)
+    public OktaSettings
+    oktaSettings(Environment environment)
     {
-        return new Oauth2IdTokenValidator(properties);
+        return
+            new OktaSettings()
+                .setEnabled(environment.getProperty("granite.session.login.okta.enabled",Boolean.class,false))
+                .setIssuer(environment.getProperty("granite.session.okta.issuer"))
+                .setClientId(environment.getProperty("granite.session.okta.client-id"))
+                .setRedirectUri(environment.getProperty("granite.session.okta.redirect-uri"))
+                .setPostLogoutRedirectUri(environment.getProperty("granite.session.okta.post-logout-redirect-uri"))
+                .setAuthoritiesSource(
+                    OktaAuthoritiesSource.valueOf(
+                        environment.getProperty("granite.session.okta.authorities-source","USER").trim().toUpperCase()))
+                .setGroupMapping(
+                    Binder
+                        .get(environment)
+                        .bind("granite.session.okta.group-mapping",Bindable.mapOf(String.class,String.class))
+                        .orElse(Map.of()))
+                .setTransactionTtl(Duration.parse(environment.getProperty("granite.session.okta.transaction-ttl","PT5M")))
+                .setDiscoveryCacheTtl(Duration.parse(environment.getProperty("granite.session.okta.discovery-cache-ttl","PT1H")))
+                .setClockSkew(Duration.parse(environment.getProperty("granite.session.okta.clock-skew","PT60S")))
+                .setHttpTimeout(Duration.parse(environment.getProperty("granite.session.okta.http-timeout","PT5S")));
+    }
+
+    @Bean
+    @Scope("singleton")
+    public IOktaClient
+    oktaClient(OktaSettings settings,Environment environment,ResourceLoader loader,Clock clock)
+    {
+        return
+            new OktaClient(
+                settings,
+                settings.isEnabled() ? new OktaKeyLoader(environment,loader).load(clock) : null,
+                clock);
     }
 
     @Bean
     @Scope("singleton")
     public SessionPurgeJob
     sessionPurgeJob(
-        ObjectProvider<ISessionRepository>       repositories,
-        ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
-        Clock                                    clock,
-        Environment                              environment)
+        ObjectProvider<ISessionRepository>              repositories,
+        ObjectProvider<IOktaLoginTransactionRepository> transactionRepositories,
+        ObjectProvider<ISpringUnitOfWorkManager>        unitOfWorkManagers,
+        Clock                                           clock,
+        Environment                                     environment)
     {
         return
             new SessionPurgeJob(
                 repositories,
+                transactionRepositories,
                 unitOfWorkManagers,
                 clock,
                 Duration.parse(environment.getProperty("granite.session.purge.interval","PT15M")),
@@ -207,7 +243,8 @@ class GraniteSessionCommandServerConfiguration
         paths.addAll(
             List.of(
                 "/session-command-service/login",
-                "/session-command-service/login-with-oauth2",
+                "/session-command-service/start-okta-login",
+                "/session-command-service/complete-okta-login",
                 "/session-command-service/refresh",
                 "/session-command-service/resolve-session",
                 "/.well-known/jwks.json"));

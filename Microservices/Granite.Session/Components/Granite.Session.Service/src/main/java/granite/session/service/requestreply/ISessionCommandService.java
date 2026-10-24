@@ -12,8 +12,11 @@ interface ISessionCommandService
     CompletionStage<LoginReply>
     login(LoginRequest request);
 
-    CompletionStage<LoginWithOauth2Reply>
-    loginWithOauth2(LoginWithOauth2Request request);
+    CompletionStage<StartOktaLoginReply>
+    startOktaLogin(StartOktaLoginRequest request);
+
+    CompletionStage<CompleteOktaLoginReply>
+    completeOktaLogin(CompleteOktaLoginRequest request);
 
     CompletionStage<LogoutReply>
     logout(LogoutRequest request);

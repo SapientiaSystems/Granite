@@ -1,10 +1,9 @@
 import {AbstractServiceRequest} from "strata.foundation.core/Transfer";
 
 export
-interface LoginWithOauth2Request
+interface StartOktaLoginRequest
     extends AbstractServiceRequest
 {
-    provider?: string;
-    idToken?: string;
     deviceId?: string;
+    returnTo?: string;
 }

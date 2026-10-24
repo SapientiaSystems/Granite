@@ -7,8 +7,10 @@ package granite.session.server.application;
 import granite.session.service.requestreply.ISessionCommandService;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
-import granite.session.service.requestreply.LoginWithOauth2Reply;
-import granite.session.service.requestreply.LoginWithOauth2Request;
+import granite.session.service.requestreply.CompleteOktaLoginReply;
+import granite.session.service.requestreply.CompleteOktaLoginRequest;
+import granite.session.service.requestreply.StartOktaLoginReply;
+import granite.session.service.requestreply.StartOktaLoginRequest;
 import granite.session.service.requestreply.RefreshReply;
 import granite.session.service.requestreply.RefreshRequest;
 import jakarta.persistence.OptimisticLockException;
@@ -126,20 +128,50 @@ class ConcurrencyRetryingSessionCommandServiceTest
 
     @Test
     public void
-    retriesOauth2LoginOnce()
+    retriesCompleteOktaLoginOnce()
     {
-        LoginWithOauth2Request oauth2  = new LoginWithOauth2Request().setProvider("okta");
-        LoginWithOauth2Reply   success = new LoginWithOauth2Reply(oauth2).setSuccess(true);
+        CompleteOktaLoginRequest okta    = new CompleteOktaLoginRequest().setTransactionId("t");
+        CompleteOktaLoginReply   success = new CompleteOktaLoginReply(okta).setSuccess(true);
 
         Mockito
-            .when(delegate.loginWithOauth2(oauth2))
+            .when(delegate.completeOktaLogin(okta))
             .thenThrow(new RollbackException("commit failed"))
             .thenReturn(CompletableFuture.completedFuture(success));
 
-        LoginWithOauth2Reply reply = subject.loginWithOauth2(oauth2).toCompletableFuture().join();
+        CompleteOktaLoginReply reply = subject.completeOktaLogin(okta).toCompletableFuture().join();
 
         assertTrue(reply.isSuccess());
-        Mockito.verify(delegate,Mockito.times(2)).loginWithOauth2(oauth2);
+        Mockito.verify(delegate,Mockito.times(2)).completeOktaLogin(okta);
+    }
+
+    @Test
+    public void
+    secondCompleteOktaLoginConflictIsAGenericFailure()
+    {
+        CompleteOktaLoginRequest okta = new CompleteOktaLoginRequest().setTransactionId("t");
+
+        Mockito
+            .when(delegate.completeOktaLogin(okta))
+            .thenThrow(new RollbackException("commit failed"));
+
+        CompleteOktaLoginReply reply = subject.completeOktaLogin(okta).toCompletableFuture().join();
+
+        assertFalse(reply.isSuccess());
+        assertEquals("Unable to log in",reply.getFailureMessage());
+        Mockito.verify(delegate,Mockito.times(2)).completeOktaLogin(okta);
+    }
+
+    @Test
+    public void
+    startOktaLoginPassesThrough()
+    {
+        StartOktaLoginRequest start = new StartOktaLoginRequest().setDeviceId("d");
+        StartOktaLoginReply   reply = new StartOktaLoginReply(start).setSuccess(true);
+
+        Mockito.when(delegate.startOktaLogin(start)).thenReturn(CompletableFuture.completedFuture(reply));
+
+        assertTrue(subject.startOktaLogin(start).toCompletableFuture().join().isSuccess());
+        Mockito.verify(delegate,Mockito.times(1)).startOktaLogin(start);
     }
 
     @Test

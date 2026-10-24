@@ -7,8 +7,8 @@ package granite.session.server.application;
 import granite.session.service.requestreply.ISessionCommandService;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
-import granite.session.service.requestreply.LoginWithOauth2Reply;
-import granite.session.service.requestreply.LoginWithOauth2Request;
+import granite.session.service.requestreply.CompleteOktaLoginReply;
+import granite.session.service.requestreply.CompleteOktaLoginRequest;
 import granite.session.service.requestreply.LogoutAllForUserReply;
 import granite.session.service.requestreply.LogoutAllForUserRequest;
 import granite.session.service.requestreply.LogoutReply;
@@ -17,6 +17,8 @@ import granite.session.service.requestreply.RefreshReply;
 import granite.session.service.requestreply.RefreshRequest;
 import granite.session.service.requestreply.ResolveSessionReply;
 import granite.session.service.requestreply.ResolveSessionRequest;
+import granite.session.service.requestreply.StartOktaLoginReply;
+import granite.session.service.requestreply.StartOktaLoginRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,14 +60,21 @@ class ConcurrencyRetryingSessionCommandService
     }
 
     @Override
-    public CompletionStage<LoginWithOauth2Reply>
-    loginWithOauth2(LoginWithOauth2Request request)
+    public CompletionStage<StartOktaLoginReply>
+    startOktaLogin(StartOktaLoginRequest request)
+    {
+        return delegate.startOktaLogin(request);
+    }
+
+    @Override
+    public CompletionStage<CompleteOktaLoginReply>
+    completeOktaLogin(CompleteOktaLoginRequest request)
     {
         return
             retryOnce(
-                () -> delegate.loginWithOauth2(request),
+                () -> delegate.completeOktaLogin(request),
                 e ->
-                    new LoginWithOauth2Reply(request)
+                    new CompleteOktaLoginReply(request)
                         .setSuccess(false)
                         .setFailureMessage(UNABLE_TO_LOG_IN),
                 request != null ? request.getRequestId() : null);

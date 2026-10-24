@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
 import granite.session.server.platform.MockSessionEventSender;
@@ -77,11 +78,13 @@ class LoginLifecycleTest
         subject =
             new SessionCommandService(
                 repository,
+                Mockito.mock(IOktaLoginTransactionRepository.class),
                 jwtTokenService,
                 new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
-                Mockito.mock(IOauth2IdTokenValidator.class),
+                Mockito.mock(IOktaClient.class),
+                new OktaSettings(),
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),

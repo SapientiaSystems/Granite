@@ -7,8 +7,9 @@ package granite.session.server.configuration;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.JwtTokenService;
-import granite.session.server.application.Oauth2ProviderConfig;
-import granite.session.server.application.Oauth2ProvidersProperties;
+import granite.session.server.application.IOktaClient;
+import granite.session.server.application.OktaAuthoritiesSource;
+import granite.session.server.application.OktaSettings;
 import granite.session.server.application.RefreshTokenService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -230,17 +231,42 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
-    oauth2ProviderConfigFieldsAreValidated()
+    oktaSettingsBindFromTheEnvironment()
     {
-        jakarta.validation.Validator validator =
-            jakarta.validation.Validation
-                .buildDefaultValidatorFactory()
-                .getValidator();
-        Oauth2ProvidersProperties properties =
-            new Oauth2ProvidersProperties()
-                .setProviders(Map.of("google",new Oauth2ProviderConfig()));
+        MockEnvironment env =
+            new MockEnvironment()
+                .withProperty("granite.session.login.okta.enabled","true")
+                .withProperty("granite.session.okta.issuer","https://example.okta.com/oauth2/default")
+                .withProperty("granite.session.okta.client-id","client-1")
+                .withProperty("granite.session.okta.redirect-uri","https://app.example.com/login/callback")
+                .withProperty("granite.session.okta.post-logout-redirect-uri","https://app.example.com/")
+                .withProperty("granite.session.okta.authorities-source","both")
+                .withProperty("granite.session.okta.group-mapping[Granite Admins]","ROLE_ADMIN")
+                .withProperty("granite.session.okta.group-mapping.auditors","ROLE_AUDITOR");
+        OktaSettings    settings = subject.oktaSettings(env);
 
-        assertTrue(validator.validate(properties).size() >= 3);
+        assertTrue(settings.isEnabled());
+        assertEquals("https://example.okta.com/oauth2/default",settings.getIssuer());
+        assertEquals("client-1",settings.getClientId());
+        assertEquals("https://app.example.com/login/callback",settings.getRedirectUri());
+        assertEquals("https://app.example.com/",settings.getPostLogoutRedirectUri());
+        assertEquals(OktaAuthoritiesSource.BOTH,settings.getAuthoritiesSource());
+        assertEquals(Map.of("Granite Admins","ROLE_ADMIN","auditors","ROLE_AUDITOR"),settings.getGroupMapping());
+        assertEquals(java.time.Duration.ofMinutes(5),settings.getTransactionTtl());
+    }
+
+    @Test
+    public void
+    oktaIsDisabledByDefaultAndNeedsNoKeyStore()
+    {
+        MockEnvironment env      = new MockEnvironment();
+        OktaSettings    settings = subject.oktaSettings(env);
+
+        assertFalse(settings.isEnabled());
+        assertEquals(OktaAuthoritiesSource.USER,settings.getAuthoritiesSource());
+        assertInstanceOf(
+            IOktaClient.class,
+            subject.oktaClient(settings,env,new DefaultResourceLoader(),java.time.Clock.systemUTC()));
     }
 
     private Object

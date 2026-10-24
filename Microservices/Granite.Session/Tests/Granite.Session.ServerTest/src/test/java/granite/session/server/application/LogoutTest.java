@@ -5,8 +5,10 @@
 package granite.session.server.application;
 
 import granite.session.server.platform.MockSessionEventSender;
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
+import granite.session.server.domain.SignInMethod;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.LogoutRequest;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -46,7 +49,6 @@ class LogoutTest
     private IJwtTokenService          jwtTokenService;
     private IUserCommandServiceClient userCommandServiceClient;
     private IUserQueryServiceClient   userQueryServiceClient;
-    private IOauth2IdTokenValidator   oauth2Validator;
     private MockSessionEventSender    sender;
     private Clock                     clock;
     private SessionCommandService     subject;
@@ -59,17 +61,18 @@ class LogoutTest
         jwtTokenService          = Mockito.mock(IJwtTokenService.class);
         userCommandServiceClient = Mockito.mock(IUserCommandServiceClient.class);
         userQueryServiceClient   = Mockito.mock(IUserQueryServiceClient.class);
-        oauth2Validator          = Mockito.mock(IOauth2IdTokenValidator.class);
         sender                   = new MockSessionEventSender();
         clock                    = Clock.fixed(NOW,ZoneOffset.UTC);
         subject =
             new SessionCommandService(
                 repository,
+                Mockito.mock(IOktaLoginTransactionRepository.class),
                 jwtTokenService,
                 new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
-                oauth2Validator,
+                Mockito.mock(IOktaClient.class),
+                new OktaSettings(),
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
@@ -148,6 +151,97 @@ class LogoutTest
             "expected failure message to mention 'session not found' but was: " + reply.getFailureMessage());
         Mockito.verify(repository,Mockito.never()).delete(Mockito.any(Session.class));
         assertTrue(sender.getEvents().isEmpty(),"expected no events");
+    }
+
+    @Test
+    public void
+    oktaLogoutReturnsEndSessionUrl()
+    {
+        IOktaClient okta = oktaSubject();
+        Session     existing =
+            stubExisting()
+                .setSignInMethod(SignInMethod.OKTA)
+                .setOktaIdToken("okta.id.token");
+        String      url  = "https://okta.example.com/oauth2/default/v1/logout?id_token_hint=okta.id.token";
+
+        Mockito.when(okta.buildEndSessionUrl("okta.id.token")).thenReturn(Optional.of(url));
+
+        LogoutReply reply = logout(SESSION_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(url,reply.getEndSessionUrl());
+        assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
+        assertNull(existing.getOktaIdToken());
+    }
+
+    @Test
+    public void
+    passwordLogoutHasNoEndSessionUrl()
+    {
+        IOktaClient okta = oktaSubject();
+
+        stubExisting().setSignInMethod(SignInMethod.PASSWORD);
+
+        LogoutReply reply = logout(SESSION_ID);
+
+        assertTrue(reply.isSuccess());
+        assertNull(reply.getEndSessionUrl());
+        Mockito.verifyNoInteractions(okta);
+    }
+
+    @Test
+    public void
+    unavailableEndSessionUrlStillLogsOut()
+    {
+        IOktaClient okta     = oktaSubject();
+        Session     existing = stubExisting().setSignInMethod(SignInMethod.OKTA).setOktaIdToken("okta.id.token");
+
+        Mockito.when(okta.buildEndSessionUrl(Mockito.anyString())).thenThrow(new OktaLoginException("down"));
+
+        LogoutReply reply = logout(SESSION_ID);
+
+        assertTrue(reply.isSuccess());
+        assertNull(reply.getEndSessionUrl());
+        assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
+    }
+
+    @Test
+    public void
+    logoutOfClosedOktaSessionHasNoEndSessionUrl()
+    {
+        IOktaClient okta = oktaSubject();
+
+        stubExisting()
+            .setSignInMethod(SignInMethod.OKTA)
+            .setOktaIdToken("okta.id.token")
+            .setClosedReason(SessionClosedReason.REPLACED);
+
+        assertNull(logout(SESSION_ID).getEndSessionUrl());
+        Mockito.verifyNoInteractions(okta);
+    }
+
+    private IOktaClient
+    oktaSubject()
+    {
+        IOktaClient okta = Mockito.mock(IOktaClient.class);
+
+        subject =
+            new SessionCommandService(
+                repository,
+                Mockito.mock(IOktaLoginTransactionRepository.class),
+                jwtTokenService,
+                new RefreshTokenService(),
+                userCommandServiceClient,
+                userQueryServiceClient,
+                okta,
+                new OktaSettings().setEnabled(true),
+                new RequiredAuthoritiesLoginGate(List.of()),
+                sender,
+                new ModelMapper().registerModule(new MappingModule()),
+                Duration.ofHours(24),
+                Duration.ofMinutes(2),
+                clock);
+        return okta;
     }
 
     private LogoutReply

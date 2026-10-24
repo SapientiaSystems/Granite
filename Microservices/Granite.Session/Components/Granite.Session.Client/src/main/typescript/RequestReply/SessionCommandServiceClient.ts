@@ -7,8 +7,10 @@ import {Instant} from "@js-joda/core";
 import {
     LoginReply,
     LoginRequest,
-    LoginWithOauth2Reply,
-    LoginWithOauth2Request,
+    StartOktaLoginReply,
+    StartOktaLoginRequest,
+    CompleteOktaLoginReply,
+    CompleteOktaLoginRequest,
     LogoutReply,
     LogoutRequest,
     LogoutAllForUserReply,
@@ -53,11 +55,19 @@ class SessionCommandServiceClient
             this.initializeRequest(request));
     }
 
-    loginWithOauth2(request: LoginWithOauth2Request): ICompletionStage<LoginWithOauth2Reply>
+    startOktaLogin(request: StartOktaLoginRequest): ICompletionStage<StartOktaLoginReply>
     {
-        console.log("SessionCommandServiceClient.loginWithOauth2");
-        return this.doPost<LoginWithOauth2Reply,LoginWithOauth2Request>(
-            "login-with-oauth2",
+        console.log("SessionCommandServiceClient.startOktaLogin");
+        return this.doPost<StartOktaLoginReply,StartOktaLoginRequest>(
+            "start-okta-login",
+            this.initializeRequest(request));
+    }
+
+    completeOktaLogin(request: CompleteOktaLoginRequest): ICompletionStage<CompleteOktaLoginReply>
+    {
+        console.log("SessionCommandServiceClient.completeOktaLogin");
+        return this.doPost<CompleteOktaLoginReply,CompleteOktaLoginRequest>(
+            "complete-okta-login",
             this.initializeRequest(request));
     }
 

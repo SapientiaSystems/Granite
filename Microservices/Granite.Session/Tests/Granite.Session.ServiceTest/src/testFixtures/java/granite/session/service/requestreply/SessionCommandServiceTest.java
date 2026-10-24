@@ -42,22 +42,22 @@ class SessionCommandServiceTest
 
     @Test
     public void
-    testLoginWithOauth2()
+    testCompleteOktaLoginWithUnknownTransactionFails()
     {
-        LoginWithOauth2Reply reply =
+        CompleteOktaLoginReply reply =
             getSubject()
-                .loginWithOauth2(
-                    new LoginWithOauth2Request()
-                        .setProvider(oauth2Provider())
-                        .setIdToken(oauth2IdToken())
+                .completeOktaLogin(
+                    new CompleteOktaLoginRequest()
+                        .setCode("code-" + UUID.randomUUID())
+                        .setState("state-" + UUID.randomUUID())
+                        .setTransactionId("unknown-" + UUID.randomUUID())
                         .setDeviceId(uniqueDeviceId()))
                 .toCompletableFuture()
                 .join();
 
-        Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        Assertions.assertNotNull(reply.getAccessToken());
-        Assertions.assertNotNull(reply.getSessionData());
-        Assertions.assertNotNull(reply.getSessionData().getAuthorities());
+        Assertions.assertFalse(reply.isSuccess());
+        Assertions.assertNull(reply.getSessionHandle());
+        Assertions.assertNull(reply.getSessionData());
     }
 
     @Test
@@ -261,12 +261,6 @@ class SessionCommandServiceTest
                 .setCredentialKind(CredentialKind.PASSWORD)
                 .setDeviceId(deviceId);
     }
-
-    protected String
-    oauth2Provider() { return "test"; }
-
-    protected String
-    oauth2IdToken() { return "test-id-token-" + UUID.randomUUID(); }
 
     protected String
     credentialFor(String userName) { return "password-" + userName; }

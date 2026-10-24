@@ -36,13 +36,24 @@ class SessionCommandServiceClient
     }
 
     @Override
-    public CompletionStage<LoginWithOauth2Reply>
-    loginWithOauth2(LoginWithOauth2Request request)
+    public CompletionStage<StartOktaLoginReply>
+    startOktaLogin(StartOktaLoginRequest request)
     {
         return
             doPostAsync(
-                "login-with-oauth2",
-                LoginWithOauth2Reply.class,
+                "start-okta-login",
+                StartOktaLoginReply.class,
+                request);
+    }
+
+    @Override
+    public CompletionStage<CompleteOktaLoginReply>
+    completeOktaLogin(CompleteOktaLoginRequest request)
+    {
+        return
+            doPostAsync(
+                "complete-okta-login",
+                CompleteOktaLoginReply.class,
                 request);
     }
 

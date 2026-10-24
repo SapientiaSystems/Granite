@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.service.event.ISessionEventSender;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -27,27 +28,31 @@ class ApplicationConfiguration
     @RequestScope
     public ITransactionalSessionCommandService
     sessionCommandService(
-        ISessionRepository        repository,
-        IJwtTokenService          jwtTokenService,
-        IRefreshTokenService      refreshTokenService,
-        IUserCommandServiceClient userCommandServiceClient,
-        IUserQueryServiceClient   userQueryServiceClient,
-        IOauth2IdTokenValidator   oauth2Validator,
-        ILoginGate                loginGate,
-        ISessionEventSender       sender,
-        ModelMapper               mapper,
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        ILoginGate                      loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
         @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,
         @Value("${granite.session.token.renewal-margin:PT2M}") String renewalMargin,
-        Clock                     clock)
+        Clock                           clock)
     {
         return
             new SessionCommandService(
                 repository,
+                transactionRepository,
                 jwtTokenService,
                 refreshTokenService,
                 userCommandServiceClient,
                 userQueryServiceClient,
-                oauth2Validator,
+                oktaClient,
+                oktaSettings,
                 loginGate,
                 sender,
                 mapper,

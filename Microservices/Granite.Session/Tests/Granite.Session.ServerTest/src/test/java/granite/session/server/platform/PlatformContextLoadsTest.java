@@ -5,7 +5,7 @@
 package granite.session.server.platform;
 
 import granite.session.server.application.IJwtTokenService;
-import granite.session.server.application.IOauth2IdTokenValidator;
+import granite.session.server.application.IOktaClient;
 import granite.session.server.application.ITransactionalSessionCommandService;
 import granite.session.server.application.ITransactionalSessionQueryService;
 import granite.session.service.event.ISessionEventSender;
@@ -35,7 +35,7 @@ class PlatformContextLoadsTest
     contextLoadsWithAllBeansWired()
     {
         assertNotNull(context.getBean(IJwtTokenService.class));
-        assertNotNull(context.getBean(IOauth2IdTokenValidator.class));
+        assertNotNull(context.getBean(IOktaClient.class));
         assertNotNull(context.getBean(Clock.class));
         assertTrue(
             context.getBeanNamesForType(ISessionEventSender.class).length > 0);

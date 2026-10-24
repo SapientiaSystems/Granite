@@ -4,7 +4,9 @@
 
 package granite.session.server.platform;
 
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
+import granite.session.server.domain.OktaLoginTransaction;
 import granite.session.server.domain.Session;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,35 +28,62 @@ public
 class SessionPurgeJob
     implements SmartLifecycle
 {
-    private final ObjectProvider<ISessionRepository>       repositories;
-    private final ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers;
-    private final Clock                                    clock;
-    private final Duration                                 interval;
-    private final int                                      batchSize;
-    private final boolean                                  enabled;
-    private final Logger                                   logger;
-    private ThreadPoolTaskScheduler                        scheduler;
+    private final ObjectProvider<ISessionRepository>              repositories;
+    private final ObjectProvider<IOktaLoginTransactionRepository> transactionRepositories;
+    private final ObjectProvider<ISpringUnitOfWorkManager>        unitOfWorkManagers;
+    private final Clock                                           clock;
+    private final Duration                                        interval;
+    private final int                                             batchSize;
+    private final boolean                                         enabled;
+    private final Logger                                          logger;
+    private ThreadPoolTaskScheduler                               scheduler;
 
     public
     SessionPurgeJob(
-        ObjectProvider<ISessionRepository>       repositories,
-        ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
-        Clock                                    clock,
-        Duration                                 interval,
-        int                                      batchSize,
-        boolean                                  enabled)
+        ObjectProvider<ISessionRepository>              repositories,
+        ObjectProvider<IOktaLoginTransactionRepository> transactionRepositories,
+        ObjectProvider<ISpringUnitOfWorkManager>        unitOfWorkManagers,
+        Clock                                           clock,
+        Duration                                        interval,
+        int                                             batchSize,
+        boolean                                         enabled)
     {
         if (batchSize < 1)
             throw new IllegalArgumentException("batchSize must be at least 1");
 
-        this.repositories       = Objects.requireNonNull(repositories,"repositories");
-        this.unitOfWorkManagers = Objects.requireNonNull(unitOfWorkManagers,"unitOfWorkManagers");
-        this.clock              = Objects.requireNonNull(clock,"clock");
-        this.interval           = Objects.requireNonNull(interval,"interval");
-        this.batchSize          = batchSize;
-        this.enabled            = enabled;
-        this.logger             = LogManager.getLogger(SessionPurgeJob.class);
-        this.scheduler          = null;
+        this.repositories            = Objects.requireNonNull(repositories,"repositories");
+        this.transactionRepositories = Objects.requireNonNull(transactionRepositories,"transactionRepositories");
+        this.unitOfWorkManagers      = Objects.requireNonNull(unitOfWorkManagers,"unitOfWorkManagers");
+        this.clock                   = Objects.requireNonNull(clock,"clock");
+        this.interval                = Objects.requireNonNull(interval,"interval");
+        this.batchSize               = batchSize;
+        this.enabled                 = enabled;
+        this.logger                  = LogManager.getLogger(SessionPurgeJob.class);
+        this.scheduler               = null;
+    }
+
+    public int
+    purgeExpiredOktaTransactions()
+    {
+        boolean bound = RequestContextHolder.getRequestAttributes() == null;
+
+        if (bound)
+            RequestContextHolder.setRequestAttributes(new RequestAttributeMap());
+
+        try
+        {
+            Integer purged =
+                new TransactionTemplate(unitOfWorkManagers.getObject())
+                    .execute(status -> deleteExpired(transactionRepositories.getObject(),clock.instant()));
+
+            logger.info("purged {} expired Okta login transaction(s)",purged);
+            return purged != null ? purged : 0;
+        }
+        finally
+        {
+            if (bound)
+                RequestContextHolder.resetRequestAttributes();
+        }
     }
 
     public int
@@ -126,12 +155,25 @@ class SessionPurgeJob
         return count;
     }
 
+    private int
+    deleteExpired(IOktaLoginTransactionRepository repository,Instant now)
+    {
+        List<OktaLoginTransaction> expired = repository.findExpiredBefore(now);
+        int                        count   = Math.min(batchSize,expired.size());
+
+        for (OktaLoginTransaction transaction : expired.subList(0,count))
+            repository.delete(transaction);
+
+        return count;
+    }
+
     private void
     purgeSafely()
     {
         try
         {
             purgeExpired();
+            purgeExpiredOktaTransactions();
         }
         catch (RuntimeException e)
         {

@@ -13,13 +13,15 @@ class LogoutContext
     private LogoutRequest request;
     private Session       loaded;
     private boolean       notFound;
+    private String        endSessionUrl;
 
     public
     LogoutContext(LogoutRequest req)
     {
-        request  = req;
-        loaded   = null;
-        notFound = false;
+        request       = req;
+        loaded        = null;
+        notFound      = false;
+        endSessionUrl = null;
     }
 
     public LogoutContext
@@ -36,6 +38,13 @@ class LogoutContext
         return this;
     }
 
+    public LogoutContext
+    setEndSessionUrl(String value)
+    {
+        endSessionUrl = value;
+        return this;
+    }
+
     public LogoutRequest
     getRequest() { return request; }
 
@@ -47,6 +56,9 @@ class LogoutContext
 
     public boolean
     isNotFound() { return notFound; }
+
+    public String
+    getEndSessionUrl() { return endSessionUrl; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -6,15 +6,18 @@ package granite.session.server.application;
 
 import granite.session.server.domain.ISessionEvent;
 import granite.session.server.domain.ISessionEventObserver;
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
+import granite.session.server.domain.OktaLoginTransaction;
 import granite.session.server.domain.Session;
+import granite.session.server.domain.SignInMethod;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
+import granite.session.service.requestreply.CompleteOktaLoginReply;
+import granite.session.service.requestreply.CompleteOktaLoginRequest;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
-import granite.session.service.requestreply.LoginWithOauth2Reply;
-import granite.session.service.requestreply.LoginWithOauth2Request;
 import granite.session.service.requestreply.LogoutAllForUserReply;
 import granite.session.service.requestreply.LogoutAllForUserRequest;
 import granite.session.service.requestreply.LogoutReply;
@@ -24,10 +27,16 @@ import granite.session.service.requestreply.RefreshRequest;
 import granite.session.service.requestreply.ResolveSessionReply;
 import granite.session.service.requestreply.ResolveSessionRequest;
 import granite.session.service.requestreply.SessionData;
+import granite.session.service.requestreply.StartOktaLoginReply;
+import granite.session.service.requestreply.StartOktaLoginRequest;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
+import granite.user.service.requestreply.CreateUserData;
+import granite.user.service.requestreply.CreateUserReply;
+import granite.user.service.requestreply.CreateUserRequest;
+import granite.user.service.requestreply.CredentialKind;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.FindUsersByKeyReply;
@@ -43,13 +52,18 @@ import strata.foundation.core.event.EventIdentifiersData;
 import strata.foundation.core.event.StandardEventType;
 import strata.foundation.core.transfer.ExceptionData;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -58,52 +72,65 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public
 class SessionCommandService
     implements ITransactionalSessionCommandService,ISessionEventObserver
 {
-    private final ISessionRepository        repository;
-    private final IJwtTokenService          jwtTokenService;
-    private final IRefreshTokenService      refreshTokenService;
-    private final IUserCommandServiceClient userCommandServiceClient;
-    private final IUserQueryServiceClient   userQueryServiceClient;
-    private final IOauth2IdTokenValidator   oauth2Validator;
-    private final ILoginGate                loginGate;
-    private final ISessionEventSender       sender;
-    private final ModelMapper               mapper;
-    private final Duration                  maxLifetime;
-    private final Duration                  renewalMargin;
-    private final Clock                     clock;
-    private final ConflictDetector          conflictDetector;
-    private final Logger                    logger;
+    private final ISessionRepository              repository;
+    private final IOktaLoginTransactionRepository transactionRepository;
+    private final IJwtTokenService                jwtTokenService;
+    private final IRefreshTokenService            refreshTokenService;
+    private final IUserCommandServiceClient       userCommandServiceClient;
+    private final IUserQueryServiceClient         userQueryServiceClient;
+    private final IOktaClient                     oktaClient;
+    private final OktaSettings                    oktaSettings;
+    private final OktaAuthorities                 oktaAuthorities;
+    private final ILoginGate                      loginGate;
+    private final ISessionEventSender             sender;
+    private final ModelMapper                     mapper;
+    private final Duration                        maxLifetime;
+    private final Duration                        renewalMargin;
+    private final Clock                           clock;
+    private final ConflictDetector                conflictDetector;
+    private final Map<String,OktaIdentity>        exchangedIdentities;
+    private final Logger                          logger;
 
-    private static final Duration ACTIVITY_INTERVAL = Duration.ofMinutes(1);
-    private static final String   INVALID_SESSION   = "invalid session";
+    private static final Duration ACTIVITY_INTERVAL   = Duration.ofMinutes(1);
+    private static final String   INVALID_SESSION     = "invalid session";
+    private static final String   INVALID_CREDENTIALS = "invalid credentials";
+    private static final String   OKTA_PROVIDER       = "okta";
+    private static final String   OKTA_ROLE           = "ROLE_USER";
 
     @Inject
     public
     SessionCommandService(
-        ISessionRepository        repository,
-        IJwtTokenService          jwtTokenService,
-        IRefreshTokenService      refreshTokenService,
-        IUserCommandServiceClient userCommandServiceClient,
-        IUserQueryServiceClient   userQueryServiceClient,
-        IOauth2IdTokenValidator   oauth2Validator,
-        ILoginGate                loginGate,
-        ISessionEventSender       sender,
-        ModelMapper               mapper,
-        Duration                  maxLifetime,
-        Duration                  renewalMargin,
-        Clock                     clock)
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        ILoginGate                      loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
+        Duration                        maxLifetime,
+        Duration                        renewalMargin,
+        Clock                           clock)
     {
         this.repository               = repository;
+        this.transactionRepository    = transactionRepository;
         this.jwtTokenService          = jwtTokenService;
         this.refreshTokenService      = refreshTokenService;
         this.userCommandServiceClient = userCommandServiceClient;
         this.userQueryServiceClient   = userQueryServiceClient;
-        this.oauth2Validator          = oauth2Validator;
+        this.oktaClient               = oktaClient;
+        this.oktaSettings             = oktaSettings != null ? oktaSettings : new OktaSettings();
+        this.oktaAuthorities          = new OktaAuthorities(this.oktaSettings);
         this.loginGate                = loginGate;
         this.sender                   = sender;
         this.mapper                   = mapper;
@@ -111,6 +138,7 @@ class SessionCommandService
         this.renewalMargin            = renewalMargin;
         this.clock                    = clock;
         this.conflictDetector         = new ConflictDetector();
+        this.exchangedIdentities      = new ConcurrentHashMap<>();
         this.logger                   = LogManager.getLogger(SessionCommandService.class);
     }
 
@@ -137,26 +165,45 @@ class SessionCommandService
     }
 
     @Override
-    public CompletionStage<LoginWithOauth2Reply>
-    loginWithOauth2(LoginWithOauth2Request request)
+    public CompletionStage<StartOktaLoginReply>
+    startOktaLogin(StartOktaLoginRequest request)
     {
         logger.debug(
-            "loginWithOauth2({})",
+            "startOktaLogin({})",
             request != null ? request.getRequestId() : null);
         return
             CompletableFuture
-                .supplyAsync(() -> validateOauth2(request),new CurrentThreadExecutor())
-                .thenApply(this::mapToOauth2Context)
-                .thenApply(this::validateIdToken)
-                .thenApply(this::resolveUser)
-                .thenApply(this::applyOauth2LoginGate)
-                .thenApply(this::applyOauth2Lifecycle)
-                .thenApply(this::createOauth2Session)
-                .thenApply(this::mintOauth2Jwt)
-                .thenApply(this::linkOauth2Replaced)
-                .thenApply(this::saveOauth2)
-                .thenApply(this::buildOauth2Reply)
-                .exceptionally(e -> buildOauth2Reply(e,request));
+                .supplyAsync(() -> validateStartOkta(request),new CurrentThreadExecutor())
+                .thenApply(this::mapToStartOktaContext)
+                .thenApply(this::prepareOktaTransaction)
+                .thenApply(this::buildAuthorizeUrl)
+                .thenApply(this::saveOktaTransaction)
+                .thenApply(this::buildStartOktaReply)
+                .exceptionally(e -> buildStartOktaReply(e,request));
+    }
+
+    @Override
+    public CompletionStage<CompleteOktaLoginReply>
+    completeOktaLogin(CompleteOktaLoginRequest request)
+    {
+        logger.debug(
+            "completeOktaLogin({})",
+            request != null ? request.getRequestId() : null);
+        return
+            CompletableFuture
+                .supplyAsync(() -> validateCompleteOkta(request),new CurrentThreadExecutor())
+                .thenApply(this::mapToCompleteOktaContext)
+                .thenApply(this::consumeOktaTransaction)
+                .thenApply(this::exchangeOktaCode)
+                .thenApply(this::resolveOktaUser)
+                .thenApply(this::applyOktaLoginGate)
+                .thenApply(this::applyOktaLifecycle)
+                .thenApply(this::createOktaSession)
+                .thenApply(this::mintOktaJwt)
+                .thenApply(this::linkOktaReplaced)
+                .thenApply(this::saveOktaSession)
+                .thenApply(this::buildCompleteOktaReply)
+                .exceptionally(e -> buildCompleteOktaReply(e,request));
     }
 
     @Override
@@ -370,7 +417,10 @@ class SessionCommandService
                         context.getDeviceId(),
                         context.getValidatedAuthorities(),
                         refreshToken,
-                        sessionHandle))
+                        sessionHandle,
+                        context.getCredentialKind() == CredentialKind.ACCESS_TOKEN
+                            ? SignInMethod.ACCESS_TOKEN
+                            : SignInMethod.PASSWORD))
                 .setRefreshToken(refreshToken)
                 .setSessionHandle(sessionHandle);
     }
@@ -418,103 +468,217 @@ class SessionCommandService
         return context.setCreated(session);
     }
 
-    protected LoginWithOauth2Request
-    validateOauth2(LoginWithOauth2Request request)
+    protected StartOktaLoginRequest
+    validateStartOkta(StartOktaLoginRequest request)
     {
-        logger.debug("<loginWithOauth2> validate");
+        logger.debug("<startOktaLogin> validate");
 
         Objects.requireNonNull(request,"request");
         Objects.requireNonNull(
-            request.getProvider(),
-            "validation failed: provider was not provided");
-
-        if (request.getProvider().isBlank())
-            throw new IllegalArgumentException("validation failed: provider was blank");
-
-        Objects.requireNonNull(
-            request.getIdToken(),
-            "validation failed: idToken was not provided");
-
-        if (request.getIdToken().isBlank())
-            throw new IllegalArgumentException("validation failed: idToken was blank");
-
-        Objects.requireNonNull(
             request.getDeviceId(),
             "validation failed: deviceId was not provided");
+
+        if (request.getDeviceId().isBlank())
+            throw new IllegalArgumentException("validation failed: deviceId was blank");
+
         return request;
     }
 
-    protected LoginWithOauth2Context
-    mapToOauth2Context(LoginWithOauth2Request request)
+    protected StartOktaLoginContext
+    mapToStartOktaContext(StartOktaLoginRequest request)
     {
-        logger.debug("<loginWithOauth2> mapToContext({})",request.getRequestId());
-        return new LoginWithOauth2Context(request);
+        logger.debug("<startOktaLogin> mapToContext({})",request.getRequestId());
+        return new StartOktaLoginContext(request);
     }
 
-    protected LoginWithOauth2Context
-    validateIdToken(LoginWithOauth2Context context)
+    protected StartOktaLoginContext
+    prepareOktaTransaction(StartOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> validateIdToken(provider={})",context.getProvider());
+        logger.debug("<startOktaLogin> prepareTransaction");
+
+        if (!oktaSettings.isEnabled())
+            return context.setRejected(true);
+
+        Instant now           = Instant.now(clock);
+        String  transactionId = refreshTokenService.generate();
+        String  verifier      = refreshTokenService.generate();
+
+        return
+            context
+                .setTransactionId(transactionId)
+                .setCodeChallenge(codeChallenge(verifier))
+                .setPromptLogin(!liveSessions(repository.findOpenByDeviceId(context.getDeviceId()),now).isEmpty())
+                .setTransaction(
+                    new OktaLoginTransaction()
+                        .setHashedTransactionId(refreshTokenService.hash(transactionId))
+                        .setState(refreshTokenService.generate())
+                        .setNonce(refreshTokenService.generate())
+                        .setCodeVerifier(verifier)
+                        .setReturnTo(sanitizeReturnTo(context.getReturnTo()))
+                        .setDeviceId(context.getDeviceId())
+                        .setExpires(now.plus(oktaSettings.getTransactionTtl())));
+    }
+
+    protected StartOktaLoginContext
+    buildAuthorizeUrl(StartOktaLoginContext context)
+    {
+        logger.debug("<startOktaLogin> buildAuthorizeUrl(prompt={})",context.isPromptLogin());
+
+        if (context.isRejected())
+            return context;
+
+        OktaLoginTransaction transaction = context.getTransaction();
+
+        return
+            context.setAuthorizeUrl(
+                oktaClient.buildAuthorizeUrl(
+                    transaction.getState(),
+                    transaction.getNonce(),
+                    context.getCodeChallenge(),
+                    context.isPromptLogin()));
+    }
+
+    protected StartOktaLoginContext
+    saveOktaTransaction(StartOktaLoginContext context)
+    {
+        logger.debug("<startOktaLogin> save");
+
+        if (context.isRejected())
+            return context;
+
+        return context.setTransaction(transactionRepository.save(context.getTransaction()));
+    }
+
+    protected CompleteOktaLoginRequest
+    validateCompleteOkta(CompleteOktaLoginRequest request)
+    {
+        logger.debug("<completeOktaLogin> validate");
+
+        Objects.requireNonNull(request,"request");
+        return request;
+    }
+
+    protected CompleteOktaLoginContext
+    mapToCompleteOktaContext(CompleteOktaLoginRequest request)
+    {
+        logger.debug("<completeOktaLogin> mapToContext({})",request.getRequestId());
+        return new CompleteOktaLoginContext(request);
+    }
+
+    protected CompleteOktaLoginContext
+    consumeOktaTransaction(CompleteOktaLoginContext context)
+    {
+        logger.debug("<completeOktaLogin> consumeTransaction");
+
+        if (!oktaSettings.isEnabled())
+            return context.reject("okta login disabled");
+
+        if (isBlank(context.getTransactionId()))
+            return context.reject("missing transaction");
+
+        String                         hash  = refreshTokenService.hash(context.getTransactionId());
+        Optional<OktaLoginTransaction> found = transactionRepository.findByHashedTransactionId(hash);
+
+        if (found.isEmpty())
+            return context.reject("unknown transaction");
+
+        OktaLoginTransaction transaction = found.get();
+
+        transactionRepository.delete(transaction);
+        context
+            .setHashedTransactionId(hash)
+            .setTransaction(transaction);
+
+        if (transaction.isExpired(Instant.now(clock)))
+            return context.reject("expired transaction");
+
+        if (!matches(transaction.getDeviceId(),context.getDeviceId()))
+            return context.reject("device mismatch");
+
+        if (!matches(transaction.getState(),context.getState()))
+            return context.reject("state mismatch");
+
+        if (isBlank(context.getCode()))
+            return context.reject("missing code");
+
+        return context;
+    }
+
+    protected CompleteOktaLoginContext
+    exchangeOktaCode(CompleteOktaLoginContext context)
+    {
+        logger.debug("<completeOktaLogin> exchangeCode");
+
+        if (context.isRejected())
+            return context;
+
+        OktaIdentity remembered = exchangedIdentities.get(context.getHashedTransactionId());
+
+        if (remembered != null)
+            return context.setIdentity(remembered);
+
+        OktaLoginTransaction transaction = context.getTransaction();
 
         try
         {
-            Oauth2ValidatedIdentity identity =
-                oauth2Validator.validate(context.getProvider(),context.getIdToken());
+            OktaIdentity identity =
+                oktaClient.exchange(
+                    context.getCode(),
+                    transaction.getCodeVerifier(),
+                    transaction.getNonce());
 
-            return context.setValidatedIdentity(identity);
+            exchangedIdentities.put(context.getHashedTransactionId(),identity);
+            return context.setIdentity(identity);
         }
-        catch (Oauth2ValidationException e)
+        catch (OktaLoginException e)
         {
-            logger.info("<loginWithOauth2> id token rejected: {}",e.getMessage());
-            return context.setFailureReason(e.getMessage());
+            logger.info("<completeOktaLogin> Okta login rejected: {}",e.getMessage());
+            return context.reject("okta rejected the login");
         }
     }
 
-    protected LoginWithOauth2Context
-    resolveUser(LoginWithOauth2Context context)
+    protected CompleteOktaLoginContext
+    resolveOktaUser(CompleteOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> resolveUser");
+        logger.debug("<completeOktaLogin> resolveUser");
 
-        if (context.getValidatedIdentity() == null)
+        if (context.isRejected())
             return context;
 
-        String   provider = context.getValidatedIdentity().getProvider();
-        String   sub      = context.getValidatedIdentity().getSub();
-        UserData existing = findUserByExternalIdentity(provider,sub);
+        OktaIdentity identity = context.getIdentity();
+        UserData     user     = findUserByExternalIdentity(OKTA_PROVIDER,identity.getSubject());
 
-        if (existing != null)
-            return
-                context
-                    .setUserId(existing.getUserId())
-                    .setAuthorities(existing.getAuthorities());
+        if (user == null)
+            user = createOktaUser(identity);
 
-        return context.setFailureReason("invalid credentials");
-    }
+        if (user == null || user.getUserId() == null)
+            return context.reject("user unavailable");
 
-    protected LoginWithOauth2Context
-    applyOauth2LoginGate(LoginWithOauth2Context context)
-    {
-        logger.debug("<loginWithOauth2> applyLoginGate");
-
-        if (context.getUserId() == null || context.getFailureReason() != null)
-            return context;
-
-        if (loginGate.permits(context.getAuthorities()))
-            return context;
-
-        logger.info("<loginWithOauth2> refused by login gate");
         return
             context
-                .setUserId(null)
-                .setFailureReason("invalid credentials");
+                .setUserId(user.getUserId())
+                .setUserName(user.getUserName())
+                .setAuthorities(oktaAuthorities.calculate(user.getAuthorities(),identity.getGroups()));
     }
 
-    protected LoginWithOauth2Context
-    applyOauth2Lifecycle(LoginWithOauth2Context context)
+    protected CompleteOktaLoginContext
+    applyOktaLoginGate(CompleteOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> applyLifecycle");
+        logger.debug("<completeOktaLogin> applyLoginGate");
 
-        if (context.getUserId() == null || context.getFailureReason() != null)
+        if (context.isRejected() || loginGate.permits(context.getAuthorities()))
+            return context;
+
+        logger.info("<completeOktaLogin> refused by login gate");
+        return context.reject("refused by login gate");
+    }
+
+    protected CompleteOktaLoginContext
+    applyOktaLifecycle(CompleteOktaLoginContext context)
+    {
+        logger.debug("<completeOktaLogin> applyLifecycle");
+
+        if (context.isRejected())
             return context;
 
         return
@@ -522,12 +686,12 @@ class SessionCommandService
                 prepareLifecycle(context.getUserId(),context.getDeviceId()));
     }
 
-    protected LoginWithOauth2Context
-    createOauth2Session(LoginWithOauth2Context context)
+    protected CompleteOktaLoginContext
+    createOktaSession(CompleteOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> createSession");
+        logger.debug("<completeOktaLogin> createSession");
 
-        if (context.getUserId() == null)
+        if (context.isRejected())
             return context;
 
         String refreshToken  = refreshTokenService.generate();
@@ -542,33 +706,31 @@ class SessionCommandService
                         context.getDeviceId(),
                         context.getAuthorities(),
                         refreshToken,
-                        sessionHandle))
-                .setRefreshToken(refreshToken)
+                        sessionHandle,
+                        SignInMethod.OKTA)
+                        .setOktaIdToken(context.getIdentity().getIdToken())
+                        .setOktaGroups(context.getIdentity().getGroups()))
                 .setSessionHandle(sessionHandle);
     }
 
-    protected LoginWithOauth2Context
-    mintOauth2Jwt(LoginWithOauth2Context context)
+    protected CompleteOktaLoginContext
+    mintOktaJwt(CompleteOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> mintJwt");
+        logger.debug("<completeOktaLogin> mintJwt");
 
         if (context.getCreated() == null)
             return context;
 
         Session session = repository.save(context.getCreated());
-        String  token   = jwtTokenService.mint(session);
 
-        session.setAccessToken(token);
-        return
-            context
-                .setCreated(session)
-                .setJwt(token);
+        session.setAccessToken(jwtTokenService.mint(session));
+        return context.setCreated(session);
     }
 
-    protected LoginWithOauth2Context
-    linkOauth2Replaced(LoginWithOauth2Context context)
+    protected CompleteOktaLoginContext
+    linkOktaReplaced(CompleteOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> linkReplaced");
+        logger.debug("<completeOktaLogin> linkReplaced");
 
         if (context.getCreated() != null)
             linkReplacedSource(context.getLifecycle(),context.getCreated());
@@ -576,10 +738,10 @@ class SessionCommandService
         return context;
     }
 
-    protected LoginWithOauth2Context
-    saveOauth2(LoginWithOauth2Context context)
+    protected CompleteOktaLoginContext
+    saveOktaSession(CompleteOktaLoginContext context)
     {
-        logger.debug("<loginWithOauth2> save");
+        logger.debug("<completeOktaLogin> save");
 
         if (context.getCreated() == null)
             return context;
@@ -737,6 +899,7 @@ class SessionCommandService
         if (context.isNotFound() || context.getLoaded() == null || context.getLoaded().isClosed())
             return context;
 
+        context.setEndSessionUrl(endSessionUrlFor(context.getLoaded()));
         closeSession(context.getLoaded(),SessionClosedReason.LOGOUT,Instant.now(clock));
         return context;
     }
@@ -1015,10 +1178,7 @@ class SessionCommandService
 
         session.attach(this);
         session
-            .setAuthorities(
-                user.getAuthorities() != null
-                    ? new LinkedHashSet<>(user.getAuthorities())
-                    : new LinkedHashSet<>())
+            .setAuthorities(authoritiesFor(session,user))
             .setAccessToken(jwtTokenService.mint(session))
             .notifyUpdated();
         return context.setRenewed(true);
@@ -1070,7 +1230,8 @@ class SessionCommandService
         return
             new LogoutReply(context.getRequest())
                 .setSuccess(true)
-                .setSuccessMessage("Session: " + context.getSessionId() + " closed");
+                .setSuccessMessage("Session: " + context.getSessionId() + " closed")
+                .setEndSessionUrl(context.getEndSessionUrl());
     }
 
     private LogoutReply
@@ -1301,7 +1462,8 @@ class SessionCommandService
         String         deviceId,
         Set<String>    authorities,
         String         refreshToken,
-        String         sessionHandle)
+        String         sessionHandle,
+        SignInMethod   signInMethod)
     {
         Instant now     = Instant.now(clock);
         Session source  = lifecycle != null ? lifecycle.getSource() : null;
@@ -1314,6 +1476,7 @@ class SessionCommandService
                 .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .setHashedHandle(refreshTokenService.hash(sessionHandle))
                 .setLastActivity(now)
+                .setSignInMethod(signInMethod)
                 .setAuthorities(
                     authorities != null
                         ? new LinkedHashSet<>(authorities)
@@ -1377,14 +1540,6 @@ class SessionCommandService
         repository.save(session);
     }
 
-    private Long
-    findUserIdByExternalIdentity(String provider,String sub)
-    {
-        UserData found = findUserByExternalIdentity(provider,sub);
-
-        return found != null ? found.getUserId() : null;
-    }
-
     private UserData
     findUserByExternalIdentity(String provider,String sub)
     {
@@ -1408,53 +1563,195 @@ class SessionCommandService
         return users.get(0);
     }
 
-    private LoginWithOauth2Reply
-    buildOauth2Reply(LoginWithOauth2Context context)
+    private UserData
+    createOktaUser(OktaIdentity identity)
     {
-        if (context.getFailureReason() != null)
+        CreateUserReply reply =
+            userCommandServiceClient
+                .createUser(
+                    new CreateUserRequest()
+                        .setUserToCreate(
+                            new CreateUserData()
+                                .setUserName(identity.getUserName())
+                                .setExternalIdentity(OKTA_PROVIDER + ":" + identity.getSubject())
+                                .setAuthorities(new LinkedHashSet<>(Set.of(OKTA_ROLE)))))
+                .toCompletableFuture()
+                .join();
+
+        if (reply != null && reply.isSuccess() && reply.getCreatedUser() != null)
         {
-            logger.info("<loginWithOauth2> failure: {}",context.getFailureReason());
-            return
-                new LoginWithOauth2Reply(context.getRequest())
-                    .setSuccess(false)
-                    .setFailureMessage(context.getFailureReason());
+            logger.info("<completeOktaLogin> user: {} created for an Okta identity",reply.getCreatedUser().getUserId());
+            return reply.getCreatedUser();
         }
 
-        if (context.getUserId() == null || context.getCreated() == null)
-        {
-            logger.info("<loginWithOauth2> invalid identity");
-            return
-                new LoginWithOauth2Reply(context.getRequest())
-                    .setSuccess(false)
-                    .setFailureMessage("invalid identity");
-        }
-
-        Session     session = context.getCreated();
-        SessionData data    = mapper.map(session,SessionData.class);
-
-        logger.info("<loginWithOauth2> session: {} created",session.getSessionId());
-        return
-            new LoginWithOauth2Reply(context.getRequest())
-                .setSuccess(true)
-                .setSuccessMessage("Session: " + session.getSessionId() + " created")
-                .setSessionData(data)
-                .setAccessToken(session.getAccessToken())
-                .setRefreshToken(context.getRefreshToken())
-                .setSessionHandle(context.getSessionHandle());
+        logger.info("<completeOktaLogin> user creation failed; looking the identity up again");
+        return findUserByExternalIdentity(OKTA_PROVIDER,identity.getSubject());
     }
 
-    private LoginWithOauth2Reply
-    buildOauth2Reply(Throwable e,LoginWithOauth2Request request)
+    private Set<String>
+    authoritiesFor(Session session,UserData user)
+    {
+        Set<String> userAuthorities =
+            user.getAuthorities() != null
+                ? new LinkedHashSet<>(user.getAuthorities())
+                : new LinkedHashSet<>();
+
+        if (session.getSignInMethod() != SignInMethod.OKTA)
+            return userAuthorities;
+
+        return oktaAuthorities.calculate(userAuthorities,session.getOktaGroups());
+    }
+
+    private String
+    endSessionUrlFor(Session session)
+    {
+        if (session.isClosed() || session.getSignInMethod() != SignInMethod.OKTA || isBlank(session.getOktaIdToken()))
+            return null;
+
+        try
+        {
+            return oktaClient.buildEndSessionUrl(session.getOktaIdToken()).orElse(null);
+        }
+        catch (RuntimeException e)
+        {
+            logger.warn("<logout> Okta end-session URL unavailable: {}",e.getClass().getSimpleName());
+            return null;
+        }
+    }
+
+    private String
+    codeChallenge(String verifier)
+    {
+        try
+        {
+            return
+                Base64
+                    .getUrlEncoder()
+                    .withoutPadding()
+                    .encodeToString(
+                        MessageDigest
+                            .getInstance("SHA-256")
+                            .digest(verifier.getBytes(StandardCharsets.US_ASCII)));
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private String
+    sanitizeReturnTo(String returnTo)
+    {
+        if (isBlank(returnTo)
+            || returnTo.length() > 2048
+            || !returnTo.startsWith("/")
+            || returnTo.startsWith("//")
+            || returnTo.startsWith("/\\"))
+            return "/";
+
+        for (char c : returnTo.toCharArray())
+            if (Character.isISOControl(c))
+                return "/";
+
+        return returnTo;
+    }
+
+    private boolean
+    matches(String expected,String actual)
+    {
+        if (expected == null || actual == null)
+            return false;
+
+        return
+            MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.UTF_8),
+                actual.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private boolean
+    isBlank(String value)
+    {
+        return value == null || value.isBlank();
+    }
+
+    private StartOktaLoginReply
+    buildStartOktaReply(StartOktaLoginContext context)
+    {
+        if (context.isRejected())
+        {
+            logger.info("<startOktaLogin> Okta login is disabled");
+            return
+                new StartOktaLoginReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage("Okta login is not available");
+        }
+
+        logger.info("<startOktaLogin> transaction: {} started",context.getTransaction().getPrimaryId());
+        return
+            new StartOktaLoginReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Okta login started")
+                .setAuthorizeUrl(context.getAuthorizeUrl())
+                .setTransactionId(context.getTransactionId());
+    }
+
+    private StartOktaLoginReply
+    buildStartOktaReply(Throwable e,StartOktaLoginRequest request)
+    {
+        logger.info("<startOktaLogin> exception reply: {}",rootCauseName(e));
+        return
+            new StartOktaLoginReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to start Okta login");
+    }
+
+    private CompleteOktaLoginReply
+    buildCompleteOktaReply(CompleteOktaLoginContext context)
+    {
+        if (context.isRejected() || context.getCreated() == null)
+        {
+            logger.info("<completeOktaLogin> refused: {}",context.getFailureReason());
+            return
+                new CompleteOktaLoginReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage(INVALID_CREDENTIALS);
+        }
+
+        Session session = context.getCreated();
+
+        logger.info("<completeOktaLogin> session: {} created",session.getSessionId());
+        return
+            new CompleteOktaLoginReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Session: " + session.getSessionId() + " created")
+                .setSessionData(mapper.map(session,SessionData.class))
+                .setSessionHandle(context.getSessionHandle())
+                .setUserName(context.getUserName())
+                .setReturnTo(context.getTransaction().getReturnTo());
+    }
+
+    private CompleteOktaLoginReply
+    buildCompleteOktaReply(Throwable e,CompleteOktaLoginRequest request)
     {
         if (conflictDetector.isConflict(e))
             throw new CompletionException(e);
 
-        logger.info("<loginWithOauth2> exception reply: {}",e.getMessage());
+        logger.info("<completeOktaLogin> exception reply: {}",rootCauseName(e));
         return
-            new LoginWithOauth2Reply(request)
+            new CompleteOktaLoginReply(request)
                 .setSuccess(false)
-                .setFailureMessage("Unable to log in")
-                .setException(ExceptionData.of(e));
+                .setFailureMessage("Unable to log in");
+    }
+
+    private String
+    rootCauseName(Throwable e)
+    {
+        Throwable cause = e;
+
+        while (cause.getCause() != null && cause.getCause() != cause)
+            cause = cause.getCause();
+
+        return cause.getClass().getSimpleName();
     }
 
     private SessionEvent

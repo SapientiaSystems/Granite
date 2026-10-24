@@ -4,18 +4,16 @@
 
 package granite.session.server.application;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import granite.session.server.domain.Session;
 import granite.session.service.requestreply.ISessionCommandService;
 import granite.session.service.requestreply.LoginReply;
-import granite.session.service.requestreply.LoginWithOauth2Reply;
-import granite.session.service.requestreply.LoginWithOauth2Request;
+import granite.session.service.requestreply.CompleteOktaLoginReply;
+import granite.session.service.requestreply.CompleteOktaLoginRequest;
+import granite.session.service.requestreply.LogoutReply;
+import granite.session.service.requestreply.LogoutRequest;
+import granite.session.service.requestreply.StartOktaLoginReply;
+import granite.session.service.requestreply.StartOktaLoginRequest;
+import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -24,17 +22,16 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.context.request.RequestContextHolder;
 import strata.server.spring.inject.RequestAttributeMap;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -60,16 +58,10 @@ class SessionCommandServiceServerTest
     private ISessionCommandService subject;
 
     @Autowired
-    private RSAKey signingKey;
+    private FakeOkta okta;
 
     @Autowired
     private EntityManagerFactory factory;
-
-    @Value("${granite.session.oauth2.providers.test.issuer-uri}")
-    private String issuer;
-
-    @Value("${granite.session.oauth2.providers.test.audience}")
-    private String audience;
 
     @BeforeEach
     public void
@@ -101,20 +93,66 @@ class SessionCommandServiceServerTest
 
     @Test
     public void
-    testLoginWithOauth2WritesCreatedOutboxEvent()
+    testCompleteOktaLoginEndToEnd()
     {
-        LoginWithOauth2Reply reply =
+        String                 deviceId = uniqueDeviceId();
+        String                 sub      = "00u" + UUID.randomUUID().toString().replace("-","");
+        StartOktaLoginReply    start    = startOkta(deviceId,"/users?tab=1");
+        Map<String,String>     query    = query(start.getAuthorizeUrl());
+
+        assertTrue(start.isSuccess(),start.getFailureMessage());
+        assertNotNull(start.getTransactionId());
+        assertEquals("S256",query.get("code_challenge_method"));
+        assertFalse(query.containsKey("prompt"));
+        okta.stubTokenReturning(okta.idToken(sub,query.get("nonce")));
+
+        CompleteOktaLoginReply reply = completeOkta(start.getTransactionId(),query.get("state"),deviceId);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertNotNull(reply.getSessionHandle());
+        assertEquals("/users?tab=1",reply.getReturnTo());
+        assertEquals(sub + "@example.com",reply.getUserName());
+        assertEquals(Set.of("ROLE_USER","ROLE_ADMIN"),reply.getSessionData().getAuthorities());
+        assertCreatedOutboxEvent(reply.getSessionData().getSessionId());
+        assertEquals("OKTA",find(reply.getSessionData().getSessionId()).getSignInMethod().name());
+        assertTrue(resolveSession(reply.getSessionHandle()).isSuccess());
+
+        CompleteOktaLoginReply reused = completeOkta(start.getTransactionId(),query.get("state"),deviceId);
+
+        assertFalse(reused.isSuccess());
+        assertEquals("invalid credentials",reused.getFailureMessage());
+
+        StartOktaLoginReply again = startOkta(deviceId,"/");
+
+        assertEquals("login",query(again.getAuthorizeUrl()).get("prompt"));
+
+        LogoutReply logout =
             subject
-                .loginWithOauth2(
-                    new LoginWithOauth2Request()
-                        .setProvider(oauth2Provider())
-                        .setIdToken(oauth2IdToken())
-                        .setDeviceId(uniqueDeviceId()))
+                .logout(new LogoutRequest().setSessionId(reply.getSessionData().getSessionId()))
                 .toCompletableFuture()
                 .join();
 
-        assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertCreatedOutboxEvent(reply.getSessionData().getSessionId());
+        assertTrue(logout.isSuccess(),logout.getFailureMessage());
+        assertTrue(logout.getEndSessionUrl().startsWith(okta.url(FakeOkta.LOGOUT_PATH)));
+        assertTrue(logout.getEndSessionUrl().contains("id_token_hint="));
+        assertNull(find(reply.getSessionData().getSessionId()).getOktaIdToken());
+    }
+
+    @Test
+    public void
+    testOktaReloginReplacesAndKeepsContinuity()
+    {
+        String                 deviceId = uniqueDeviceId();
+        String                 sub      = "00u" + UUID.randomUUID().toString().replace("-","");
+        CompleteOktaLoginReply first    = oktaLogin(sub,deviceId);
+        CompleteOktaLoginReply second   = oktaLogin(sub,deviceId);
+
+        assertTrue(first.isSuccess(),first.getFailureMessage());
+        assertTrue(second.isSuccess(),second.getFailureMessage());
+        assertEquals(first.getSessionData().getUserId(),second.getSessionData().getUserId());
+        assertEquals(first.getSessionData().getContinuityId(),second.getSessionData().getContinuityId());
+        assertEquals("REPLACED",closedReasonOf(first.getSessionData().getSessionId()));
+        assertEquals(1L,openSessions(second.getSessionData().getUserId(),deviceId));
     }
 
     @Test
@@ -216,37 +254,45 @@ class SessionCommandServiceServerTest
     protected ISessionCommandService
     getSubject() { return subject; }
 
-    @Override
-    protected String
-    oauth2IdToken()
+    private CompleteOktaLoginReply
+    oktaLogin(String sub,String deviceId)
     {
-        Instant      now    = Instant.now();
-        JWTClaimsSet claims =
-            new JWTClaimsSet.Builder()
-                .issuer(issuer)
-                .audience(audience)
-                .subject("external-" + UUID.randomUUID())
-                .claim("email","external@example.com")
-                .issueTime(Date.from(now))
-                .expirationTime(Date.from(now.plusSeconds(300)))
-                .build();
+        StartOktaLoginReply start = startOkta(deviceId,"/");
+        Map<String,String>  query = query(start.getAuthorizeUrl());
 
-        try
-        {
-            SignedJWT signed =
-                new SignedJWT(
-                    new JWSHeader.Builder(JWSAlgorithm.RS256)
-                        .keyID(signingKey.getKeyID())
-                        .build(),
-                    claims);
+        okta.stubTokenReturning(okta.idToken(sub,query.get("nonce")));
+        return completeOkta(start.getTransactionId(),query.get("state"),deviceId);
+    }
 
-            signed.sign(new RSASSASigner(signingKey.toRSAPrivateKey()));
-            return signed.serialize();
-        }
-        catch (JOSEException e)
-        {
-            throw new IllegalStateException("failed to sign test id token",e);
-        }
+    private StartOktaLoginReply
+    startOkta(String deviceId,String returnTo)
+    {
+        return
+            subject
+                .startOktaLogin(new StartOktaLoginRequest().setDeviceId(deviceId).setReturnTo(returnTo))
+                .toCompletableFuture()
+                .join();
+    }
+
+    private CompleteOktaLoginReply
+    completeOkta(String transactionId,String state,String deviceId)
+    {
+        return
+            subject
+                .completeOktaLogin(
+                    new CompleteOktaLoginRequest()
+                        .setCode("code-" + UUID.randomUUID())
+                        .setState(state)
+                        .setTransactionId(transactionId)
+                        .setDeviceId(deviceId))
+                .toCompletableFuture()
+                .join();
+    }
+
+    private Map<String,String>
+    query(String url)
+    {
+        return UriComponentsBuilder.fromUriString(url).build().getQueryParams().toSingleValueMap();
     }
 
     private LoginReply

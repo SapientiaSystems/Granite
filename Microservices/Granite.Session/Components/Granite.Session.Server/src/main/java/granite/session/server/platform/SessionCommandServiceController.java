@@ -43,13 +43,23 @@ class SessionCommandServiceController
     }
 
     @PostMapping(
-        value = "/login-with-oauth2",
+        value = "/start-okta-login",
         produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody CompletionStage<LoginWithOauth2Reply>
-    loginWithOauth2(@RequestBody LoginWithOauth2Request request)
+    public @ResponseBody CompletionStage<StartOktaLoginReply>
+    startOktaLogin(@RequestBody StartOktaLoginRequest request)
     {
-        logger.info("delegating loginWithOauth2 to implementation service");
-        return implementation.loginWithOauth2(request);
+        logger.info("delegating startOktaLogin to implementation service");
+        return implementation.startOktaLogin(request);
+    }
+
+    @PostMapping(
+        value = "/complete-okta-login",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<CompleteOktaLoginReply>
+    completeOktaLogin(@RequestBody CompleteOktaLoginRequest request)
+    {
+        logger.info("delegating completeOktaLogin to implementation service");
+        return implementation.completeOktaLogin(request);
     }
 
     @PostMapping(

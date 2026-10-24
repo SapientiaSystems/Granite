@@ -2,11 +2,11 @@ import {AbstractServiceReply} from "strata.foundation.core/Transfer";
 import {SessionData} from "./SessionData";
 
 export
-interface LoginWithOauth2Reply
+interface CompleteOktaLoginReply
     extends AbstractServiceReply
 {
     sessionData?: SessionData;
-    accessToken?: string;
-    refreshToken?: string;
     sessionHandle?: string;
+    userName?: string;
+    returnTo?: string;
 }

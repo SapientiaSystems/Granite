@@ -5,28 +5,25 @@
 package granite.session.server.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import granite.session.server.configuration.GraniteSessionCommandServerConfiguration;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
+import granite.user.service.requestreply.CreateUserReply;
+import granite.user.service.requestreply.CreateUserRequest;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.UserData;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ResourceLoader;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
 
@@ -35,15 +32,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.ArgumentMatchers.any;
 
 @Configuration
@@ -52,11 +44,12 @@ public
 class TestConfiguration
     extends GraniteSessionCommandServerConfiguration
 {
-    public static final String JWKS_PATH = "/.well-known/jwks.json";
-
     private static final String USER_PREFIX     = "user-";
     private static final String USER_SUFFIX     = "@example.com";
     private static final String PASSWORD_PREFIX = "password-";
+
+    private final Map<String,UserData> externalUsers = new ConcurrentHashMap<>();
+    private final AtomicLong          externalIds   = new AtomicLong(5000L);
 
     @Override
     @Bean
@@ -84,34 +77,34 @@ class TestConfiguration
         return new ObjectMapper();
     }
 
-    @Bean
-    @Scope("singleton")
-    public RSAKey
-    oauth2SigningKey()
-        throws JOSEException
-    {
-        return
-            new RSAKeyGenerator(2048)
-                .keyID(UUID.randomUUID().toString())
-                .generate();
-    }
-
     @Bean(destroyMethod = "stop")
     @Scope("singleton")
-    public WireMockServer
-    jwksServer(RSAKey oauth2SigningKey,@Value("${test.wiremock.port}") int port)
+    public FakeOkta
+    fakeOkta()
     {
-        WireMockServer server = new WireMockServer(wireMockConfig().port(port));
+        return new FakeOkta();
+    }
 
-        server.start();
-        server.stubFor(
-            get(urlEqualTo(JWKS_PATH))
-                .willReturn(
-                    okJson(
-                        new JWKSet(oauth2SigningKey.toPublicJWK())
-                            .toJSONObject()
-                            .toString())));
-        return server;
+    @Override
+    @Bean
+    @Scope("singleton")
+    public OktaSettings
+    oktaSettings(Environment environment)
+    {
+        return
+            fakeOkta()
+                .settings()
+                .setAuthoritiesSource(OktaAuthoritiesSource.BOTH)
+                .setGroupMapping(Map.of("Granite Admins","ROLE_ADMIN"));
+    }
+
+    @Override
+    @Bean
+    @Scope("singleton")
+    public IOktaClient
+    oktaClient(OktaSettings settings,Environment environment,ResourceLoader loader,Clock clock)
+    {
+        return fakeOkta().client(settings,Clock.systemUTC());
     }
 
     @Override
@@ -159,6 +152,27 @@ class TestConfiguration
                     return CompletableFuture.completedFuture(reply);
                 });
 
+        Mockito
+            .when(client.createUser(any(CreateUserRequest.class)))
+            .thenAnswer(
+                invocation ->
+                {
+                    CreateUserRequest request = invocation.getArgument(0);
+                    UserData          created =
+                        new UserData()
+                            .setUserId(externalIds.incrementAndGet())
+                            .setUserName(request.getUserToCreate().getUserName())
+                            .setExternalIdentity(request.getUserToCreate().getExternalIdentity())
+                            .setAuthorities(request.getUserToCreate().getAuthorities());
+
+                    externalUsers.put(created.getExternalIdentity(),created);
+                    return
+                        CompletableFuture.completedFuture(
+                            new CreateUserReply(request)
+                                .setSuccess(true)
+                                .setCreatedUser(created));
+                });
+
         return client;
     }
 
@@ -180,18 +194,13 @@ class TestConfiguration
                 {
                     FindUsersByExternalIdentityRequest request = invocation.getArgument(0);
 
+                    UserData                           found   =
+                        externalUsers.get(request.getProvider() + ":" + request.getExternalId());
+
                     return
                         CompletableFuture.completedFuture(
                             new FindUsersByExternalIdentityReply(request)
-                                .setUsers(
-                                    List.of(
-                                        new UserData()
-                                            .setUserId(
-                                                500L + Math.floorMod(request.getExternalId().hashCode(),500))
-                                            .setUserName(request.getExternalId())
-                                            .setExternalIdentity(
-                                                request.getProvider() + ":" + request.getExternalId())
-                                            .setAuthorities(java.util.Set.of("ROLE_USER"))))
+                                .setUsers(found != null ? List.of(found) : List.of())
                                 .setSuccess(true));
                 });
 

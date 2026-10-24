@@ -5,6 +5,7 @@
 package granite.session.server.application;
 
 import granite.session.server.platform.MockSessionEventSender;
+import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
 import granite.session.service.event.SessionEvent;
@@ -60,7 +61,6 @@ class LoginTest
     private IJwtTokenService          jwtTokenService;
     private IUserCommandServiceClient userCommandServiceClient;
     private IUserQueryServiceClient   userQueryServiceClient;
-    private IOauth2IdTokenValidator   oauth2Validator;
     private MockSessionEventSender    sender;
     private Clock                     clock;
     private SessionCommandService     subject;
@@ -73,17 +73,18 @@ class LoginTest
         jwtTokenService          = Mockito.mock(IJwtTokenService.class);
         userCommandServiceClient = Mockito.mock(IUserCommandServiceClient.class);
         userQueryServiceClient   = Mockito.mock(IUserQueryServiceClient.class);
-        oauth2Validator          = Mockito.mock(IOauth2IdTokenValidator.class);
         sender                   = new MockSessionEventSender();
         clock                    = Clock.fixed(NOW,ZoneOffset.UTC);
         subject =
             new SessionCommandService(
                 repository,
+                Mockito.mock(IOktaLoginTransactionRepository.class),
                 jwtTokenService,
                 new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
-                oauth2Validator,
+                Mockito.mock(IOktaClient.class),
+                new OktaSettings(),
                 new RequiredAuthoritiesLoginGate(List.of()),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
@@ -531,11 +532,13 @@ class LoginTest
         return
             new SessionCommandService(
                 repository,
+                Mockito.mock(IOktaLoginTransactionRepository.class),
                 jwtTokenService,
                 new RefreshTokenService(),
                 userCommandServiceClient,
                 userQueryServiceClient,
-                oauth2Validator,
+                Mockito.mock(IOktaClient.class),
+                new OktaSettings(),
                 new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),

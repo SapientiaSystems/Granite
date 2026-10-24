@@ -45,9 +45,9 @@ class SessionCommandServiceClientTest
     @Override
     @Test
     public void
-    testLoginWithOauth2()
+    testCompleteOktaLoginWithUnknownTransactionFails()
     {
-        super.testLoginWithOauth2();
+        super.testCompleteOktaLoginWithUnknownTransactionFails();
     }
 
     @Override
