@@ -87,7 +87,7 @@ class LogoutSessionTest
 
     @Test
     public void
-    failedLogoutKeepsCookie()
+    failedLogoutStillClearsTheCookie()
         throws Exception
     {
         SessionRequestContext context = SessionTestSupport.context("d",11L,7L);
@@ -97,14 +97,25 @@ class LogoutSessionTest
             .thenReturn(CompletableFuture.completedFuture(new LogoutReply().setSuccess(false)));
 
         assertFalse(run(context).isLoggedOut());
-        assertTrue(context.getSetCookies().isEmpty());
+        assertEquals(1,context.getSetCookies().size());
+        assertTrue(context.getSetCookies().get(0).startsWith("GRANITE_SID=;"));
+        assertTrue(context.getSetCookies().get(0).contains("Max-Age=0"));
+    }
+
+    @Test
+    public void
+    erroredLogoutStillClearsTheCookie()
+        throws Exception
+    {
+        SessionRequestContext context = SessionTestSupport.context("d",11L,7L);
 
         Mockito
             .when(commandClient.logout(Mockito.any(LogoutRequest.class)))
             .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("down")));
 
         assertFalse(run(context).isLoggedOut());
-        assertTrue(context.getSetCookies().isEmpty());
+        assertEquals(1,context.getSetCookies().size());
+        assertTrue(context.getSetCookies().get(0).contains("Max-Age=0"));
     }
 }
 

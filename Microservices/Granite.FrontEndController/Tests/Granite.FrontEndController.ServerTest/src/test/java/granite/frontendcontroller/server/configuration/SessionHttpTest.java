@@ -186,6 +186,26 @@ class SessionHttpTest
         assertTrue(backend.bodies().get(0).contains("\"sessionId\":11"));
         assertEquals(1,backend.paths().size());
     }
+
+    @Test
+    public void
+    failedLogoutStillClearsTheCookie()
+        throws Exception
+    {
+        backend.respond("logout",new LogoutReply().setSuccess(false));
+
+        MvcResult result =
+            send(
+                post("/frontendcontroller-user-service/handle-input")
+                    .header("Authorization",SessionRequestContextTest.bearer("{\"jti\":\"11\",\"sub\":\"7\"}"))
+                    .content(
+                        "{\"input\":{\"userId\":7,\"source\":\"Session.Current\",\"command\":\"Logout\","
+                            + "\"destination\":\"LoginView\",\"logout\":true}}"));
+
+        assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith("GRANITE_SID=;"));
+        assertTrue(result.getResponse().getHeader("Set-Cookie").contains("Max-Age=0"));
+        assertTrue(result.getResponse().getContentAsString().contains("\"loggedOut\":false"));
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
