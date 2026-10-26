@@ -2,7 +2,7 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import { SessionFrontEndControllerServiceClient }       from "granite.frontendcontroller.client/RequestReply";
+import { GraniteFrontEndControllerServiceClient }       from "granite.frontendcontroller.client/RequestReply";
 import { CsrfFetch }                              from "../Http/CsrfFetch";
 import type { FetchFunction }                     from "../Http/CsrfFetch";
 import { SessionFetch }                           from "../Http/SessionFetch";
@@ -42,7 +42,7 @@ export function createAuthentication(options: IAuthenticationOptions = {}): IAut
         new AuthenticationManager(
             options.service ??
                 new FrontEndSessionService(
-                    () => clientOver(csrf.fetch,(url,fetchFunction) => new SessionFrontEndControllerServiceClient(url,fetchFunction),SESSION_SERVICE)),
+                    () => clientOver(csrf.fetch,(url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),SESSION_SERVICE)),
             options.navigator);
 
     session.setUnauthorizedHandler(() => manager.handleUnauthorized());

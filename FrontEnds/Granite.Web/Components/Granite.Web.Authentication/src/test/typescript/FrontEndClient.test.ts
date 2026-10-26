@@ -5,7 +5,7 @@
 import { describe, expect, it, vi }               from "vitest";
 import { GetOutputRequestBuilder }                from "strata.frontendcontroller.service/RequestReply";
 import { ServiceError }                           from "strata.client.core/Service";
-import { SessionFrontEndControllerServiceClient }  from "granite.frontendcontroller.client/RequestReply";
+import { GraniteFrontEndControllerServiceClient }  from "granite.frontendcontroller.client/RequestReply";
 import { CsrfFetch }                              from "../../main/typescript/Http/CsrfFetch";
 
 function jsonResponse(status: number,body: unknown): Response
@@ -24,7 +24,7 @@ describe("typed FrontEndController client over injected fetch",() =>
     {
         const send   = vi.fn().mockResolvedValue(jsonResponse(200,{ success: true }));
         const csrf   = new CsrfFetch(send,() => "tok");
-        const client = new SessionFrontEndControllerServiceClient("/api/frontendcontroller-user-service",csrf.fetch);
+        const client = new GraniteFrontEndControllerServiceClient("/api/frontendcontroller-user-service",csrf.fetch);
 
         const reply      = await client.getSessionOutput(request());
         const [url,init] = send.mock.calls[0] as [string,RequestInit];
@@ -42,7 +42,7 @@ describe("typed FrontEndController client over injected fetch",() =>
     it("reads the headers before close clears them",async () =>
     {
         const send   = vi.fn().mockResolvedValue(jsonResponse(200,{}));
-        const client = new SessionFrontEndControllerServiceClient("/s",send);
+        const client = new GraniteFrontEndControllerServiceClient("/s",send);
         const stage  = client.getSessionOutput(request());
 
         client.close();
@@ -54,7 +54,7 @@ describe("typed FrontEndController client over injected fetch",() =>
     it("resolves a 500 with its entity",async () =>
     {
         const send   = vi.fn().mockResolvedValue(jsonResponse(500,{ success: false,failureMessage: "boom" }));
-        const client = new SessionFrontEndControllerServiceClient("/s",send);
+        const client = new GraniteFrontEndControllerServiceClient("/s",send);
 
         expect((await client.getSessionOutput(request())).failureMessage).toBe("boom");
     });
@@ -62,7 +62,7 @@ describe("typed FrontEndController client over injected fetch",() =>
     it("rejects a 401 with a ServiceError carrying the status",async () =>
     {
         const send   = vi.fn().mockResolvedValue(new Response("",{ status: 401 }));
-        const client = new SessionFrontEndControllerServiceClient("/s",send);
+        const client = new GraniteFrontEndControllerServiceClient("/s",send);
 
         const error = await client.getSessionOutput(request()).then(() => undefined,(failure: unknown) => failure);
 

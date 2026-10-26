@@ -7,7 +7,7 @@ package granite.frontendcontroller.server.configuration;
 import com.sun.net.httpserver.HttpServer;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
-import granite.frontendcontroller.service.requestreply.IUsersFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.user.service.requestreply.UpdateUserData;
 import org.junit.jupiter.api.AfterEach;
@@ -38,8 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public
 class GraniteFrontEndControllerConfigurationTest
 {
-    private HttpServer                          userService;
-    private List<String>                        authorizations;
+    private HttpServer                             userService;
+    private List<String>                           authorizations;
     private GraniteFrontEndControllerConfiguration subject;
 
     @BeforeEach
@@ -73,6 +73,8 @@ class GraniteFrontEndControllerConfigurationTest
 
         Mockito.when(configuration.getProperty("user-command-service.base-url")).thenReturn(baseUrl + "/user-command-service");
         Mockito.when(configuration.getProperty("user-query-service.base-url")).thenReturn(baseUrl + "/user-query-service");
+        Mockito.when(configuration.getProperty("session-command-service.base-url")).thenReturn(baseUrl + "/session-command-service");
+        Mockito.when(configuration.getProperty("session-query-service.base-url")).thenReturn(baseUrl + "/session-query-service");
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
@@ -98,8 +100,8 @@ class GraniteFrontEndControllerConfigurationTest
         inbound.addHeader("Authorization","Bearer caller.jwt.token");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
-        IUsersFrontEndControllerService service =
-            subject.usersFrontEndControllerService(Runnable::run,new ModelMapper());
+        IGraniteFrontEndControllerService service =
+            subject.graniteFrontEndControllerService(Runnable::run,new ModelMapper());
 
         RequestContextHolder.resetRequestAttributes();
 

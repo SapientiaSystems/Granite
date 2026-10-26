@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// SessionFrontEndControllerServiceTest.java
+// GraniteFrontEndControllerServiceSessionTest.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.server.application;
@@ -13,6 +13,7 @@ import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest
 import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
+import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -27,21 +28,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
-class SessionFrontEndControllerServiceTest
+class GraniteFrontEndControllerServiceSessionTest
 {
-    private SessionFrontEndControllerService service;
+    private GraniteFrontEndControllerService service;
 
     @BeforeEach
     public void
     setUp()
     {
         service =
-            new SessionFrontEndControllerService(
+            new GraniteFrontEndControllerService(
                 new ModelMapper(),
                 Runnable::run,
+                Mockito.mock(IUserQueryServiceClient.class),
+                Mockito.mock(IUserCommandServiceClient.class),
                 Mockito.mock(ISessionCommandServiceClient.class),
                 Mockito.mock(ISessionQueryServiceClient.class),
-                Mockito.mock(IUserQueryServiceClient.class),
                 SessionTestSupport.context(null,null,null),
                 new SessionLoginSettings(true,false));
     }

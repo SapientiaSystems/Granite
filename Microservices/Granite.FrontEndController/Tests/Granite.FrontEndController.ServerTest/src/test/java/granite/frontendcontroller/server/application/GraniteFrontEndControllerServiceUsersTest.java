@@ -1,14 +1,18 @@
 //////////////////////////////////////////////////////////////////////////////
-// UsersFrontEndControllerServiceTest.java
+// GraniteFrontEndControllerServiceUsersTest.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.server.application;
 
+import granite.frontendcontroller.server.control.session.SessionLoginSettings;
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
 import granite.frontendcontroller.service.requestreply.UsersInput;
+import granite.session.client.requestreply.ISessionCommandServiceClient;
+import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.CreateUsersReply;
@@ -35,11 +39,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
-class UsersFrontEndControllerServiceTest
+class GraniteFrontEndControllerServiceUsersTest
 {
-    private IUserQueryServiceClient        queryClient;
-    private IUserCommandServiceClient      commandClient;
-    private UsersFrontEndControllerService service;
+    private IUserQueryServiceClient          queryClient;
+    private IUserCommandServiceClient        commandClient;
+    private GraniteFrontEndControllerService service;
 
     @BeforeEach
     public void
@@ -47,7 +51,16 @@ class UsersFrontEndControllerServiceTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        service = new UsersFrontEndControllerService(new ModelMapper(),Runnable::run,queryClient,commandClient);
+        service =
+            new GraniteFrontEndControllerService(
+                new ModelMapper(),
+                Runnable::run,
+                queryClient,
+                commandClient,
+                Mockito.mock(ISessionCommandServiceClient.class),
+                Mockito.mock(ISessionQueryServiceClient.class),
+                SessionTestSupport.context(null,null,null),
+                new SessionLoginSettings(true,false));
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))

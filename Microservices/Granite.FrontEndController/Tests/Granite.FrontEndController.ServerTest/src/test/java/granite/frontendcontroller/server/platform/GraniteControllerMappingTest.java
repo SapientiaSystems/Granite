@@ -1,24 +1,24 @@
 //////////////////////////////////////////////////////////////////////////////
-// SessionControllerMappingTest.java
+// GraniteControllerMappingTest.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.server.platform;
 
-import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import org.junit.jupiter.api.Tag;
 
 @Tag("CommitStage")
 public
-class SessionControllerMappingTest
+class GraniteControllerMappingTest
     extends AbstractControllerMappingTest
 {
     @Override
     protected Class<?>
-    getServiceInterface() { return ISessionFrontEndControllerService.class; }
+    getServiceInterface() { return IGraniteFrontEndControllerService.class; }
 
     @Override
     protected Class<?>
-    getControllerClass() { return SessionFrontEndControllerServiceController.class; }
+    getControllerClass() { return GraniteFrontEndControllerServiceController.class; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

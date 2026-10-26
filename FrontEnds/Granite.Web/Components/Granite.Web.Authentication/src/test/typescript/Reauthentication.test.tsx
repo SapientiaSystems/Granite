@@ -9,7 +9,7 @@ import { Route, Routes }                                                  from "
 import { useState }                                                       from "react";
 import type { ReactElement }                                              from "react";
 import { GetOutputRequestBuilder }                                        from "strata.frontendcontroller.service/RequestReply";
-import { UsersFrontEndControllerServiceClient }                           from "granite.frontendcontroller.client/RequestReply";
+import { GraniteFrontEndControllerServiceClient }                           from "granite.frontendcontroller.client/RequestReply";
 import { useAuthentication }                                              from "../../main/typescript/Authentication/AuthenticationContext";
 import { RequireAuthentication }                                          from "../../main/typescript/Authentication/RequireAuthentication";
 import { LoginView }                                                      from "../../main/typescript/Login/LoginView";
@@ -30,7 +30,7 @@ function Caller(): ReactElement
 
     const load = (): void =>
     {
-        createFrontEndClient((url,fetchFunction) => new UsersFrontEndControllerServiceClient(url,fetchFunction),"frontendcontroller-user-service")
+        createFrontEndClient((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),"frontendcontroller-user-service")
             .getUsersOutput(GetOutputRequestBuilder.newBuilder().setSource("User.All").setDestination("UsersEditableView").build())
             .then(reply => setResult(reply.success ? "loaded" : "refused"),() => setResult("failed"));
     };

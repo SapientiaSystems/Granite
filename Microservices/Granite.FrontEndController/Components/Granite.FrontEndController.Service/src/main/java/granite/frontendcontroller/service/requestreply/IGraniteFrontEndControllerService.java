@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// IUsersFrontEndControllerService.java
+// IGraniteFrontEndControllerService.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.service.requestreply;
@@ -9,7 +9,7 @@ import strata.frontendcontroller.service.requestreply.IFrontEndControllerService
 import java.util.concurrent.CompletionStage;
 
 public
-interface IUsersFrontEndControllerService
+interface IGraniteFrontEndControllerService
     extends IFrontEndControllerService
 {
     CompletionStage<HandleUsersInputReply>
@@ -17,6 +17,12 @@ interface IUsersFrontEndControllerService
 
     CompletionStage<GetUsersOutputReply>
     getUsersOutput(GetUsersOutputRequest request);
+
+    CompletionStage<HandleSessionInputReply>
+    handleSessionInput(HandleSessionInputRequest request);
+
+    CompletionStage<GetSessionOutputReply>
+    getSessionOutput(GetSessionOutputRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////

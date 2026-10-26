@@ -6,7 +6,7 @@ package granite.frontendcontroller.server.platform;
 
 import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
-import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -32,17 +32,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public
 class ResponseCookieAdviceTest
 {
-    private ISessionFrontEndControllerService service;
+    private IGraniteFrontEndControllerService service;
     private MockMvc                         mvc;
 
     @BeforeEach
     public void
     setUp()
     {
-        service = Mockito.mock(ISessionFrontEndControllerService.class);
+        service = Mockito.mock(IGraniteFrontEndControllerService.class);
         mvc =
             MockMvcBuilders
-                .standaloneSetup(new SessionFrontEndControllerServiceController(service))
+                .standaloneSetup(new GraniteFrontEndControllerServiceController(service))
                 .addPlaceholderValue("granite.frontendcontroller.service-path","/frontendcontroller-user-service")
                 .setControllerAdvice(new ResponseCookieAdvice())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapperSupplier().get()))

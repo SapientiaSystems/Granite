@@ -10,7 +10,7 @@ import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
-import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.session.service.requestreply.FindSessionsByKeyReply;
 import granite.session.service.requestreply.LoginReply;
@@ -105,7 +105,7 @@ class GraniteFrontEndControllerServiceFactoryTest
 
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
-        ISessionFrontEndControllerService service = factory.createSessionService(new ModelMapper(),Runnable::run);
+        IGraniteFrontEndControllerService service = factory.createService(new ModelMapper(),Runnable::run);
 
         RequestContextHolder.resetRequestAttributes();
 

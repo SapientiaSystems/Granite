@@ -6,9 +6,11 @@ import { vi }                                                                   
 import { CompletableObservable }                                                from "strata.foundation.core/Concurrent";
 import type { ICompletionStage }                                                from "strata.foundation.core/Concurrent";
 import { ServiceError, StandardResponse }                                       from "strata.client.core/Service";
-import type { ISessionFrontEndControllerServiceClient }                         from "granite.frontendcontroller.client/RequestReply";
+import type { IGraniteFrontEndControllerServiceClient }                         from "granite.frontendcontroller.client/RequestReply";
 import type { GetSessionOutputReply, GetSessionOutputRequest,
-              HandleSessionInputReply, HandleSessionInputRequest }               from "granite.frontendcontroller.service/RequestReply";
+              HandleSessionInputReply, HandleSessionInputRequest,
+              GetUsersOutputReply, GetUsersOutputRequest,
+              HandleUsersInputReply, HandleUsersInputRequest }                   from "granite.frontendcontroller.service/RequestReply";
 import type { FrontEndOutput }                                                  from "strata.frontendcontroller.service/RequestReply";
 import { AuthenticationManager }                                                from "../../main/typescript/Authentication/AuthenticationManager";
 import type { INavigator }                                                      from "../../main/typescript/Authentication/AuthenticationManager";
@@ -25,7 +27,7 @@ export interface IRecordedCall
 export type Responder = (payload: Record<string,unknown>) => FrontEndOutput | Error;
 
 export class FakeFrontEnd
-    implements ISessionFrontEndControllerServiceClient
+    implements IGraniteFrontEndControllerServiceClient
 {
     readonly calls: Array<IRecordedCall> = [];
     private readonly responders: Map<string,Responder> = new Map();
@@ -41,12 +43,24 @@ export class FakeFrontEnd
         return this.calls.filter(call => call.key === key);
     }
 
-    setAuthorization(): IFrontEndControllerServiceClient
+    setAuthorization(): IGraniteFrontEndControllerServiceClient
     {
         throw new Error("the SPA must not set Authorization");
     }
 
     close(): void {}
+
+    getUsersOutput(request: GetUsersOutputRequest): ICompletionStage<GetUsersOutputReply>
+    {
+        return this.answer(request.source + "->" + request.destination,request as unknown as Record<string,unknown>) as ICompletionStage<GetUsersOutputReply>;
+    }
+
+    handleUsersInput(request: HandleUsersInputRequest): ICompletionStage<HandleUsersInputReply>
+    {
+        const input = request.input as unknown as Record<string,unknown>;
+
+        return this.answer(input.source + "->" + input.command + "->" + input.destination,input) as ICompletionStage<HandleUsersInputReply>;
+    }
 
     getSessionOutput(request: GetSessionOutputRequest): ICompletionStage<GetSessionOutputReply>
     {

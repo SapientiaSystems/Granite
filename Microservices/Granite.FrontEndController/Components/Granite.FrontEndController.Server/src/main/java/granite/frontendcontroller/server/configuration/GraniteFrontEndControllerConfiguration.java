@@ -6,10 +6,8 @@ package granite.frontendcontroller.server.configuration;
 
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
 import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
-import granite.frontendcontroller.server.platform.SessionFrontEndControllerServiceController;
-import granite.frontendcontroller.server.platform.UsersFrontEndControllerServiceController;
-import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
-import granite.frontendcontroller.service.requestreply.IUsersFrontEndControllerService;
+import granite.frontendcontroller.server.platform.GraniteFrontEndControllerServiceController;
+import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import jakarta.inject.Named;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,48 +46,25 @@ class GraniteFrontEndControllerConfiguration
 
     @Bean
     @RequestScoped
-    @Named("Users")
-    public IUsersFrontEndControllerService
-    usersFrontEndControllerService(
+    @Named("Granite")
+    public IGraniteFrontEndControllerService
+    graniteFrontEndControllerService(
         @Named("FrontEndController")
         Executor    executor,
         ModelMapper mapper)
     {
-        return serviceFactory().createUsersService(mapper,executor);
+        return serviceFactory().createService(mapper,executor);
     }
 
     @Bean
     @RequestScoped
-    @Named("Session")
-    public ISessionFrontEndControllerService
-    sessionFrontEndControllerService(
-        @Named("FrontEndController")
-        Executor    executor,
-        ModelMapper mapper)
+    @Named("Granite")
+    public GraniteFrontEndControllerServiceController
+    graniteFrontEndControllerServiceController(
+        @Named("Granite")
+        IGraniteFrontEndControllerService service)
     {
-        return serviceFactory().createSessionService(mapper,executor);
-    }
-
-    @Bean
-    @RequestScoped
-    @Named("Users")
-    public UsersFrontEndControllerServiceController
-    usersFrontEndControllerServiceController(
-        @Named("Users")
-        IUsersFrontEndControllerService service)
-    {
-        return new UsersFrontEndControllerServiceController(service);
-    }
-
-    @Bean
-    @RequestScoped
-    @Named("Session")
-    public SessionFrontEndControllerServiceController
-    sessionFrontEndControllerServiceController(
-        @Named("Session")
-        ISessionFrontEndControllerService service)
-    {
-        return new SessionFrontEndControllerServiceController(service);
+        return new GraniteFrontEndControllerServiceController(service);
     }
 
     @Bean

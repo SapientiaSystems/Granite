@@ -5,8 +5,8 @@
 import { useEffect, useRef, useState }               from "react";
 import type { ReactElement }                        from "react";
 import { Alert, Stack, Group }                      from "@mantine/core";
-import { UsersFrontEndControllerServiceClient }    from "granite.frontendcontroller.client/RequestReply";
-import type { IUsersFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
+import { GraniteFrontEndControllerServiceClient }    from "granite.frontendcontroller.client/RequestReply";
+import type { IGraniteFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
 import { GetOutputRequestBuilder, HandleInputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
 import type { GetUsersOutputReply, HandleUsersInputReply, UsersOutput } from "granite.frontendcontroller.service/RequestReply";
 import type { UsersInput }                             from "granite.frontendcontroller.service/RequestReply";
@@ -32,12 +32,12 @@ export function UsersView(): ReactElement
 
     currentUserIdRef.current = currentUserId;
 
-    const createClient = (): IUsersFrontEndControllerServiceClient =>
-        createFrontEndClient((url,fetchFunction) => new UsersFrontEndControllerServiceClient(url,fetchFunction),USERS_SERVICE);
+    const createClient = (): IGraniteFrontEndControllerServiceClient =>
+        createFrontEndClient((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),USERS_SERVICE);
 
     const sendInput = (command: string, usersToCreate: Array<CreateUserData>, usersToUpdate: Array<UpdateUserData>, userIdsToDelete: Array<number>): Promise<IUsersResult> =>
     {
-        const client: IUsersFrontEndControllerServiceClient = createClient();
+        const client: IGraniteFrontEndControllerServiceClient = createClient();
         const input:  UsersInput                        =
             {
                 userId:      currentUserIdRef.current ?? null,
@@ -96,7 +96,7 @@ export function UsersView(): ReactElement
 
     useEffect(() =>
     {
-        const service: IUsersFrontEndControllerServiceClient = createClient();
+        const service: IGraniteFrontEndControllerServiceClient = createClient();
 
         service
             .getUsersOutput(

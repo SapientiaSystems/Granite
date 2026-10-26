@@ -4,13 +4,11 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.frontendcontroller.server.application.SessionFrontEndControllerService;
-import granite.frontendcontroller.server.application.UsersFrontEndControllerService;
+import granite.frontendcontroller.server.application.GraniteFrontEndControllerService;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.platform.ForwardedBearerClientRequestFilter;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
-import granite.frontendcontroller.service.requestreply.IUsersFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.session.client.requestreply.SessionCommandServiceClient;
@@ -39,22 +37,17 @@ class GraniteFrontEndControllerServiceFactory
         this.sslBundles = sslBundles;
     }
 
-    public IUsersFrontEndControllerService
-    createUsersService(ModelMapper mapper,Executor executor)
-    {
-        return new UsersFrontEndControllerService(mapper,executor,userQueryClient(),userCommandClient());
-    }
-
-    public ISessionFrontEndControllerService
-    createSessionService(ModelMapper mapper,Executor executor)
+    public IGraniteFrontEndControllerService
+    createService(ModelMapper mapper,Executor executor)
     {
         return
-            new SessionFrontEndControllerService(
+            new GraniteFrontEndControllerService(
                 mapper,
                 executor,
+                userQueryClient(),
+                userCommandClient(),
                 sessionCommandClient(),
                 sessionQueryClient(),
-                userQueryClient(),
                 SessionRequestContext.fromCurrentRequest(),
                 SessionLoginSettings.fromConfiguration(configuration));
     }

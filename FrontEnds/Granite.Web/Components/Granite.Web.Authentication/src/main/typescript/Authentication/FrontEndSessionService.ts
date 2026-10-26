@@ -5,7 +5,7 @@
 import { GetOutputRequestBuilder, HandleInputRequestBuilder }                 from "strata.frontendcontroller.service/RequestReply";
 import { ServiceError }                                                       from "strata.client.core/Service";
 import { CompletionError }                                                    from "strata.foundation.core/Concurrent";
-import type { ISessionFrontEndControllerServiceClient }                       from "granite.frontendcontroller.client/RequestReply";
+import type { IGraniteFrontEndControllerServiceClient }                       from "granite.frontendcontroller.client/RequestReply";
 import type { GetSessionOutputReply, HandleSessionInputReply,
               SessionInput, SessionOutput }                                   from "granite.frontendcontroller.service/RequestReply";
 import type { ILoginMethods, ILogoutResult, ISessionService, ISessionStatus } from "./ISessionService";
@@ -21,9 +21,9 @@ export const UNAUTHENTICATED: ISessionStatus = { authenticated: false, authoriti
 export class FrontEndSessionService
     implements ISessionService
 {
-    private readonly createClient: () => ISessionFrontEndControllerServiceClient;
+    private readonly createClient: () => IGraniteFrontEndControllerServiceClient;
 
-    constructor(createClient: () => ISessionFrontEndControllerServiceClient)
+    constructor(createClient: () => IGraniteFrontEndControllerServiceClient)
     {
         this.createClient = createClient;
     }
@@ -86,7 +86,7 @@ export class FrontEndSessionService
 
     private async read(source: string,destination: string): Promise<SessionOutput>
     {
-        const client: ISessionFrontEndControllerServiceClient = this.createClient();
+        const client: IGraniteFrontEndControllerServiceClient = this.createClient();
 
         try
         {
@@ -104,7 +104,7 @@ export class FrontEndSessionService
 
     private async send(source: string,command: string,destination: string,fields: Partial<SessionInput>): Promise<SessionOutput>
     {
-        const client: ISessionFrontEndControllerServiceClient = this.createClient();
+        const client: IGraniteFrontEndControllerServiceClient = this.createClient();
         const input:  SessionInput                            = { userId: null, source, command, destination, ...fields };
 
         try
