@@ -6,16 +6,13 @@ package granite.frontendcontroller.server.control.session;
 
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.CompleteOktaLoginInput;
-import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.CompleteOktaLoginRequest;
 import granite.session.service.requestreply.SessionData;
-import strata.frontendcontroller.server.application.IHandleInputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndInputMapper;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
+import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.service.requestreply.SessionInput;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -25,12 +22,11 @@ import java.util.concurrent.CompletionStage;
 
 public
 class CompleteOktaLoginView
-    implements IHandleInputAction
+    implements IInputAction<SessionInput,SessionOutput>
 {
     private final ISessionCommandServiceClient commandClient;
     private final SessionRequestContext        context;
     private final SessionLoginSettings         settings;
-    private final FrontEndInputMapper          mapper;
 
     public
     CompleteOktaLoginView(
@@ -41,22 +37,11 @@ class CompleteOktaLoginView
         this.commandClient = commandClient;
         this.context = context;
         this.settings = settings;
-        this.mapper = FrontEndInputMapper.of();
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(HandleInputRequest request)
-    {
-        return
-            mapper
-                .map(CompleteOktaLoginInput.class,request.getInput())
-                .map(this::complete)
-                .orElseThrow();
-    }
-
-    protected CompletionStage<FrontEndOutput>
-    complete(CompleteOktaLoginInput input)
+    public CompletionStage<SessionOutput>
+    apply(SessionInput input)
     {
         Optional<String> deviceId      = context.getCookie(SessionCookies.DEVICE_COOKIE).filter(id -> !id.isBlank());
         Optional<String> transactionId = context.getCookie(SessionCookies.LOGIN_COOKIE).filter(id -> !id.isBlank());
@@ -78,8 +63,8 @@ class CompleteOktaLoginView
                 .exceptionally(e -> refused(input));
     }
 
-    protected FrontEndOutput
-    toOutput(CompleteOktaLoginInput input,CompleteOktaLoginReply reply)
+    protected SessionOutput
+    toOutput(SessionInput input,CompleteOktaLoginReply reply)
     {
         SessionData data   = reply.getSessionData();
         String      handle = reply.getSessionHandle();
@@ -97,14 +82,14 @@ class CompleteOktaLoginView
                 .setReturnTo(reply.getReturnTo());
     }
 
-    private FrontEndOutput
-    refused(CompleteOktaLoginInput input)
+    private SessionOutput
+    refused(SessionInput input)
     {
         return describe(input).setStatus("UNAUTHENTICATED");
     }
 
     private SessionOutput
-    describe(CompleteOktaLoginInput input)
+    describe(SessionInput input)
     {
         return
             new SessionOutput()

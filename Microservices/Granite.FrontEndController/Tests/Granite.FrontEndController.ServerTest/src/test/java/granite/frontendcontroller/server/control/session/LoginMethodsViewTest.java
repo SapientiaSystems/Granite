@@ -4,33 +4,30 @@
 
 package granite.frontendcontroller.server.control.session;
 
-import granite.frontendcontroller.service.requestreply.LoginMethodsOutput;
+import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import strata.foundation.core.configuration.IConfiguration;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
 class LoginMethodsViewTest
 {
-    private LoginMethodsOutput
+    private SessionOutput
     run(SessionLoginSettings settings)
         throws Exception
     {
         return
-            assertInstanceOf(
-                LoginMethodsOutput.class,
-                new LoginMethodsView(settings)
-                    .apply(new GetOutputRequest().setUserId(0L).setSource("Session.New").setDestination("LoginView"))
-                    .toCompletableFuture()
-                    .get());
+            new LoginMethodsView(settings)
+                .apply(new GetSessionOutputRequest().setUserId(0L).setSource("Session.New").setDestination("LoginView"))
+                .toCompletableFuture()
+                .get();
     }
 
     @Test
@@ -38,7 +35,7 @@ class LoginMethodsViewTest
     reportsBothSwitchesAndCopiesTheKey()
         throws Exception
     {
-        LoginMethodsOutput output = run(new SessionLoginSettings(true,true));
+        SessionOutput output = run(new SessionLoginSettings(true,true));
 
         assertTrue(output.isPasswordEnabled());
         assertTrue(output.isOktaEnabled());
@@ -51,7 +48,7 @@ class LoginMethodsViewTest
     disabledPasswordLoginIsMissingFromLoginMethods()
         throws Exception
     {
-        LoginMethodsOutput output = run(new SessionLoginSettings(false,false));
+        SessionOutput output = run(new SessionLoginSettings(false,false));
 
         assertFalse(output.isPasswordEnabled());
         assertFalse(output.isOktaEnabled());

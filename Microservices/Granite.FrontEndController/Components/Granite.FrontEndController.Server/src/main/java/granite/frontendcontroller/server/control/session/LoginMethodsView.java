@@ -4,17 +4,16 @@
 
 package granite.frontendcontroller.server.control.session;
 
-import granite.frontendcontroller.service.requestreply.LoginMethodsOutput;
-import strata.frontendcontroller.server.application.IGetOutputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
+import granite.frontendcontroller.server.control.IOutputAction;
+import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public
 class LoginMethodsView
-    implements IGetOutputAction
+    implements IOutputAction<GetSessionOutputRequest,SessionOutput>
 {
     private final SessionLoginSettings settings;
 
@@ -25,12 +24,12 @@ class LoginMethodsView
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(GetOutputRequest request)
+    public CompletionStage<SessionOutput>
+    apply(GetSessionOutputRequest request)
     {
         return
             CompletableFuture.completedFuture(
-                new LoginMethodsOutput()
+                new SessionOutput()
                     .setPasswordEnabled(settings.isPasswordEnabled())
                     .setOktaEnabled(settings.isOktaEnabled())
                     .setUserId(request.getUserId())

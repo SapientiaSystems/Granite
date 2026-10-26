@@ -4,9 +4,7 @@
 
 package granite.frontendcontroller.server.control.session;
 
-import granite.frontendcontroller.service.requestreply.LoginInput;
-import granite.frontendcontroller.service.requestreply.LoginMethodsOutput;
-import granite.frontendcontroller.service.requestreply.LogoutOutput;
+import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -24,10 +22,9 @@ class SessionLeakTest
     noSecretInToStringOrOutput()
     {
         String text =
-            new LoginInput().setUserName("amy").setPassword(SessionTestSupport.PASSWORD)
+            new SessionInput().setUserName("amy").setPassword(SessionTestSupport.PASSWORD)
                 + new SessionOutput().setUserName("amy").setAuthorities(Set.of("ROLE_USER")).setStatus("AUTHENTICATED").toString()
-                + new LoginMethodsOutput().toString()
-                + new LogoutOutput().toString()
+                + new SessionOutput().toString()
                 + new SessionLoginSettings(true,false).toString();
 
         assertFalse(text.contains(SessionTestSupport.PASSWORD));

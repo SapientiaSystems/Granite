@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -157,17 +156,14 @@ class UpdateUsersViewTest
         throws Exception
     {
         return
-            (UsersOutput)
-                view
-                    .apply(
-                        new HandleInputRequest()
-                            .setInput(
-                                input
-                                    .setSource("User.All")
-                                    .setCommand("Save")
-                                    .setDestination("UsersEditableView")))
-                    .toCompletableFuture()
-                    .get();
+            view
+                .apply(
+                    input
+                        .setSource("User.All")
+                        .setCommand("Save")
+                        .setDestination("UsersEditableView"))
+                .toCompletableFuture()
+                .get();
     }
 }
 

@@ -4,18 +4,19 @@
 
 package granite.frontendcontroller.server.platform;
 
+import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
+import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import strata.frontendcontroller.server.platform.UserFrontEndControllerServiceController;
-import strata.frontendcontroller.service.requestreply.HandleInputReply;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
-import strata.frontendcontroller.service.requestreply.IFrontEndControllerService;
+import strata.foundation.core.mapper.ObjectMapperSupplier;
 
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
@@ -31,18 +32,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public
 class ResponseCookieAdviceTest
 {
-    private IFrontEndControllerService service;
-    private MockMvc                    mvc;
+    private ISessionFrontEndControllerService service;
+    private MockMvc                         mvc;
 
     @BeforeEach
     public void
     setUp()
     {
-        service = Mockito.mock(IFrontEndControllerService.class);
+        service = Mockito.mock(ISessionFrontEndControllerService.class);
         mvc =
             MockMvcBuilders
-                .standaloneSetup(new UserFrontEndControllerServiceController(service))
+                .standaloneSetup(new SessionFrontEndControllerServiceController(service))
+                .addPlaceholderValue("granite.frontendcontroller.service-path","/frontendcontroller-user-service")
                 .setControllerAdvice(new ResponseCookieAdvice())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapperSupplier().get()))
                 .build();
     }
 
@@ -53,7 +56,7 @@ class ResponseCookieAdviceTest
         MvcResult started =
             mvc
                 .perform(
-                    post("/frontendcontroller-user-service/handle-input")
+                    post("/frontendcontroller-user-service/handle-session-input")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andReturn();
@@ -69,7 +72,7 @@ class ResponseCookieAdviceTest
         throws Exception
     {
         Mockito
-            .when(service.handleInput(Mockito.any(HandleInputRequest.class)))
+            .when(service.handleSessionInput(Mockito.any(HandleSessionInputRequest.class)))
             .thenAnswer(
                 invocation ->
                 {
@@ -80,7 +83,7 @@ class ResponseCookieAdviceTest
                             () ->
                             {
                                 context.addSetCookie(SessionCookies.issue("h",null,Instant.now()));
-                                return new HandleInputReply().setSuccess(true);
+                                return new HandleSessionInputReply().setSuccess(true);
                             });
                 });
 
@@ -98,8 +101,8 @@ class ResponseCookieAdviceTest
         throws Exception
     {
         Mockito
-            .when(service.handleInput(Mockito.any(HandleInputRequest.class)))
-            .thenReturn(CompletableFuture.completedFuture(new HandleInputReply().setSuccess(true)));
+            .when(service.handleSessionInput(Mockito.any(HandleSessionInputRequest.class)))
+            .thenReturn(CompletableFuture.completedFuture(new HandleSessionInputReply().setSuccess(true)));
 
         MvcResult result = call();
 

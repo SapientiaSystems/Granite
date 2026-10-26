@@ -5,6 +5,8 @@
 package granite.frontendcontroller.server.control.session;
 
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.server.control.IOutputAction;
+import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.session.service.requestreply.FindSessionsByKeyReply;
@@ -15,9 +17,6 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindUsersByKeyReply;
 import granite.user.service.requestreply.FindUsersByKeyRequest;
 import granite.user.service.requestreply.UserKey;
-import strata.frontendcontroller.server.application.IGetOutputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -27,7 +26,7 @@ import java.util.concurrent.CompletionStage;
 
 public
 class SessionStatusView
-    implements IGetOutputAction
+    implements IOutputAction<GetSessionOutputRequest,SessionOutput>
 {
     private final ISessionQueryServiceClient sessionClient;
     private final IUserQueryServiceClient    userClient;
@@ -45,8 +44,8 @@ class SessionStatusView
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(GetOutputRequest request)
+    public CompletionStage<SessionOutput>
+    apply(GetSessionOutputRequest request)
     {
         Optional<Long> sessionId = context.getSessionId();
 
@@ -78,8 +77,8 @@ class SessionStatusView
         return Optional.of(session);
     }
 
-    protected CompletionStage<FrontEndOutput>
-    describe(GetOutputRequest request,Optional<SessionData> session)
+    protected CompletionStage<SessionOutput>
+    describe(GetSessionOutputRequest request,Optional<SessionData> session)
     {
         if (session.isEmpty())
             return CompletableFuture.completedFuture(unauthenticated(request));
@@ -93,8 +92,8 @@ class SessionStatusView
                 .thenApply(reply -> toOutput(request,session.get(),reply));
     }
 
-    protected FrontEndOutput
-    toOutput(GetOutputRequest request,SessionData session,FindUsersByKeyReply reply)
+    protected SessionOutput
+    toOutput(GetSessionOutputRequest request,SessionData session,FindUsersByKeyReply reply)
     {
         if (!reply.isSuccess() || reply.getFoundUsers() == null || reply.getFoundUsers().isEmpty())
             return unauthenticated(request);
@@ -106,14 +105,14 @@ class SessionStatusView
                 .setStatus("AUTHENTICATED");
     }
 
-    private FrontEndOutput
-    unauthenticated(GetOutputRequest request)
+    private SessionOutput
+    unauthenticated(GetSessionOutputRequest request)
     {
         return describe(request).setStatus("UNAUTHENTICATED");
     }
 
     private SessionOutput
-    describe(GetOutputRequest request)
+    describe(GetSessionOutputRequest request)
     {
         return
             new SessionOutput()

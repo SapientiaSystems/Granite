@@ -6,7 +6,7 @@ package granite.frontendcontroller.server.control.session;
 
 import strata.foundation.core.mapper.ObjectMapperSupplier;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
+import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.LoginReply;
@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
 
 import java.time.Instant;
 import java.util.Set;
@@ -28,7 +27,6 @@ import static granite.frontendcontroller.server.control.session.SessionTestSuppo
 import static granite.frontendcontroller.server.control.session.SessionTestSupport.PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,13 +60,11 @@ class LoginSessionTest
     }
 
     private SessionOutput
-    run(SessionRequestContext context,SessionLoginSettings settings,HandleInputRequest request)
+    run(SessionRequestContext context,SessionLoginSettings settings,SessionInput request)
         throws Exception
     {
         return
-            assertInstanceOf(
-                SessionOutput.class,
-                new LoginView(commandClient,context,settings).apply(request).toCompletableFuture().get());
+            new LoginView(commandClient,context,settings).apply(request).toCompletableFuture().get();
     }
 
     private void
@@ -111,7 +107,7 @@ class LoginSessionTest
         assertTrue(cookie.contains("Path=/"));
         assertTrue(cookie.matches(".*Max-Age=(59[0-9]|600).*"));
 
-        String json = new ObjectMapperSupplier().get().registerModule(new FrontEndJacksonModule()).writeValueAsString(output);
+        String json = new ObjectMapperSupplier().get().writeValueAsString(output);
 
         for (String secret : new String[] {HANDLE,"access-token-secret","refresh-token-secret",PASSWORD})
             assertFalse(json.contains(secret));

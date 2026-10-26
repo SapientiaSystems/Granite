@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
 
 import java.util.List;
 import java.util.Set;
@@ -106,17 +105,14 @@ class DeleteUsersViewTest
         throws Exception
     {
         return
-            (UsersOutput)
-                view
-                    .apply(
-                        new HandleInputRequest()
-                            .setInput(
-                                input
-                                    .setSource("User.All")
-                                    .setCommand("Delete")
-                                    .setDestination("UsersEditableView")))
-                    .toCompletableFuture()
-                    .get();
+            view
+                .apply(
+                    input
+                        .setSource("User.All")
+                        .setCommand("Delete")
+                        .setDestination("UsersEditableView"))
+                .toCompletableFuture()
+                .get();
     }
 }
 

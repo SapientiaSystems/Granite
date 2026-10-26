@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.control.session;
 
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.session.service.requestreply.FindSessionsByKeyReply;
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -83,12 +82,10 @@ class SessionStatusViewTest
         throws Exception
     {
         return
-            assertInstanceOf(
-                SessionOutput.class,
-                new SessionStatusView(sessionClient,userClient,context)
-                    .apply(new GetOutputRequest().setUserId(7L).setSource("Session.Current").setDestination("SessionView"))
-                    .toCompletableFuture()
-                    .get());
+            new SessionStatusView(sessionClient,userClient,context)
+                .apply(new GetSessionOutputRequest().setUserId(7L).setSource("Session.Current").setDestination("SessionView"))
+                .toCompletableFuture()
+                .get();
     }
 
     private void

@@ -6,10 +6,8 @@ package granite.frontendcontroller.server.control.session;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
-import granite.frontendcontroller.service.requestreply.RedirectOutput;
+import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
-import granite.frontendcontroller.service.requestreply.StartOktaLoginInput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.StartOktaLoginReply;
 import granite.session.service.requestreply.StartOktaLoginRequest;
@@ -19,15 +17,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import strata.foundation.core.mapper.ObjectMapperSupplier;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
 
 
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -62,14 +58,14 @@ class StartOktaLoginViewTest
                         .setAuthorizeUrl(AUTHORIZE_URL)
                         .setTransactionId(TRANSACTION_ID)));
 
-        RedirectOutput output = assertInstanceOf(RedirectOutput.class,run(context,true));
+        SessionOutput output = run(context,true);
 
         ArgumentCaptor<StartOktaLoginRequest> captor = ArgumentCaptor.forClass(StartOktaLoginRequest.class);
 
         Mockito.verify(commandClient).startOktaLogin(captor.capture());
         assertEquals("device-1",captor.getValue().getDeviceId());
         assertEquals("/users",captor.getValue().getReturnTo());
-        assertEquals(AUTHORIZE_URL,output.getUrl());
+        assertEquals(AUTHORIZE_URL,output.getRedirectUrl());
         assertEquals("Session.New",output.getSource());
         assertEquals(1,context.getSetCookies().size());
 
@@ -126,29 +122,28 @@ class StartOktaLoginViewTest
         assertRefused(run(context,true),context);
     }
 
-    private FrontEndOutput
+    private SessionOutput
     run(SessionRequestContext context,boolean oktaEnabled)
         throws Exception
     {
         return
             new StartOktaLoginView(commandClient,context,new SessionLoginSettings(true,oktaEnabled))
                 .apply(
-                    new HandleInputRequest()
-                        .setInput(
-                            new StartOktaLoginInput()
-                                .setReturnTo("/users")
-                                .setUserId(0L)
-                                .setSource("Session.New")
-                                .setCommand("StartOktaLogin")
-                                .setDestination("LoginView")))
+                    new SessionInput()
+                        .setReturnTo("/users")
+                        .setUserId(0L)
+                        .setSource("Session.New")
+                        .setCommand("StartOktaLogin")
+                        .setDestination("LoginView"))
                 .toCompletableFuture()
                 .get();
     }
 
     private void
-    assertRefused(FrontEndOutput output,SessionRequestContext context)
+    assertRefused(SessionOutput output,SessionRequestContext context)
     {
-        assertEquals("UNAUTHENTICATED",assertInstanceOf(SessionOutput.class,output).getStatus());
+        assertEquals("UNAUTHENTICATED",output.getStatus());
+        assertNull(output.getRedirectUrl());
         assertTrue(context.getSetCookies().isEmpty());
     }
 
@@ -156,7 +151,7 @@ class StartOktaLoginViewTest
     serialize(Object value)
         throws Exception
     {
-        ObjectMapper mapper = new ObjectMapperSupplier().get().registerModule(new FrontEndJacksonModule());
+        ObjectMapper mapper = new ObjectMapperSupplier().get();
 
         return mapper.writeValueAsString(value);
     }

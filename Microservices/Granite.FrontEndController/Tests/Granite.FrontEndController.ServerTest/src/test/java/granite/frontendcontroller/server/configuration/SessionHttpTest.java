@@ -4,10 +4,12 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
-import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
+import granite.frontendcontroller.server.platform.SessionFrontEndControllerServiceController;
+import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
+import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.LogoutReply;
@@ -30,11 +32,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.mapper.ObjectMapperSupplier;
-import strata.frontendcontroller.server.application.FrontEndControllerService;
-import strata.frontendcontroller.server.platform.UserFrontEndControllerServiceController;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
-import strata.frontendcontroller.service.requestreply.IFrontEndControllerService;
 
 import javax.net.ssl.SSLContext;
 import java.time.Instant;
@@ -76,25 +73,24 @@ class SessionHttpTest
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
-        GraniteRequestProcessorFactory factory = new GraniteRequestProcessorFactory(configuration,sslBundles);
-        IFrontEndControllerService     service = Mockito.mock(IFrontEndControllerService.class);
+        GraniteFrontEndControllerServiceFactory factory = new GraniteFrontEndControllerServiceFactory(configuration,sslBundles);
+        ISessionFrontEndControllerService       service = Mockito.mock(ISessionFrontEndControllerService.class);
 
         Mockito
-            .when(service.handleInput(Mockito.any(HandleInputRequest.class)))
+            .when(service.handleSessionInput(Mockito.any(HandleSessionInputRequest.class)))
             .thenAnswer(
-                i -> new FrontEndControllerService(factory.create(),new ModelMapper(),Runnable::run).handleInput(i.getArgument(0)));
+                i -> factory.createSessionService(new ModelMapper(),Runnable::run).handleSessionInput(i.getArgument(0)));
         Mockito
-            .when(service.getOutput(Mockito.any(GetOutputRequest.class)))
+            .when(service.getSessionOutput(Mockito.any(GetSessionOutputRequest.class)))
             .thenAnswer(
-                i -> new FrontEndControllerService(factory.create(),new ModelMapper(),Runnable::run).getOutput(i.getArgument(0)));
-
-        ObjectMapper mapper = new ObjectMapperSupplier().get().registerModule(new FrontEndJacksonModule());
+                i -> factory.createSessionService(new ModelMapper(),Runnable::run).getSessionOutput(i.getArgument(0)));
 
         mvc =
             MockMvcBuilders
-                .standaloneSetup(new UserFrontEndControllerServiceController(service))
+                .standaloneSetup(new SessionFrontEndControllerServiceController(service))
+                .addPlaceholderValue("granite.frontendcontroller.service-path","/frontendcontroller-user-service")
                 .setControllerAdvice(new ResponseCookieAdvice())
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapperSupplier().get()))
                 .build();
     }
 
@@ -119,7 +115,7 @@ class SessionHttpTest
     loginBody()
     {
         return
-            "{\"input\":{\"userId\":0,\"source\":\"Session.New\",\"command\":\"Login\",\"destination\":\"LoginView\","
+            "{\"input\":{\"source\":\"Session.New\",\"command\":\"Login\",\"destination\":\"LoginView\","
                 + "\"userName\":\"amy\",\"password\":\"" + PASSWORD + "\"}}";
     }
 
@@ -138,7 +134,7 @@ class SessionHttpTest
                 .setSessionHandle(HANDLE)
                 .setSuccess(true));
 
-        MvcResult result = send(post("/frontendcontroller-user-service/handle-input").content(loginBody()));
+        MvcResult result = send(post("/frontendcontroller-user-service/handle-session-input").content(loginBody()));
 
         String cookie = result.getResponse().getHeader("Set-Cookie");
         String body = result.getResponse().getContentAsString();
@@ -162,7 +158,7 @@ class SessionHttpTest
     {
         backend.respond("login",new LoginReply().setSuccess(false).setFailureMessage("invalid credentials"));
 
-        MvcResult result = send(post("/frontendcontroller-user-service/handle-input").content(loginBody()));
+        MvcResult result = send(post("/frontendcontroller-user-service/handle-session-input").content(loginBody()));
 
         assertNull(result.getResponse().getHeader("Set-Cookie"));
         assertTrue(result.getResponse().getContentAsString().contains("UNAUTHENTICATED"));
@@ -178,11 +174,11 @@ class SessionHttpTest
 
         MvcResult result =
             send(
-                post("/frontendcontroller-user-service/handle-input")
+                post("/frontendcontroller-user-service/handle-session-input")
                     .header("Authorization",SessionRequestContextTest.bearer("{\"jti\":\"11\",\"sub\":\"7\"}"))
                     .content(
-                        "{\"input\":{\"userId\":7,\"source\":\"Session.Current\",\"command\":\"Logout\","
-                            + "\"destination\":\"LoginView\",\"logout\":true}}"));
+                        "{\"input\":{\"source\":\"Session.Current\",\"command\":\"Logout\","
+                            + "\"destination\":\"LoginView\"}}"));
 
         assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith("GRANITE_SID=;"));
         assertTrue(result.getResponse().getHeader("Set-Cookie").contains("Max-Age=0"));
@@ -204,9 +200,9 @@ class SessionHttpTest
 
         MvcResult result =
             send(
-                post("/frontendcontroller-user-service/handle-input")
+                post("/frontendcontroller-user-service/handle-session-input")
                     .content(
-                        "{\"input\":{\"userId\":0,\"source\":\"Session.New\",\"command\":\"StartOktaLogin\","
+                        "{\"input\":{\"source\":\"Session.New\",\"command\":\"StartOktaLogin\","
                             + "\"destination\":\"LoginView\",\"returnTo\":\"/users\"}}"));
         String    cookie = result.getResponse().getHeader("Set-Cookie");
         String    body   = result.getResponse().getContentAsString();
@@ -237,10 +233,10 @@ class SessionHttpTest
 
         MvcResult    result  =
             send(
-                post("/frontendcontroller-user-service/handle-input")
+                post("/frontendcontroller-user-service/handle-session-input")
                     .cookie(new Cookie("GRANITE_LOGIN","transaction-secret"))
                     .content(
-                        "{\"input\":{\"userId\":0,\"source\":\"Session.New\",\"command\":\"CompleteOktaLogin\","
+                        "{\"input\":{\"source\":\"Session.New\",\"command\":\"CompleteOktaLogin\","
                             + "\"destination\":\"LoginView\",\"code\":\"code-secret\",\"state\":\"state-1\"}}"));
         List<String> cookies = result.getResponse().getHeaders("Set-Cookie");
         String       body    = result.getResponse().getContentAsString();

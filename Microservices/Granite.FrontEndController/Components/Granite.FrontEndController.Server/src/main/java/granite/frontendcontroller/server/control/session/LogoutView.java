@@ -4,17 +4,14 @@
 
 package granite.frontendcontroller.server.control.session;
 
+import granite.frontendcontroller.server.control.IInputAction;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.LogoutInput;
-import granite.frontendcontroller.service.requestreply.LogoutOutput;
+import granite.frontendcontroller.service.requestreply.SessionInput;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.LogoutRequest;
-import strata.frontendcontroller.server.application.IHandleInputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndInputMapper;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -22,33 +19,21 @@ import java.util.concurrent.CompletionStage;
 
 public
 class LogoutView
-    implements IHandleInputAction
+    implements IInputAction<SessionInput,SessionOutput>
 {
     private final ISessionCommandServiceClient commandClient;
     private final SessionRequestContext        context;
-    private final FrontEndInputMapper          mapper;
 
     public
     LogoutView(ISessionCommandServiceClient commandClient,SessionRequestContext context)
     {
         this.commandClient = commandClient;
         this.context = context;
-        this.mapper = FrontEndInputMapper.of();
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(HandleInputRequest request)
-    {
-        return
-            mapper
-                .map(LogoutInput.class,request.getInput())
-                .map(this::logout)
-                .orElseThrow();
-    }
-
-    protected CompletionStage<FrontEndOutput>
-    logout(LogoutInput input)
+    public CompletionStage<SessionOutput>
+    apply(SessionInput input)
     {
         Optional<Long> sessionId = context.getSessionId();
 
@@ -62,24 +47,24 @@ class LogoutView
                 .exceptionally(e -> describe(input,false,null));
     }
 
-    protected FrontEndOutput
-    toOutput(LogoutInput input,LogoutReply reply)
+    protected SessionOutput
+    toOutput(SessionInput input,LogoutReply reply)
     {
         return reply.isSuccess() ? clearAndDescribe(input,reply.getEndSessionUrl()) : describe(input,false,null);
     }
 
-    private FrontEndOutput
-    clearAndDescribe(LogoutInput input,String endSessionUrl)
+    private SessionOutput
+    clearAndDescribe(SessionInput input,String endSessionUrl)
     {
         context.addSetCookie(SessionCookies.clear());
         return describe(input,true,endSessionUrl);
     }
 
-    private FrontEndOutput
-    describe(LogoutInput input,boolean loggedOut,String endSessionUrl)
+    private SessionOutput
+    describe(SessionInput input,boolean loggedOut,String endSessionUrl)
     {
         return
-            new LogoutOutput()
+            new SessionOutput()
                 .setLoggedOut(loggedOut)
                 .setEndSessionUrl(endSessionUrl)
                 .setUserId(input.getUserId())

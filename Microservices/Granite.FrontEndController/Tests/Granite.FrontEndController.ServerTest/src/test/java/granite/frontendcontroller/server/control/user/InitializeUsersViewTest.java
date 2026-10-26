@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
+import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindAllUsersReply;
@@ -12,7 +13,6 @@ import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -39,14 +39,13 @@ class InitializeUsersViewTest
                         .setUsers(List.of(new UserData().setUserId(1L),new UserData().setUserId(2L)))));
 
         UsersOutput output =
-            (UsersOutput)
-                new InitializeUsersView(queryClient)
-                    .apply(
-                        new GetOutputRequest()
-                            .setSource("User.All")
-                            .setDestination("UsersEditableView"))
-                    .toCompletableFuture()
-                    .get();
+            new InitializeUsersView(queryClient)
+                .apply(
+                    new GetUsersOutputRequest()
+                        .setSource("User.All")
+                        .setDestination("UsersEditableView"))
+                .toCompletableFuture()
+                .get();
 
         assertEquals(2,output.getUsers().size());
         assertTrue(output.getFailureMessages().isEmpty());
@@ -66,11 +65,10 @@ class InitializeUsersViewTest
                 CompletableFuture.completedFuture(new FindAllUsersReply().setSuccess(false)));
 
         UsersOutput output =
-            (UsersOutput)
-                new InitializeUsersView(queryClient)
-                    .apply(new GetOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
-                    .toCompletableFuture()
-                    .get();
+            new InitializeUsersView(queryClient)
+                .apply(new GetUsersOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
+                .toCompletableFuture()
+                .get();
 
         assertTrue(output.getUsers().isEmpty());
         assertEquals(List.of("Unable to refresh user list: unknown error"),output.getFailureMessages());

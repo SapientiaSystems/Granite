@@ -6,9 +6,7 @@ package granite.frontendcontroller.server.control.session;
 
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
-import granite.frontendcontroller.service.requestreply.LoginInput;
-import granite.frontendcontroller.service.requestreply.LogoutInput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
+import granite.frontendcontroller.service.requestreply.SessionInput;
 
 import java.util.Map;
 
@@ -33,30 +31,26 @@ class SessionTestSupport
         return new SessionRequestContext(cookies,bearer);
     }
 
-    public static HandleInputRequest
+    public static SessionInput
     login(String userName,String password)
     {
         return
-            new HandleInputRequest()
-                .setInput(
-                    new LoginInput()
-                        .setUserName(userName)
-                        .setPassword(password)
-                        .setSource("Session.New")
-                        .setCommand("Login")
-                        .setDestination("LoginView"));
+            new SessionInput()
+                .setUserName(userName)
+                .setPassword(password)
+                .setSource("Session.New")
+                .setCommand("Login")
+                .setDestination("LoginView");
     }
 
-    public static HandleInputRequest
+    public static SessionInput
     logout()
     {
         return
-            new HandleInputRequest()
-                .setInput(
-                    new LogoutInput()
-                        .setSource("Session.Current")
-                        .setCommand("Logout")
-                        .setDestination("LoginView"));
+            new SessionInput()
+                .setSource("Session.Current")
+                .setCommand("Logout")
+                .setDestination("LoginView");
     }
 }
 

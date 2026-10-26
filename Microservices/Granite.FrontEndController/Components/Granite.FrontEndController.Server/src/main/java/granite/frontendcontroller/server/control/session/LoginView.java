@@ -6,17 +6,14 @@ package granite.frontendcontroller.server.control.session;
 
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.LoginInput;
-import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
 import granite.session.service.requestreply.SessionData;
 import granite.user.service.requestreply.CredentialKind;
-import strata.frontendcontroller.server.application.IHandleInputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndInputMapper;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
+import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.service.requestreply.SessionInput;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -26,12 +23,11 @@ import java.util.concurrent.CompletionStage;
 
 public
 class LoginView
-    implements IHandleInputAction
+    implements IInputAction<SessionInput,SessionOutput>
 {
     private final ISessionCommandServiceClient commandClient;
     private final SessionRequestContext        context;
     private final SessionLoginSettings         settings;
-    private final FrontEndInputMapper          mapper;
 
     public
     LoginView(
@@ -42,22 +38,11 @@ class LoginView
         this.commandClient = commandClient;
         this.context = context;
         this.settings = settings;
-        this.mapper = FrontEndInputMapper.of();
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(HandleInputRequest request)
-    {
-        return
-            mapper
-                .map(LoginInput.class,request.getInput())
-                .map(this::login)
-                .orElseThrow();
-    }
-
-    protected CompletionStage<FrontEndOutput>
-    login(LoginInput input)
+    public CompletionStage<SessionOutput>
+    apply(SessionInput input)
     {
         Optional<String> deviceId = context.getCookie(SessionCookies.DEVICE_COOKIE).filter(id -> !id.isBlank());
 
@@ -79,8 +64,8 @@ class LoginView
                 .exceptionally(e -> refused(input));
     }
 
-    protected FrontEndOutput
-    toOutput(LoginInput input,LoginReply reply)
+    protected SessionOutput
+    toOutput(SessionInput input,LoginReply reply)
     {
         SessionData data = reply.getSessionData();
         String      handle = reply.getSessionHandle();
@@ -97,14 +82,14 @@ class LoginView
                 .setStatus("AUTHENTICATED");
     }
 
-    private FrontEndOutput
-    refused(LoginInput input)
+    private SessionOutput
+    refused(SessionInput input)
     {
         return describe(input).setStatus("UNAUTHENTICATED");
     }
 
     private SessionOutput
-    describe(LoginInput input)
+    describe(SessionInput input)
     {
         return
             new SessionOutput()

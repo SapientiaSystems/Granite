@@ -9,9 +9,8 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindAllUsersReply;
 import granite.user.service.requestreply.FindAllUsersRequest;
 import granite.user.service.requestreply.UserData;
-import strata.frontendcontroller.server.application.IGetOutputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.GetOutputRequest;
+import granite.frontendcontroller.server.control.IOutputAction;
+import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.concurrent.CompletionStage;
 
 public
 class InitializeUsersView
-    implements IGetOutputAction
+    implements IOutputAction<GetUsersOutputRequest,UsersOutput>
 {
     private final IUserQueryServiceClient queryClient;
 
@@ -30,8 +29,8 @@ class InitializeUsersView
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(GetOutputRequest request)
+    public CompletionStage<UsersOutput>
+    apply(GetUsersOutputRequest request)
     {
         return
             queryClient
@@ -39,8 +38,8 @@ class InitializeUsersView
                 .thenApply(reply -> toUsersOutput(request,reply));
     }
 
-    protected FrontEndOutput
-    toUsersOutput(GetOutputRequest request,FindAllUsersReply reply)
+    protected UsersOutput
+    toUsersOutput(GetUsersOutputRequest request,FindAllUsersReply reply)
     {
         List<UserData> users = List.of();
         List<String>   failures = new ArrayList<>();

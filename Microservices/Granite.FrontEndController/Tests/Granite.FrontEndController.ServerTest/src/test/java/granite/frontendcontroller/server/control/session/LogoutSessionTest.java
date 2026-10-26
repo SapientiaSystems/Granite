@@ -5,7 +5,7 @@
 package granite.frontendcontroller.server.control.session;
 
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.LogoutOutput;
+import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.LogoutRequest;
@@ -19,7 +19,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,14 +35,11 @@ class LogoutSessionTest
         commandClient = Mockito.mock(ISessionCommandServiceClient.class);
     }
 
-    private LogoutOutput
+    private SessionOutput
     run(SessionRequestContext context)
         throws Exception
     {
-        return
-            assertInstanceOf(
-                LogoutOutput.class,
-                new LogoutView(commandClient,context).apply(SessionTestSupport.logout()).toCompletableFuture().get());
+        return new LogoutView(commandClient,context).apply(SessionTestSupport.logout()).toCompletableFuture().get();
     }
 
     @Test
@@ -57,7 +53,7 @@ class LogoutSessionTest
             .when(commandClient.logout(Mockito.any(LogoutRequest.class)))
             .thenReturn(CompletableFuture.completedFuture(new LogoutReply().setSuccess(true)));
 
-        LogoutOutput output = run(context);
+        SessionOutput output = run(context);
 
         assertTrue(output.isLoggedOut());
         assertNull(output.getEndSessionUrl());
@@ -85,7 +81,7 @@ class LogoutSessionTest
             .when(commandClient.logout(Mockito.any(LogoutRequest.class)))
             .thenReturn(CompletableFuture.completedFuture(new LogoutReply().setSuccess(true).setEndSessionUrl(url)));
 
-        LogoutOutput output = run(context);
+        SessionOutput output = run(context);
 
         assertTrue(output.isLoggedOut());
         assertEquals(url,output.getEndSessionUrl());

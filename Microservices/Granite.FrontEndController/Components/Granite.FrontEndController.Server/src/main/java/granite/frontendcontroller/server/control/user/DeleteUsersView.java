@@ -13,10 +13,7 @@ import granite.user.service.requestreply.DestroyUsersRequest;
 import granite.user.service.requestreply.FindAllUsersReply;
 import granite.user.service.requestreply.FindAllUsersRequest;
 import granite.user.service.requestreply.UserData;
-import strata.frontendcontroller.server.application.IHandleInputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndInputMapper;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
+import granite.frontendcontroller.server.control.IInputAction;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -28,13 +25,12 @@ import java.util.concurrent.CompletionStage;
 
 public
 class DeleteUsersView
-    implements IHandleInputAction
+    implements IInputAction<UsersInput,UsersOutput>
 {
     private static final String NOT_DELETED = "not deleted";
 
     private final IUserQueryServiceClient   queryClient;
     private final IUserCommandServiceClient commandClient;
-    private final FrontEndInputMapper       mapper;
 
     public
     DeleteUsersView(
@@ -43,22 +39,11 @@ class DeleteUsersView
     {
         this.queryClient = queryClient;
         this.commandClient = commandClient;
-        this.mapper = FrontEndInputMapper.of();
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(HandleInputRequest request)
-    {
-        return
-            mapper
-                .map(UsersInput.class,request.getInput())
-                .map(this::delete)
-                .orElseThrow();
-    }
-
-    protected CompletionStage<FrontEndOutput>
-    delete(UsersInput input)
+    public CompletionStage<UsersOutput>
+    apply(UsersInput input)
     {
         List<String> failures = new ArrayList<>();
         Set<Long>    ids = new LinkedHashSet<>();
@@ -103,7 +88,7 @@ class DeleteUsersView
             failures.add(reason(reply.getFailureMessage()));
     }
 
-    protected FrontEndOutput
+    protected UsersOutput
     toUsersOutput(UsersInput input,FindAllUsersReply reply,List<String> failures)
     {
         List<UserData> users = List.of();

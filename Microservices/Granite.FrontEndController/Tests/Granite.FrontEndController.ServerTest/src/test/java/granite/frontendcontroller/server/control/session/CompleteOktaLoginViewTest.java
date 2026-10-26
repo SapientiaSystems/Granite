@@ -6,8 +6,7 @@ package granite.frontendcontroller.server.control.session;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
-import granite.frontendcontroller.service.requestreply.CompleteOktaLoginInput;
-import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
+import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
@@ -19,8 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import strata.foundation.core.mapper.ObjectMapperSupplier;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -31,7 +28,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -75,7 +71,7 @@ class CompleteOktaLoginViewTest
                                 .setExpires(Instant.now().plusSeconds(3600))
                                 .setAuthorities(Set.of("ROLE_ADMIN")))));
 
-        SessionOutput output = assertInstanceOf(SessionOutput.class,run(context,true));
+        SessionOutput output = run(context,true);
 
         ArgumentCaptor<CompleteOktaLoginRequest> captor = ArgumentCaptor.forClass(CompleteOktaLoginRequest.class);
 
@@ -172,22 +168,20 @@ class CompleteOktaLoginViewTest
         assertLoginCleared(context.getSetCookies());
     }
 
-    private FrontEndOutput
+    private SessionOutput
     run(SessionRequestContext context,boolean oktaEnabled)
         throws Exception
     {
         return
             new CompleteOktaLoginView(commandClient,context,new SessionLoginSettings(true,oktaEnabled))
                 .apply(
-                    new HandleInputRequest()
-                        .setInput(
-                            new CompleteOktaLoginInput()
-                                .setCode(CODE)
-                                .setState("state-1")
-                                .setUserId(0L)
-                                .setSource("Session.New")
-                                .setCommand("CompleteOktaLogin")
-                                .setDestination("LoginView")))
+                    new SessionInput()
+                        .setCode(CODE)
+                        .setState("state-1")
+                        .setUserId(0L)
+                        .setSource("Session.New")
+                        .setCommand("CompleteOktaLogin")
+                        .setDestination("LoginView"))
                 .toCompletableFuture()
                 .get();
     }
@@ -207,9 +201,9 @@ class CompleteOktaLoginViewTest
     }
 
     private void
-    assertRefused(FrontEndOutput output)
+    assertRefused(SessionOutput output)
     {
-        SessionOutput session = assertInstanceOf(SessionOutput.class,output);
+        SessionOutput session = output;
 
         assertEquals("UNAUTHENTICATED",session.getStatus());
         assertNull(session.getReturnTo());
@@ -229,7 +223,7 @@ class CompleteOktaLoginViewTest
     serialize(Object value)
         throws Exception
     {
-        ObjectMapper mapper = new ObjectMapperSupplier().get().registerModule(new FrontEndJacksonModule());
+        ObjectMapper mapper = new ObjectMapperSupplier().get();
 
         return mapper.writeValueAsString(value);
     }

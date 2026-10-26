@@ -1,15 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////
-// GraniteRequestProcessorFactory.java
+// GraniteFrontEndControllerServiceFactory.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.frontendcontroller.server.control.PrefixRoutingRequestProcessor;
+import granite.frontendcontroller.server.application.SessionFrontEndControllerService;
+import granite.frontendcontroller.server.application.UsersFrontEndControllerService;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
-import granite.frontendcontroller.server.control.session.SessionRequestProcessor;
-import granite.frontendcontroller.server.control.user.UserRequestProcessor;
 import granite.frontendcontroller.server.platform.ForwardedBearerClientRequestFilter;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.service.requestreply.ISessionFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.IUsersFrontEndControllerService;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.session.client.requestreply.SessionCommandServiceClient;
@@ -19,39 +20,43 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.client.requestreply.UserCommandServiceClient;
 import granite.user.client.requestreply.UserQueryServiceClient;
 import jakarta.ws.rs.client.ClientBuilder;
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.ssl.SslBundles;
 import strata.foundation.core.configuration.IConfiguration;
-import strata.frontendcontroller.server.application.IRequestProcessor;
 
-import java.util.Map;
+import java.util.concurrent.Executor;
 
 public
-class GraniteRequestProcessorFactory
+class GraniteFrontEndControllerServiceFactory
 {
     private final IConfiguration configuration;
     private final SslBundles     sslBundles;
 
     public
-    GraniteRequestProcessorFactory(IConfiguration configuration,SslBundles sslBundles)
+    GraniteFrontEndControllerServiceFactory(IConfiguration configuration,SslBundles sslBundles)
     {
         this.configuration = configuration;
         this.sslBundles = sslBundles;
     }
 
-    public IRequestProcessor
-    create()
+    public IUsersFrontEndControllerService
+    createUsersService(ModelMapper mapper,Executor executor)
     {
-        SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
-        IRequestProcessor     session =
-            new SessionRequestProcessor(
+        return new UsersFrontEndControllerService(mapper,executor,userQueryClient(),userCommandClient());
+    }
+
+    public ISessionFrontEndControllerService
+    createSessionService(ModelMapper mapper,Executor executor)
+    {
+        return
+            new SessionFrontEndControllerService(
+                mapper,
+                executor,
                 sessionCommandClient(),
                 sessionQueryClient(),
                 userQueryClient(),
-                context,
+                SessionRequestContext.fromCurrentRequest(),
                 SessionLoginSettings.fromConfiguration(configuration));
-        IRequestProcessor     user = new UserRequestProcessor(userQueryClient(),userCommandClient());
-
-        return new PrefixRoutingRequestProcessor(Map.of("Session.",session),user);
     }
 
     public IUserQueryServiceClient

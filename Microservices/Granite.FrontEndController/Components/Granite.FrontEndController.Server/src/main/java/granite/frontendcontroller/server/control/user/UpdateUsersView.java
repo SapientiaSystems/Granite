@@ -17,10 +17,7 @@ import granite.user.service.requestreply.UpdateUserData;
 import granite.user.service.requestreply.UpdateUsersReply;
 import granite.user.service.requestreply.UpdateUsersRequest;
 import granite.user.service.requestreply.UserData;
-import strata.frontendcontroller.server.application.IHandleInputAction;
-import strata.frontendcontroller.service.requestreply.FrontEndInputMapper;
-import strata.frontendcontroller.service.requestreply.FrontEndOutput;
-import strata.frontendcontroller.service.requestreply.HandleInputRequest;
+import granite.frontendcontroller.server.control.IInputAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +26,12 @@ import java.util.concurrent.CompletionStage;
 
 public
 class UpdateUsersView
-    implements IHandleInputAction
+    implements IInputAction<UsersInput,UsersOutput>
 {
     private static final String NOT_SAVED = "not saved";
 
     private final IUserQueryServiceClient   queryClient;
     private final IUserCommandServiceClient commandClient;
-    private final FrontEndInputMapper       mapper;
 
     public
     UpdateUsersView(
@@ -44,22 +40,11 @@ class UpdateUsersView
     {
         this.queryClient = queryClient;
         this.commandClient = commandClient;
-        this.mapper = FrontEndInputMapper.of();
     }
 
     @Override
-    public CompletionStage<FrontEndOutput>
-    apply(HandleInputRequest request)
-    {
-        return
-            mapper
-                .map(UsersInput.class,request.getInput())
-                .map(this::save)
-                .orElseThrow();
-    }
-
-    protected CompletionStage<FrontEndOutput>
-    save(UsersInput input)
+    public CompletionStage<UsersOutput>
+    apply(UsersInput input)
     {
         List<String> failures = new ArrayList<>();
 
@@ -125,7 +110,7 @@ class UpdateUsersView
             failures.add(reason(reply.getFailureMessage()));
     }
 
-    protected FrontEndOutput
+    protected UsersOutput
     toUsersOutput(UsersInput input,FindAllUsersReply reply,List<String> failures)
     {
         List<UserData> users = List.of();

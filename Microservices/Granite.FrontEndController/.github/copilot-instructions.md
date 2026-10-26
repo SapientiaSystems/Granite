@@ -2,14 +2,14 @@
 
 ## Overview
 
-Granite.FrontEndController is a Spring Boot microservice built on the Strata FrontEndController framework. The web application sends a `FrontEndInput` to `handle-input` and reads a `FrontEndOutput` from `get-output` or `handle-input`. The service holds no persistent state of its own: request processors translate inputs into calls on the Granite.User query and command services, forwarding the caller's bearer token, and wrap the results in outputs.
+Granite.FrontEndController is a Spring Boot microservice built on the Strata FrontEndController framework. The web application calls typed, per-subject operations: `getUsersOutput` / `handleUsersInput` for the Users screen and `getSessionOutput` / `handleSessionInput` for login and session. Each operation has its own request, reply, input and output types and its own endpoint. The service holds no persistent state of its own: the services translate inputs into calls on the Granite.User and Granite.Session services, forwarding the caller's bearer token, and wrap the results in outputs. It is also the only place that sets and clears the `GRANITE_SID` session cookie.
 
 ## Technology Stack
 
 - **Language**: Java 23 (Amazon Corretto), TypeScript
 - **Build**: Gradle (multi-project), Yarn (TypeScript components)
 - **Framework**: Spring Boot 3.4, Spring 6.2
-- **Serialization**: Jackson (subtype deduction for `FrontEndInput`/`FrontEndOutput`)
+- **Serialization**: Jackson (concrete `FrontEndInput`/`FrontEndOutput` types bound by the request/reply generics; no type property, no deduction)
 - **Containerization**: Google Jib (OCI images)
 - **Testing**: JUnit Jupiter 5
 - **Foundation Libraries**: Strata Framework Set (strata.foundation.core, strata.server.core, strata.frontendcontroller)
@@ -22,12 +22,12 @@ Granite.FrontEndController/
 │   ├── Granite.FrontEndController.UserHost/       # Spring Boot app serving /frontendcontroller-user-service/
 │   └── Granite.FrontEndController.AdminHost/      # Spring Boot app serving /frontendcontroller-admin-service/
 ├── Components/
-│   ├── Granite.FrontEndController.Service/        # Input/output types (Java + TypeScript), FrontEndJacksonModule
-│   ├── Granite.FrontEndController.Server/         # Request processors, view actions, Spring configuration
+│   ├── Granite.FrontEndController.Service/        # Typed request/reply, input/output and service interfaces (Java + TypeScript)
+│   ├── Granite.FrontEndController.Server/         # Services, controllers, view actions, Spring configuration
 │   └── Granite.FrontEndController.Client/         # REST client (Java + TypeScript)
 ├── Tests/
 │   ├── Granite.FrontEndController.ServiceTest/
-│   ├── Granite.FrontEndController.ServerTest/     # Plain JUnit unit tests
+│   ├── Granite.FrontEndController.ServerTest/     # Plain JUnit unit tests and MockMvc tests
 │   ├── Granite.FrontEndController.ClientTest/
 │   └── Granite.FrontEndController.TestSuite/
 ├── build.gradle
@@ -37,20 +37,32 @@ Granite.FrontEndController/
 
 ## Architecture
 
-### Request/Reply with FrontEndInput and FrontEndOutput
+### Typed operations per subject
 
-Each screen interaction is a `FrontEndInput` identified by its key `source->command->destination` (for example `User.All->Save->UsersEditableView`). The request processor routes an input to an `IHandleInputAction` and a view request to an `IGetOutputAction`. Both return a `FrontEndOutput`.
+Strata's `FrontEndControllerService` is an abstract pipeline (validate, map to context, run the operation, build the reply). Each Granite subject extends it, implements its own service interface and exposes one get-output and one handle-input operation. Each screen interaction is a `FrontEndInput` identified by its key `source->command->destination` (for example `User.All->Save->UsersEditableView`); a view request is identified by `source->destination` (for example `User.All->UsersEditableView`). The service dispatches on the key to a view action. An unknown key fails the reply: its exception chain ends in `IllegalArgumentException("No action found for key: ...")`.
+
+| Subject | Operation | Request / Reply | Input / Output | Keys |
+|---|---|---|---|---|
+| Users | `getUsersOutput` | `GetUsersOutputRequest` / `GetUsersOutputReply` | `UsersOutput` | `User.All->UsersEditableView` |
+| Users | `handleUsersInput` | `HandleUsersInputRequest` / `HandleUsersInputReply` | `UsersInput` / `UsersOutput` | `User.All->Save->UsersEditableView`, `User.All->Delete->UsersEditableView` |
+| Session | `getSessionOutput` | `GetSessionOutputRequest` / `GetSessionOutputReply` | `SessionOutput` | `Session.New->LoginView`, `Session.Current->SessionView` |
+| Session | `handleSessionInput` | `HandleSessionInputRequest` / `HandleSessionInputReply` | `SessionInput` / `SessionOutput` | `Session.New->Login->LoginView`, `Session.New->StartOktaLogin->LoginView`, `Session.New->CompleteOktaLogin->LoginView`, `Session.Current->Logout->LoginView` |
+
+`userId` is no longer required by Strata, so callers do not send a placeholder.
 
 #### Granite.FrontEndController.Service
 
-- `UsersInput`: `usersToCreate: List<CreateUserData>`, `usersToUpdate: List<UpdateUserData>`, `userIdsToDelete: List<Long>`; all default to empty lists.
-- `UsersOutput`: `users: List<UserData>`, `failureMessages: List<String>`.
-- `FrontEndJacksonModule`: Jackson module that registers every Granite subtype of `FrontEndInput` and `FrontEndOutput`.
+- Package `granite.frontendcontroller.service.requestreply`. `IUsersFrontEndControllerService` (`handleUsersInput`, `getUsersOutput`) and `ISessionFrontEndControllerService` (`handleSessionInput`, `getSessionOutput`) each return `CompletionStage<...Reply>`. Requests extend Strata `HandleInputRequest<I>` / `GetOutputRequest`; replies extend `HandleInputReply<I,O>` / `GetOutputReply<O>` and have a constructor taking the originating request.
+- `UsersInput`: `usersToCreate: List<CreateUserData>`, `usersToUpdate: List<UpdateUserData>`, `userIdsToDelete: List<Long>`; all default to empty lists. `UsersOutput`: `users: List<UserData>`, `failureMessages: List<String>`.
+- `SessionInput {userName, password, returnTo, code, state}`: one flat input for every session command. `password` and `code` are write-only: never serialized, never in `toString`. Each command reads only the fields it needs (`Login`: `userName`, `password`; `StartOktaLogin`: `returnTo`; `CompleteOktaLogin`: `code`, `state`; `Logout`: none).
+- `SessionOutput {status, userName, authorities, returnTo, passwordEnabled, oktaEnabled, redirectUrl, loggedOut, endSessionUrl}`: one flat output for every session key. `status` is `AUTHENTICATED` or `UNAUTHENTICATED`. Each key fills only its own fields (boolean getters are `isX`).
 - TypeScript mirrors of each type live under `src/main/typescript/RequestReply/` and are exported from `index.ts`.
 
 #### Granite.FrontEndController.Server
 
-- `server.control.user`: `UserRequestProcessor` (extends Strata `DefaultRequestProcessor`, constructed with `IUserQueryServiceClient` and `IUserCommandServiceClient`) and its three actions, registered under these keys:
+- `server.application`: `UsersFrontEndControllerService` and `SessionFrontEndControllerService` extend Strata `FrontEndControllerService` and call its protected `handleInput(request,operation,replyFactory)` / `getOutput(...)` helpers. Each holds a `Map` of key to action for inputs and another for outputs; `dispatchInput` / `dispatchOutput` look the key up, fail with `IllegalArgumentException("No action found for key: <key>")` when absent, and otherwise set the action's output on the context.
+- `server.control`: `IInputAction<I,O>` (`CompletionStage<O> apply(I input)`) and `IOutputAction<R,O>` (`CompletionStage<O> apply(R request)`) are the Granite-local typed action interfaces. The view actions implement them and do no casting.
+- `server.control.user`: the Users actions, constructed with `IUserQueryServiceClient` and `IUserCommandServiceClient`:
 
 | Key | Action | Behavior |
 |---|---|---|
@@ -58,37 +70,46 @@ Each screen interaction is a `FrontEndInput` identified by its key `source->comm
 | `User.All->Save->UsersEditableView` (handle-input) | `UpdateUsersView` | `createUsers` then `updateUsers` (each skipped when its list is empty), then re-queries all users |
 | `User.All->Delete->UsersEditableView` (handle-input) | `DeleteUsersView` | refuses the caller's own `userId`, `destroyUsers` for the rest, then re-queries all users |
 
-  Every output copies `source`/`command`/`destination` from the request. Save and delete report failed users and failed batches as `failureMessages` (`<userName or id>: <reason>`) alongside the refreshed `users` list. An unknown key fails with `IllegalArgumentException("No action found for key: ...")`.
-- `server.configuration`: `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` provide the processors, executors, User service clients and the `FrontEndJacksonModule` bean.
+  Every output copies `source`/`command`/`destination` and `userId` from the request. Save and delete report failed users and failed batches as `failureMessages` (`<userName or id>: <reason>`) alongside the refreshed `users` list.
+- `server.control.session`: the Session actions (clients `ISessionCommandServiceClient`, `ISessionQueryServiceClient`, `IUserQueryServiceClient`, a `SessionRequestContext` and `SessionLoginSettings`). All of them produce `SessionOutput`. The login and logout outputs never carry a token or the handle.
 
-### Jackson subtype registration
+| Key | Action | Behavior |
+|---|---|---|
+| `Session.New->LoginView` (get-output, public) | `LoginMethodsView` | `SessionOutput` with `passwordEnabled` from `granite.session.login.password.enabled` (default `true`) and `oktaEnabled` from `granite.session.login.okta.enabled` (default `false`) |
+| `Session.New->Login->LoginView` (handle-input, public) | `LoginView` | Session `login` (`PASSWORD`, `deviceId` from the `GRANITE_DID` cookie). Success adds `Set-Cookie: GRANITE_SID=<handle>; HttpOnly; Secure; SameSite=Strict; Path=/` (`Max-Age` = remaining session lifetime) and returns `AUTHENTICATED`. A failed login, disabled password login, blank field, missing `GRANITE_DID` or Session error all return `UNAUTHENTICATED` with no cookie and no hint why |
+| `Session.New->StartOktaLogin->LoginView` (handle-input, public) | `StartOktaLoginView` | Session `startOktaLogin` (`deviceId` from `GRANITE_DID`, `returnTo` from the input). Success adds `Set-Cookie: GRANITE_LOGIN=<transaction id>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=300` and returns `SessionOutput` with `redirectUrl` (the Okta authorize URL; the SPA navigates the window to it). Okta disabled, missing `GRANITE_DID` or a Session failure return `UNAUTHENTICATED` with no `redirectUrl` and no cookie |
+| `Session.New->CompleteOktaLogin->LoginView` (handle-input, public) | `CompleteOktaLoginView` | Always adds `Set-Cookie: GRANITE_LOGIN=; Max-Age=0`. Session `completeOktaLogin` with `code`, `state`, the `GRANITE_LOGIN` transaction id and `GRANITE_DID`. Success also adds `GRANITE_SID` (as for password login) and returns `AUTHENTICATED` with `userName`, `authorities` and `returnTo`. Okta disabled, a missing cookie or any Session failure return `UNAUTHENTICATED` with no `GRANITE_SID` |
+| `Session.Current->SessionView` (get-output) | `SessionStatusView` | Session id is the `jti` of the forwarded bearer; Session query `findSessionsByKey` (open, unexpired, same user) and User `findUsersByKey` for `userName`; `authorities` from the session |
+| `Session.Current->Logout->LoginView` (handle-input) | `LogoutView` | Session `logout` for the bearer's `jti` (closes as `LOGOUT`), then `Set-Cookie: GRANITE_SID=; Max-Age=0` and `loggedOut=true`. On failure `loggedOut=false` and the cookie is kept. `endSessionUrl` is Session's end-session URL for an Okta session (the SPA navigates to it to end the Okta session), otherwise null |
 
-Strata's abstract `FrontEndInput` and `FrontEndOutput` use `@JsonTypeInfo(use = DEDUCTION)`: no type id is written, and the concrete class is deduced from the set of properties present in the JSON. Each application must register its concrete classes, otherwise deserialization fails.
+  `granite.session.login.okta.enabled` must match Session's flag of the same name (both default `false`; `local` and `production` read `${OKTA_ENABLED:false}`, `development` and `test` read `${OKTA_ENABLED_DEVELOPMENT:false}`/`${OKTA_ENABLED_TEST:false}`). Both `HostConfiguration` classes build `IConfiguration` with `new SpringConfigurationProvider(environment)`, which is what resolves these placeholders from environment variables; `IConfiguration` does not apply Spring relaxed binding, so a `GRANITE_SESSION_LOGIN_OKTA_ENABLED` variable has no effect.
+- `server.platform`: `UsersFrontEndControllerServiceController` and `SessionFrontEndControllerServiceController` extend Strata `AbstractFrontEndControllerServiceController<S>` (they do not implement the service interface). Both are `@RestController @CrossOrigin(origins = "*") @RequestMapping("${granite.frontendcontroller.service-path}")` and expose `@PostMapping` methods that delegate to the injected service. `SessionRequestContext` is captured on the request thread when the Session service is built (inbound cookies, the bearer's `jti` and `sub`, and a list of `Set-Cookie` values) and stored as a request attribute. Strata's reply cookies never reach HTTP, so `ResponseCookieAdvice` (a `@ControllerAdvice` `ResponseBodyAdvice` with no selectors, so it applies to every controller, including both new ones; bean in `GraniteFrontEndControllerConfiguration`) copies the list to `Set-Cookie` response headers (plus `Cache-Control: no-store`) on the container thread. `SessionCookies` builds the `GRANITE_SID` and `GRANITE_LOGIN` header values.
+- `server.configuration`: `GraniteFrontEndControllerServiceFactory` builds the two services with **concrete** User and Session clients (each registering `ForwardedBearerClientRequestFilter.fromCurrentRequest()`) and captures `SessionRequestContext.fromCurrentRequest()`. The services are therefore request-scoped, so they are created on the request thread. Never pass request-scoped client beans to a service: a continuation that runs off the request thread would fail (the Users Save bug). `GraniteFrontEndControllerConfiguration` imports Strata `ApplicationConfiguration` (the `ModelMapper`) and `FrontEndControllerHealthCheckConfiguration`, and provides a singleton `@Named("FrontEndController")` executor (`BoundedExecutor(200,10s)`), the request-scoped `@Named("Users")` / `@Named("Session")` services and controllers, and the `ResponseCookieAdvice` bean.
 
-- Add every new `FrontEndInput` or `FrontEndOutput` subtype to `FrontEndJacksonModule` and nowhere else.
-- The module is registered on the Spring MVC mapper through the `frontEndJacksonModule()` bean in both Granite configurations (Spring Boot registers `Module` beans), and on the springdoc `StrataObjectMapperProvider` json and yaml mappers in both `HostConfiguration` classes.
-- Any test that builds an `ObjectMapper` for FrontEndController types must register `FrontEndJacksonModule`.
-- Deduction needs each subtype to have a distinct set of property names, so give every subtype at least one property no sibling has.
-- The TypeScript client must send all fields of an input, including empty arrays, so that deduction can match the intended subtype.
+### Jackson binding
+
+Strata's request and reply classes carry the concrete input and output as generics (`HandleInputRequest<I>`, `HandleInputReply<I,O>`, `GetOutputReply<O>`), so Jackson binds the concrete `UsersInput`, `SessionInput`, `UsersOutput` or `SessionOutput` without a type property. There is no deduction and no custom Jackson module; do not add one. A new subject needs its own typed request, reply, input and output classes and its own service interface, service and controller. `FrontEndJsonSerializationTest` covers the JSON round trips; keep it passing when a type changes.
 
 ### Calling User with the caller's identity
 
-User requires a valid Session-issued bearer token. The request-scoped `IUserQueryServiceClient` beans and the UserHost's `IUserCommandServiceClient` (`user-command-service.base-url`) in `GraniteUserFrontEndControllerConfiguration` and `GraniteAdminFrontEndControllerConfiguration` register `ForwardedBearerClientRequestFilter`. It captures the inbound `Authorization: Bearer ...` header when the client is created, and adds it as a real HTTP header on outgoing calls. Copying `Authorization` into a request DTO's `headers` does not reach User, because DTO headers are part of the JSON body.
+User requires a valid Session-issued bearer token. The concrete User and Session clients built by `GraniteFrontEndControllerServiceFactory` register `ForwardedBearerClientRequestFilter`. It captures the inbound `Authorization: Bearer ...` header when the client is created (on the request thread), and adds it as a real HTTP header on outgoing calls. Copying `Authorization` into a request DTO's `headers` does not reach User, because DTO headers are part of the JSON body.
 
 ### Applications
 
-- **FrontEndControllerUserHost**: imports `GraniteUserFrontEndControllerConfiguration` and `ServiceConfiguration`; exposes `/frontendcontroller-user-service/`. Listens on port 8081.
-- **FrontEndControllerAdminHost**: imports `GraniteAdminFrontEndControllerConfiguration` and `ServiceConfiguration`; exposes `/frontendcontroller-admin-service/`.
+- **FrontEndControllerUserHost**: imports `GraniteFrontEndControllerConfiguration` and `ServiceConfiguration`; sets `granite.frontendcontroller.service-path=/frontendcontroller-user-service`. Listens on port 8081.
+- **FrontEndControllerAdminHost**: imports `GraniteFrontEndControllerConfiguration` and `ServiceConfiguration`; sets `granite.frontendcontroller.service-path=/frontendcontroller-admin-service`. Listens on port 8082.
+
+Both hosts serve both subjects. Each `HostConfiguration` keeps its OpenAPI group, scanning `granite.frontendcontroller.server.platform` (where the controllers live) and the health package.
 
 ## Commonly Used Design Patterns
 
 ### Request-Reply
 
-Service operations accept a typed request and return a typed reply. Requests extend `AbstractServiceRequest` (with `requestId`, `timestamp`, headers, cookies). Replies extend `AbstractServiceReply`. `handle-input` wraps a `FrontEndInput` in a `HandleInputRequest`; `get-output` returns a `GetOutputReply` carrying a `FrontEndOutput`.
+Service operations accept a typed request and return a typed reply. Requests extend `AbstractServiceRequest` (with `requestId`, `timestamp`, headers, cookies). Replies extend `AbstractServiceReply`. `handle<Subject>Input` wraps a `FrontEndInput` in a `Handle<Subject>InputRequest`; `get<Subject>Output` takes a `Get<Subject>OutputRequest` and returns a reply carrying the subject's `FrontEndOutput`.
 
 ### Asynchronous Pipeline
 
-Actions return `CompletionStage<FrontEndOutput>` and compose User client calls with `thenApply`/`thenCompose`.
+Actions return `CompletionStage<O>` and compose User and Session client calls with `thenApply`/`thenCompose`.
 
 ### Composable Configuration
 
@@ -96,23 +117,24 @@ Spring `@Configuration` classes are composed via `@Import`. `HostConfiguration` 
 
 ## REST Endpoints
 
-### FrontEndController User Service (`/frontendcontroller-user-service/`)
+Both hosts expose the same four operations under their own service path (`granite.frontendcontroller.service-path`). All are `POST` and consume and produce JSON.
 
-| Endpoint | Request | Reply |
-|---|---|---|
-| `POST /handle-input` | `HandleInputRequest` | `HandleInputReply` |
-| `POST /get-output` | `GetOutputRequest` | `GetOutputReply` |
+| Host | Endpoint | Request | Reply |
+|---|---|---|---|
+| User (`/frontendcontroller-user-service/`) | `POST /get-users-output` | `GetUsersOutputRequest` | `GetUsersOutputReply` |
+| User | `POST /handle-users-input` | `HandleUsersInputRequest` | `HandleUsersInputReply` |
+| User | `POST /get-session-output` | `GetSessionOutputRequest` | `GetSessionOutputReply` |
+| User | `POST /handle-session-input` | `HandleSessionInputRequest` | `HandleSessionInputReply` |
+| Admin (`/frontendcontroller-admin-service/`) | `POST /get-users-output` | `GetUsersOutputRequest` | `GetUsersOutputReply` |
+| Admin | `POST /handle-users-input` | `HandleUsersInputRequest` | `HandleUsersInputReply` |
+| Admin | `POST /get-session-output` | `GetSessionOutputRequest` | `GetSessionOutputReply` |
+| Admin | `POST /handle-session-input` | `HandleSessionInputRequest` | `HandleSessionInputReply` |
 
-### FrontEndController Admin Service (`/frontendcontroller-admin-service/`)
+Base URLs: `user-query-service.base-url`, `user-command-service.base-url`, `session-command-service.base-url`, `session-query-service.base-url`. Both `HostConfiguration` request-logging filters have payload and header logging turned off, because bodies carry passwords and headers carry `Cookie` and `Authorization`.
 
-Configured by `GraniteAdminFrontEndControllerConfiguration`, which extends Strata's `AdminFrontEndControllerConfiguration`.
+### Testing
 
-| Endpoint | Request | Reply |
-|---|---|---|
-| `POST /handle-input` | `HandleInputRequest` | `HandleInputReply` |
-| `POST /get-output` | `GetOutputRequest` | `GetOutputReply` |
-
-Both hosts route requests through the same `UserRequestProcessor`. The Admin host has request-scoped `IUserQueryServiceClient` and `IUserCommandServiceClient` beans (`user-query-service.base-url`, `user-command-service.base-url`).
+`Granite.FrontEndController.ServerTest` holds the view-action tests, a dispatch test per service, MockMvc tests on the new paths (cookie behaviour through `ResponseCookieAdvice`), the factory and configuration tests, and `AbstractControllerMappingTest` (in the `platform` package, with `UsersControllerMappingTest` and `SessionControllerMappingTest`). The mapping test checks by reflection that every service interface method has a controller method with a `@...Mapping` annotation. Strata's own fixture is not published, so Granite keeps this copy.
 
 ## Preferred Coding Style and Idioms
 

@@ -4,9 +4,8 @@
 
 package granite.frontendcontroller.adminhost.main;
 
-import granite.frontendcontroller.server.configuration.GraniteAdminFrontEndControllerConfiguration;
+import granite.frontendcontroller.server.configuration.GraniteFrontEndControllerConfiguration;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
-import granite.frontendcontroller.service.requestreply.FrontEndJacksonModule;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.ObjectMapperProvider;
@@ -28,7 +27,7 @@ import strata.server.spring.service.ServiceConfiguration;
 
 @Configuration
 @Import({
-    GraniteAdminFrontEndControllerConfiguration.class,
+    GraniteFrontEndControllerConfiguration.class,
     ServiceConfiguration.class,
     SpringDocConfigProperties.class,
     StrataModelResolver.class,
@@ -105,8 +104,6 @@ class HostConfiguration
     {
         StrataObjectMapperProvider provider = new StrataObjectMapperProvider(properties);
 
-        provider.jsonMapper().registerModule(new FrontEndJacksonModule());
-        provider.yamlMapper().registerModule(new FrontEndJacksonModule());
         return provider;
     }
 
