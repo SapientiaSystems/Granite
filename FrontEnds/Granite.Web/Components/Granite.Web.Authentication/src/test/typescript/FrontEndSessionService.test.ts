@@ -14,12 +14,13 @@ function serviceOver(frontEnd: FakeFrontEnd): FrontEndSessionService
 
 describe("FrontEndSessionService",() =>
 {
-    it("reads the login methods with a placeholder user id",async () =>
+    it("reads the login methods",async () =>
     {
         const frontEnd = new FakeFrontEnd().respond(KEYS.methods,() => methodsOutput(false,true));
 
         expect(await serviceOver(frontEnd).getLoginMethods()).toEqual({ passwordEnabled: false, oktaEnabled: true });
-        expect(frontEnd.calls[0].payload).toMatchObject({ userId: 0, source: "Session.New", destination: "LoginView" });
+        expect(frontEnd.calls[0].payload).toMatchObject({ source: "Session.New", destination: "LoginView" });
+        expect(frontEnd.calls[0].payload.userId ?? null).toBeNull();
     });
 
     it("sends the password login input",async () =>
@@ -30,7 +31,7 @@ describe("FrontEndSessionService",() =>
 
         expect(status).toMatchObject({ authenticated: true, userName: "alice", authorities: ["ROLE_USER"] });
         expect(frontEnd.calls[0].payload).toEqual(
-            { userId: 0, source: "Session.New", command: "Login", destination: "LoginView", userName: "alice", password: "secret" });
+            { userId: null, source: "Session.New", command: "Login", destination: "LoginView", userName: "alice", password: "secret" });
     });
 
     it("maps UNAUTHENTICATED to a refusal",async () =>
@@ -46,7 +47,7 @@ describe("FrontEndSessionService",() =>
 
         expect(await serviceOver(frontEnd).startOktaLogin("/users")).toBe("https://okta.example/a");
         expect(frontEnd.calls[0].payload).toEqual(
-            { userId: 0, source: "Session.New", command: "StartOktaLogin", destination: "LoginView", returnTo: "/users" });
+            { userId: null, source: "Session.New", command: "StartOktaLogin", destination: "LoginView", returnTo: "/users" });
     });
 
     it("returns no URL when Okta start is refused",async () =>
@@ -64,7 +65,7 @@ describe("FrontEndSessionService",() =>
 
         expect(status.returnTo).toBe("/x");
         expect(frontEnd.calls[0].payload).toEqual(
-            { userId: 0, source: "Session.New", command: "CompleteOktaLogin", destination: "LoginView", code: "code-1", state: "state-1" });
+            { userId: null, source: "Session.New", command: "CompleteOktaLogin", destination: "LoginView", code: "code-1", state: "state-1" });
     });
 
     it("reads the current session",async () =>
@@ -95,14 +96,14 @@ describe("FrontEndSessionService",() =>
 
         expect(await serviceOver(frontEnd).logout()).toEqual({ loggedOut: true, endSessionUrl: "https://okta.example/end" });
         expect(frontEnd.calls[0].payload).toEqual(
-            { userId: 0, source: "Session.Current", command: "Logout", destination: "LoginView", logout: true });
+            { userId: null, source: "Session.Current", command: "Logout", destination: "LoginView" });
     });
 
     it("rejects with the failure message when the reply is not successful",async () =>
     {
         const failing = new FakeFrontEnd();
 
-        failing.handleInput = () => Promise.resolve({ success: false, failureMessage: "down" }) as never;
+        failing.handleSessionInput = () => Promise.resolve({ success: false, failureMessage: "down" }) as never;
 
         await expect(serviceOver(failing).login("a","b")).rejects.toThrow("down");
     });

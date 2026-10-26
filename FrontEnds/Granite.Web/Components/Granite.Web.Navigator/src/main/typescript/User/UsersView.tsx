@@ -5,12 +5,12 @@
 import { useEffect, useRef, useState }               from "react";
 import type { ReactElement }                        from "react";
 import { Alert, Stack, Group }                      from "@mantine/core";
-import type { IFrontEndControllerServiceClient }        from "strata.frontendcontroller.client/RequestReply";
-import { FrontEndOutputMapper, GetOutputRequestBuilder, HandleInputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
-import type { GetOutputReply, HandleInputReply }    from "strata.frontendcontroller.service/RequestReply";
-import type { UsersInput, UsersOutput }             from "granite.frontendcontroller.service/RequestReply";
+import { UsersFrontEndControllerServiceClient }    from "granite.frontendcontroller.client/RequestReply";
+import type { IUsersFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
+import { GetOutputRequestBuilder, HandleInputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
+import type { GetUsersOutputReply, HandleUsersInputReply, UsersOutput } from "granite.frontendcontroller.service/RequestReply";
+import type { UsersInput }                             from "granite.frontendcontroller.service/RequestReply";
 import type { UserData, CreateUserData, UpdateUserData } from "granite.user.service/RequestReply";
-import { Optional }                                 from "strata.foundation.core/Utility";
 import { UsersEditableView }                        from "granite.web.user/EditableView";
 import type { IUsersResult }                        from "granite.web.user/EditableView";
 import { canEdit, useAuthentication }                   from "granite.web.authentication/Authentication";
@@ -32,15 +32,15 @@ export function UsersView(): ReactElement
 
     currentUserIdRef.current = currentUserId;
 
-    const createClient = (): IFrontEndControllerServiceClient => createFrontEndClient(USERS_SERVICE);
+    const createClient = (): IUsersFrontEndControllerServiceClient =>
+        createFrontEndClient((url,fetchFunction) => new UsersFrontEndControllerServiceClient(url,fetchFunction),USERS_SERVICE);
 
     const sendInput = (command: string, usersToCreate: Array<CreateUserData>, usersToUpdate: Array<UpdateUserData>, userIdsToDelete: Array<number>): Promise<IUsersResult> =>
     {
-        const client: IFrontEndControllerServiceClient = createClient();
-        const mapper: FrontEndOutputMapper              = FrontEndOutputMapper.of();
+        const client: IUsersFrontEndControllerServiceClient = createClient();
         const input:  UsersInput                        =
             {
-                userId:      currentUserIdRef.current ?? 0,
+                userId:      currentUserIdRef.current ?? null,
                 source:      USERS_SOURCE,
                 command:     command,
                 destination: USERS_DESTINATION,
@@ -52,8 +52,8 @@ export function UsersView(): ReactElement
         return new Promise<IUsersResult>((resolve, reject) =>
         {
             client
-                .handleInput(HandleInputRequestBuilder.newBuilder().setInput(input).build())
-                .thenApply((reply: HandleInputReply) =>
+                .handleUsersInput(HandleInputRequestBuilder.newBuilder<UsersInput>().setInput(input).build())
+                .thenApply((reply: HandleUsersInputReply) =>
                 {
                     client.close();
 
@@ -63,22 +63,22 @@ export function UsersView(): ReactElement
                         return reply;
                     }
 
-                    const output: Optional<UsersOutput> = mapper.mapFromReply<UsersOutput>(reply);
+                    const output: UsersOutput | undefined = reply.output;
 
-                    if (!output.isPresent())
+                    if (!output)
                     {
                         reject(new Error("Empty response"));
                         return reply;
                     }
 
-                    resolve({ users: output.get().users ?? [], failureMessages: output.get().failureMessages ?? [] });
+                    resolve({ users: output.users ?? [], failureMessages: output.failureMessages ?? [] });
                     return reply;
                 })
                 .exceptionally((error: Error) =>
                 {
                     client.close();
                     reject(error);
-                    return {} as HandleInputReply;
+                    return {} as HandleUsersInputReply;
                 })
                 .subscribe(undefined, (error: Error) =>
                 {
@@ -96,32 +96,30 @@ export function UsersView(): ReactElement
 
     useEffect(() =>
     {
-        const service: IFrontEndControllerServiceClient = createClient();
-        const mapper:  FrontEndOutputMapper              = FrontEndOutputMapper.of();
+        const service: IUsersFrontEndControllerServiceClient = createClient();
 
         service
-            .getOutput(
+            .getUsersOutput(
                 GetOutputRequestBuilder
                     .newBuilder()
-                    .setUserId(0)
                     .setSource(USERS_SOURCE)
                     .setDestination(USERS_DESTINATION)
                     .build())
-            .thenApply((reply: GetOutputReply) =>
+            .thenApply((reply: GetUsersOutputReply) =>
             {
                 if (reply.success === false)
                     setLoadError(reply.failureMessage ?? "Failed to load users");
                 else
                 {
-                    const output: Optional<UsersOutput> = mapper.mapFromReply<UsersOutput>(reply);
+                    const data: UsersOutput | undefined = reply.output;
 
-                    output.ifPresent(data =>
+                    if (data)
                     {
                         setUsers(data.users ?? []);
 
                         if ((data.failureMessages ?? []).length > 0)
                             setLoadError(data.failureMessages.join("; "));
-                    });
+                    }
                 }
 
                 setLoading(false);
@@ -132,7 +130,7 @@ export function UsersView(): ReactElement
                 console.error("Failed to get Users output", error);
                 setLoadError(error?.message ?? "Failed to load users");
                 setLoading(false);
-                return {} as GetOutputReply;
+                return {} as GetUsersOutputReply;
             })
             .subscribe(undefined, (error: Error) =>
             {

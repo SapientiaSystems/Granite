@@ -2,11 +2,10 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
-import type { IFrontEndControllerServiceClient }  from "strata.frontendcontroller.client/RequestReply";
+import { SessionFrontEndControllerServiceClient }       from "granite.frontendcontroller.client/RequestReply";
 import { CsrfFetch }                              from "../Http/CsrfFetch";
 import type { FetchFunction }                     from "../Http/CsrfFetch";
 import { SessionFetch }                           from "../Http/SessionFetch";
-import { GraniteFrontEndControllerServiceClient } from "../Http/GraniteFrontEndControllerServiceClient";
 import { AuthenticationManager }                  from "./AuthenticationManager";
 import type { INavigator }                        from "./AuthenticationManager";
 import { FrontEndSessionService }                 from "./FrontEndSessionService";
@@ -18,7 +17,7 @@ export const SESSION_SERVICE: string = "frontendcontroller-user-service";
 export interface IAuthentication
 {
     manager:               AuthenticationManager;
-    createFrontEndClient:  (service: string) => IFrontEndControllerServiceClient;
+    createFrontEndClient:  <C>(create: (serviceUrl: string,fetchFunction: FetchFunction) => C,service: string) => C;
 }
 
 export interface IAuthenticationOptions
@@ -36,17 +35,19 @@ export function createAuthentication(options: IAuthenticationOptions = {}): IAut
     const csrf: CsrfFetch         = new CsrfFetch(options.fetchFunction,options.cookieReader);
     const session: SessionFetch   = new SessionFetch(csrf.fetch);
 
-    const clientOver = (fetchFunction: FetchFunction,service: string): IFrontEndControllerServiceClient =>
-        new GraniteFrontEndControllerServiceClient(baseUrl + "/" + service,fetchFunction);
+    const clientOver = <C>(fetchFunction: FetchFunction,create: (serviceUrl: string,fetchFunction: FetchFunction) => C,service: string): C =>
+        create(baseUrl + "/" + service,fetchFunction);
 
     const manager: AuthenticationManager =
         new AuthenticationManager(
-            options.service ?? new FrontEndSessionService(() => clientOver(csrf.fetch,SESSION_SERVICE)),
+            options.service ??
+                new FrontEndSessionService(
+                    () => clientOver(csrf.fetch,(url,fetchFunction) => new SessionFrontEndControllerServiceClient(url,fetchFunction),SESSION_SERVICE)),
             options.navigator);
 
     session.setUnauthorizedHandler(() => manager.handleUnauthorized());
 
-    return { manager, createFrontEndClient: (service: string) => clientOver(session.fetch,service) };
+    return { manager, createFrontEndClient: <C>(create: (serviceUrl: string,fetchFunction: FetchFunction) => C,service: string): C => clientOver(session.fetch,create,service) };
 }
 
 //////////////////////////////////////////////////////////////////////////////

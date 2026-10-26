@@ -6,11 +6,9 @@ import { useEffect, useState }                       from "react";
 import type { ReactElement }                        from "react";
 import { Badge, Group, Loader, Paper,
          Stack, Text, Title }                       from "@mantine/core";
-import { FakeFrontEndControllerServiceClient }      from "granite.frontendcontroller.client/RequestReply";
-import { FrontEndOutputMapper, GetOutputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
-import type { GetOutputReply }                     from "strata.frontendcontroller.service/RequestReply";
-import type { HomeOutput }                         from "granite.frontendcontroller.service/RequestReply";
-import { Optional }                                from "strata.foundation.core/Utility";
+import { FakeHomeFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
+import { GetOutputRequestBuilder }               from "strata.frontendcontroller.service/RequestReply";
+import type { GetHomeOutputReply }                       from "granite.frontendcontroller.service/RequestReply";
 
 function formatUserName(firstName: string, lastName: string, userName: string): string
 {
@@ -46,11 +44,10 @@ export function HomeView(): ReactElement
 
     useEffect(() =>
     {
-        const service: FakeFrontEndControllerServiceClient = new FakeFrontEndControllerServiceClient();
-        const mapper:  FrontEndOutputMapper                = FrontEndOutputMapper.of();
+        const service: FakeHomeFrontEndControllerServiceClient = new FakeHomeFrontEndControllerServiceClient();
 
         service
-            .getOutput(
+            .getHomeOutput(
                 GetOutputRequestBuilder
                     .newBuilder()
                     .setUserId(1)
@@ -58,17 +55,17 @@ export function HomeView(): ReactElement
                     .setDestination("HomeView")
                     .build())
             .thenApply(
-                (reply: GetOutputReply) =>
+                (reply: GetHomeOutputReply) =>
                 {
-                    const output: Optional<HomeOutput> = mapper.mapFromReply<HomeOutput>(reply);
+                    const home = reply.output;
 
-                    output.ifPresent(home =>
+                    if (home)
                     {
                         setUserName(home.userName ?? "");
                         setFirstName(home.firstName ?? "");
                         setLastName(home.lastName ?? "");
                         setRole(home.role ?? "");
-                    });
+                    }
 
                     setLoading(false);
                     return reply;
@@ -77,7 +74,7 @@ export function HomeView(): ReactElement
             {
                 console.error("Failed to get Home output", error);
                 setLoading(false);
-                return {} as GetOutputReply;
+                return {} as GetHomeOutputReply;
             })
             .subscribe();
 

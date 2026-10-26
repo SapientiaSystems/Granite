@@ -6,9 +6,10 @@ import { vi }                                                                   
 import { CompletableObservable }                                                from "strata.foundation.core/Concurrent";
 import type { ICompletionStage }                                                from "strata.foundation.core/Concurrent";
 import { ServiceError, StandardResponse }                                       from "strata.client.core/Service";
-import type { IFrontEndControllerServiceClient }                                from "strata.frontendcontroller.client/RequestReply";
-import type { FrontEndOutput, GetOutputReply, GetOutputRequest,
-              HandleInputReply, HandleInputRequest }                            from "strata.frontendcontroller.service/RequestReply";
+import type { ISessionFrontEndControllerServiceClient }                         from "granite.frontendcontroller.client/RequestReply";
+import type { GetSessionOutputReply, GetSessionOutputRequest,
+              HandleSessionInputReply, HandleSessionInputRequest }               from "granite.frontendcontroller.service/RequestReply";
+import type { FrontEndOutput }                                                  from "strata.frontendcontroller.service/RequestReply";
 import { AuthenticationManager }                                                from "../../main/typescript/Authentication/AuthenticationManager";
 import type { INavigator }                                                      from "../../main/typescript/Authentication/AuthenticationManager";
 import { FrontEndSessionService }                                               from "../../main/typescript/Authentication/FrontEndSessionService";
@@ -24,7 +25,7 @@ export interface IRecordedCall
 export type Responder = (payload: Record<string,unknown>) => FrontEndOutput | Error;
 
 export class FakeFrontEnd
-    implements IFrontEndControllerServiceClient
+    implements ISessionFrontEndControllerServiceClient
 {
     readonly calls: Array<IRecordedCall> = [];
     private readonly responders: Map<string,Responder> = new Map();
@@ -47,16 +48,16 @@ export class FakeFrontEnd
 
     close(): void {}
 
-    getOutput(request: GetOutputRequest): ICompletionStage<GetOutputReply>
+    getSessionOutput(request: GetSessionOutputRequest): ICompletionStage<GetSessionOutputReply>
     {
-        return this.answer(request.source + "->" + request.destination,request as unknown as Record<string,unknown>) as ICompletionStage<GetOutputReply>;
+        return this.answer(request.source + "->" + request.destination,request as unknown as Record<string,unknown>) as ICompletionStage<GetSessionOutputReply>;
     }
 
-    handleInput(request: HandleInputRequest): ICompletionStage<HandleInputReply>
+    handleSessionInput(request: HandleSessionInputRequest): ICompletionStage<HandleSessionInputReply>
     {
         const input = request.input as unknown as Record<string,unknown>;
 
-        return this.answer(input.source + "->" + input.command + "->" + input.destination,input) as ICompletionStage<HandleInputReply>;
+        return this.answer(input.source + "->" + input.command + "->" + input.destination,input) as ICompletionStage<HandleSessionInputReply>;
     }
 
     private answer(key: string,payload: Record<string,unknown>): ICompletionStage<unknown>
@@ -92,7 +93,7 @@ export class FakeNavigator
 export function sessionOutput(authenticated: boolean,userName: string | null = null,authorities: Array<string> = [],returnTo?: string): FrontEndOutput
 {
     return {
-        userId:      0,
+        userId:      null,
         source:      "Session.Current",
         destination: "SessionView",
         command:     null,
@@ -105,17 +106,17 @@ export function sessionOutput(authenticated: boolean,userName: string | null = n
 
 export function methodsOutput(passwordEnabled: boolean,oktaEnabled: boolean): FrontEndOutput
 {
-    return { userId: 0, source: "Session.New", destination: "LoginView", command: null, passwordEnabled, oktaEnabled } as FrontEndOutput;
+    return { userId: null, source: "Session.New", destination: "LoginView", command: null, status: "UNAUTHENTICATED", passwordEnabled, oktaEnabled } as FrontEndOutput;
 }
 
 export function logoutOutput(loggedOut: boolean,endSessionUrl: string | null = null): FrontEndOutput
 {
-    return { userId: 0, source: "Session.Current", destination: "LoginView", command: "Logout", loggedOut, endSessionUrl } as FrontEndOutput;
+    return { userId: null, source: "Session.Current", destination: "LoginView", command: "Logout", status: "UNAUTHENTICATED", loggedOut, endSessionUrl } as FrontEndOutput;
 }
 
-export function redirectOutput(url: string): FrontEndOutput
+export function redirectOutput(redirectUrl: string): FrontEndOutput
 {
-    return { userId: 0, source: "Session.New", destination: "LoginView", command: "StartOktaLogin", url } as FrontEndOutput;
+    return { userId: null, source: "Session.New", destination: "LoginView", command: "StartOktaLogin", status: "UNAUTHENTICATED", redirectUrl } as FrontEndOutput;
 }
 
 export const KEYS =

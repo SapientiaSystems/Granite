@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { createContext, useContext }            from "react";
-import type { IFrontEndControllerServiceClient } from "strata.frontendcontroller.client/RequestReply";
+import type { FetchFunction }                        from "../Http/CsrfFetch";
 import type { IAuthenticationState }            from "./IAuthenticationState";
 import type { ILoginMethods }                   from "./ISessionService";
 
@@ -16,7 +16,7 @@ export interface IAuthenticationContext
     logout:                 () => Promise<boolean>;
     getLoginMethods:        () => Promise<ILoginMethods>;
     cancelReauthentication: () => void;
-    createFrontEndClient:   (service: string) => IFrontEndControllerServiceClient;
+    createFrontEndClient:   <C>(create: (serviceUrl: string,fetchFunction: FetchFunction) => C,service: string) => C;
 }
 
 export const AuthenticationContext = createContext<IAuthenticationContext | null>(null);

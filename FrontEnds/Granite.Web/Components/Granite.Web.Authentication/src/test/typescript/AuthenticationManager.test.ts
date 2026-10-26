@@ -56,7 +56,7 @@ describe("AuthenticationManager",() =>
         await manager.login("alice","secret");
 
         expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_USER"] });
-        expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userId: 0, userName: "alice", password: "secret" });
+        expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userName: "alice", password: "secret" });
     });
 
     it("refuses a wrong password without saying why",async () =>
@@ -121,7 +121,7 @@ describe("AuthenticationManager",() =>
 
         expect(await manager.logout()).toBe(true);
         expect(manager.getState().status).toBe("anonymous");
-        expect(frontEnd.callsFor(KEYS.logout)[0].payload).toMatchObject({ logout: true });
+        expect(frontEnd.callsFor(KEYS.logout)[0].payload).toMatchObject({ source: "Session.Current", command: "Logout" });
     });
 
     it("navigates to the Okta end-session URL after logout",async () =>

@@ -5,7 +5,7 @@
 import { describe, expect, it, vi }               from "vitest";
 import { GetOutputRequestBuilder }                from "strata.frontendcontroller.service/RequestReply";
 import { ServiceError }                           from "strata.client.core/Service";
-import { GraniteFrontEndControllerServiceClient } from "../../main/typescript/Http/GraniteFrontEndControllerServiceClient";
+import { SessionFrontEndControllerServiceClient }  from "granite.frontendcontroller.client/RequestReply";
 import { CsrfFetch }                              from "../../main/typescript/Http/CsrfFetch";
 
 function jsonResponse(status: number,body: unknown): Response
@@ -15,23 +15,23 @@ function jsonResponse(status: number,body: unknown): Response
 
 function request()
 {
-    return GetOutputRequestBuilder.newBuilder().setUserId(0).setSource("Session.New").setDestination("LoginView").build();
+    return GetOutputRequestBuilder.newBuilder().setSource("Session.New").setDestination("LoginView").build();
 }
 
-describe("GraniteFrontEndControllerServiceClient",() =>
+describe("typed FrontEndController client over injected fetch",() =>
 {
     it("posts JSON with the CSRF header and no Authorization",async () =>
     {
         const send   = vi.fn().mockResolvedValue(jsonResponse(200,{ success: true }));
         const csrf   = new CsrfFetch(send,() => "tok");
-        const client = new GraniteFrontEndControllerServiceClient("/api/frontendcontroller-user-service",csrf.fetch);
+        const client = new SessionFrontEndControllerServiceClient("/api/frontendcontroller-user-service",csrf.fetch);
 
-        const reply      = await client.getOutput(request());
+        const reply      = await client.getSessionOutput(request());
         const [url,init] = send.mock.calls[0] as [string,RequestInit];
         const headers    = new Headers(init.headers);
 
         expect(reply.success).toBe(true);
-        expect(url).toBe("/api/frontendcontroller-user-service/get-output");
+        expect(url).toBe("/api/frontendcontroller-user-service/get-session-output");
         expect(init.method).toBe("POST");
         expect(headers.get("Content-Type")).toBe("application/json");
         expect(headers.get("X-XSRF-TOKEN")).toBe("tok");
@@ -42,8 +42,8 @@ describe("GraniteFrontEndControllerServiceClient",() =>
     it("reads the headers before close clears them",async () =>
     {
         const send   = vi.fn().mockResolvedValue(jsonResponse(200,{}));
-        const client = new GraniteFrontEndControllerServiceClient("/s",send);
-        const stage  = client.getOutput(request());
+        const client = new SessionFrontEndControllerServiceClient("/s",send);
+        const stage  = client.getSessionOutput(request());
 
         client.close();
         await stage;
@@ -54,17 +54,17 @@ describe("GraniteFrontEndControllerServiceClient",() =>
     it("resolves a 500 with its entity",async () =>
     {
         const send   = vi.fn().mockResolvedValue(jsonResponse(500,{ success: false,failureMessage: "boom" }));
-        const client = new GraniteFrontEndControllerServiceClient("/s",send);
+        const client = new SessionFrontEndControllerServiceClient("/s",send);
 
-        expect((await client.getOutput(request())).failureMessage).toBe("boom");
+        expect((await client.getSessionOutput(request())).failureMessage).toBe("boom");
     });
 
     it("rejects a 401 with a ServiceError carrying the status",async () =>
     {
         const send   = vi.fn().mockResolvedValue(new Response("",{ status: 401 }));
-        const client = new GraniteFrontEndControllerServiceClient("/s",send);
+        const client = new SessionFrontEndControllerServiceClient("/s",send);
 
-        const error = await client.getOutput(request()).then(() => undefined,(failure: unknown) => failure);
+        const error = await client.getSessionOutput(request()).then(() => undefined,(failure: unknown) => failure);
 
         expect(error).toBeInstanceOf(ServiceError);
         expect((error as ServiceError).getStatus()).toBe(401);
