@@ -40,8 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public
 class GatewayCookieCsrfTest
 {
-    private static final String GET_OUTPUT   = "/frontendcontroller-user-service/get-output";
-    private static final String HANDLE_INPUT = "/frontendcontroller-user-service/handle-input";
+    private static final String GET_USERS_OUTPUT     = "/frontendcontroller-user-service/get-users-output";
+    private static final String GET_SESSION_OUTPUT   = "/frontendcontroller-user-service/get-session-output";
+    private static final String HANDLE_SESSION_INPUT = "/frontendcontroller-user-service/handle-session-input";
 
     private static GatewayTestBackend backend;
 
@@ -122,7 +123,7 @@ class GatewayCookieCsrfTest
     newDeviceCookieIsForwardedOnFirstRequest()
     {
         EntityExchangeResult<byte[]> result =
-            post(GET_OUTPUT,GatewayPublicInputTest.output("Session.New",null,"LoginView"),Map.of(),null,null);
+            post(GET_SESSION_OUTPUT,GatewayPublicInputTest.output("Session.New",null,"LoginView"),Map.of(),null,null);
         String                       device = cookies(result).getFirst("GRANITE_DID").getValue();
 
         assertEquals(200,result.getStatus().value());
@@ -149,7 +150,7 @@ class GatewayCookieCsrfTest
     {
         String handle = register("ROLE_ADMIN");
 
-        assertEquals(403,post(GET_OUTPUT,users(),Map.of("GRANITE_SID",handle),null,null).getStatus().value());
+        assertEquals(403,post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle),null,null).getStatus().value());
         assertFalse(backend.getResolveCalls().contains(handle));
     }
 
@@ -162,7 +163,7 @@ class GatewayCookieCsrfTest
 
         assertEquals(
             403,
-            post(GET_OUTPUT,users(),Map.of("GRANITE_SID",handle,"XSRF-TOKEN","right"),"wrong",null)
+            post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle,"XSRF-TOKEN","right"),"wrong",null)
                 .getStatus()
                 .value());
         assertFalse(backend.getResolveCalls().contains(handle));
@@ -177,7 +178,7 @@ class GatewayCookieCsrfTest
 
         assertEquals(
             200,
-            post(GET_OUTPUT,users(),Map.of("GRANITE_SID",handle,"XSRF-TOKEN","right"),"right",null)
+            post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle,"XSRF-TOKEN","right"),"right",null)
                 .getStatus()
                 .value());
     }
@@ -188,10 +189,10 @@ class GatewayCookieCsrfTest
     {
         String login = GatewayPublicInputTest.input("Session.New","Login","LoginView");
 
-        assertEquals(403,post(HANDLE_INPUT,login,Map.of("GRANITE_DID","d"),null,null).getStatus().value());
+        assertEquals(403,post(HANDLE_SESSION_INPUT,login,Map.of("GRANITE_DID","d"),null,null).getStatus().value());
         assertEquals(
             200,
-            post(HANDLE_INPUT,login,Map.of("GRANITE_DID","d","XSRF-TOKEN","t"),"t",null).getStatus().value());
+            post(HANDLE_SESSION_INPUT,login,Map.of("GRANITE_DID","d","XSRF-TOKEN","t"),"t",null).getStatus().value());
     }
 
     @Test
@@ -220,7 +221,7 @@ class GatewayCookieCsrfTest
     {
         assertEquals(
             200,
-            post(GET_OUTPUT,users(),Map.of("other","x"),null,sign("ROLE_ADMIN")).getStatus().value());
+            post(GET_USERS_OUTPUT,users(),Map.of("other","x"),null,sign("ROLE_ADMIN")).getStatus().value());
     }
 
     @Test
@@ -228,7 +229,7 @@ class GatewayCookieCsrfTest
     postWithoutCookiesNeedsNoCsrfToken()
     {
         int status =
-            post(GET_OUTPUT,GatewayPublicInputTest.output("Session.New",null,"LoginView"),Map.of(),null,null)
+            post(GET_SESSION_OUTPUT,GatewayPublicInputTest.output("Session.New",null,"LoginView"),Map.of(),null,null)
                 .getStatus()
                 .value();
 
@@ -240,7 +241,7 @@ class GatewayCookieCsrfTest
     public void
     forbiddenResponseCarriesFreshCsrfCookie()
     {
-        EntityExchangeResult<byte[]> result = post(GET_OUTPUT,users(),Map.of("GRANITE_DID","d"),null,null);
+        EntityExchangeResult<byte[]> result = post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_DID","d"),null,null);
 
         assertEquals(403,result.getStatus().value());
         assertNotNull(cookies(result).getFirst("XSRF-TOKEN"));

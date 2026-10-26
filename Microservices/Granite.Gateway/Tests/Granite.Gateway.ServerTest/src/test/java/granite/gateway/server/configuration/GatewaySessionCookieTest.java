@@ -39,8 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public
 class GatewaySessionCookieTest
 {
-    private static final String GET_OUTPUT   = "/frontendcontroller-user-service/get-output";
-    private static final String HANDLE_INPUT = "/frontendcontroller-user-service/handle-input";
+    private static final String GET_USERS_OUTPUT     = "/frontendcontroller-user-service/get-users-output";
+    private static final String HANDLE_SESSION_INPUT = "/frontendcontroller-user-service/handle-session-input";
     private static final String CSRF         = "csrf-token-value";
 
     private static GatewayTestBackend backend;
@@ -84,7 +84,7 @@ class GatewaySessionCookieTest
         String token  = register(handle,"ROLE_ADMIN");
         String device = "device-" + UUID.randomUUID();
 
-        assertEquals(200,post(GET_OUTPUT,users(),handle,device,null));
+        assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,device,null));
         assertTrue(backend.getReceivedAuthorizations().contains("Bearer " + token));
 
         String cookies = lastCookieHeaderWith(device);
@@ -146,7 +146,7 @@ class GatewaySessionCookieTest
     public void
     unknownClosedOrExpiredHandleIsUnauthorized()
     {
-        assertEquals(401,post(GET_OUTPUT,users(),newHandle(),null,null));
+        assertEquals(401,post(GET_USERS_OUTPUT,users(),newHandle(),null,null));
     }
 
     @Test
@@ -158,7 +158,7 @@ class GatewaySessionCookieTest
 
         register(handle,"ROLE_ADMIN");
         backend.failResolvesFor(handle);
-        assertEquals(401,post(GET_OUTPUT,users(),handle,null,null));
+        assertEquals(401,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
 
     @Test
@@ -170,7 +170,7 @@ class GatewaySessionCookieTest
 
         register(handle,"ROLE_ADMIN");
         backend.delayResolvesFor(handle);
-        assertEquals(401,post(GET_OUTPUT,users(),handle,null,null));
+        assertEquals(401,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
 
     @Test
@@ -181,7 +181,7 @@ class GatewaySessionCookieTest
         String handle = newHandle();
 
         register(handle,"ROLE_USER");
-        assertEquals(403,post(GET_OUTPUT,users(),handle,null,null));
+        assertEquals(403,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
 
     @Test
@@ -194,7 +194,7 @@ class GatewaySessionCookieTest
 
         backend.registerHandle(handle,backend.sign(sessionId,List.of("ROLE_ADMIN")));
         backend.revoke(sessionId);
-        assertEquals(401,post(GET_OUTPUT,users(),handle,null,null));
+        assertEquals(401,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
 
     @Test
@@ -207,7 +207,7 @@ class GatewaySessionCookieTest
         String bearer = backend.sign(List.of("ROLE_ADMIN"));
 
         register(handle,"ROLE_USER");
-        assertEquals(200,post(GET_OUTPUT,users(),handle,device,bearer));
+        assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,device,bearer));
         assertTrue(backend.getReceivedAuthorizations().contains("Bearer " + bearer));
         assertFalse(backend.getResolveCalls().contains(handle));
         assertFalse(lastCookieHeaderWith(device).contains("GRANITE_SID"));
@@ -220,7 +220,7 @@ class GatewaySessionCookieTest
         String handle = newHandle();
         String device = "device-" + UUID.randomUUID();
         int    status =
-            post(HANDLE_INPUT,GatewayPublicInputTest.input("Session.New","Login","LoginView"),handle,device,null);
+            post(HANDLE_SESSION_INPUT,GatewayPublicInputTest.input("Session.New","Login","LoginView"),handle,device,null);
 
         assertNotEquals(401,status);
         assertNotEquals(403,status);
@@ -236,8 +236,8 @@ class GatewaySessionCookieTest
         String handle = newHandle();
 
         register(handle,"ROLE_ADMIN");
-        assertEquals(200,post(GET_OUTPUT,users(),handle,null,null));
-        assertEquals(200,post(GET_OUTPUT,users(),handle,null,null));
+        assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,null,null));
+        assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,null,null));
         assertEquals(1,Collections.frequency(backend.getResolveCalls(),handle));
     }
 
@@ -263,9 +263,9 @@ class GatewaySessionCookieTest
 
         try
         {
-            post(GET_OUTPUT,users(),good,null,null);
-            post(GET_OUTPUT,users(),failing,null,null);
-            post(GET_OUTPUT,users(),unknown,null,null);
+            post(GET_USERS_OUTPUT,users(),good,null,null);
+            post(GET_USERS_OUTPUT,users(),failing,null,null);
+            post(GET_USERS_OUTPUT,users(),unknown,null,null);
         }
         finally
         {

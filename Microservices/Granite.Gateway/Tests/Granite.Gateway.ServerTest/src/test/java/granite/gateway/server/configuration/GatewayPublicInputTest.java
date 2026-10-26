@@ -67,7 +67,7 @@ class GatewayPublicInputTest
     loginViewOutputIsPublicOnBothHosts()
     {
         for (String host : HOSTS)
-            assertPublic(host + "/get-output",output("Session.New",null,"LoginView"));
+            assertPublic(host + "/get-session-output",output("Session.New",null,"LoginView"));
     }
 
     @Test
@@ -76,7 +76,7 @@ class GatewayPublicInputTest
     {
         for (String host : HOSTS)
             for (String command : List.of("Login","StartOktaLogin","CompleteOktaLogin"))
-                assertPublic(host + "/handle-input",input("Session.New",command,"LoginView"));
+                assertPublic(host + "/handle-session-input",input("Session.New",command,"LoginView"));
     }
 
     @Test
@@ -85,12 +85,12 @@ class GatewayPublicInputTest
     {
         for (String host : HOSTS)
         {
-            assertEquals(401,post(host + "/get-output",output("User.All",null,"UsersEditableView")));
-            assertEquals(401,post(host + "/handle-input",input("User.All","Save","UsersEditableView")));
-            assertEquals(401,post(host + "/handle-input",input("Session.New",null,"LoginView")));
-            assertEquals(401,post(host + "/get-output",output("Session.New","Login","LoginView")));
-            assertEquals(401,post(host + "/handle-input",input("Session.Current","Logout","LoginView")));
-            assertEquals(401,post(host + "/handle-input","not json"));
+            assertEquals(401,post(host + "/get-users-output",output("User.All",null,"UsersEditableView")));
+            assertEquals(401,post(host + "/handle-users-input",input("User.All","Save","UsersEditableView")));
+            assertEquals(401,post(host + "/handle-session-input",input("Session.New",null,"LoginView")));
+            assertEquals(401,post(host + "/get-session-output",output("Session.New","Login","LoginView")));
+            assertEquals(401,post(host + "/handle-session-input",input("Session.Current","Logout","LoginView")));
+            assertEquals(401,post(host + "/handle-session-input","not json"));
         }
     }
 
@@ -100,7 +100,7 @@ class GatewayPublicInputTest
     {
         String body = input("Session.New","Login","LoginView");
 
-        assertPublic("/frontendcontroller-user-service/handle-input",body);
+        assertPublic("/frontendcontroller-user-service/handle-session-input",body);
         assertTrue(backend.getReceivedBodies().contains(body));
     }
 

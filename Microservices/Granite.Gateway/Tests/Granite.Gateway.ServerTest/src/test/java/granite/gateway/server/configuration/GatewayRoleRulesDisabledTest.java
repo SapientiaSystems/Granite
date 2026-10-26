@@ -66,7 +66,7 @@ class GatewayRoleRulesDisabledTest
         String token = backend.sign(List.of("ROLE_USER"));
 
         assertAllowed(HttpMethod.POST,"/user-command-service/create-user",token);
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
     }
 
     private void

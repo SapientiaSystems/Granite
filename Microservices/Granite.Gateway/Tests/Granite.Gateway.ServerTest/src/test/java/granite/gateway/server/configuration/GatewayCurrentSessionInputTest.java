@@ -74,9 +74,9 @@ class GatewayCurrentSessionInputTest
             String cookieBody = logout("cookie-" + UUID.randomUUID());
             String bearerBody = logout("bearer-" + UUID.randomUUID());
 
-            assertEquals(200,postWithCookie(host + "/handle-input",cookieBody,handleFor("ROLE_AUDITOR")));
+            assertEquals(200,postWithCookie(host + "/handle-session-input",cookieBody,handleFor("ROLE_AUDITOR")));
             assertTrue(backend.getReceivedBodies().contains(cookieBody));
-            assertEquals(200,postWithBearer(host + "/handle-input",bearerBody,backend.sign(List.of("ROLE_AUDITOR"))));
+            assertEquals(200,postWithBearer(host + "/handle-session-input",bearerBody,backend.sign(List.of("ROLE_AUDITOR"))));
             assertTrue(backend.getReceivedBodies().contains(bearerBody));
         }
     }
@@ -91,10 +91,10 @@ class GatewayCurrentSessionInputTest
 
         for (String host : HOSTS)
         {
-            assertEquals(200,postWithCookie(host + "/handle-input",logout("u"),handle));
-            assertEquals(200,postWithCookie(host + "/get-output",sessionView(),handle));
-            assertEquals(200,postWithBearer(host + "/handle-input",logout("u"),bearer));
-            assertEquals(200,postWithBearer(host + "/get-output",sessionView(),bearer));
+            assertEquals(200,postWithCookie(host + "/handle-session-input",logout("u"),handle));
+            assertEquals(200,postWithCookie(host + "/get-session-output",sessionView(),handle));
+            assertEquals(200,postWithBearer(host + "/handle-session-input",logout("u"),bearer));
+            assertEquals(200,postWithBearer(host + "/get-session-output",sessionView(),bearer));
         }
     }
 
@@ -107,14 +107,20 @@ class GatewayCurrentSessionInputTest
         String bearer = backend.sign(List.of("ROLE_AUDITOR"));
 
         for (String host : HOSTS)
+        {
             for (String body : List.of(
                 input("User.All","Save","UsersEditableView"),
-                input("User.All","Delete","UsersEditableView"),
-                input("Session.Current","Logout","SessionView")))
+                input("User.All","Delete","UsersEditableView")))
             {
-                assertEquals(403,postWithCookie(host + "/handle-input",body,handle),host + " " + body);
-                assertEquals(403,postWithBearer(host + "/handle-input",body,bearer),host + " " + body);
+                assertEquals(403,postWithCookie(host + "/handle-users-input",body,handle),host + " " + body);
+                assertEquals(403,postWithBearer(host + "/handle-users-input",body,bearer),host + " " + body);
             }
+
+            String logout = input("Session.Current","Logout","SessionView");
+
+            assertEquals(403,postWithCookie(host + "/handle-session-input",logout,handle),host);
+            assertEquals(403,postWithBearer(host + "/handle-session-input",logout,bearer),host);
+        }
     }
 
     @Test
@@ -123,8 +129,8 @@ class GatewayCurrentSessionInputTest
     {
         for (String host : HOSTS)
         {
-            assertEquals(401,postWithBearer(host + "/handle-input",logout("u"),null));
-            assertEquals(401,postWithBearer(host + "/get-output",sessionView(),null));
+            assertEquals(401,postWithBearer(host + "/handle-session-input",logout("u"),null));
+            assertEquals(401,postWithBearer(host + "/get-session-output",sessionView(),null));
         }
     }
 
@@ -160,14 +166,14 @@ class GatewayCurrentSessionInputTest
         {
             for (String body : inputs)
             {
-                assertEquals(403,postWithCookie(host + "/handle-input",body,handle),host + " " + body);
-                assertEquals(403,postWithBearer(host + "/handle-input",body,bearer),host + " " + body);
+                assertEquals(403,postWithCookie(host + "/handle-session-input",body,handle),host + " " + body);
+                assertEquals(403,postWithBearer(host + "/handle-session-input",body,bearer),host + " " + body);
             }
 
             for (String body : outputs)
             {
-                assertEquals(403,postWithCookie(host + "/get-output",body,handle),host + " " + body);
-                assertEquals(403,postWithBearer(host + "/get-output",body,bearer),host + " " + body);
+                assertEquals(403,postWithCookie(host + "/get-session-output",body,handle),host + " " + body);
+                assertEquals(403,postWithBearer(host + "/get-session-output",body,bearer),host + " " + body);
             }
         }
     }

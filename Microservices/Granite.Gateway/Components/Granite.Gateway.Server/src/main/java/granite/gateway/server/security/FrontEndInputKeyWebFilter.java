@@ -28,17 +28,17 @@ public
 class FrontEndInputKeyWebFilter
     implements WebFilter
 {
-    public static final String KEY_ATTRIBUTE = "granite.gateway.front-end-input-key";
-    public static final String GET_OUTPUT    = "/get-output";
-    public static final String HANDLE_INPUT  = "/handle-input";
-    public static final String SEPARATOR     = "->";
+    public static final String KEY_ATTRIBUTE        = "granite.gateway.front-end-input-key";
+    public static final String GET_SESSION_OUTPUT   = "/get-session-output";
+    public static final String HANDLE_SESSION_INPUT = "/handle-session-input";
+    public static final String SEPARATOR            = "->";
 
     public static final Set<String> PATHS =
         Set.of(
-            "/frontendcontroller-user-service" + GET_OUTPUT,
-            "/frontendcontroller-user-service" + HANDLE_INPUT,
-            "/frontendcontroller-admin-service" + GET_OUTPUT,
-            "/frontendcontroller-admin-service" + HANDLE_INPUT);
+            "/frontendcontroller-user-service" + GET_SESSION_OUTPUT,
+            "/frontendcontroller-user-service" + HANDLE_SESSION_INPUT,
+            "/frontendcontroller-admin-service" + GET_SESSION_OUTPUT,
+            "/frontendcontroller-admin-service" + HANDLE_SESSION_INPUT);
 
     private final int          maxBytes;
     private final ObjectMapper mapper;
@@ -133,7 +133,7 @@ class FrontEndInputKeyWebFilter
             if (root == null || !root.isObject())
                 return null;
 
-            JsonNode     node  = path.endsWith(HANDLE_INPUT) ? root.path("input") : root;
+            JsonNode     node  = path.endsWith(HANDLE_SESSION_INPUT) ? root.path("input") : root;
             List<String> parts = new ArrayList<>();
 
             for (String name : List.of("source","command","destination"))

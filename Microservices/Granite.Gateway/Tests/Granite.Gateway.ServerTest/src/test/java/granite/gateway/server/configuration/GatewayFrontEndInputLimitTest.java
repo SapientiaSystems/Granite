@@ -55,7 +55,7 @@ class GatewayFrontEndInputLimitTest
             .baseUrl("http://localhost:" + port)
             .build()
             .post()
-            .uri("/frontendcontroller-user-service/handle-input")
+            .uri("/frontendcontroller-user-service/handle-session-input")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(GatewayPublicInputTest.input("Session.New","Login","LoginView") + " ".repeat(128))
             .exchange()

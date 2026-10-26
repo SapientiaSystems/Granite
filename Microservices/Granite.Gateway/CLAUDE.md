@@ -115,13 +115,13 @@ After logout, a token is rejected at the Gateway within the live-cache window (3
 
 The browser holds only `GRANITE_SID` (session handle), `GRANITE_DID` (device) and `XSRF-TOKEN`. Filters run inside the security chain in this order (none is a Spring bean, so none runs outside the chain):
 
-1. `FrontEndInputKeyWebFilter` (before `CSRF`): for `POST /frontendcontroller-{user,admin}-service/{get-output,handle-input}`, cookie or bearer, buffers the body (`granite.gateway.front-end-input.max-bytes`, default `1048576`; larger is 413), records the FEC key `source->command->destination` (top level for `get-output`, under `input` for `handle-input`) and replays the body unchanged. No key is recorded when a part contains `->` or is present but not a string.
+1. `FrontEndInputKeyWebFilter` (before `CSRF`): for `POST /frontendcontroller-{user,admin}-service/{get-session-output,handle-session-input}` only (Users paths are plain path rules), cookie or bearer, buffers the body (`granite.gateway.front-end-input.max-bytes`, default `1048576`; larger is 413), records the FEC key `source->command->destination` (top level for `get-session-output`, under `input` for `handle-session-input`) and replays the body unchanged. No key is recorded when a part contains `->` or is present but not a string.
 2. `CsrfCookieWebFilter` (before `CSRF`): issues `XSRF-TOKEN` when absent, on every non-bearer request (a 403 also carries a fresh one).
 3. Spring `CsrfWebFilter`: required by `CookieCsrfProtectionMatcher` = method not `GET`/`HEAD`/`TRACE`/`OPTIONS`, no `Authorization` header, at least one cookie. The SPA echoes the raw `XSRF-TOKEN` cookie value in the `X-XSRF-TOKEN` header (plain `ServerCsrfTokenRequestAttributeHandler`, no masking). Missing or wrong → 403.
 4. `DeviceCookieWebFilter` (after `CSRF`): when a non-bearer request has no `GRANITE_DID`, issues 256-bit base64url `GRANITE_DID` (`HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=31536000`) and adds it to the forwarded `Cookie` header.
 5. `SessionCookieWebFilter` (before `AUTHENTICATION`): with `GRANITE_SID` present it always strips it from the forwarded `Cookie` header. A request with an `Authorization` header keeps the bearer path unchanged (bearer wins, cookie ignored). A public request is not resolved. Otherwise the handle is resolved through `ISessionResolver` and `Authorization: Bearer <jwt>` is injected; any failure is 401.
 
-The injected JWT then goes through the ordinary bearer authentication, `jti` revocation check and role rules. Public FEC inputs (`PublicFrontEndInputMatcher`), on both hosts: `get-output` with `Session.New->LoginView`; `handle-input` with `Session.New->Login->LoginView`, `Session.New->StartOktaLogin->LoginView`, `Session.New->CompleteOktaLogin->LoginView`. Authenticated-only FEC inputs (`CurrentSessionFrontEndInputMatcher`), on both hosts, open to any role: `get-output` with `Session.Current->SessionView`; `handle-input` with `Session.Current->Logout->LoginView`. Both matchers extend `FrontEndInputKeyMatcher`. The handle, tokens and CSRF token are never logged.
+The injected JWT then goes through the ordinary bearer authentication, `jti` revocation check and role rules. Public FEC inputs (`PublicFrontEndInputMatcher`), on both hosts: `get-session-output` with `Session.New->LoginView`; `handle-session-input` with `Session.New->Login->LoginView`, `Session.New->StartOktaLogin->LoginView`, `Session.New->CompleteOktaLogin->LoginView`. Authenticated-only FEC inputs (`CurrentSessionFrontEndInputMatcher`), on both hosts, open to any role: `get-session-output` with `Session.Current->SessionView`; `handle-session-input` with `Session.Current->Logout->LoginView`. Both matchers extend `FrontEndInputKeyMatcher`. The handle, tokens and CSRF token are never logged.
 
 Authorization rules live here and only here: User and Session only authenticate. Each application that instantiates a Gateway declares its rules by overriding `configureAuthorization`. Rules match on path and method, so they cannot inspect request bodies; only the FEC key matchers above, which run before them, look at the recorded key. The caller's `Authorization` header is relayed to the routed service unchanged.
 
@@ -129,11 +129,13 @@ Granite's own rules ship in `GraniteRoleRulesGatewayServerConfiguration` (`HostC
 
 | Matcher | Authorities |
 |---|---|
-| `POST /frontendcontroller-user-service/get-output`, `POST /frontendcontroller-admin-service/get-output` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
+| `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
 | `/user-query-service/**` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
 | `POST /session-command-service/logout` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
 | `/session-query-service/**` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
 | `/**` (catch-all, so everything else) | `ROLE_ADMIN` |
+
+`POST .../handle-users-input` (both hosts) has no rule of its own and falls to the catch-all (ADMIN or `SCOPE_internal`); the retired `get-output` and `handle-input` paths also fall to it.
 
 The catch-all uses `pathMatchers("/**")`, not `anyExchange()`, because the base chain registers `anyExchange().authenticated()` afterwards.
 

@@ -25,8 +25,8 @@ class GraniteRoleRulesGatewayServerConfiguration
             base
                 .pathMatchers(
                     HttpMethod.POST,
-                    "/frontendcontroller-user-service/get-output",
-                    "/frontendcontroller-admin-service/get-output")
+                    "/frontendcontroller-user-service/get-users-output",
+                    "/frontendcontroller-admin-service/get-users-output")
                     .hasAnyAuthority("ROLE_ADMIN","ROLE_AUDITOR","SCOPE_internal")
                 .pathMatchers("/user-query-service/**")
                     .hasAnyAuthority("ROLE_ADMIN","ROLE_AUDITOR","SCOPE_internal")

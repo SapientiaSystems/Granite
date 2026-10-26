@@ -66,10 +66,10 @@ class GatewayRoleRulesTest
     {
         String token = backend.sign(List.of("ROLE_ADMIN"));
 
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-output",token);
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-output",token);
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",token);
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-input",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-users-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-users-input",token);
         assertAllowed(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
         assertAllowed(HttpMethod.POST,"/user-command-service/create-user",token);
         assertAllowed(HttpMethod.POST,"/session-command-service/logout",token);
@@ -85,16 +85,29 @@ class GatewayRoleRulesTest
     {
         String token = backend.sign(List.of("ROLE_AUDITOR"));
 
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-output",token);
-        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-users-output",token);
         assertAllowed(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
         assertAllowed(HttpMethod.POST,"/session-command-service/logout",token);
         assertAllowed(HttpMethod.POST,"/session-query-service/find-sessions-by-key",token);
-        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",token);
-        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-input",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-users-input",token);
         assertForbidden(HttpMethod.POST,"/user-command-service/create-user",token);
         assertForbidden(HttpMethod.POST,"/session-command-service/logout-all-for-user",token);
         assertForbidden(HttpMethod.POST,"/outbox-service/anything",token);
+    }
+
+    @Test
+    public void
+    retiredSharedPathsFallToCatchAll()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",admin);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",auditor);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-output",auditor);
     }
 
     @Test
@@ -104,7 +117,7 @@ class GatewayRoleRulesTest
     {
         String token = backend.sign(List.of("ROLE_USER"));
 
-        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-output",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertForbidden(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
     }
 
@@ -140,7 +153,7 @@ class GatewayRoleRulesTest
     public void
     missingTokenIsUnauthorized()
     {
-        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/get-output",null));
+        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",null));
     }
 
     private void

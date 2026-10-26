@@ -38,7 +38,7 @@ class FrontEndInputKeyMatcher
             return MatchResult.notMatch();
 
         boolean isMatch =
-            path.endsWith(FrontEndInputKeyWebFilter.GET_OUTPUT)
+            path.endsWith(FrontEndInputKeyWebFilter.GET_SESSION_OUTPUT)
                 ? outputKeys.contains(key)
                 : inputKeys.contains(key);
 
