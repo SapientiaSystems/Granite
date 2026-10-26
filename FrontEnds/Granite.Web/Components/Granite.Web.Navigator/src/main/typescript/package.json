@@ -1,6 +1,6 @@
 {
   "name": "granite.web.navigator",
-  "version": "1.0.0-snapshot.1793044977988",
+  "version": "1.0.0-snapshot.1793045359848",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
