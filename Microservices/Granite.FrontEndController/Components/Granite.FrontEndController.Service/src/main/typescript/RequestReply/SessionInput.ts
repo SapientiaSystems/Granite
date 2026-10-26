@@ -5,10 +5,14 @@
 import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
 
 export
-interface LogoutInput
+interface SessionInput
     extends FrontEndInput
 {
-    logout: boolean;
+    userName?: string | null;
+    password?: string | null;
+    returnTo?: string | null;
+    code?:     string | null;
+    state?:    string | null;
 }
 
 //////////////////////////////////////////////////////////////////////////////

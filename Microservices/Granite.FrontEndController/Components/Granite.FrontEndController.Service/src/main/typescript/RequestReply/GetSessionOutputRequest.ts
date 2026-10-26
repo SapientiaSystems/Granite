@@ -2,14 +2,12 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { FrontEndOutput } from "strata.frontendcontroller.service/RequestReply";
+import type { GetOutputRequest } from "strata.frontendcontroller.service/RequestReply";
 
 export
-interface LogoutOutput
-    extends FrontEndOutput
+interface GetSessionOutputRequest
+    extends GetOutputRequest
 {
-    loggedOut:     boolean;
-    endSessionUrl: string | null;
 }
 
 //////////////////////////////////////////////////////////////////////////////

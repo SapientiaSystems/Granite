@@ -2,14 +2,13 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { FrontEndOutput } from "strata.frontendcontroller.service/RequestReply";
+import type { GetOutputReply } from "strata.frontendcontroller.service/RequestReply";
+import type { UsersOutput } from "./UsersOutput";
 
 export
-interface LoginMethodsOutput
-    extends FrontEndOutput
+interface GetUsersOutputReply
+    extends GetOutputReply<UsersOutput>
 {
-    passwordEnabled: boolean;
-    oktaEnabled:     boolean;
 }
 
 //////////////////////////////////////////////////////////////////////////////

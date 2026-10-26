@@ -13,19 +13,29 @@ public
 class SessionOutput
     extends FrontEndOutput
 {
+    private String      status;
     private String      userName;
     private Set<String> authorities;
-    private String      status;
     private String      returnTo;
+    private boolean     passwordEnabled;
+    private boolean     oktaEnabled;
+    private String      redirectUrl;
+    private boolean     loggedOut;
+    private String      endSessionUrl;
 
     public
     SessionOutput()
     {
         super();
-        userName    = null;
-        authorities = new HashSet<>();
-        status      = null;
-        returnTo    = null;
+        status          = null;
+        userName        = null;
+        authorities     = new HashSet<>();
+        returnTo        = null;
+        passwordEnabled = false;
+        oktaEnabled     = false;
+        redirectUrl     = null;
+        loggedOut       = false;
+        endSessionUrl   = null;
     }
 
     @Override
@@ -57,6 +67,13 @@ class SessionOutput
     }
 
     public SessionOutput
+    setStatus(String value)
+    {
+        status = value;
+        return this;
+    }
+
+    public SessionOutput
     setUserName(String value)
     {
         userName = value;
@@ -71,18 +88,49 @@ class SessionOutput
     }
 
     public SessionOutput
-    setStatus(String value)
-    {
-        status = value;
-        return this;
-    }
-
-    public SessionOutput
     setReturnTo(String value)
     {
         returnTo = value;
         return this;
     }
+
+    public SessionOutput
+    setPasswordEnabled(boolean value)
+    {
+        passwordEnabled = value;
+        return this;
+    }
+
+    public SessionOutput
+    setOktaEnabled(boolean value)
+    {
+        oktaEnabled = value;
+        return this;
+    }
+
+    public SessionOutput
+    setRedirectUrl(String value)
+    {
+        redirectUrl = value;
+        return this;
+    }
+
+    public SessionOutput
+    setLoggedOut(boolean value)
+    {
+        loggedOut = value;
+        return this;
+    }
+
+    public SessionOutput
+    setEndSessionUrl(String value)
+    {
+        endSessionUrl = value;
+        return this;
+    }
+
+    public String
+    getStatus() { return status; }
 
     public String
     getUserName() { return userName; }
@@ -91,10 +139,22 @@ class SessionOutput
     getAuthorities() { return authorities; }
 
     public String
-    getStatus() { return status; }
+    getReturnTo() { return returnTo; }
+
+    public boolean
+    isPasswordEnabled() { return passwordEnabled; }
+
+    public boolean
+    isOktaEnabled() { return oktaEnabled; }
 
     public String
-    getReturnTo() { return returnTo; }
+    getRedirectUrl() { return redirectUrl; }
+
+    public boolean
+    isLoggedOut() { return loggedOut; }
+
+    public String
+    getEndSessionUrl() { return endSessionUrl; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

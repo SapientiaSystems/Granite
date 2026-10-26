@@ -2,13 +2,14 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { FrontEndOutput } from "strata.frontendcontroller.service/RequestReply";
+import type { HandleInputReply } from "strata.frontendcontroller.service/RequestReply";
+import type { UsersInput } from "./UsersInput";
+import type { UsersOutput } from "./UsersOutput";
 
 export
-interface RedirectOutput
-    extends FrontEndOutput
+interface HandleUsersInputReply
+    extends HandleInputReply<UsersInput,UsersOutput>
 {
-    url: string;
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -8,10 +8,15 @@ export
 interface SessionOutput
     extends FrontEndOutput
 {
-    userName:    string | null;
-    authorities: Array<string>;
-    status:      string;
-    returnTo?:   string | null;
+    status:           string;
+    userName?:        string | null;
+    authorities?:     Array<string> | null;
+    returnTo?:        string | null;
+    passwordEnabled?: boolean;
+    oktaEnabled?:     boolean;
+    redirectUrl?:     string | null;
+    loggedOut?:       boolean;
+    endSessionUrl?:   string | null;
 }
 
 //////////////////////////////////////////////////////////////////////////////

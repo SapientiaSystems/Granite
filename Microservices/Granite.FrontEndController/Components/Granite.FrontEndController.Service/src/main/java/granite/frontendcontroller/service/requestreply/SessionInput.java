@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// LoginInput.java
+// SessionInput.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.service.requestreply;
@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import strata.frontendcontroller.service.requestreply.FrontEndInput;
 
 public
-class LoginInput
+class SessionInput
     extends FrontEndInput
 {
     private String userName;
@@ -16,53 +16,84 @@ class LoginInput
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    private String returnTo;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String code;
+
+    private String state;
+
     public
-    LoginInput()
+    SessionInput()
     {
         super();
         userName = null;
         password = null;
+        returnTo = null;
+        code     = null;
+        state    = null;
     }
 
     @Override
-    public LoginInput
+    public SessionInput
     setUserId(Long id)
     {
-        return (LoginInput)super.setUserId(id);
+        return (SessionInput)super.setUserId(id);
     }
 
     @Override
-    public LoginInput
+    public SessionInput
     setSource(String src)
     {
-        return (LoginInput)super.setSource(src);
+        return (SessionInput)super.setSource(src);
     }
 
     @Override
-    public LoginInput
+    public SessionInput
     setDestination(String dest)
     {
-        return (LoginInput)super.setDestination(dest);
+        return (SessionInput)super.setDestination(dest);
     }
 
     @Override
-    public LoginInput
+    public SessionInput
     setCommand(String cmd)
     {
-        return (LoginInput)super.setCommand(cmd);
+        return (SessionInput)super.setCommand(cmd);
     }
 
-    public LoginInput
+    public SessionInput
     setUserName(String value)
     {
         userName = value;
         return this;
     }
 
-    public LoginInput
+    public SessionInput
     setPassword(String value)
     {
         password = value;
+        return this;
+    }
+
+    public SessionInput
+    setReturnTo(String value)
+    {
+        returnTo = value;
+        return this;
+    }
+
+    public SessionInput
+    setCode(String value)
+    {
+        code = value;
+        return this;
+    }
+
+    public SessionInput
+    setState(String value)
+    {
+        state = value;
         return this;
     }
 
@@ -72,11 +103,20 @@ class LoginInput
     public String
     getPassword() { return password; }
 
+    public String
+    getReturnTo() { return returnTo; }
+
+    public String
+    getCode() { return code; }
+
+    public String
+    getState() { return state; }
+
     @Override
     public String
     toString()
     {
-        return "LoginInput{userName=" + userName + "}";
+        return "SessionInput{key=" + getKey() + ",userName=" + userName + ",returnTo=" + returnTo + "}";
     }
 }
 

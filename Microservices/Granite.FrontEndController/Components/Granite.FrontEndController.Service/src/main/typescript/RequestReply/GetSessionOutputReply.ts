@@ -2,14 +2,13 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
+import type { GetOutputReply } from "strata.frontendcontroller.service/RequestReply";
+import type { SessionOutput } from "./SessionOutput";
 
 export
-interface CompleteOktaLoginInput
-    extends FrontEndInput
+interface GetSessionOutputReply
+    extends GetOutputReply<SessionOutput>
 {
-    code:  string;
-    state: string;
 }
 
 //////////////////////////////////////////////////////////////////////////////

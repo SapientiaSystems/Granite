@@ -2,14 +2,13 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
+import type { HandleInputRequest } from "strata.frontendcontroller.service/RequestReply";
+import type { HomeInput } from "./HomeInput";
 
 export
-interface LoginInput
-    extends FrontEndInput
+interface HandleHomeInputRequest
+    extends HandleInputRequest<HomeInput>
 {
-    userName: string;
-    password: string;
 }
 
 //////////////////////////////////////////////////////////////////////////////
