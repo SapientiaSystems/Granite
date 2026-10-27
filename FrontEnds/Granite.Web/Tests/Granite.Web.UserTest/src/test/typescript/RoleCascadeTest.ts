@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }                                   from "vitest";
-import { applySelection, deselectRole, roleOptions, selectRole }  from "granite.web.user/EditableView";
+import { applySelection, deselectRole, normalizeAuthorities, removeRole, roleOptions, selectRole }  from "granite.web.user/EditableView";
 
 const catalog: Array<{ name: string; label: string; impliedRoles: Array<string> }> =
 [
@@ -66,6 +66,37 @@ describe("RoleCascade", () =>
         expect(applySelection(["ROLE_PROMOTIONS_APPROVER","ROLE_PROMOTIONS_PLANNER","ROLE_PROMOTIONS_REVIEWER"],
                               ["ROLE_PROMOTIONS_APPROVER","ROLE_PROMOTIONS_REVIEWER"],catalog))
             .toEqual(["ROLE_PROMOTIONS_REVIEWER"]);
+    });
+
+    it("explicitRemovalCascades", () =>
+    {
+        const all: Array<string> = ["ROLE_PROMOTIONS_APPROVER","ROLE_PROMOTIONS_PLANNER","ROLE_PROMOTIONS_REVIEWER","ROLE_LEGACY"];
+
+        expect(removeRole(all,"ROLE_PROMOTIONS_PLANNER",catalog)).toEqual(["ROLE_PROMOTIONS_REVIEWER","ROLE_LEGACY"]);
+        expect(removeRole(all,"ROLE_LEGACY",catalog)).not.toContain("ROLE_LEGACY");
+        expect(removeRole(["ROLE_A","ROLE_B"],"ROLE_A",[])).toEqual(["ROLE_B"]);
+        expect(removeRole(["ROLE_A","ROLE_B"],"ROLE_A",undefined)).toEqual(["ROLE_B"]);
+    });
+
+    it("selectionIsNormalized", () =>
+    {
+        expect(normalizeAuthorities(applySelection(["ROLE_PROMOTIONS_PLANNER"],["ROLE_PROMOTIONS_PLANNER","ROLE_PROMOTIONS_REVIEWER"," ROLE_PROMOTIONS_REVIEWER "],catalog)))
+            .toEqual(["ROLE_PROMOTIONS_PLANNER","ROLE_PROMOTIONS_REVIEWER"]);
+    });
+
+    it("diamondDeselectRemovesAllDependents", () =>
+    {
+        const diamond: Array<{ name: string; label: string; impliedRoles: Array<string> }> =
+        [
+            { name: "BASE",  label: "Base",  impliedRoles: [] },
+            { name: "LEFT",  label: "Left",  impliedRoles: ["BASE"] },
+            { name: "RIGHT", label: "Right", impliedRoles: ["BASE"] },
+            { name: "TOP",   label: "Top",   impliedRoles: ["LEFT","RIGHT"] },
+        ];
+
+        expect([...selectRole([],"TOP",diamond)].sort()).toEqual(["BASE","LEFT","RIGHT","TOP"]);
+        expect(deselectRole(["BASE","LEFT","RIGHT","TOP"],"LEFT",diamond).sort()).toEqual(["BASE","RIGHT"]);
+        expect(deselectRole(["BASE","LEFT","RIGHT","TOP"],"BASE",diamond)).toEqual([]);
     });
 });
 

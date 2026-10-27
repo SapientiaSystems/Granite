@@ -56,6 +56,11 @@ export function deselectRole(selected: Array<string>, role: string, catalog: Arr
     return selected.filter(name => !removed.includes(name));
 }
 
+export function removeRole(selected: Array<string>, role: string, catalog: Array<RoleData> | undefined): Array<string>
+{
+    return catalog == null || catalog.length === 0 ? selected.filter(r => r !== role) : deselectRole(selected,role,catalog);
+}
+
 export function applySelection(previous: Array<string>, next: Array<string>, catalog: Array<RoleData> | undefined): Array<string>
 {
     if (catalog == null || catalog.length === 0)

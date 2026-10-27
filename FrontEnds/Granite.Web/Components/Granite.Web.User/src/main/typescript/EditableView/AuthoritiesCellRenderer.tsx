@@ -4,7 +4,7 @@
 
 import type { ReactElement, MouseEvent } from "react";
 import type { CustomCellRendererProps }  from "ag-grid-react";
-import type { RoleData }                     from "granite.frontendcontroller.service/RequestReply";
+import type { RoleData }                 from "granite.frontendcontroller.service/RequestReply";
 import type { IUserRow }                 from "./UsersChangeSet";
 
 const chipStyle = { display: "inline-block", background: "#dde7f7", color: "#1d3d70", borderRadius: 10,

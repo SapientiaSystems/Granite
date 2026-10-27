@@ -25,6 +25,7 @@ import { ExpandCellRenderer }                    from "./ExpandCellRenderer";
 import { AuthoritiesCellRenderer }               from "./AuthoritiesCellRenderer";
 import { AuthoritiesCellEditor }                 from "./AuthoritiesCellEditor";
 import { PasswordCellEditor }                    from "./PasswordCellEditor";
+import { removeRole }                           from "./RoleCascade";
 import { UserValuesDetail, UserValuesContext,
          detailRowHeight }                       from "./UserValuesDetail";
 import type { IUserValuesContext }               from "./UserValuesDetail";
@@ -589,7 +590,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         {
             const row: IUserRow | undefined = rowsRef.current.find(r => r.rowKey === rowKey);
 
-            updateRow(rowKey, { authorities: (row?.authorities ?? []).filter(a => a !== authority) });
+            updateRow(rowKey, { authorities: removeRole(row?.authorities ?? [],authority,props.roles) });
         },
     };
 
