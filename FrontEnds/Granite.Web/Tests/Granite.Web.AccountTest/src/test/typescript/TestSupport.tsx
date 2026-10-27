@@ -39,18 +39,20 @@ export class FakePreferencesClient
     failLoad:          string | undefined            = undefined;
     failSave:          string | undefined            = undefined;
     deferSaves:        boolean                       = false;
+    loadFailures:      Array<string>                 = [];
+    saveFailures:      Array<string>                 = [];
 
     constructor(state: IFakePreferences)
     {
         this.state = state;
     }
 
-    reply(values: Record<string,unknown> = this.state.values): unknown
+    reply(values: Record<string,unknown> = this.state.values,failureMessages: Array<string> = []): unknown
     {
         return {
             success: true,
             output:  { userId: 1, source: "Preferences.Current", destination: "PreferencesView", command: null,
-                       values: { ...values }, definitions: this.state.definitions, failureMessages: [] },
+                       values: { ...values }, definitions: this.state.definitions, failureMessages },
         };
     }
 
@@ -64,7 +66,7 @@ export class FakePreferencesClient
         if (this.failLoad !== undefined)
             return Promise.resolve({ success: false, failureMessage: this.failLoad });
 
-        return Promise.resolve(this.reply());
+        return Promise.resolve(this.reply(this.state.values,this.loadFailures));
     }
 
     handlePreferencesInput(request: { input: Record<string,unknown> }): Promise<unknown>
@@ -79,7 +81,7 @@ export class FakePreferencesClient
 
         this.state.values = { ...this.state.values, ...(request.input.values as Record<string,unknown>) };
 
-        return Promise.resolve(this.reply());
+        return Promise.resolve(this.reply(this.state.values,this.saveFailures));
     }
 
     complete(index: number,values: Record<string,unknown>): void

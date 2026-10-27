@@ -170,6 +170,35 @@ describe("Preferences",() =>
         expect((screen.getByRole("switch") as HTMLInputElement).disabled).toBe(true);
     });
 
+    it("degradedReadKeepsCachedThemeAndShowsError",async () =>
+    {
+        window.localStorage.setItem("granite.theme","dark");
+
+        const client = clientWith("light");
+
+        client.loadFailures = ["unable to read preferences"];
+        renderWithPreferences(client,<PreferencesView userName="ann" userRole="User" />);
+
+        expect(await screen.findByText("unable to read preferences")).toBeTruthy();
+        expect(scheme()).toBe("dark");
+        expect(window.localStorage.getItem("granite.theme")).toBe("dark");
+        expect((screen.getByRole("switch") as HTMLInputElement).disabled).toBe(true);
+    });
+
+    it("saveReplyWithFailureMessagesIsAFailure",async () =>
+    {
+        const client = flagClient();
+
+        client.saveFailures = ["not saved"];
+        renderWithPreferences(client,<Flag />);
+
+        await waitFor(() => expect(client.gets).toHaveLength(1));
+        await userEvent.click(await screen.findByText("toggle flag"));
+
+        await waitFor(() => expect(screen.getByTestId("flag-error").textContent).toBe("not saved"));
+        expect(screen.getByTestId("flag").textContent).toBe("false");
+    });
+
     it("reloadsWhenTheUserChanges",async () =>
     {
         const client         = clientWith("light");

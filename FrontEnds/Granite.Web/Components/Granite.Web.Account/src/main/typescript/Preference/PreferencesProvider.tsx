@@ -121,6 +121,13 @@ export function PreferencesProvider({ children }: IPreferencesProviderProps): Re
                     return;
                 }
 
+                if ((output.failureMessages ?? []).length > 0)
+                {
+                    setError(output.failureMessages.join("; "));
+                    setStatus("error");
+                    return;
+                }
+
                 setValues(output.values ?? {});
                 setDefinitions(output.definitions ?? []);
                 setError(null);
