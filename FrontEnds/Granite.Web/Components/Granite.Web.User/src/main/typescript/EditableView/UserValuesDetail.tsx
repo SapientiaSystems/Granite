@@ -10,7 +10,7 @@ import type { CustomCellRendererProps }                          from "ag-grid-r
 import { themeQuartz }                                           from "ag-grid-community";
 import type { CellValueChangedEvent, ColDef }                    from "ag-grid-community";
 import type { IUserRow }                                         from "./UsersChangeSet";
-import { createEntry, entryDisplay }                             from "./UsersValueEntries";
+import { createEntry, entryDisplay, isReservedValueKey }  from "./UsersValueEntries";
 import type { IValueEntry }                                      from "./UsersValueEntries";
 
 export interface IUserValuesContext
@@ -54,8 +54,8 @@ export function UserValuesDetail(props: CustomCellRendererProps<IUserRow>): Reac
 
     const columnDefs: Array<ColDef<IValueEntry>> = useMemo(() =>
     [
-        { field: "key",   headerName: "Key",   flex: 1, editable: editing, headerTooltip: "Key"   },
-        { colId: "value", headerName: "Value", flex: 2, editable: editing, headerTooltip: "Value",
+        { field: "key",   headerName: "Key",   flex: 1, editable: (p) => editing && !isReservedValueKey(p.data?.key ?? ""), headerTooltip: "Key"   },
+        { colId: "value", headerName: "Value", flex: 2, editable: (p) => editing && !isReservedValueKey(p.data?.key ?? ""), headerTooltip: "Value",
           valueGetter: (p) => p.data != null ? entryDisplay(p.data) : "",
           valueSetter: (p) => { p.data.value = p.newValue; return true; } },
     ], [editing]);
@@ -67,7 +67,7 @@ export function UserValuesDetail(props: CustomCellRendererProps<IUserRow>): Reac
 
     function handleDelete(): void
     {
-        const selected: Set<number> = new Set((gridRef.current?.api?.getSelectedRows() ?? []).map(e => e.id));
+        const selected: Set<number> = new Set((gridRef.current?.api?.getSelectedRows() ?? []).filter(e => !isReservedValueKey(e.key)).map(e => e.id));
 
         if (selected.size > 0)
         {

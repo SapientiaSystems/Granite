@@ -6,7 +6,7 @@ React 19 and TypeScript single-page app, built as yarn components published to t
 
 ## Commands (from `FrontEnds/Granite.Web`, or the root `build-granite-web`)
 
-- `yarn run test-granite-web`: all test projects; `test-granite-web-authentication` and `test-granite-web-user` run one. Each publishes its component to the local Verdaccio, then runs Vitest in `Tests/Granite.Web.<Component>Test`.
+- `yarn run test-granite-web`: all test projects; `test-granite-web-authentication`, `test-granite-web-user` and `test-granite-web-account` run one. Each publishes its component to the local Verdaccio, then runs Vitest in `Tests/Granite.Web.<Component>Test`.
 - Test layout: `Tests/Granite.Web.<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (private projects, never published, importing subpaths such as `granite.web.authentication/Authentication`). Export from the component's `index.ts` whatever a test needs. Header name is the test project, for example `Granite.Web.AuthenticationTest`.
 - `yarn run build-granite-web-<component>` and `yarn run build`: type-check, bump the snapshot version in each component's `src/main/typescript/package.json`, and publish to the local Verdaccio only. `dist/**` under the AppHost is build output and is not committed.
 - `containerize-*` and `push-*` publish images: never run them without approval.
@@ -31,3 +31,9 @@ The browser holds no tokens. It carries the HttpOnly cookies `GRANITE_SID` and `
 ## Navigator and AppHost
 
 `UsersView` creates `GraniteFrontEndControllerServiceClient` instances with `createFrontEndClient((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),"frontendcontroller-user-service")` and calls `getUsersOutput` and `handleUsersInput`. `HomeView` uses `FakeHomeFrontEndControllerServiceClient.getHomeOutput` (no server).  The AppHost routes `login` and `login/callback`; the Okta redirect URI configured in Session must be the SPA's `/login/callback`.
+
+## Preferences (`Granite.Web.Account`)
+
+`PreferencesProvider` (mounted by the AppHost inside `AuthenticationProvider`; applications can mount it too) loads `getPreferencesOutput` (`Preferences.Current->PreferencesView`) through `useAuthentication().createFrontEndClient` once the session is authenticated and exposes `{ values, definitions, status, error }`. `usePreference<T>(key)` returns `[value, setValue, { saving, error }]`; the setter calls `handlePreferencesInput` (`Preferences.Current->Save->PreferencesView`, `values: { [key]: value }`), shows the new value optimistically, updates from the reply and reverts with the error on failure. Without a stored value the declared default applies. `PreferencesView({ userName, userRole, children })` shows the user card, the theme switch (`granite.theme`, `light` or `dark`) and its `children` sections, which use `usePreference` for their own keys.
+
+The server is the source of truth for the theme. The last theme is cached in `localStorage` key `granite.theme` (every access in try/catch) so the cached theme (default `light`) applies at start-up and on the login page, and the server value replaces it once loaded. The Users screen shows value keys starting with `preferences.` or `granite.` read-only.

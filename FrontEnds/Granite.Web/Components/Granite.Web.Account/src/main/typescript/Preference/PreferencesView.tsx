@@ -1,13 +1,17 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.User
+// Granite.Web.Account
 //////////////////////////////////////////////////////////////////////////////
 
+import { useEffect }                  from "react";
 import type { ReactElement }          from "react";
-import { Stack, Group, Paper, Title, Text,
-         Badge, Switch }               from "@mantine/core";
-import { useMantineColorScheme,
-         useComputedColorScheme }     from "@mantine/core";
+import { Alert, Stack, Group, Paper, Title, Text,
+         Badge, Switch }              from "@mantine/core";
+import { useMantineColorScheme }      from "@mantine/core";
 import type { IPreferencesViewProps } from "./IPreferencesViewProps";
+import { usePreferences }             from "./PreferencesProvider";
+import { usePreference }              from "./usePreference";
+import { isTheme, writeCachedTheme }  from "./ThemeCache";
+import type { Theme }                 from "./ThemeCache";
 
 const sunIcon =
 (
@@ -35,8 +39,19 @@ const moonIcon =
 
 export function PreferencesView(props: IPreferencesViewProps): ReactElement
 {
-    const { setColorScheme } = useMantineColorScheme();
-    const computedScheme     = useComputedColorScheme("light");
+    const { setColorScheme }                  = useMantineColorScheme();
+    const { status }                          = usePreferences();
+    const [stored, setTheme, themeState]      = usePreference<string>("granite.theme");
+    const theme: Theme                        = isTheme(stored) ? stored : "light";
+
+    useEffect(() =>
+    {
+        if (status === "ready")
+        {
+            setColorScheme(theme);
+            writeCachedTheme(theme);
+        }
+    },[status,theme]);
 
     return (
         <Stack gap="lg" p="md" style={{ maxWidth: 520 }}>
@@ -52,15 +67,19 @@ export function PreferencesView(props: IPreferencesViewProps): ReactElement
             <Paper p="md" withBorder>
                 <Title order={4} mb="sm">Theme</Title>
                 <Switch
-                    checked={computedScheme === "dark"}
-                    onChange={() => setColorScheme(computedScheme === "dark" ? "light" : "dark")}
+                    checked={theme === "dark"}
+                    onChange={() => void setTheme(theme === "dark" ? "light" : "dark")}
+                    disabled={status !== "ready"}
                     size="lg"
                     color="dark.4"
                     onLabel={moonIcon}
                     offLabel={sunIcon}
-                    label={computedScheme === "dark" ? "Dark" : "Light"}
+                    label={theme === "dark" ? "Dark" : "Light"}
                 />
+                {themeState.error && <Alert color="red" mt="sm">{themeState.error}</Alert>}
             </Paper>
+
+            {props.children}
 
         </Stack>
     );

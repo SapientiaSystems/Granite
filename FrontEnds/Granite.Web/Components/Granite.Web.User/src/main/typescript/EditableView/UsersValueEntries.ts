@@ -13,6 +13,13 @@ export interface IValueEntry
 
 let nextEntryId: number = 1;
 
+const RESERVED_VALUE_PREFIXES: Array<string> = ["preferences.", "granite."];
+
+export function isReservedValueKey(key: string): boolean
+{
+    return RESERVED_VALUE_PREFIXES.some(prefix => key.startsWith(prefix));
+}
+
 export function createEntry(key: string = "", value: unknown = ""): IValueEntry
 {
     return { id: nextEntryId++, key, value };
