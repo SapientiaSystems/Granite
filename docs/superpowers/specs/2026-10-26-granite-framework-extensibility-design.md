@@ -91,8 +91,8 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 
 ### Shared role catalog
 - New type in `Granite.Foundation.Core`, e.g. `granite.foundation.core.security.ApplicationRolesManager`: list of role definitions (name, label, implied roles), `adminRole()` (always `ROLE_ADMIN`, always present), `defaultRole()`, and `expand(Set<String>)` (transitive closure).
-- `GraniteApplicationRoles` (Admin, Auditor, User; default User) lives beside it. An application defines its own (Poplar: in `Poplar.Foundation.Core`) and returns it from an overridable `applicationRoles()` `@Bean` on each of its host configurations that use the catalog (User, Session, FrontEndController; each logs the catalog role names once at startup).
-- Granite's concrete `Granite*ServerConfiguration` classes default `applicationRoles()` to `GraniteApplicationRoles`; applications override.
+- `GraniteApplicationRolesManagerSupplier` (a `Supplier<ApplicationRolesManager>`: Admin, Auditor, User; default User) lives beside it. An application defines its own (Poplar: in `Poplar.Foundation.Core`) and returns it from an overridable `applicationRoles()` `@Bean` on each of its host configurations that use the catalog (User, Session, FrontEndController; each logs the catalog role names once at startup).
+- Granite's concrete `Granite*ServerConfiguration` classes default `applicationRoles()` to `new GraniteApplicationRolesManagerSupplier().get()`; applications override.
 
 ### User service
 - Command side validates stored authorities: every role must be in the catalog (non-role authorities such as `SCOPE_*` are not storable), and the set is normalized by adding implied roles. Removal cascade (unchecking Reviewer also unchecks Planner and Approver) is a UI behaviour; the server only guarantees closure.
@@ -107,7 +107,7 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 
 ### FrontEndController
 - `AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndControllerService>` holds the executor, `ResponseCookieAdvice`, health import and the request-scoped service/controller beans built from `createService(GraniteFrontEndControllerContext)` and `createController(S)`. Client factories for User/Session are protected helpers; applications add their own.
-- `GraniteFrontEndControllerContext` bundles mapper, executor, the four Granite clients, `SessionRequestContext`, `SessionLoginSettings`, `ApplicationRoles`, preference definitions — so adding a Granite dependency later doesn't break application constructors.
+- `GraniteFrontEndControllerContext` bundles mapper, executor, the four Granite clients, `SessionRequestContext`, `SessionLoginSettings`, `ApplicationRolesManager`, preference definitions — so adding a Granite dependency later doesn't break application constructors.
 - `GraniteFrontEndControllerServiceController<S>` becomes generic; Granite's concrete controller is the Granite-application binding. Spring MVC picks up inherited `@PostMapping`s.
 - `GraniteFrontEndControllerConfiguration` (Granite application) extends the abstract base.
 - New Preferences pair: `getPreferencesOutput`/`handlePreferencesInput` (`/get-preferences-output`, `/handle-preferences-input`), always acting on the session's user (never a request `userId`). Output: values for declared keys (defaults filled in). Input: changed keys; undeclared keys or wrong types rejected.
