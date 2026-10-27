@@ -94,13 +94,13 @@ class GraniteFrontEndControllerConfigurationClientsTest
             .respond(
                 "login",
                 new LoginReply()
-                    .setSessionData(new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(600)).setAuthorities(Set.of("ROLE_ADMIN")))
+                    .setSessionData(new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(600)).setAuthorities(Set.of("ROLE_Admin")))
                     .setSessionHandle("the-handle")
                     .setSuccess(true))
             .respond(
                 "find-sessions-by-key",
                 new FindSessionsByKeyReply()
-                    .setSessions(List.of(new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(600)).setAuthorities(Set.of("ROLE_ADMIN"))))
+                    .setSessions(List.of(new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(600)).setAuthorities(Set.of("ROLE_Admin"))))
                     .setSuccess(true))
             .respond(
                 "find-users-by-key",

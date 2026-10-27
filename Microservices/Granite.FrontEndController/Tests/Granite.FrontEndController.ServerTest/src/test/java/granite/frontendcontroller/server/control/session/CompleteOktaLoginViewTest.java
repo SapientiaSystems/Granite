@@ -69,7 +69,7 @@ class CompleteOktaLoginViewTest
                                 .setSessionId(11L)
                                 .setUserId(7L)
                                 .setExpires(Instant.now().plusSeconds(3600))
-                                .setAuthorities(Set.of("ROLE_ADMIN")))));
+                                .setAuthorities(Set.of("ROLE_Admin")))));
 
         SessionOutput output = run(context,true);
 
@@ -82,7 +82,7 @@ class CompleteOktaLoginViewTest
         assertEquals("device-1",captor.getValue().getDeviceId());
         assertEquals("AUTHENTICATED",output.getStatus());
         assertEquals("alice@example.com",output.getUserName());
-        assertEquals(Set.of("ROLE_ADMIN"),output.getAuthorities());
+        assertEquals(Set.of("ROLE_Admin"),output.getAuthorities());
         assertEquals("/users",output.getReturnTo());
 
         List<String> cookies = context.getSetCookies();

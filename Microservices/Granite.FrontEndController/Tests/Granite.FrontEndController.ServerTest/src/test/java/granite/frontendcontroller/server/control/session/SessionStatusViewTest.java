@@ -74,7 +74,7 @@ class SessionStatusViewTest
                 .setSessionId(11L)
                 .setUserId(7L)
                 .setExpires(Instant.now().plusSeconds(600))
-                .setAuthorities(Set.of("ROLE_ADMIN","ROLE_AUDITOR"));
+                .setAuthorities(Set.of("ROLE_Admin","ROLE_Auditor"));
     }
 
     private SessionOutput
@@ -107,7 +107,7 @@ class SessionStatusViewTest
 
         assertEquals("AUTHENTICATED",output.getStatus());
         assertEquals("amy",output.getUserName());
-        assertEquals(Set.of("ROLE_ADMIN","ROLE_AUDITOR"),output.getAuthorities());
+        assertEquals(Set.of("ROLE_Admin","ROLE_Auditor"),output.getAuthorities());
         assertEquals("Session.Current",output.getSource());
         assertEquals("SessionView",output.getDestination());
 

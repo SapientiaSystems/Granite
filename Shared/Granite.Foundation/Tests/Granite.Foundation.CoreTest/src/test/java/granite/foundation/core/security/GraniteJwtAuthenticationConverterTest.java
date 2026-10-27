@@ -27,7 +27,7 @@ class GraniteJwtAuthenticationConverterTest
     principalNameIsSubject()
     {
         AbstractAuthenticationToken token =
-            new GraniteJwtAuthenticationConverter().convert(jwt("authorities",List.of("ROLE_USER")));
+            new GraniteJwtAuthenticationConverter().convert(jwt("authorities",List.of("ROLE_User")));
 
         assertEquals("1001",token.getName());
         assertTrue(token.isAuthenticated());
@@ -39,9 +39,9 @@ class GraniteJwtAuthenticationConverterTest
     {
         AbstractAuthenticationToken token =
             new GraniteJwtAuthenticationConverter()
-                .convert(jwt("authorities",List.of("ROLE_ADMIN","SCOPE_internal")));
+                .convert(jwt("authorities",List.of("ROLE_Admin","SCOPE_internal")));
 
-        assertEquals(Set.of("ROLE_ADMIN","SCOPE_internal"),names(token));
+        assertEquals(Set.of("ROLE_Admin","SCOPE_internal"),names(token));
     }
 
     @Test
@@ -50,9 +50,9 @@ class GraniteJwtAuthenticationConverterTest
     {
         GraniteJwtAuthenticationConverter subject = new GraniteJwtAuthenticationConverter();
 
-        assertTrue(names(subject.convert(jwt("other",List.of("ROLE_ADMIN")))).isEmpty());
-        assertTrue(names(subject.convert(jwt("authorities","ROLE_ADMIN"))).isEmpty());
-        assertEquals(Set.of("ROLE_USER"),names(subject.convert(jwt("authorities",List.of("ROLE_USER","",7)))));
+        assertTrue(names(subject.convert(jwt("other",List.of("ROLE_Admin")))).isEmpty());
+        assertTrue(names(subject.convert(jwt("authorities","ROLE_Admin"))).isEmpty());
+        assertEquals(Set.of("ROLE_User"),names(subject.convert(jwt("authorities",List.of("ROLE_User","",7)))));
     }
 
     @Test
@@ -60,9 +60,9 @@ class GraniteJwtAuthenticationConverterTest
     customClaimNameIsHonoured()
     {
         AbstractAuthenticationToken token =
-            new GraniteJwtAuthenticationConverter("roles").convert(jwt("roles",List.of("ROLE_AUDITOR")));
+            new GraniteJwtAuthenticationConverter("roles").convert(jwt("roles",List.of("ROLE_Auditor")));
 
-        assertEquals(Set.of("ROLE_AUDITOR"),names(token));
+        assertEquals(Set.of("ROLE_Auditor"),names(token));
     }
 
     private static Jwt

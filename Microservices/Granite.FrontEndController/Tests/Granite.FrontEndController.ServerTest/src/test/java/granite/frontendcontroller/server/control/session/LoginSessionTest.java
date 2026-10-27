@@ -53,7 +53,7 @@ class LoginSessionTest
                         .setSessionId(11L)
                         .setUserId(7L)
                         .setExpires(Instant.now().plusSeconds(600))
-                        .setAuthorities(Set.of("ROLE_ADMIN")))
+                        .setAuthorities(Set.of("ROLE_Admin")))
                 .setAccessToken("access-token-secret")
                 .setRefreshToken("refresh-token-secret")
                 .setSessionHandle(HANDLE);
@@ -91,7 +91,7 @@ class LoginSessionTest
 
         assertEquals("AUTHENTICATED",output.getStatus());
         assertEquals("amy",output.getUserName());
-        assertEquals(Set.of("ROLE_ADMIN"),output.getAuthorities());
+        assertEquals(Set.of("ROLE_Admin"),output.getAuthorities());
         assertEquals("Session.New",output.getSource());
         assertEquals("Login",output.getCommand().orElseThrow());
         assertEquals("LoginView",output.getDestination());

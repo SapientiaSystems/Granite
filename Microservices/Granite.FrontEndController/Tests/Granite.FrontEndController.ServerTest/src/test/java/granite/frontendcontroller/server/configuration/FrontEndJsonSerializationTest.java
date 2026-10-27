@@ -36,7 +36,7 @@ class FrontEndJsonSerializationTest
 {
     private static final String SAVE_JSON =
         "{\"input\":{\"userId\":7,\"source\":\"User.All\",\"command\":\"Save\",\"destination\":\"UsersEditableView\","
-            + "\"usersToCreate\":[{\"userName\":\"amy\",\"password\":\"pw\",\"authorities\":[\"ROLE_AUDITOR\"],"
+            + "\"usersToCreate\":[{\"userName\":\"amy\",\"password\":\"pw\",\"authorities\":[\"ROLE_Auditor\"],"
             + "\"values\":{\"theme\":\"dark\"}}]}}";
 
     private static final String LOGIN_JSON =
@@ -86,7 +86,7 @@ class FrontEndJsonSerializationTest
                                 new UserData()
                                     .setUserId(1L)
                                     .setUserName("amy")
-                                    .setAuthorities(Set.of("ROLE_AUDITOR"))))
+                                    .setAuthorities(Set.of("ROLE_Auditor"))))
                         .setFailureMessages(List.of("bad user")));
 
         String              json   = mapper.writeValueAsString(reply);
@@ -162,7 +162,7 @@ class FrontEndJsonSerializationTest
                     new SessionOutput()
                         .setStatus("AUTHENTICATED")
                         .setUserName("amy")
-                        .setAuthorities(Set.of("ROLE_USER"))
+                        .setAuthorities(Set.of("ROLE_User"))
                         .setPasswordEnabled(true)
                         .setRedirectUrl("https://okta/authorize"));
 
@@ -170,7 +170,7 @@ class FrontEndJsonSerializationTest
 
         assertEquals("AUTHENTICATED",actual.getStatus());
         assertEquals("amy",actual.getUserName());
-        assertEquals(Set.of("ROLE_USER"),actual.getAuthorities());
+        assertEquals(Set.of("ROLE_User"),actual.getAuthorities());
         assertTrue(actual.isPasswordEnabled());
         assertFalse(actual.isOktaEnabled());
         assertEquals("https://okta/authorize",actual.getRedirectUrl());
