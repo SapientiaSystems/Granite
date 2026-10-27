@@ -68,7 +68,10 @@ class UpdateUsersView
     {
         if (users == null || users.isEmpty())
             return CompletableFuture.completedFuture(null);
-for (CreateUserData user : users)            if (user.getValues() != null)                user.setValues(withoutReserved(user.getValues()));
+
+        for (CreateUserData user : users)
+            if (user.getValues() != null)
+                user.setValues(withoutReserved(user.getValues()));
 
         return
             commandClient
@@ -112,7 +115,6 @@ for (CreateUserData user : users)            if (user.getValues() != null)      
 
         return false;
     }
-
 
     protected void
     collectCreateFailures(CreateUsersReply reply,List<String> failures)

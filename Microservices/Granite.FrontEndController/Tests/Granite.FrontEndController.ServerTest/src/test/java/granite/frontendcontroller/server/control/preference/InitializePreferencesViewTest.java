@@ -119,6 +119,16 @@ class InitializePreferencesViewTest
 
     @Test
     public void
+    getNormalisesStoredBooleanText()
+        throws Exception
+    {
+        storedValues(Map.of("preferences.compact","TRUE"));
+
+        assertEquals(true,run(7L,null).getValues().get("compact"));
+    }
+
+    @Test
+    public void
     ignoresRequestUserId()
         throws Exception
     {

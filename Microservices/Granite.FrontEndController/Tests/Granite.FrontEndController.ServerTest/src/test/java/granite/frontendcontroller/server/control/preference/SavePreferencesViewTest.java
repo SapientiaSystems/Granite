@@ -37,7 +37,8 @@ class SavePreferencesViewTest
     private static final List<PreferenceDefinition> DEFINITIONS =
         List.of(
             PreferenceDefinition.enumeration("granite.theme",List.of("light","dark"),"light"),
-            PreferenceDefinition.bool("compact",false));
+            PreferenceDefinition.bool("compact",false),
+            PreferenceDefinition.number("size",10));
 
     private IUserQueryServiceClient   queryClient;
     private IUserCommandServiceClient commandClient;
@@ -71,7 +72,7 @@ class SavePreferencesViewTest
                         if (entry.getValue() == null)
                             stored.remove(entry.getKey());
                         else
-                            stored.put(entry.getKey(),entry.getValue());
+                            stored.put(entry.getKey(),entry.getValue() instanceof Boolean ? String.valueOf(entry.getValue()) : entry.getValue());
                     }
 
                     return CompletableFuture.completedFuture(new MergeUserValuesReply().setSuccess(true));
@@ -167,6 +168,34 @@ class SavePreferencesViewTest
         assertEquals(List.of("not authenticated"),output.getFailureMessages());
         Mockito.verifyNoInteractions(commandClient);
         Mockito.verifyNoInteractions(queryClient);
+    }
+
+    @Test
+    public void
+    booleanPreferenceSurvivesUserRoundTrip()
+        throws Exception
+    {
+        PreferencesOutput saved = run(7L,null,Map.of("compact",true,"size",25));
+
+        assertEquals("true",stored.get("preferences.compact"));
+        assertEquals(true,saved.getValues().get("compact"));
+        assertEquals(25,saved.getValues().get("size"));
+
+        PreferencesOutput off = run(7L,null,Map.of("compact",false));
+
+        assertEquals(false,off.getValues().get("compact"));
+        assertTrue(off.getFailureMessages().isEmpty());
+    }
+
+    @Test
+    public void
+    saveStillRequiresRealBoolean()
+        throws Exception
+    {
+        PreferencesOutput output = run(7L,null,Map.of("compact","true"));
+
+        assertEquals(1,output.getFailureMessages().size());
+        assertFalse(stored.containsKey("preferences.compact"));
     }
 
     @Test

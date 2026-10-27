@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.control.preference;
 
 import granite.frontendcontroller.server.application.PreferenceDefinition;
+import granite.frontendcontroller.server.application.PreferenceType;
 import granite.frontendcontroller.service.requestreply.PreferenceDefinitionData;
 import granite.frontendcontroller.service.requestreply.PreferencesOutput;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -89,7 +90,7 @@ class PreferencesAssembler
 
         for (PreferenceDefinition definition : definitions)
         {
-            Object value = stored.get(PREFIX + definition.getKey());
+            Object value = normalise(definition,stored.get(PREFIX + definition.getKey()));
 
             values.put(definition.getKey(),value != null && definition.isValid(value) ? value : definition.getDefaultValue());
         }
@@ -129,6 +130,21 @@ class PreferencesAssembler
                     .setAllowedValues(new ArrayList<>(definition.getAllowedValues())));
 
         return data;
+    }
+
+    private Object
+    normalise(PreferenceDefinition definition,Object stored)
+    {
+        if (definition.getType() == PreferenceType.BOOLEAN && stored instanceof String text)
+        {
+            if (text.equalsIgnoreCase("true"))
+                return Boolean.TRUE;
+
+            if (text.equalsIgnoreCase("false"))
+                return Boolean.FALSE;
+        }
+
+        return stored;
     }
 
     private PreferenceDefinition
