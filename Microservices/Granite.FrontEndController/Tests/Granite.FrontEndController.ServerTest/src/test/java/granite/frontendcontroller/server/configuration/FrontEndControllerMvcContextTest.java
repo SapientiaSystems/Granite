@@ -130,7 +130,7 @@ class FrontEndControllerMvcContextTest
         mvc
             .perform(asyncDispatch(started))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.output.roles[0].name").value("ROLE_Admin"));
+            .andExpect(jsonPath("$.output.roles[0].name").value("ROLE_ADMIN"));
     }
 }
 

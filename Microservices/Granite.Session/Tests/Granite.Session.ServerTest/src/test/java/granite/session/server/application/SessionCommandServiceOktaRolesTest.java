@@ -60,7 +60,7 @@ class SessionCommandServiceOktaRolesTest
     private static final String  SUB            = "00u1okta";
     private static final Long    USER_ID        = 42L;
     private static final Instant NOW            = Instant.parse("2026-10-24T12:00:00Z");
-    private static final String  APPROVER       = "ROLE_PromotionsApprover";
+    private static final String  APPROVER       = "ROLE_PROMOTIONS_APPROVER";
 
     private FakeOkta                        okta;
     private OktaSettings                    settings;

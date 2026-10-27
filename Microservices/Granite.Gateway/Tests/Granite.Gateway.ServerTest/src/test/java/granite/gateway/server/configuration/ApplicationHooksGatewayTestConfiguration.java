@@ -44,9 +44,9 @@ class ApplicationHooksGatewayTestConfiguration
         return
             exchanges
                 .pathMatchers(HttpMethod.POST,"/frontendcontroller-user-service/get-promotions-output")
-                    .hasAuthority("ROLE_PromotionsReviewer")
+                    .hasAuthority("ROLE_PROMOTIONS_REVIEWER")
                 .pathMatchers("/frontendcontroller-user-service/**")
-                    .hasAuthority("ROLE_PromotionsReviewer")
+                    .hasAuthority("ROLE_PROMOTIONS_REVIEWER")
                 .pathMatchers("/user-command-service/**")
                     .permitAll()
                 .pathMatchers("/session-command-service/resolve-session")

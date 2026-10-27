@@ -116,7 +116,7 @@ class GraniteJwtDecoderFactoryTest
         Jwt jwt = decoder.decode(sign(trusted,ISSUER,AUDIENCE,Duration.ofMinutes(5)));
 
         assertEquals("1001",jwt.getSubject());
-        assertEquals(List.of("ROLE_User"),jwt.getClaimAsStringList("authorities"));
+        assertEquals(List.of("ROLE_USER"),jwt.getClaimAsStringList("authorities"));
     }
 
     @Test
@@ -256,7 +256,7 @@ class GraniteJwtDecoderFactoryTest
                 .audience(audience)
                 .issueTime(Date.from(now.minus(Duration.ofMinutes(10))))
                 .expirationTime(Date.from(now.plus(lifetime)))
-                .claim("authorities",List.of("ROLE_User"))
+                .claim("authorities",List.of("ROLE_USER"))
                 .build();
         SignedJWT    jwt    =
             new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(keyId).build(),claims);

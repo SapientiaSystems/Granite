@@ -25,11 +25,11 @@ describe("FrontEndSessionService",() =>
 
     it("sends the password login input",async () =>
     {
-        const frontEnd = new FakeFrontEnd().respond(KEYS.login,() => sessionOutput(true,"alice",["ROLE_User"]));
+        const frontEnd = new FakeFrontEnd().respond(KEYS.login,() => sessionOutput(true,"alice",["ROLE_USER"]));
 
         const status = await serviceOver(frontEnd).login("alice","secret");
 
-        expect(status).toMatchObject({ authenticated: true, userName: "alice", authorities: ["ROLE_User"] });
+        expect(status).toMatchObject({ authenticated: true, userName: "alice", authorities: ["ROLE_USER"] });
         expect(frontEnd.calls[0].payload).toEqual(
             { userId: null, source: "Session.New", command: "Login", destination: "LoginView", userName: "alice", password: "secret" });
     });
@@ -70,7 +70,7 @@ describe("FrontEndSessionService",() =>
 
     it("reads the current session",async () =>
     {
-        const frontEnd = new FakeFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_Admin"]));
+        const frontEnd = new FakeFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_ADMIN"]));
 
         expect(await serviceOver(frontEnd).getCurrent()).toMatchObject({ authenticated: true, userName: "alice" });
         expect(frontEnd.calls[0].payload).toMatchObject({ source: "Session.Current", destination: "SessionView" });

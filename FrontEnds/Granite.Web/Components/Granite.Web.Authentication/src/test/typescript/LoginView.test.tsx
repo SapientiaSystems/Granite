@@ -63,7 +63,7 @@ describe("RequireAuthentication and LoginView",() =>
 
     it("restores an existing session before rendering the protected route",async () =>
     {
-        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_User"]));
+        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_USER"]));
 
         renderWithAuthentication(authenticationFor(frontEnd),"/users",routes);
 
@@ -73,7 +73,7 @@ describe("RequireAuthentication and LoginView",() =>
 
     it("leaves the login view when already signed in",async () =>
     {
-        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_User"]));
+        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_USER"]));
 
         renderWithAuthentication(authenticationFor(frontEnd),"/login",
             <Routes>

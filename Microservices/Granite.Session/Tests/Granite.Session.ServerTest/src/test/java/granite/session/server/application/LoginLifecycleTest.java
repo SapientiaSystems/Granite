@@ -58,7 +58,7 @@ class LoginLifecycleTest
     private static final String   DEVICE_ID     = "device-A";
     private static final Duration MAX_LIFETIME  = Duration.ofHours(24);
     private static final Instant  NOW           = Instant.parse("2026-10-24T12:00:00Z");
-    private static final Set<String> LOGIN_ROLES = Set.of("ROLE_User");
+    private static final Set<String> LOGIN_ROLES = Set.of("ROLE_USER");
 
     private ISessionRepository        repository;
     private IJwtTokenService          jwtTokenService;
@@ -107,7 +107,7 @@ class LoginLifecycleTest
         Session old =
             session(400L,USER_ID,DEVICE_ID,NOW.minusSeconds(60))
                 .setContinuityId(cid)
-                .setAuthorities(Set.of("ROLE_Admin"))
+                .setAuthorities(Set.of("ROLE_ADMIN"))
                 .setValue("cart","3");
 
         onDevice(old);
@@ -140,7 +140,7 @@ class LoginLifecycleTest
         Session other =
             session(401L,OTHER_USER_ID,DEVICE_ID,NOW.minusSeconds(60))
                 .setContinuityId(cid)
-                .setAuthorities(Set.of("ROLE_Admin"))
+                .setAuthorities(Set.of("ROLE_ADMIN"))
                 .setValue("secret","v");
 
         onDevice(other);
@@ -169,7 +169,7 @@ class LoginLifecycleTest
         Session newer  =
             session(411L,USER_ID,"device-C",NOW.minus(Duration.ofMinutes(5)))
                 .setContinuityId(cid)
-                .setAuthorities(Set.of("ROLE_Admin"))
+                .setAuthorities(Set.of("ROLE_ADMIN"))
                 .setValue("v","new");
 
         ofUser(older,newer);
@@ -232,7 +232,7 @@ class LoginLifecycleTest
     {
         Session old =
             session(430L,USER_ID,DEVICE_ID,NOW.minusSeconds(60))
-                .setAuthorities(Set.of("ROLE_Admin","ROLE_Auditor"));
+                .setAuthorities(Set.of("ROLE_ADMIN","ROLE_AUDITOR"));
 
         onDevice(old);
 

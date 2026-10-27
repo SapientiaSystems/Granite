@@ -148,7 +148,7 @@ export function scriptedFrontEnd(): FakeFrontEnd
     return new FakeFrontEnd()
         .respond(KEYS.methods,() => methodsOutput(true,false))
         .respond(KEYS.current,() => sessionOutput(false))
-        .respond(KEYS.login,(payload) => payload.password === "secret" ? sessionOutput(true,String(payload.userName),["ROLE_User"]) : sessionOutput(false))
+        .respond(KEYS.login,(payload) => payload.password === "secret" ? sessionOutput(true,String(payload.userName),["ROLE_USER"]) : sessionOutput(false))
         .respond(KEYS.logout,() => logoutOutput(true));
 }
 

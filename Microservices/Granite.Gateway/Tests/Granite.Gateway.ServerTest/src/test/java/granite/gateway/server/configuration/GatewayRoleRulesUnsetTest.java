@@ -63,7 +63,7 @@ class GatewayRoleRulesUnsetTest
     roleUserCannotAdministerUsers()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_User"));
+        String token = backend.sign(List.of("ROLE_USER"));
 
         assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
         assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-users-input",token);
@@ -75,8 +75,8 @@ class GatewayRoleRulesUnsetTest
     unmatchedPathsAreAdminOnly()
         throws Exception
     {
-        assertForbidden(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_User")));
-        assertAllowed(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_Admin")));
+        assertForbidden(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_USER")));
+        assertAllowed(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_ADMIN")));
     }
 
     @Test
@@ -84,7 +84,7 @@ class GatewayRoleRulesUnsetTest
     auditorIsNotGrantedReaderAccess()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_Auditor"));
+        String token = backend.sign(List.of("ROLE_AUDITOR"));
 
         assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertForbidden(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
@@ -95,7 +95,7 @@ class GatewayRoleRulesUnsetTest
     adminKeepsReaderAndAdministrationAccess()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_Admin"));
+        String token = backend.sign(List.of("ROLE_ADMIN"));
 
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);

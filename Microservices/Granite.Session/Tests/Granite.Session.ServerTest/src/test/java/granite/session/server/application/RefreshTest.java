@@ -100,7 +100,7 @@ class RefreshTest
         Mockito
             .when(jwtTokenService.mint(Mockito.any(Session.class)))
             .thenReturn(NEW_JWT);
-        stubUser(List.of(new UserData().setUserId(USER_ID).setAuthorities(Set.of("ROLE_User"))));
+        stubUser(List.of(new UserData().setUserId(USER_ID).setAuthorities(Set.of("ROLE_USER"))));
     }
 
     @Test
@@ -110,9 +110,9 @@ class RefreshTest
         Session existing =
             stubCurrent(
                 session(NOW.minus(Duration.ofHours(1)),NOW.plus(Duration.ofMinutes(5)))
-                    .setAuthorities(Set.of("ROLE_User")));
+                    .setAuthorities(Set.of("ROLE_USER")));
 
-        stubUser(List.of(new UserData().setUserId(USER_ID).setAuthorities(Set.of("ROLE_Admin"))));
+        stubUser(List.of(new UserData().setUserId(USER_ID).setAuthorities(Set.of("ROLE_ADMIN"))));
 
         RefreshReply reply = refresh(REFRESH_TOKEN);
 
@@ -121,8 +121,8 @@ class RefreshTest
         ArgumentCaptor<Session> mintCaptor = ArgumentCaptor.forClass(Session.class);
 
         Mockito.verify(jwtTokenService).mint(mintCaptor.capture());
-        assertEquals(Set.of("ROLE_Admin"),mintCaptor.getValue().getAuthorities());
-        assertEquals(Set.of("ROLE_Admin"),existing.getAuthorities());
+        assertEquals(Set.of("ROLE_ADMIN"),mintCaptor.getValue().getAuthorities());
+        assertEquals(Set.of("ROLE_ADMIN"),existing.getAuthorities());
     }
 
     @Test

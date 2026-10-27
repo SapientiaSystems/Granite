@@ -72,7 +72,7 @@ class UserCommandServiceRolesTest
         CreateUserReply reply = create(Set.of(APPROVER));
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(Set.of(APPROVER,REVIEWER,"ROLE_User"),reply.getCreatedUser().getAuthorities());
+        assertEquals(Set.of(APPROVER,REVIEWER,"ROLE_USER"),reply.getCreatedUser().getAuthorities());
     }
 
     @Test
@@ -121,7 +121,7 @@ class UserCommandServiceRolesTest
         UpdateUserReply reply = update(Set.of(REVIEWER,APPROVER));
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(Set.of(APPROVER,REVIEWER,"ROLE_User"),stored.getAuthorities());
+        assertEquals(Set.of(APPROVER,REVIEWER,"ROLE_USER"),stored.getAuthorities());
     }
 
     @Test
@@ -133,7 +133,7 @@ class UserCommandServiceRolesTest
         UpdateUserReply reply = update(Set.of("ROLE_Legacy",REVIEWER));
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(Set.of("ROLE_Legacy",REVIEWER,"ROLE_User"),stored.getAuthorities());
+        assertEquals(Set.of("ROLE_Legacy",REVIEWER,"ROLE_USER"),stored.getAuthorities());
     }
 
     @Test
@@ -181,7 +181,7 @@ class UserCommandServiceRolesTest
             ApplicationRoles roles = context.getBean(ApplicationRoles.class);
 
             assertTrue(roles.isRole(APPROVER));
-            assertTrue(roles.isRole("ROLE_Admin"));
+            assertTrue(roles.isRole("ROLE_ADMIN"));
         }
     }
 

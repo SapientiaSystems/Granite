@@ -23,15 +23,15 @@ class OktaRolesTest
     private static final ApplicationRoles ROLES =
         new ApplicationRoles(
             List.of(
-                new RoleDefinition("ROLE_Auditor","Auditor",Set.of()),
-                new RoleDefinition("ROLE_User","User",Set.of()),
-                new RoleDefinition("ROLE_PromotionsApprover","Promotions Approver",Set.of("ROLE_Auditor","ROLE_User"))),
-            "ROLE_User");
+                new RoleDefinition("ROLE_AUDITOR","Auditor",Set.of()),
+                new RoleDefinition("ROLE_USER","User",Set.of()),
+                new RoleDefinition("ROLE_PROMOTIONS_APPROVER","Promotions Approver",Set.of("ROLE_AUDITOR","ROLE_USER"))),
+            "ROLE_USER");
 
     private static final Map<String,String> MAPPING =
         Map.of(
-            "GC-Approvers","ROLE_PromotionsApprover",
-            "GC-Admins","ROLE_Admin",
+            "GC-Approvers","ROLE_PROMOTIONS_APPROVER",
+            "GC-Admins","ROLE_ADMIN",
             "GC-Bogus","ROLE_Nope");
 
     @Test
@@ -49,7 +49,7 @@ class OktaRolesTest
     mappedGroupsExpand()
     {
         assertEquals(
-            Optional.of(Set.of("ROLE_PromotionsApprover","ROLE_Auditor","ROLE_User")),
+            Optional.of(Set.of("ROLE_PROMOTIONS_APPROVER","ROLE_AUDITOR","ROLE_USER")),
             subject(OktaUnmappedGroups.DEFAULT_ROLE).rolesFor(Set.of("GC-Approvers","Everyone")));
     }
 
@@ -58,10 +58,10 @@ class OktaRolesTest
     unmappedFallsBackToDefault()
     {
         assertEquals(
-            Optional.of(Set.of("ROLE_User")),
+            Optional.of(Set.of("ROLE_USER")),
             subject(OktaUnmappedGroups.DEFAULT_ROLE).rolesFor(Set.of("Everyone")));
         assertEquals(
-            Optional.of(Set.of("ROLE_User")),
+            Optional.of(Set.of("ROLE_USER")),
             subject(OktaUnmappedGroups.DEFAULT_ROLE).rolesFor(null));
     }
 
@@ -78,7 +78,7 @@ class OktaRolesTest
     nonCatalogMappingIgnored()
     {
         assertEquals(
-            Optional.of(Set.of("ROLE_User")),
+            Optional.of(Set.of("ROLE_USER")),
             subject(OktaUnmappedGroups.DEFAULT_ROLE).rolesFor(Set.of("GC-Bogus")));
         assertEquals(Optional.empty(),subject(OktaUnmappedGroups.REFUSE).rolesFor(Set.of("GC-Bogus")));
     }

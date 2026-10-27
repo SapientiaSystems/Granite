@@ -36,7 +36,7 @@ class FrontEndJsonSerializationTest
 {
     private static final String SAVE_JSON =
         "{\"input\":{\"userId\":7,\"source\":\"User.All\",\"command\":\"Save\",\"destination\":\"UsersEditableView\","
-            + "\"usersToCreate\":[{\"userName\":\"amy\",\"password\":\"pw\",\"authorities\":[\"ROLE_Auditor\"],"
+            + "\"usersToCreate\":[{\"userName\":\"amy\",\"password\":\"pw\",\"authorities\":[\"ROLE_AUDITOR\"],"
             + "\"values\":{\"theme\":\"dark\"}}]}}";
 
     private static final String LOGIN_JSON =
@@ -86,7 +86,7 @@ class FrontEndJsonSerializationTest
                                 new UserData()
                                     .setUserId(1L)
                                     .setUserName("amy")
-                                    .setAuthorities(Set.of("ROLE_Auditor"))))
+                                    .setAuthorities(Set.of("ROLE_AUDITOR"))))
                         .setFailureMessages(List.of("bad user")));
 
         String              json   = mapper.writeValueAsString(reply);
@@ -108,14 +108,14 @@ class FrontEndJsonSerializationTest
                 .setSuccess(true)
                 .setOutput(
                     new UsersOutput()
-                        .setRoles(List.of(new RoleData().setName("ROLE_Manager").setLabel("Manager").setImpliedRoles(List.of("ROLE_Clerk")))));
+                        .setRoles(List.of(new RoleData().setName("ROLE_MANAGER").setLabel("Manager").setImpliedRoles(List.of("ROLE_CLERK")))));
 
         String              json   = mapper.writeValueAsString(reply);
         GetUsersOutputReply actual = mapper.readValue(json,GetUsersOutputReply.class);
 
-        assertTrue(json.contains("\"roles\":[{\"name\":\"ROLE_Manager\",\"label\":\"Manager\",\"impliedRoles\":[\"ROLE_Clerk\"]}]"),json);
-        assertEquals("ROLE_Manager",actual.getOutput().getRoles().get(0).getName());
-        assertEquals(List.of("ROLE_Clerk"),actual.getOutput().getRoles().get(0).getImpliedRoles());
+        assertTrue(json.contains("\"roles\":[{\"name\":\"ROLE_MANAGER\",\"label\":\"Manager\",\"impliedRoles\":[\"ROLE_CLERK\"]}]"),json);
+        assertEquals("ROLE_MANAGER",actual.getOutput().getRoles().get(0).getName());
+        assertEquals(List.of("ROLE_CLERK"),actual.getOutput().getRoles().get(0).getImpliedRoles());
     }
 
     @Test
@@ -162,7 +162,7 @@ class FrontEndJsonSerializationTest
                     new SessionOutput()
                         .setStatus("AUTHENTICATED")
                         .setUserName("amy")
-                        .setAuthorities(Set.of("ROLE_User"))
+                        .setAuthorities(Set.of("ROLE_USER"))
                         .setPasswordEnabled(true)
                         .setRedirectUrl("https://okta/authorize"));
 
@@ -170,7 +170,7 @@ class FrontEndJsonSerializationTest
 
         assertEquals("AUTHENTICATED",actual.getStatus());
         assertEquals("amy",actual.getUserName());
-        assertEquals(Set.of("ROLE_User"),actual.getAuthorities());
+        assertEquals(Set.of("ROLE_USER"),actual.getAuthorities());
         assertTrue(actual.isPasswordEnabled());
         assertFalse(actual.isOktaEnabled());
         assertEquals("https://okta/authorize",actual.getRedirectUrl());

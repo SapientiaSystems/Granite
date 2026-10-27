@@ -261,7 +261,7 @@ class JwtTokenServiceTest
         throws ParseException
     {
         JwtTokenService target      = newService();
-        Set<String>     authorities = new LinkedHashSet<>(List.of("ROLE_User","ROLE_Admin"));
+        Set<String>     authorities = new LinkedHashSet<>(List.of("ROLE_USER","ROLE_ADMIN"));
         Session         session     =
             newSession(1001L,2002L,"device-A").setAuthorities(authorities);
         String          token       = target.mint(session);
@@ -269,7 +269,7 @@ class JwtTokenServiceTest
         List<String>    actual      = claims.getStringListClaim("authorities");
 
         assertNotNull(actual);
-        assertEquals(List.of("ROLE_User","ROLE_Admin"),actual);
+        assertEquals(List.of("ROLE_USER","ROLE_ADMIN"),actual);
     }
 
     @Test
@@ -278,7 +278,7 @@ class JwtTokenServiceTest
         throws JwtVerificationException
     {
         JwtTokenService       target      = newService();
-        Set<String>           authorities = new LinkedHashSet<>(List.of("ROLE_User","ROLE_Admin"));
+        Set<String>           authorities = new LinkedHashSet<>(List.of("ROLE_USER","ROLE_ADMIN"));
         Session               session     =
             newSession(1001L,2002L,"device-A").setAuthorities(authorities);
         String                token       = target.mint(session);

@@ -94,9 +94,9 @@ Downstream application systems reuse the gateway by depending on `granite-gatewa
 | `routeLocator(RouteLocatorBuilder,Environment)` → `configureRoutes(Builder,Environment)` | adds the seven Granite routes above |
 | `addRoute(Builder,id,pathPattern,hostProperty,Environment)` | helper: one route whose URI comes from the required property `hostProperty` |
 | `securityWebFilterChain(ServerHttpSecurity,ReactiveJwtDecoder,GraniteJwtAuthenticationConverter,ISessionResolver,Environment)` | reactive JWT resource server with the cookie path (see "Browser cookies"). First rule: `denyAll` on `/session-command-service/resolve-session`, `/session-command-service/start-okta-login` and `/session-command-service/complete-okta-login`, so no external caller reaches them through the direct Session route (Session lists them as public because the Gateway resolver and the FEC call them before there is a session; the FEC is the only entry for Okta login) (403 when authenticated, 401 when not; the Gateway's own resolver calls Session directly, not through the chain). `OPTIONS` and `getPublicExchangeMatcher(Environment)` are public. `getAuthenticatedExchangeMatcher(Environment)` then requires only authentication. Then come the `configureAuthorization(...)` rules, then `anyExchange().authenticated()` |
-| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | `final` template, always applied: Granite's users-reader rules, Granite's admin-only paths, then `configureApplicationAuthorization(...)`, then the `ROLE_Admin` catch-all. Not overridable; applications extend through the hooks below |
-| `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` | hook: application rules, evaluated after Granite's users-reader rules and before the `ROLE_Admin` catch-all; default declares none |
-| `getUsersReaderAuthorities(Environment)` | hook: authorities allowed on Granite's users-reader rules; default `ROLE_Admin`, `SCOPE_internal` |
+| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | `final` template, always applied: Granite's users-reader rules, Granite's admin-only paths, then `configureApplicationAuthorization(...)`, then the `ROLE_ADMIN` catch-all. Not overridable; applications extend through the hooks below |
+| `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` | hook: application rules, evaluated after Granite's users-reader rules and before the `ROLE_ADMIN` catch-all; default declares none |
+| `getUsersReaderAuthorities(Environment)` | hook: authorities allowed on Granite's users-reader rules; default `ROLE_ADMIN`, `SCOPE_internal` |
 | `configureApplicationRoutes(Builder,Environment)` | hook: called after Granite's routes in every profile, including `production`; default adds none |
 | `getPublicPathPatterns(Environment)` | hook: paths reachable without a token: `/health/**`, Session `login`, `refresh`, the static app (`/`, `/index.html`, `/config.js`, `/favicon.ico`, `/assets/**`), plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production` |
 | `getPublicExchangeMatcher(Environment)` | hook: the public paths OR `PublicFrontEndInputMatcher` (the `LoginView` FEC inputs) |
@@ -136,11 +136,11 @@ Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthori
 | `/user-query-service/**` | `getUsersReaderAuthorities()` |
 | `POST /session-command-service/logout` | `getUsersReaderAuthorities()` |
 | `/session-query-service/**` | `getUsersReaderAuthorities()` |
-| `POST ./handle-users-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/outbox-service/**` | `ROLE_Admin` |
+| `POST ./handle-users-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/outbox-service/**` | `ROLE_ADMIN` |
 | application rules from `configureApplicationAuthorization` | as declared |
-| `/**` (catch-all, so everything else) | `ROLE_Admin` |
+| `/**` (catch-all, so everything else) | `ROLE_ADMIN` |
 
-`GraniteRoleRulesGatewayServerConfiguration` (`HostConfiguration` extends it) is the Granite application: when `granite.gateway.authorization.role-rules.enabled=true` its `getUsersReaderAuthorities(Environment)` returns `ROLE_Admin`, `ROLE_Auditor`, `SCOPE_internal`; otherwise the base default (`ROLE_Admin`, `SCOPE_internal`). That is the flag's only effect. It is `true` in the ServiceHost `local` and `development` profiles and unset in `test` and `production`, where `ROLE_Auditor` therefore gets 403 on the reader paths. Granite core knows only `ROLE_Admin`; `ROLE_Auditor` belongs to the Granite application, so a base configuration with `ROLE_Auditor` gets 403 on those paths.
+`GraniteRoleRulesGatewayServerConfiguration` (`HostConfiguration` extends it) is the Granite application: when `granite.gateway.authorization.role-rules.enabled=true` its `getUsersReaderAuthorities(Environment)` returns `ROLE_ADMIN`, `ROLE_AUDITOR`, `SCOPE_internal`; otherwise the base default (`ROLE_ADMIN`, `SCOPE_internal`). That is the flag's only effect. It is `true` in the ServiceHost `local` and `development` profiles and unset in `test` and `production`, where `ROLE_AUDITOR` therefore gets 403 on the reader paths. Granite core knows only `ROLE_ADMIN`; `ROLE_AUDITOR` belongs to the Granite application, so a base configuration with `ROLE_AUDITOR` gets 403 on those paths.
 
 The Granite-owned admin-only paths are registered before the application hook, so a broad application rule such as `/frontendcontroller-user-service/**` or a `permitAll` on `/user-command-service/**` cannot widen access to them. `configureAuthorization` is `final`, so an application cannot drop or reorder the core rules; it adds rules only through the hooks.
 
@@ -156,9 +156,9 @@ configureApplicationAuthorization(ServerHttpSecurity.AuthorizeExchangeSpec excha
     return
         exchanges
             .pathMatchers(HttpMethod.POST,"/frontendcontroller-user-service/get-promotions-output")
-                .hasAnyAuthority("ROLE_PromotionsReviewer","ROLE_Admin")
+                .hasAnyAuthority("ROLE_PROMOTIONS_REVIEWER","ROLE_ADMIN")
             .pathMatchers("/promotion-query-service/**")
-                .hasAnyAuthority("ROLE_Admin","SCOPE_internal");
+                .hasAnyAuthority("ROLE_ADMIN","SCOPE_internal");
 }
 ```
 

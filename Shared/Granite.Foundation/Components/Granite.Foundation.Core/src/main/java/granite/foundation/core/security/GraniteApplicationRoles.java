@@ -10,8 +10,8 @@ import java.util.Set;
 public
 class GraniteApplicationRoles
 {
-    public static final String AUDITOR = "ROLE_Auditor";
-    public static final String USER    = "ROLE_User";
+    public static final String AUDITOR = "ROLE_AUDITOR";
+    public static final String USER    = "ROLE_USER";
 
     private
     GraniteApplicationRoles() {}

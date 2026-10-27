@@ -204,7 +204,7 @@ class LoginTest
     public void
     loginWithValidPasswordFlowsAuthoritiesThroughToSession()
     {
-        Set<String> authorities = Set.of("ROLE_User","ROLE_Admin");
+        Set<String> authorities = Set.of("ROLE_USER","ROLE_ADMIN");
 
         stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,authorities);
 
@@ -294,7 +294,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -322,7 +322,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -369,7 +369,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -435,7 +435,7 @@ class LoginTest
     {
         SessionCommandService gated = gatedSubject();
 
-        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_User"));
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_USER"));
 
         LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
 
@@ -451,7 +451,7 @@ class LoginTest
         SessionCommandService gated = gatedSubject();
 
         stubAuthenticate(
-            USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_User","ROLE_Auditor"));
+            USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_USER","ROLE_AUDITOR"));
 
         LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
 
@@ -488,12 +488,12 @@ class LoginTest
                 .setDeviceId(DEVICE_ID)
                 .setExpires(NOW.plus(Duration.ofMinutes(10)))
                 .setAccessToken(existingToken)
-                .setAuthorities(Set.of("ROLE_Admin"));
+                .setAuthorities(Set.of("ROLE_ADMIN"));
 
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_Auditor"));
+        stubUser(Set.of("ROLE_AUDITOR"));
 
         LoginReply reply =
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
@@ -503,7 +503,7 @@ class LoginTest
         ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
 
         Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
-        assertEquals(Set.of("ROLE_Auditor"),captor.getValue().getAuthorities());
+        assertEquals(Set.of("ROLE_AUDITOR"),captor.getValue().getAuthorities());
     }
 
     @Test
@@ -518,12 +518,12 @@ class LoginTest
                 .setDeviceId(DEVICE_ID)
                 .setExpires(NOW.plus(Duration.ofMinutes(10)))
                 .setAccessToken(existingToken)
-                .setAuthorities(Set.of("ROLE_Admin"));
+                .setAuthorities(Set.of("ROLE_ADMIN"));
 
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         LoginReply reply =
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
@@ -546,7 +546,7 @@ class LoginTest
                 userQueryServiceClient,
                 Mockito.mock(IOktaClient.class),
                 new OktaSettings(),
-                new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin","ROLE_Auditor")),
+                new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 Duration.ofHours(24),
@@ -603,7 +603,7 @@ class LoginTest
         boolean        valid,
         Long           userId)
     {
-        stubAuthenticate(userName,credential,kind,valid,userId,Set.of("ROLE_User"));
+        stubAuthenticate(userName,credential,kind,valid,userId,Set.of("ROLE_USER"));
     }
 
     private void

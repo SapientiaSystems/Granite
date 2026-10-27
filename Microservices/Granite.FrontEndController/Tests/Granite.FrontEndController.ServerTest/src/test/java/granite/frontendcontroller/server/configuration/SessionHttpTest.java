@@ -133,7 +133,7 @@ class SessionHttpTest
             "login",
             new LoginReply()
                 .setSessionData(
-                    new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(1800)).setAuthorities(Set.of("ROLE_Admin")))
+                    new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(1800)).setAuthorities(Set.of("ROLE_ADMIN")))
                 .setAccessToken("access-token-secret")
                 .setRefreshToken("refresh-token-secret")
                 .setSessionHandle(HANDLE)
@@ -230,7 +230,7 @@ class SessionHttpTest
             "complete-okta-login",
             new CompleteOktaLoginReply()
                 .setSessionData(
-                    new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(1800)).setAuthorities(Set.of("ROLE_Admin")))
+                    new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(1800)).setAuthorities(Set.of("ROLE_ADMIN")))
                 .setSessionHandle(HANDLE)
                 .setUserName("alice")
                 .setReturnTo("/users")

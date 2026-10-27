@@ -62,19 +62,19 @@ class AuthorityRenamerTest
 
     @Test
     public void
-    renamesLegacyValues()
+    renamesMixedCaseToUpper()
     {
-        String userName = create("ROLE_ADMIN","ROLE_USER");
+        String userName = create("ROLE_Admin","ROLE_User");
 
         assertEquals(1,renamer(GraniteApplicationRoles.create()).rename());
-        assertEquals(Set.of("ROLE_Admin","ROLE_User"),authorities(userName));
+        assertEquals(Set.of("ROLE_ADMIN","ROLE_USER"),authorities(userName));
     }
 
     @Test
     public void
     isIdempotent()
     {
-        create("ROLE_ADMIN","ROLE_USER");
+        create("ROLE_Admin","ROLE_User");
 
         AuthorityRenamer renamer = renamer(GraniteApplicationRoles.create());
 
@@ -109,7 +109,7 @@ class AuthorityRenamerTest
             new AuthorityRenamer(
                 context.getBeanProvider(IUserRepository.class),
                 context.getBeanProvider(ISpringUnitOfWorkManager.class),
-                Map.of("ROLE_ADMIN","ROLE_Admin","ROLE_AUDITOR","ROLE_Auditor","ROLE_USER","ROLE_User"),
+                Map.of("ROLE_Admin","ROLE_ADMIN","ROLE_Auditor","ROLE_AUDITOR","ROLE_User","ROLE_USER"),
                 roles);
     }
 

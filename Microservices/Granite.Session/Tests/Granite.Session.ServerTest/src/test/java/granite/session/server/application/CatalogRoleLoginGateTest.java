@@ -23,8 +23,8 @@ class CatalogRoleLoginGateTest
     public void
     permitsCatalogRole()
     {
-        assertTrue(gate.permits(Set.of("ROLE_User")));
-        assertTrue(gate.permits(Set.of("SCOPE_internal","ROLE_Admin")));
+        assertTrue(gate.permits(Set.of("ROLE_USER")));
+        assertTrue(gate.permits(Set.of("SCOPE_internal","ROLE_ADMIN")));
     }
 
     @Test
@@ -34,7 +34,7 @@ class CatalogRoleLoginGateTest
         assertFalse(gate.permits(Set.of()));
         assertFalse(gate.permits(null));
         assertFalse(gate.permits(Set.of("SCOPE_internal")));
-        assertFalse(gate.permits(Set.of("ROLE_USER")));
+        assertFalse(gate.permits(Set.of("ROLE_User")));
     }
 }
 

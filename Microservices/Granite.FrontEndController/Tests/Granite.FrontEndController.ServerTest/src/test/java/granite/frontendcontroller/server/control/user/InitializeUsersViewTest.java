@@ -49,7 +49,7 @@ class InitializeUsersViewTest
                 .get();
 
         assertEquals(2,output.getUsers().size());
-        assertEquals(List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),output.getRoles().stream().map(role -> role.getName()).toList());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),output.getRoles().stream().map(role -> role.getName()).toList());
         assertEquals("Admin",output.getRoles().get(0).getLabel());
         assertEquals(List.of(),output.getRoles().get(0).getImpliedRoles());
         assertTrue(output.getFailureMessages().isEmpty());

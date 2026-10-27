@@ -17,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public
 class ApplicationRolesTest
 {
-    private static final String REVIEWER = "ROLE_PromotionsReviewer";
-    private static final String PLANNER  = "ROLE_PromotionsPlanner";
-    private static final String APPROVER = "ROLE_PromotionsApprover";
+    private static final String REVIEWER = "ROLE_PROMOTIONS_REVIEWER";
+    private static final String PLANNER  = "ROLE_PROMOTIONS_PLANNER";
+    private static final String APPROVER = "ROLE_PROMOTIONS_APPROVER";
 
     @Test
     public void
@@ -92,6 +92,19 @@ class ApplicationRolesTest
 
     @Test
     public void
+    rejectsNonUpperSnakeName()
+    {
+        for (String name : List.of("ROLE_PromotionsReviewer","ROLE_promotions","ADMIN"))
+            assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ApplicationRoles(
+                        List.of(new RoleDefinition(name,"Bad",Set.of())),
+                        name));
+    }
+
+    @Test
+    public void
     rejectsImplyingAdmin()
     {
         assertThrows(
@@ -154,10 +167,10 @@ class ApplicationRolesTest
         ApplicationRoles subject = GraniteApplicationRoles.create();
 
         assertEquals(
-            List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),
+            List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),
             subject.getRoles().stream().map(RoleDefinition::getName).toList());
-        assertEquals(List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),subject.getRoleNames());
-        assertEquals("ROLE_User",subject.getDefaultRole());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),subject.getRoleNames());
+        assertEquals("ROLE_USER",subject.getDefaultRole());
     }
 
     private ApplicationRoles

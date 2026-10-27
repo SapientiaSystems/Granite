@@ -13,7 +13,7 @@ The first consumer is Poplar (`C:\Development\Poplar`), whose FrontEndController
 
 - An application's Gateway, FrontEndController, User and Session hosts are thin subclasses of Granite base configurations.
 - An application's FEC service, controller and TS client **inherit** Granite's (Session, Users, Preferences operations) and add their own operations.
-- Applications define their own roles, role hierarchy and default role; Granite core owns only `ROLE_Admin`.
+- Applications define their own roles, role hierarchy and default role; Granite core owns only `ROLE_ADMIN`.
 - Okta group → role mapping with an application-selected mode (on creation / every login).
 - Server-side, per-user preferences stored in the User `values` map; Granite owns theme, applications add their own keys and UI sections.
 - Granite's UI pieces are consumable by an application that owns its own frame (menu bar, routes).
@@ -30,7 +30,7 @@ The first consumer is Poplar (`C:\Development\Poplar`), whose FrontEndController
 ## Anti-goals
 
 - An application having to copy Granite's security chain, session handling, cookie/CSRF logic or login code.
-- An application being able to accidentally remove Granite's core rules (session paths, `ROLE_Admin` catch-all).
+- An application being able to accidentally remove Granite's core rules (session paths, `ROLE_ADMIN` catch-all).
 - Clients writing arbitrary keys into a user's `values` map.
 - A stored authority set that violates the role hierarchy.
 
@@ -67,13 +67,13 @@ public class PoplarFrontEndControllerConfiguration
 TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServiceClient` — one client for Session, Users, Preferences and the application's operations.
 
 ### Roles
-- Granite core: `ROLE_Admin` only (renamed from `ROLE_ADMIN`).
-- Granite application: `ROLE_Auditor`, `ROLE_User` (renamed from `ROLE_AUDITOR`, `ROLE_USER`); `ROLE_User` is its default role. These are not inherited by other applications.
-- Mixed case role names (`ROLE_PromotionsReviewer`).
+- Granite core: `ROLE_ADMIN` only.
+- Granite application: `ROLE_AUDITOR`, `ROLE_USER`; `ROLE_USER` is its default role. These are not inherited by other applications.
+- Role names are uppercase: `ROLE_` plus UPPER_SNAKE (`ROLE_PROMOTIONS_REVIEWER`), the standard. An earlier mixed-case scheme (`ROLE_Admin`, `ROLE_Auditor`, `ROLE_User`) was dropped.
 - Hierarchy example (Poplar): Reviewer (read) ⊂ Planner (+write) ⊂ Approver (+approve).
-- **The expanded set is stored** on the user: an Approver's record holds `ROLE_PromotionsReviewer`, `ROLE_PromotionsPlanner`, `ROLE_PromotionsApprover`.
-- `ROLE_Admin` stays **separate** from application hierarchies: it implies no application role and no application role implies it. An Admin performs application actions only when also granted those roles.
-- Existing stored `ROLE_ADMIN`/`ROLE_AUDITOR`/`ROLE_USER` values are **converted** to the new names automatically.
+- **The expanded set is stored** on the user: an Approver's record holds `ROLE_PROMOTIONS_REVIEWER`, `ROLE_PROMOTIONS_PLANNER`, `ROLE_PROMOTIONS_APPROVER`.
+- `ROLE_ADMIN` stays **separate** from application hierarchies: it implies no application role and no application role implies it. An Admin performs application actions only when also granted those roles.
+- Stored mixed-case values `ROLE_Admin`/`ROLE_Auditor`/`ROLE_User` (from the interim scheme) are **converted** to `ROLE_ADMIN`/`ROLE_AUDITOR`/`ROLE_USER` automatically.
 
 ### Default roles at first login
 - Password user saved with no roles → on first successful login receives the application's configured default role (expanded, stored).
@@ -90,14 +90,14 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 ## Builder's latitude and recommended design (Claude's calls — review these)
 
 ### Shared role catalog
-- New type in `Granite.Foundation.Core`, e.g. `granite.foundation.core.security.ApplicationRoles`: list of role definitions (name, label, implied roles), `adminRole()` (always `ROLE_Admin`, always present), `defaultRole()`, and `expand(Set<String>)` (transitive closure).
+- New type in `Granite.Foundation.Core`, e.g. `granite.foundation.core.security.ApplicationRoles`: list of role definitions (name, label, implied roles), `adminRole()` (always `ROLE_ADMIN`, always present), `defaultRole()`, and `expand(Set<String>)` (transitive closure).
 - `GraniteApplicationRoles` (Admin, Auditor, User; default User) lives beside it. An application defines its own (Poplar: in `Poplar.Foundation.Core`) and returns it from an overridable `applicationRoles()` `@Bean` on each of its host configurations that use the catalog (User, Session, FrontEndController; each logs the catalog role names once at startup).
 - Granite's concrete `Granite*ServerConfiguration` classes default `applicationRoles()` to `GraniteApplicationRoles`; applications override.
 
 ### User service
 - Command side validates stored authorities: every role must be in the catalog (non-role authorities such as `SCOPE_*` are not storable), and the set is normalized by adding implied roles. Removal cascade (unchecking Reviewer also unchecks Planner and Approver) is a UI behaviour; the server only guarantees closure.
 - New merge command for `values` (merge only the given keys; null value removes the key) so preference saves never replace the whole map. Callable only with `SCOPE_internal` (FEC).
-- Startup authority renamer (like `UserBootstrapper`): idempotent, rewrites `ROLE_ADMIN→ROLE_Admin`, `ROLE_AUDITOR→ROLE_Auditor`, `ROLE_USER→ROLE_User`; rename map is an overridable method. Session applies the same renamer to stored session authorities so existing sessions keep working.
+- Startup authority renamer (like `UserBootstrapper`): idempotent, rewrites `ROLE_Admin→ROLE_ADMIN`, `ROLE_Auditor→ROLE_AUDITOR`, `ROLE_User→ROLE_USER` (the interim mixed-case names; uppercase is the standard); rename map is an overridable method. Session applies the same renamer to stored session authorities so existing sessions keep working.
 
 ### Session service
 - `applicationRoles()` bean used for: default role on first password login (when stored authorities are empty, Session asks User to store the expanded default before the login gate runs), Okta creation roles, and expansion.
@@ -115,16 +115,16 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 - `getUsersOutput` returns the role catalog (names, labels, implications) so the Users screen offers a pick list instead of free text.
 
 ### Gateway
-- Base configuration keeps owning: cookie→JWT swap, CSRF, session body-key filter, public/current-session matchers, Granite routes, `ROLE_Admin` catch-all.
-- Core rules in the base: preferences paths → any authenticated user; `get-users-output`/`handle-users-input` → `ROLE_Admin`, `SCOPE_internal`; everything else → `ROLE_Admin`, `SCOPE_internal`.
+- Base configuration keeps owning: cookie→JWT swap, CSRF, session body-key filter, public/current-session matchers, Granite routes, `ROLE_ADMIN` catch-all.
+- Core rules in the base: preferences paths → any authenticated user; `get-users-output`/`handle-users-input` → `ROLE_ADMIN`, `SCOPE_internal`; everything else → `ROLE_ADMIN`, `SCOPE_internal`.
 - Hooks: `configureApplicationRoutes(Builder,Environment)` (additive) and `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` invoked **after** Granite's specific rules and **before** the catch-all, so an application can't drop core rules.
-- Granite application rules (`ROLE_Auditor` read access to Users/Sessions) move to the Granite application's subclass.
-- **Core rules are always registered** (user decision 2026-10-26, final review): the users-reader rules (`getUsersReaderAuthorities(Environment)`, default `ROLE_Admin`, `SCOPE_internal`), the Granite admin-only paths, then the application hook, then `/**` → `ROLE_Admin`, `SCOPE_internal`, regardless of any property. `configureAuthorization` is `final`. `granite.gateway.authorization.role-rules.enabled` no longer switches the core rules; it only controls whether the Granite application's `getUsersReaderAuthorities` adds `ROLE_Auditor` (default `false`: Admin/internal only).
+- Granite application rules (`ROLE_AUDITOR` read access to Users/Sessions) move to the Granite application's subclass.
+- **Core rules are always registered** (user decision 2026-10-26, final review): the users-reader rules (`getUsersReaderAuthorities(Environment)`, default `ROLE_ADMIN`, `SCOPE_internal`), the Granite admin-only paths, then the application hook, then `/**` → `ROLE_ADMIN`, `SCOPE_internal`, regardless of any property. `configureAuthorization` is `final`. `granite.gateway.authorization.role-rules.enabled` no longer switches the core rules; it only controls whether the Granite application's `getUsersReaderAuthorities` adds `ROLE_AUDITOR` (default `false`: Admin/internal only).
 
 ### Web (phase 3)
 - `UsersView` moves from `Granite.Web.Navigator` into `Granite.Web.User` (reusable). Authorities editor becomes a pick list from the role catalog with hierarchy cascade (grant adds implied; removing removes dependents).
 - `Granite.Web.Account`: `PreferencesProvider` + `usePreference(key)` hook; `PreferencesView` takes `children` sections; theme loads from and saves to the server.
-- `Authorities.ts`: `ROLE_ADMIN` → `ROLE_Admin`; a generic `hasRole` helper exported.
+- `Authorities.ts`: `canEdit` checks `ROLE_ADMIN`; a generic `hasRole` helper exported.
 - A `UserMenu`/logout building block exported from Authentication.
 - `Granite.Web.Navigator` becomes Granite's own frame only.
 

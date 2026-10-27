@@ -85,14 +85,14 @@ class ExtendedFrontEndControllerConfigurationTest
         ApplicationRoles roles =
             new ApplicationRoles(
                 List.of(
-                    new RoleDefinition("ROLE_Clerk","Clerk",Set.of()),
-                    new RoleDefinition("ROLE_Manager","Manager",Set.of("ROLE_Clerk"))),
-                "ROLE_Clerk");
+                    new RoleDefinition("ROLE_CLERK","Clerk",Set.of()),
+                    new RoleDefinition("ROLE_MANAGER","Manager",Set.of("ROLE_CLERK"))),
+                "ROLE_CLERK");
 
         GetUsersOutputReply reply = usersOutput(configuration(roles));
 
-        assertEquals(List.of("ROLE_Admin","ROLE_Clerk","ROLE_Manager"),names(reply));
-        assertEquals(List.of("ROLE_Clerk"),reply.getOutput().getRoles().get(2).getImpliedRoles());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_CLERK","ROLE_MANAGER"),names(reply));
+        assertEquals(List.of("ROLE_CLERK"),reply.getOutput().getRoles().get(2).getImpliedRoles());
         assertEquals("Manager",reply.getOutput().getRoles().get(2).getLabel());
     }
 
@@ -100,7 +100,7 @@ class ExtendedFrontEndControllerConfigurationTest
     public void
     graniteUsersOutputListsGraniteCatalog()
     {
-        assertEquals(List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),names(usersOutput(configuration(null))));
+        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),names(usersOutput(configuration(null))));
     }
 
     private ExtendedFrontEndControllerConfiguration

@@ -133,7 +133,7 @@ class UserSecurityFilterChainTest
         assertTrue(response.getStatus() != 401 && response.getStatus() != 403,"status " + response.getStatus());
         assertEquals("1001",authentication.get().getName());
         assertEquals(
-            Set.of("ROLE_Admin","SCOPE_internal"),
+            Set.of("ROLE_ADMIN","SCOPE_internal"),
             authentication
                 .get()
                 .getAuthorities()
@@ -203,7 +203,7 @@ class UserSecurityFilterChainTest
                 .audience(audience)
                 .issueTime(Date.from(now.minusSeconds(600)))
                 .expirationTime(Date.from(now.plusSeconds(lifetimeSeconds)))
-                .claim("authorities",List.of("ROLE_Admin","SCOPE_internal"))
+                .claim("authorities",List.of("ROLE_ADMIN","SCOPE_internal"))
                 .build();
         SignedJWT    jwt    = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256),claims);
 

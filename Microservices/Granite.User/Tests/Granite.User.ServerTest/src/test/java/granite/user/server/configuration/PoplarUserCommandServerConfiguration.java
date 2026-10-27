@@ -20,8 +20,8 @@ public
 class PoplarUserCommandServerConfiguration
     extends ExtendedUserCommandServerConfiguration
 {
-    public static final String REVIEWER = "ROLE_PromotionsReviewer";
-    public static final String APPROVER = "ROLE_PromotionsApprover";
+    public static final String REVIEWER = "ROLE_PROMOTIONS_REVIEWER";
+    public static final String APPROVER = "ROLE_PROMOTIONS_APPROVER";
 
     @Override
     @Bean

@@ -23,7 +23,7 @@ class UserServiceTest
     testCreateUser()
     {
         String      userName    = uniqueUserName();
-        Set<String> authorities = Set.of("ROLE_User");
+        Set<String> authorities = Set.of("ROLE_USER");
         CreateUserReply reply =
             getSubject()
                 .createUser(
@@ -47,8 +47,8 @@ class UserServiceTest
     testUpdateUser()
     {
         String      userName           = uniqueUserName();
-        Set<String> initialAuthorities = Set.of("ROLE_User");
-        Set<String> updatedAuthorities = Set.of("ROLE_User","ROLE_Admin");
+        Set<String> initialAuthorities = Set.of("ROLE_USER");
+        Set<String> updatedAuthorities = Set.of("ROLE_USER","ROLE_ADMIN");
         CreateUserReply createReply =
             getSubject()
                 .createUser(
@@ -99,7 +99,7 @@ class UserServiceTest
                         .setUserToCreate(
                             new CreateUserData()
                                 .setUserName(uniqueUserName())
-                                .setAuthorities(Set.of("ROLE_User"))))
+                                .setAuthorities(Set.of("ROLE_USER"))))
                 .toCompletableFuture()
                 .join();
 
@@ -110,7 +110,7 @@ class UserServiceTest
                         .setUserToCreate(
                             new CreateUserData()
                                 .setUserName(uniqueUserName())
-                                .setAuthorities(Set.of("ROLE_User"))))
+                                .setAuthorities(Set.of("ROLE_USER"))))
                 .toCompletableFuture()
                 .join();
 
@@ -128,10 +128,10 @@ class UserServiceTest
                             List.of(
                                 new UpdateUserData()
                                     .setUserId(id1)
-                                    .setAuthorities(Set.of("ROLE_User","ROLE_Admin")),
+                                    .setAuthorities(Set.of("ROLE_USER","ROLE_ADMIN")),
                                 new UpdateUserData()
                                     .setUserId(id2)
-                                    .setAuthorities(Set.of("ROLE_User","ROLE_Auditor")))))
+                                    .setAuthorities(Set.of("ROLE_USER","ROLE_AUDITOR")))))
                 .toCompletableFuture()
                 .join();
 
@@ -152,7 +152,7 @@ class UserServiceTest
                         .setUserToCreate(
                             new CreateUserData()
                                 .setUserName(uniqueUserName())
-                                .setAuthorities(Set.of("ROLE_User"))))
+                                .setAuthorities(Set.of("ROLE_USER"))))
                 .toCompletableFuture()
                 .join();
 

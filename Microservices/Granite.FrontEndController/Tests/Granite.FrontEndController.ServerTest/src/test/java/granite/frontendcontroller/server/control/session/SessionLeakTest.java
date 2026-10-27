@@ -23,7 +23,7 @@ class SessionLeakTest
     {
         String text =
             new SessionInput().setUserName("amy").setPassword(SessionTestSupport.PASSWORD)
-                + new SessionOutput().setUserName("amy").setAuthorities(Set.of("ROLE_User")).setStatus("AUTHENTICATED").toString()
+                + new SessionOutput().setUserName("amy").setAuthorities(Set.of("ROLE_USER")).setStatus("AUTHENTICATED").toString()
                 + new SessionOutput().toString()
                 + new SessionLoginSettings(true,false).toString();
 

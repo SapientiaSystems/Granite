@@ -13,13 +13,13 @@ An application (for example Poplar) reuses Granite by extending the entry config
 
 ### Role catalog
 
-- `ApplicationRoles` (Foundation) is the role catalog; each application supplies its own, Granite's is `GraniteApplicationRoles` (`ROLE_Admin`, `ROLE_Auditor`, `ROLE_User`).
+- `ApplicationRoles` (Foundation) is the role catalog; each application supplies its own, Granite's is `GraniteApplicationRoles` (`ROLE_ADMIN`, `ROLE_AUDITOR`, `ROLE_USER`).
 - An application provides ONE catalog factory (for example a static `create()` in its Foundation library, as `GraniteApplicationRoles.create()` is for Granite) and returns it from the `applicationRoles()` override on all three hosts that use the catalog: User, Session and FrontEndController. Each of those hosts logs the catalog's role names (names only) once at startup (`applicationRolesStartupLog`), so a host left on a different catalog is visible in the logs.
-- Granite core owns only `ROLE_Admin`; it implies no application role and is implied by none. `ROLE_Auditor` and `ROLE_User` belong to the Granite application catalog.
-- Role names are mixed case. Stored authority sets are always closed under the role hierarchy (the expanded set is stored).
-- Renames, applied once at User startup by `AuthorityRenamer`: `ROLE_ADMIN` to `ROLE_Admin`, `ROLE_AUDITOR` to `ROLE_Auditor`, `ROLE_USER` to `ROLE_User`.
+- Granite core owns only `ROLE_ADMIN`; it implies no application role and is implied by none. `ROLE_AUDITOR` and `ROLE_USER` belong to the Granite application catalog.
+- Role names are `ROLE_` plus UPPER_SNAKE (`ROLE_[A-Z0-9_]+`, enforced by `ApplicationRoles`). Stored authority sets are always closed under the role hierarchy (the expanded set is stored).
+- Renames, applied once at User startup by `AuthorityRenamer`: `ROLE_Admin` to `ROLE_ADMIN`, `ROLE_Auditor` to `ROLE_AUDITOR`, `ROLE_User` to `ROLE_USER` (the earlier mixed-case names are converted back to the uppercase standard).
 - Request authorization rules (which caller may reach which path) live only in the Gateway chain. Outside it, Session gates login (default: the user must hold at least one catalog role; `granite.session.login.required-authorities` overrides with an explicit list) and User rejects stored roles outside the catalog.
-- Gateway core rules (users readers, Granite admin-only paths, application hook, `/**` → `ROLE_Admin`) are always registered; `granite.gateway.authorization.role-rules.enabled` only makes the Granite application grant `ROLE_Auditor` reader access.
+- Gateway core rules (users readers, Granite admin-only paths, application hook, `/**` → `ROLE_ADMIN`) are always registered; `granite.gateway.authorization.role-rules.enabled` only makes the Granite application grant `ROLE_AUDITOR` reader access.
 
 ### Okta properties (Session)
 

@@ -69,7 +69,7 @@ class GatewayApplicationHooksTest
     applicationRuleGrantsApplicationRole()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_PromotionsReviewer"));
+        String token = backend.sign(List.of("ROLE_PROMOTIONS_REVIEWER"));
 
         assertNotEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/get-promotions-output",token));
     }
@@ -79,7 +79,7 @@ class GatewayApplicationHooksTest
     applicationRoleDeniedElsewhere()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_PromotionsReviewer"));
+        String token = backend.sign(List.of("ROLE_PROMOTIONS_REVIEWER"));
 
         assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token));
     }
@@ -89,7 +89,7 @@ class GatewayApplicationHooksTest
     roleUserGetsCoreRulesWithoutRoleRulesFlag()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_User"));
+        String token = backend.sign(List.of("ROLE_USER"));
 
         assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token));
         assertEquals(403,call(HttpMethod.GET,"/unlisted-service/anything",token));
@@ -100,10 +100,10 @@ class GatewayApplicationHooksTest
     adminCatchAllStillApplies()
         throws Exception
     {
-        assertNotEquals(403,call(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_Admin"))));
+        assertNotEquals(403,call(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_ADMIN"))));
         assertEquals(
             403,
-            call(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_PromotionsReviewer"))));
+            call(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_PROMOTIONS_REVIEWER"))));
     }
 
     @Test
@@ -116,7 +116,7 @@ class GatewayApplicationHooksTest
             call(
                 HttpMethod.POST,
                 "/session-command-service/resolve-session",
-                backend.sign(List.of("ROLE_PromotionsReviewer"))));
+                backend.sign(List.of("ROLE_PROMOTIONS_REVIEWER"))));
     }
 
     @Test
@@ -124,7 +124,7 @@ class GatewayApplicationHooksTest
     applicationPrefixRuleCannotGrantUserAdministration()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_PromotionsReviewer"));
+        String token = backend.sign(List.of("ROLE_PROMOTIONS_REVIEWER"));
 
         assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token));
         assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",token));
@@ -141,7 +141,7 @@ class GatewayApplicationHooksTest
             call(
                 HttpMethod.POST,
                 "/user-command-service/create-user",
-                backend.sign(List.of("ROLE_PromotionsReviewer"))));
+                backend.sign(List.of("ROLE_PROMOTIONS_REVIEWER"))));
     }
 
     @Test
@@ -149,7 +149,7 @@ class GatewayApplicationHooksTest
     baseConfigurationDoesNotKnowAuditor()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_Auditor"));
+        String token = backend.sign(List.of("ROLE_AUDITOR"));
 
         assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token));
         assertEquals(403,call(HttpMethod.POST,"/user-query-service/find-users-by-key",token));

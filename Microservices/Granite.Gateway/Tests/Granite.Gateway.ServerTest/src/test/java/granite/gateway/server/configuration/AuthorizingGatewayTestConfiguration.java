@@ -30,9 +30,9 @@ class AuthorizingGatewayTestConfiguration
         return
             exchanges
                 .pathMatchers(HttpMethod.POST,"/user-command-service/**")
-                    .hasAuthority("ROLE_Admin")
+                    .hasAuthority("ROLE_ADMIN")
                 .pathMatchers("/session-query-service/**")
-                    .hasAnyAuthority("ROLE_Admin","SCOPE_internal");
+                    .hasAnyAuthority("ROLE_ADMIN","SCOPE_internal");
     }
 }
 

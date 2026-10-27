@@ -28,38 +28,38 @@ class RequiredAuthoritiesLoginGateTest
     public void
     blankEntriesAreIgnored()
     {
-        assertTrue(new RequiredAuthoritiesLoginGate(List.of("", " ")).permits(Set.of("ROLE_User")));
+        assertTrue(new RequiredAuthoritiesLoginGate(List.of("", " ")).permits(Set.of("ROLE_USER")));
     }
 
     @Test
     public void
     anyListedAuthorityPermits()
     {
-        ILoginGate gate = new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin","ROLE_Auditor"));
+        ILoginGate gate = new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR"));
 
-        assertTrue(gate.permits(Set.of("ROLE_User","ROLE_Auditor")));
-        assertTrue(gate.permits(Set.of("ROLE_Admin")));
+        assertTrue(gate.permits(Set.of("ROLE_USER","ROLE_AUDITOR")));
+        assertTrue(gate.permits(Set.of("ROLE_ADMIN")));
     }
 
     @Test
     public void
     missingAuthorityIsRefused()
     {
-        assertFalse(new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin","ROLE_Auditor")).permits(Set.of("ROLE_User")));
+        assertFalse(new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")).permits(Set.of("ROLE_USER")));
     }
 
     @Test
     public void
     nullAuthoritiesAreRefused()
     {
-        assertFalse(new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin")).permits(null));
+        assertFalse(new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN")).permits(null));
     }
 
     @Test
     public void
     matchingIsCaseSensitive()
     {
-        assertFalse(new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin")).permits(Set.of("role_admin")));
+        assertFalse(new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN")).permits(Set.of("role_admin")));
     }
 }
 

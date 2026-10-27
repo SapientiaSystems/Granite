@@ -111,8 +111,8 @@ describe("UsersChangeSet", () =>
     it("mergeDropsAcceptedEdits", () =>
     {
         const baseline  = toRows([user(1, "ann", ["A"])]);
-        const rows      = [{ ...baseline[0], authorities: [" ROLE_Admin", "ROLE_Admin"] }];
-        const refreshed = [user(1, "ann", ["ROLE_Admin"])];
+        const rows      = [{ ...baseline[0], authorities: [" ROLE_ADMIN", "ROLE_ADMIN"] }];
+        const refreshed = [user(1, "ann", ["ROLE_ADMIN"])];
         const merged    = mergePending(refreshed, rows, baseline);
 
         expect(merged[0]).toEqual(toRows(refreshed)[0]);

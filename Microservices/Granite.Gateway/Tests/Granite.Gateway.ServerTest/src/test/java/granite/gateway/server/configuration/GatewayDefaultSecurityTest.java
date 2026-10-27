@@ -61,8 +61,8 @@ class GatewayDefaultSecurityTest
     {
         post("/user-command-service/create-user",null).expectStatus().isUnauthorized();
         post("/user-command-service/create-user",backend.sign(List.of())).expectStatus().isForbidden();
-        post("/user-command-service/create-user",backend.sign(List.of("ROLE_User"))).expectStatus().isForbidden();
-        post("/user-command-service/create-user",backend.sign(List.of("ROLE_Admin"))).expectStatus().isOk();
+        post("/user-command-service/create-user",backend.sign(List.of("ROLE_USER"))).expectStatus().isForbidden();
+        post("/user-command-service/create-user",backend.sign(List.of("ROLE_ADMIN"))).expectStatus().isOk();
     }
 
     @Test

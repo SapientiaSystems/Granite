@@ -66,13 +66,13 @@ class GraniteSessionCommandServerConfigurationTest
     {
         MockEnvironment env = new MockEnvironment();
 
-        env.setProperty("granite.session.login.required-authorities","ROLE_Admin,ROLE_Auditor");
+        env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
 
         ILoginGate gate = subject.loginGate(env,GraniteApplicationRoles.create());
 
         assertInstanceOf(RequiredAuthoritiesLoginGate.class,gate);
-        assertFalse(gate.permits(Set.of("ROLE_User")));
-        assertTrue(gate.permits(Set.of("ROLE_Auditor")));
+        assertFalse(gate.permits(Set.of("ROLE_USER")));
+        assertTrue(gate.permits(Set.of("ROLE_AUDITOR")));
     }
 
     @Test
@@ -82,7 +82,7 @@ class GraniteSessionCommandServerConfigurationTest
         ILoginGate gate = subject.loginGate(new MockEnvironment(),GraniteApplicationRoles.create());
 
         assertInstanceOf(CatalogRoleLoginGate.class,gate);
-        assertTrue(gate.permits(Set.of("ROLE_User")));
+        assertTrue(gate.permits(Set.of("ROLE_USER")));
         assertFalse(gate.permits(Set.of("SCOPE_internal")));
         assertFalse(gate.permits(Set.of()));
     }
@@ -105,7 +105,7 @@ class GraniteSessionCommandServerConfigurationTest
             new OktaSettings()
                 .setGroupMapping(
                     Map.of(
-                        "GC-Admins","ROLE_Admin",
+                        "GC-Admins","ROLE_ADMIN",
                         "GC-Bogus","ROLE_Nope",
                         "GC-Blank"," "));
 
@@ -118,7 +118,7 @@ class GraniteSessionCommandServerConfigurationTest
     public void
     groupMappingCheckIsEmptyWhenAllMappingsAreCatalogRoles()
     {
-        OktaSettings settings = new OktaSettings().setGroupMapping(Map.of("GC-Admins","ROLE_Admin"));
+        OktaSettings settings = new OktaSettings().setGroupMapping(Map.of("GC-Admins","ROLE_ADMIN"));
 
         assertTrue(subject.oktaGroupMappingCheck(settings,GraniteApplicationRoles.create()).getIgnoredGroups().isEmpty());
     }
@@ -288,8 +288,8 @@ class GraniteSessionCommandServerConfigurationTest
                 .withProperty("granite.session.okta.post-logout-redirect-uri","https://app.example.com/")
                 .withProperty("granite.session.okta.role-assignment","every_login")
                 .withProperty("granite.session.okta.unmapped-groups","refuse")
-                .withProperty("granite.session.okta.group-mapping[Granite Admins]","ROLE_Admin")
-                .withProperty("granite.session.okta.group-mapping.auditors","ROLE_Auditor");
+                .withProperty("granite.session.okta.group-mapping[Granite Admins]","ROLE_ADMIN")
+                .withProperty("granite.session.okta.group-mapping.auditors","ROLE_AUDITOR");
         OktaSettings    settings = subject.oktaSettings(env);
 
         assertTrue(settings.isEnabled());
@@ -299,7 +299,7 @@ class GraniteSessionCommandServerConfigurationTest
         assertEquals("https://app.example.com/",settings.getPostLogoutRedirectUri());
         assertEquals(OktaRoleAssignment.EVERY_LOGIN,settings.getRoleAssignment());
         assertEquals(OktaUnmappedGroups.REFUSE,settings.getUnmappedGroups());
-        assertEquals(Map.of("Granite Admins","ROLE_Admin","auditors","ROLE_Auditor"),settings.getGroupMapping());
+        assertEquals(Map.of("Granite Admins","ROLE_ADMIN","auditors","ROLE_AUDITOR"),settings.getGroupMapping());
         assertEquals(java.time.Duration.ofMinutes(5),settings.getTransactionTtl());
     }
 

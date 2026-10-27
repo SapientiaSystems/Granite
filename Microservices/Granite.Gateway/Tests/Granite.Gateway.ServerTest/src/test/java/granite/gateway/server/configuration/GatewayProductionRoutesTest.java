@@ -83,7 +83,7 @@ class GatewayProductionRoutesTest
         throws Exception
     {
         int    before = backend.getReceivedAuthorizations().size();
-        String token  = backend.sign(List.of("ROLE_Admin"));
+        String token  = backend.sign(List.of("ROLE_ADMIN"));
 
         client
             .post()

@@ -53,14 +53,14 @@ class SessionCommandServiceDefaultRoleTest
     private static final Instant NOW       = Instant.parse("2026-10-26T12:00:00Z");
     private static final String  THEME     = "preferences.granite.theme";
 
-    private static final Set<String> EXPANDED_DEFAULT = Set.of("ROLE_PromotionsApprover","ROLE_PromotionsReviewer");
+    private static final Set<String> EXPANDED_DEFAULT = Set.of("ROLE_PROMOTIONS_APPROVER","ROLE_PROMOTIONS_REVIEWER");
 
     private static final ApplicationRoles POPLAR =
         new ApplicationRoles(
             List.of(
-                new RoleDefinition("ROLE_PromotionsReviewer","Promotions Reviewer",Set.of()),
-                new RoleDefinition("ROLE_PromotionsApprover","Promotions Approver",Set.of("ROLE_PromotionsReviewer"))),
-            "ROLE_PromotionsApprover");
+                new RoleDefinition("ROLE_PROMOTIONS_REVIEWER","Promotions Reviewer",Set.of()),
+                new RoleDefinition("ROLE_PROMOTIONS_APPROVER","Promotions Approver",Set.of("ROLE_PROMOTIONS_REVIEWER"))),
+            "ROLE_PROMOTIONS_APPROVER");
 
     private ISessionRepository        repository;
     private IJwtTokenService          jwtTokenService;
@@ -164,7 +164,7 @@ class SessionCommandServiceDefaultRoleTest
     public void
     existingRolesUntouched()
     {
-        stubAuthenticate(true,Set.of("ROLE_PromotionsApprover","ROLE_PromotionsReviewer"));
+        stubAuthenticate(true,Set.of("ROLE_PROMOTIONS_APPROVER","ROLE_PROMOTIONS_REVIEWER"));
 
         LoginReply reply = login();
 

@@ -80,7 +80,7 @@ class UserBootstrapperTest
 
         assertTrue(encoder.matches("first-secret",created.getPassword()));
         assertFalse(created.getPassword().contains("first-secret"));
-        assertEquals(Set.of("ROLE_User","ROLE_Admin"),created.getAuthorities());
+        assertEquals(Set.of("ROLE_USER","ROLE_ADMIN"),created.getAuthorities());
     }
 
     @Test
@@ -141,7 +141,7 @@ class UserBootstrapperTest
     {
         MockEnvironment environment = environment(true,"local");
 
-        environment.setProperty("granite.user.bootstrap.authorities","ROLE_Auditor");
+        environment.setProperty("granite.user.bootstrap.authorities","ROLE_AUDITOR");
 
         UserBootstrapper bootstrapper =
             new GraniteUserCommandServerConfiguration()
@@ -153,7 +153,7 @@ class UserBootstrapperTest
                     GraniteApplicationRoles.create());
 
         assertTrue(bootstrapper.bootstrap());
-        assertEquals(Set.of("ROLE_Auditor"),find(environment.getProperty("granite.user.bootstrap.user-name")).orElseThrow().getAuthorities());
+        assertEquals(Set.of("ROLE_AUDITOR"),find(environment.getProperty("granite.user.bootstrap.user-name")).orElseThrow().getAuthorities());
     }
 
     private UserBootstrapper
@@ -167,7 +167,7 @@ class UserBootstrapperTest
                 enabled,
                 userName,
                 password,
-                Set.of("ROLE_User","ROLE_Admin"));
+                Set.of("ROLE_USER","ROLE_ADMIN"));
     }
 
     private Optional<User>

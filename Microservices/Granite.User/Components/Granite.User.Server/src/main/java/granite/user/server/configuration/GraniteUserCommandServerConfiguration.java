@@ -77,7 +77,7 @@ class GraniteUserCommandServerConfiguration
                         Binder
                             .get(environment)
                             .bind("granite.user.bootstrap.authorities",Bindable.listOf(String.class))
-                            .orElse(List.of("ROLE_User")))));
+                            .orElse(List.of("ROLE_USER")))));
     }
 
     @Bean
@@ -96,9 +96,9 @@ class GraniteUserCommandServerConfiguration
     {
         Map<String,String> renames = new LinkedHashMap<>();
 
-        renames.put("ROLE_ADMIN","ROLE_Admin");
-        renames.put("ROLE_AUDITOR","ROLE_Auditor");
-        renames.put("ROLE_USER","ROLE_User");
+        renames.put("ROLE_Admin","ROLE_ADMIN");
+        renames.put("ROLE_Auditor","ROLE_AUDITOR");
+        renames.put("ROLE_User","ROLE_USER");
         return renames;
     }
 

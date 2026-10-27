@@ -101,7 +101,7 @@ class GatewayCookieCsrfTest
     deviceCookieAndCsrfCookieNotIssuedToBearerRequests()
         throws Exception
     {
-        String                       token  = sign("ROLE_Admin");
+        String                       token  = sign("ROLE_ADMIN");
         EntityExchangeResult<byte[]> result =
             client
                 .post()
@@ -148,7 +148,7 @@ class GatewayCookieCsrfTest
     cookiePostWithoutCsrfTokenIsForbidden()
         throws Exception
     {
-        String handle = register("ROLE_Admin");
+        String handle = register("ROLE_ADMIN");
 
         assertEquals(403,post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle),null,null).getStatus().value());
         assertFalse(backend.getResolveCalls().contains(handle));
@@ -159,7 +159,7 @@ class GatewayCookieCsrfTest
     cookiePostWithWrongCsrfTokenIsForbidden()
         throws Exception
     {
-        String handle = register("ROLE_Admin");
+        String handle = register("ROLE_ADMIN");
 
         assertEquals(
             403,
@@ -174,7 +174,7 @@ class GatewayCookieCsrfTest
     cookiePostWithMatchingCsrfTokenPasses()
         throws Exception
     {
-        String handle = register("ROLE_Admin");
+        String handle = register("ROLE_ADMIN");
 
         assertEquals(
             200,
@@ -200,7 +200,7 @@ class GatewayCookieCsrfTest
     getWithCookiesNeedsNoCsrfToken()
         throws Exception
     {
-        String handle = register("ROLE_Admin");
+        String handle = register("ROLE_ADMIN");
         int    status =
             client
                 .method(HttpMethod.GET)
@@ -221,7 +221,7 @@ class GatewayCookieCsrfTest
     {
         assertEquals(
             200,
-            post(GET_USERS_OUTPUT,users(),Map.of("other","x"),null,sign("ROLE_Admin")).getStatus().value());
+            post(GET_USERS_OUTPUT,users(),Map.of("other","x"),null,sign("ROLE_ADMIN")).getStatus().value());
     }
 
     @Test

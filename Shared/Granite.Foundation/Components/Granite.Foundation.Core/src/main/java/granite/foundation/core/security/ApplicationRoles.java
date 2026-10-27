@@ -12,11 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public
 class ApplicationRoles
 {
-    public static final String ADMIN = "ROLE_Admin";
+    public static final String ADMIN = "ROLE_ADMIN";
+
+    private static final Pattern NAME_PATTERN = Pattern.compile("ROLE_[A-Z0-9_]+");
 
     private final List<RoleDefinition>       roles;
     private final Map<String,RoleDefinition> byName;
@@ -37,6 +40,9 @@ class ApplicationRoles
 
         for (RoleDefinition role : applicationRoles)
         {
+            if (!NAME_PATTERN.matcher(role.getName()).matches())
+                throw new IllegalArgumentException("role name must match ROLE_[A-Z0-9_]+: " + role.getName());
+
             if (ADMIN.equals(role.getName()))
                 throw new IllegalArgumentException(ADMIN + " is reserved");
 

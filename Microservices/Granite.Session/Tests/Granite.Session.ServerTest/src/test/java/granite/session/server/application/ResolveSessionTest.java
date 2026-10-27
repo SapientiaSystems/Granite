@@ -190,7 +190,7 @@ class ResolveSessionTest
         Session session = stub(live());
 
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         ResolveSessionReply reply = resolve(HANDLE);
 
@@ -214,7 +214,7 @@ class ResolveSessionTest
     {
         stub(live());
         tokenExpires(NOW.plus(RENEWAL_MARGIN));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         ResolveSessionReply reply = resolve(HANDLE);
 
@@ -245,7 +245,7 @@ class ResolveSessionTest
         Session session = stub(session(created,created.plus(MAX_LIFETIME)));
 
         tokenExpires(NOW.plusSeconds(30));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         ResolveSessionReply reply = resolve(HANDLE);
 
@@ -262,15 +262,15 @@ class ResolveSessionTest
         Session session = stub(live());
 
         tokenExpires(NOW.plusSeconds(10));
-        stubUser(Set.of("ROLE_User","ROLE_Auditor"));
+        stubUser(Set.of("ROLE_USER","ROLE_AUDITOR"));
 
         AtomicReference<Set<String>> minted = mintedAuthorities();
         ResolveSessionReply          reply  = resolve(HANDLE);
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(Set.of("ROLE_User","ROLE_Auditor"),minted.get());
-        assertEquals(Set.of("ROLE_User","ROLE_Auditor"),session.getAuthorities());
-        assertEquals(Set.of("ROLE_User","ROLE_Auditor"),reply.getSession().getAuthorities());
+        assertEquals(Set.of("ROLE_USER","ROLE_AUDITOR"),minted.get());
+        assertEquals(Set.of("ROLE_USER","ROLE_AUDITOR"),session.getAuthorities());
+        assertEquals(Set.of("ROLE_USER","ROLE_AUDITOR"),reply.getSession().getAuthorities());
 
         ArgumentCaptor<FindUsersByKeyRequest> request =
             ArgumentCaptor.forClass(FindUsersByKeyRequest.class);
@@ -324,7 +324,7 @@ class ResolveSessionTest
         Session session = stub(live());
 
         tokenExpires(null);
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         ResolveSessionReply reply = resolve(HANDLE);
 
@@ -390,7 +390,7 @@ class ResolveSessionTest
         {
             stub(live());
             tokenExpires(NOW.plusSeconds(10));
-            stubUser(Set.of("ROLE_User"));
+            stubUser(Set.of("ROLE_USER"));
 
             assertTrue(resolve(HANDLE).isSuccess());
             assertRejected(resolve(HANDLE + "-unknown"));
@@ -420,12 +420,12 @@ class ResolveSessionTest
     {
         stub(live().setSignInMethod(SignInMethod.OKTA).setOktaGroups(Set.of("Granite Admins")));
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
-        stubUser(Set.of("ROLE_User"));
+        stubUser(Set.of("ROLE_USER"));
 
         AtomicReference<Set<String>> minted = mintedAuthorities();
 
         assertTrue(resolve(HANDLE).isSuccess());
-        assertEquals(Set.of("ROLE_User"),minted.get());
+        assertEquals(Set.of("ROLE_USER"),minted.get());
     }
 
     @Test
@@ -434,30 +434,30 @@ class ResolveSessionTest
     {
         stub(live().setSignInMethod(SignInMethod.PASSWORD));
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
-        stubUser(Set.of("ROLE_Auditor"));
+        stubUser(Set.of("ROLE_AUDITOR"));
 
         AtomicReference<Set<String>> minted = mintedAuthorities();
 
         assertTrue(resolve(HANDLE).isSuccess());
-        assertEquals(Set.of("ROLE_Auditor"),minted.get());
+        assertEquals(Set.of("ROLE_AUDITOR"),minted.get());
     }
 
     @Test
     public void
     renewalPicksUpRenamedAuthorities()
     {
-        Session session = stub(live().setAuthorities(Set.of("ROLE_ADMIN")));
+        Session session = stub(live().setAuthorities(Set.of("ROLE_Admin")));
 
         tokenExpires(NOW.plusSeconds(10));
-        stubUser(Set.of("ROLE_Admin"));
+        stubUser(Set.of("ROLE_ADMIN"));
 
         AtomicReference<Set<String>> minted = mintedAuthorities();
         ResolveSessionReply          reply  = resolve(HANDLE);
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(Set.of("ROLE_Admin"),minted.get());
-        assertEquals(Set.of("ROLE_Admin"),session.getAuthorities());
-        assertEquals(Set.of("ROLE_Admin"),reply.getSession().getAuthorities());
+        assertEquals(Set.of("ROLE_ADMIN"),minted.get());
+        assertEquals(Set.of("ROLE_ADMIN"),session.getAuthorities());
+        assertEquals(Set.of("ROLE_ADMIN"),reply.getSession().getAuthorities());
     }
 
     private Session
@@ -478,7 +478,7 @@ class ResolveSessionTest
                 .setAccessToken(OLD_JWT)
                 .setHashedHandle(refreshTokenService.hash(HANDLE))
                 .setLastActivity(NOW.minusSeconds(10))
-                .setAuthorities(Set.of("ROLE_User"));
+                .setAuthorities(Set.of("ROLE_USER"));
 
         session.setCreated(created);
         return session;

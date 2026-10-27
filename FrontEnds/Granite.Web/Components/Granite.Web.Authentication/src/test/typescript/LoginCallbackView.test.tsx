@@ -37,7 +37,7 @@ describe("LoginCallbackView",() =>
 {
     it("sends CompleteOktaLogin and navigates to the return path",async () =>
     {
-        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_Admin"],"/users"));
+        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_ADMIN"],"/users"));
 
         renderCallback(frontEnd,"?code=c0de&state=st8");
 

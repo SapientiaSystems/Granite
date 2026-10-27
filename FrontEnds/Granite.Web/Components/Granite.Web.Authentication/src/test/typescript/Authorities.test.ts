@@ -10,13 +10,13 @@ import type { IAuthenticationState }              from "../../main/typescript/Au
 const AUTHENTICATED_ADMIN: IAuthenticationState = {
     status:      "authenticated",
     userName:    "alice",
-    authorities: ["ROLE_User","ROLE_Admin"],
+    authorities: ["ROLE_USER","ROLE_ADMIN"],
 };
 
 const AUTHENTICATED_AUDITOR: IAuthenticationState = {
     status:      "authenticated",
     userName:    "carol",
-    authorities: ["ROLE_Auditor"],
+    authorities: ["ROLE_AUDITOR"],
 };
 
 describe("canEdit",() =>
@@ -36,15 +36,15 @@ describe("canEdit",() =>
         expect(canEdit({ ...AUTHENTICATED_ADMIN, status: "reauthenticating" })).toBe(true);
     });
 
-    it("isAdminRecognisesMixedCase",() =>
+    it("isAdminRecognisesUppercase",() =>
     {
-        expect(canEdit({ ...AUTHENTICATED_ADMIN, authorities: ["ROLE_Admin"] })).toBe(true);
-        expect(canEdit({ ...AUTHENTICATED_ADMIN, authorities: ["ROLE_ADMIN"] })).toBe(false);
+        expect(canEdit({ ...AUTHENTICATED_ADMIN, authorities: ["ROLE_ADMIN"] })).toBe(true);
+        expect(canEdit({ ...AUTHENTICATED_ADMIN, authorities: ["ROLE_Admin"] })).toBe(false);
     });
 
-    it("is false when anonymous even if ROLE_Admin is listed",() =>
+    it("is false when anonymous even if ROLE_ADMIN is listed",() =>
     {
-        expect(canEdit({ ...ANONYMOUS, authorities: ["ROLE_Admin"] })).toBe(false);
+        expect(canEdit({ ...ANONYMOUS, authorities: ["ROLE_ADMIN"] })).toBe(false);
     });
 });
 
@@ -52,17 +52,17 @@ describe("hasAuthority",() =>
 {
     it("is true for an authenticated user holding the authority",() =>
     {
-        expect(hasAuthority(AUTHENTICATED_AUDITOR,"ROLE_Auditor")).toBe(true);
+        expect(hasAuthority(AUTHENTICATED_AUDITOR,"ROLE_AUDITOR")).toBe(true);
     });
 
     it("is false for an authenticated user lacking the authority",() =>
     {
-        expect(hasAuthority(AUTHENTICATED_AUDITOR,"ROLE_Admin")).toBe(false);
+        expect(hasAuthority(AUTHENTICATED_AUDITOR,"ROLE_ADMIN")).toBe(false);
     });
 
     it("is false when not authenticated even if the authority is listed",() =>
     {
-        expect(hasAuthority({ ...ANONYMOUS, authorities: ["ROLE_Auditor"] },"ROLE_Auditor")).toBe(false);
+        expect(hasAuthority({ ...ANONYMOUS, authorities: ["ROLE_AUDITOR"] },"ROLE_AUDITOR")).toBe(false);
     });
 });
 
