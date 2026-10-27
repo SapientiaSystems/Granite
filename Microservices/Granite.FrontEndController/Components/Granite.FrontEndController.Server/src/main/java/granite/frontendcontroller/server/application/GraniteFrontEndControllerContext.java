@@ -13,6 +13,7 @@ import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import org.modelmapper.ModelMapper;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -28,6 +29,7 @@ class GraniteFrontEndControllerContext
     private final SessionRequestContext        sessionRequestContext;
     private final SessionLoginSettings         sessionLoginSettings;
     private final ApplicationRoles             applicationRoles;
+    private final List<PreferenceDefinition>   preferenceDefinitions;
 
     public
     GraniteFrontEndControllerContext(
@@ -39,7 +41,8 @@ class GraniteFrontEndControllerContext
         ISessionQueryServiceClient   sessionQueryClient,
         SessionRequestContext        sessionRequestContext,
         SessionLoginSettings         sessionLoginSettings,
-        ApplicationRoles             applicationRoles)
+        ApplicationRoles             applicationRoles,
+        List<PreferenceDefinition>   preferenceDefinitions)
     {
         this.mapper                = Objects.requireNonNull(mapper,"mapper");
         this.executor              = Objects.requireNonNull(executor,"executor");
@@ -50,6 +53,7 @@ class GraniteFrontEndControllerContext
         this.sessionRequestContext = Objects.requireNonNull(sessionRequestContext,"sessionRequestContext");
         this.sessionLoginSettings  = Objects.requireNonNull(sessionLoginSettings,"sessionLoginSettings");
         this.applicationRoles      = Objects.requireNonNull(applicationRoles,"applicationRoles");
+        this.preferenceDefinitions = List.copyOf(Objects.requireNonNull(preferenceDefinitions,"preferenceDefinitions"));
     }
 
     public ModelMapper
@@ -78,6 +82,9 @@ class GraniteFrontEndControllerContext
 
     public ApplicationRoles
     getApplicationRoles() { return applicationRoles; }
+
+    public List<PreferenceDefinition>
+    getPreferenceDefinitions() { return preferenceDefinitions; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

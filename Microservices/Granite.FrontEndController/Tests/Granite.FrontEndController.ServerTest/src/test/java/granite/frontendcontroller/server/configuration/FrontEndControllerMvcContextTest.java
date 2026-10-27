@@ -35,7 +35,13 @@ class FrontEndControllerMvcContextTest
     private static final String PATH = "/frontendcontroller-test-service";
 
     private static final List<String> GRANITE_PATHS =
-        List.of("/get-session-output","/handle-session-input","/get-users-output","/handle-users-input");
+        List.of(
+            "/get-session-output",
+            "/handle-session-input",
+            "/get-users-output",
+            "/handle-users-input",
+            "/get-preferences-output",
+            "/handle-preferences-input");
 
     private AnnotationConfigWebApplicationContext context;
 
@@ -56,6 +62,7 @@ class FrontEndControllerMvcContextTest
 
         assertPaths(GRANITE_PATHS);
         assertRoles(mvc);
+        assertPreferences(mvc);
     }
 
     @Test
@@ -69,6 +76,7 @@ class FrontEndControllerMvcContextTest
         paths.add("/get-echo-output");
         assertPaths(paths);
         assertRoles(mvc);
+        assertPreferences(mvc);
 
         MvcResult started =
             mvc
@@ -113,6 +121,42 @@ class FrontEndControllerMvcContextTest
         for (String path : expected)
             assertTrue(paths.contains(PATH + path),"missing " + path + " in " + paths);
     }
+    private void
+    assertPreferences(MockMvc mvc)
+        throws Exception
+    {
+        MvcResult started =
+            mvc
+                .perform(
+                    post(PATH + "/get-preferences-output")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"source\":\"Preferences.Current\",\"destination\":\"PreferencesView\"}"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvc
+            .perform(asyncDispatch(started))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.output.definitions[0].key").value("granite.theme"))
+            .andExpect(jsonPath("$.output.definitions[0].type").value("ENUM"));
+
+        MvcResult saved =
+            mvc
+                .perform(
+                    post(PATH + "/handle-preferences-input")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                            "{\"input\":{\"source\":\"Preferences.Current\",\"command\":\"Save\","
+                                + "\"destination\":\"PreferencesView\",\"values\":{\"granite.theme\":\"dark\"}}}"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvc
+            .perform(asyncDispatch(saved))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.output.failureMessages[0]").value("not authenticated"));
+    }
+
 
     private void
     assertRoles(MockMvc mvc)

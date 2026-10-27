@@ -5,8 +5,13 @@
 package granite.frontendcontroller.server.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
+import granite.frontendcontroller.service.requestreply.HandlePreferencesInputRequest;
+import granite.frontendcontroller.service.requestreply.PreferenceDefinitionData;
+import granite.frontendcontroller.service.requestreply.PreferencesInput;
+import granite.frontendcontroller.service.requestreply.PreferencesOutput;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
@@ -116,6 +121,56 @@ class FrontEndJsonSerializationTest
         assertTrue(json.contains("\"roles\":[{\"name\":\"ROLE_MANAGER\",\"label\":\"Manager\",\"impliedRoles\":[\"ROLE_CLERK\"]}]"),json);
         assertEquals("ROLE_MANAGER",actual.getOutput().getRoles().get(0).getName());
         assertEquals(List.of("ROLE_CLERK"),actual.getOutput().getRoles().get(0).getImpliedRoles());
+    }
+
+    @Test
+    public void
+    preferencesReplyRoundTrips()
+        throws Exception
+    {
+        GetPreferencesOutputReply reply =
+            new GetPreferencesOutputReply()
+                .setSuccess(true)
+                .setOutput(
+                    new PreferencesOutput()
+                        .setValues(Map.of("granite.theme","dark","compact",true,"size",3))
+                        .setDefinitions(
+                            List.of(
+                                new PreferenceDefinitionData()
+                                    .setKey("granite.theme")
+                                    .setType("ENUM")
+                                    .setDefaultValue("light")
+                                    .setAllowedValues(List.of("light","dark"))))
+                        .setFailureMessages(List.of("bad")));
+
+        String            json   = mapper.writeValueAsString(reply);
+        PreferencesOutput actual = mapper.readValue(json,GetPreferencesOutputReply.class).getOutput();
+
+        assertTrue(json.contains("\"allowedValues\":[\"light\",\"dark\"]"),json);
+        assertTrue(json.contains("\"type\":\"ENUM\""),json);
+        assertEquals("dark",actual.getValues().get("granite.theme"));
+        assertEquals(true,actual.getValues().get("compact"));
+        assertEquals(3,actual.getValues().get("size"));
+        assertEquals("light",actual.getDefinitions().get(0).getDefaultValue());
+        assertEquals(List.of("light","dark"),actual.getDefinitions().get(0).getAllowedValues());
+        assertEquals(List.of("bad"),actual.getFailureMessages());
+    }
+
+    @Test
+    public void
+    preferencesRequestBindsPreferencesInput()
+        throws Exception
+    {
+        PreferencesInput input =
+            mapper
+                .readValue(
+                    "{\"input\":{\"source\":\"Preferences.Current\",\"command\":\"Save\",\"destination\":\"PreferencesView\","
+                        + "\"values\":{\"compact\":true}}}",
+                    HandlePreferencesInputRequest.class)
+                .getInput();
+
+        assertEquals("Preferences.Current->Save->PreferencesView",input.getKey());
+        assertEquals(Map.of("compact",true),input.getValues());
     }
 
     @Test

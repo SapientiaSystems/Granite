@@ -6,9 +6,12 @@ package granite.frontendcontroller.server.configuration;
 
 import granite.foundation.core.security.ApplicationRoles;
 import granite.foundation.core.security.RoleDefinition;
+import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
+import granite.frontendcontroller.service.requestreply.PreferenceDefinitionData;
+import granite.frontendcontroller.service.requestreply.PreferencesOutput;
 import granite.frontendcontroller.service.requestreply.RoleData;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindAllUsersReply;
@@ -94,6 +97,25 @@ class ExtendedFrontEndControllerConfigurationTest
         assertEquals(List.of("ROLE_ADMIN","ROLE_CLERK","ROLE_MANAGER"),names(reply));
         assertEquals(List.of("ROLE_CLERK"),reply.getOutput().getRoles().get(2).getImpliedRoles());
         assertEquals("Manager",reply.getOutput().getRoles().get(2).getLabel());
+    }
+
+    @Test
+    public void
+    extendedConfigurationAddsDefinition()
+    {
+        PreferencesOutput output =
+            service(configuration(null))
+                .getPreferencesOutput(new GetPreferencesOutputRequest().setSource("Preferences.Current").setDestination("PreferencesView"))
+                .toCompletableFuture()
+                .join()
+                .getOutput();
+
+        List<String> keys = new ArrayList<>();
+
+        for (PreferenceDefinitionData definition : output.getDefinitions())
+            keys.add(definition.getKey());
+
+        assertEquals(List.of("granite.theme","echo.loud"),keys);
     }
 
     @Test

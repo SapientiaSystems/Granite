@@ -12,6 +12,10 @@ import type { HandleSessionInputRequest }  from "./HandleSessionInputRequest";
 import type { HandleSessionInputReply }    from "./HandleSessionInputReply";
 import type { GetSessionOutputRequest }    from "./GetSessionOutputRequest";
 import type { GetSessionOutputReply }      from "./GetSessionOutputReply";
+import type { HandlePreferencesInputRequest } from "./HandlePreferencesInputRequest";
+import type { HandlePreferencesInputReply }   from "./HandlePreferencesInputReply";
+import type { GetPreferencesOutputRequest }   from "./GetPreferencesOutputRequest";
+import type { GetPreferencesOutputReply }     from "./GetPreferencesOutputReply";
 
 export
 interface IGraniteFrontEndControllerService
@@ -24,6 +28,10 @@ interface IGraniteFrontEndControllerService
     handleSessionInput(request: HandleSessionInputRequest): ICompletionStage<HandleSessionInputReply>;
 
     getSessionOutput(request: GetSessionOutputRequest): ICompletionStage<GetSessionOutputReply>;
+
+    handlePreferencesInput(request: HandlePreferencesInputRequest): ICompletionStage<HandlePreferencesInputReply>;
+
+    getPreferencesOutput(request: GetPreferencesOutputRequest): ICompletionStage<GetPreferencesOutputReply>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

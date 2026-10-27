@@ -63,7 +63,8 @@ class GraniteFrontEndControllerServiceUsersTest
                     Mockito.mock(ISessionQueryServiceClient.class),
                     SessionTestSupport.context(null,null,null),
                     new SessionLoginSettings(true,false),
-                    GraniteApplicationRoles.create()));
+                    GraniteApplicationRoles.create(),
+                    List.of()));
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))

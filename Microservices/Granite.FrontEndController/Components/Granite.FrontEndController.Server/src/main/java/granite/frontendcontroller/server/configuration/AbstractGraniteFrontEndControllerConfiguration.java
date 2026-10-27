@@ -7,6 +7,7 @@ package granite.frontendcontroller.server.configuration;
 import granite.foundation.core.security.ApplicationRoles;
 import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
+import granite.frontendcontroller.server.application.PreferenceDefinition;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
 import granite.frontendcontroller.server.platform.ForwardedBearerClientRequestFilter;
@@ -37,6 +38,7 @@ import strata.foundation.core.configuration.IConfiguration;
 import strata.frontendcontroller.server.application.ApplicationConfiguration;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 @Configuration
@@ -102,7 +104,14 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 createSessionQueryClient(),
                 SessionRequestContext.fromCurrentRequest(),
                 SessionLoginSettings.fromConfiguration(configuration),
-                roles);
+                roles,
+                preferenceDefinitions());
+    }
+
+    protected List<PreferenceDefinition>
+    preferenceDefinitions()
+    {
+        return List.of(PreferenceDefinition.enumeration("granite.theme",List.of("light","dark"),"light"));
     }
 
     protected abstract S

@@ -6,7 +6,9 @@ import type { ICompletionStage }                          from "strata.foundatio
 import type { HandleUsersInputRequest, HandleUsersInputReply,
               GetUsersOutputRequest, GetUsersOutputReply,
               HandleSessionInputRequest, HandleSessionInputReply,
-              GetSessionOutputRequest, GetSessionOutputReply }  from "granite.frontendcontroller.service/RequestReply";
+              GetSessionOutputRequest, GetSessionOutputReply,
+              HandlePreferencesInputRequest, HandlePreferencesInputReply,
+              GetPreferencesOutputRequest, GetPreferencesOutputReply }  from "granite.frontendcontroller.service/RequestReply";
 import { AbstractGraniteFrontEndControllerServiceClient } from "./AbstractGraniteFrontEndControllerServiceClient";
 import type { FetchFunction }                             from "./FetchFunction";
 import type { IGraniteFrontEndControllerServiceClient }   from "./IGraniteFrontEndControllerServiceClient";
@@ -46,6 +48,20 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetSessionOutputReply,GetSessionOutputRequest>(
             "get-session-output",
+            this.initializeRequest(request));
+    }
+
+    handlePreferencesInput(request: HandlePreferencesInputRequest): ICompletionStage<HandlePreferencesInputReply>
+    {
+        return this.doPost<HandlePreferencesInputReply,HandlePreferencesInputRequest>(
+            "handle-preferences-input",
+            this.initializeRequest(request));
+    }
+
+    getPreferencesOutput(request: GetPreferencesOutputRequest): ICompletionStage<GetPreferencesOutputReply>
+    {
+        return this.doPost<GetPreferencesOutputReply,GetPreferencesOutputRequest>(
+            "get-preferences-output",
             this.initializeRequest(request));
     }
 }

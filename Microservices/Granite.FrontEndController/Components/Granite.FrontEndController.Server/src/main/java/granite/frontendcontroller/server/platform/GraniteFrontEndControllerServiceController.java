@@ -4,10 +4,14 @@
 
 package granite.frontendcontroller.server.platform;
 
+import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
+import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandlePreferencesInputReply;
+import granite.frontendcontroller.service.requestreply.HandlePreferencesInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
@@ -69,6 +73,26 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating getSessionOutput to implementation service");
         return getService().getSessionOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-preferences-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandlePreferencesInputReply>
+    handlePreferencesInput(@RequestBody HandlePreferencesInputRequest request)
+    {
+        getLogger().info("delegating handlePreferencesInput to implementation service");
+        return getService().handlePreferencesInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-preferences-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetPreferencesOutputReply>
+    getPreferencesOutput(@RequestBody GetPreferencesOutputRequest request)
+    {
+        getLogger().info("delegating getPreferencesOutput to implementation service");
+        return getService().getPreferencesOutput(request);
     }
 }
 

@@ -6,6 +6,7 @@ package granite.frontendcontroller.server.configuration;
 
 import granite.foundation.core.security.ApplicationRoles;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
+import granite.frontendcontroller.server.application.PreferenceDefinition;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import strata.foundation.spring.inject.RequestScoped;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.CompletableFuture;
@@ -61,6 +63,17 @@ class ExtendedFrontEndControllerConfiguration
     applicationRoles()
     {
         return roles == null ? super.applicationRoles() : roles;
+    }
+
+    @Override
+    protected List<PreferenceDefinition>
+    preferenceDefinitions()
+    {
+        List<PreferenceDefinition> definitions = new ArrayList<>(super.preferenceDefinitions());
+
+        definitions.add(PreferenceDefinition.bool("echo.loud",false));
+
+        return definitions;
     }
 
     @Override

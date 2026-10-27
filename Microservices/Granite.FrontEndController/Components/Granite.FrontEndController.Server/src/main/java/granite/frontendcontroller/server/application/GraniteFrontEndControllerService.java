@@ -6,6 +6,8 @@ package granite.frontendcontroller.server.application;
 
 import granite.frontendcontroller.server.control.IInputAction;
 import granite.frontendcontroller.server.control.IOutputAction;
+import granite.frontendcontroller.server.control.preference.InitializePreferencesView;
+import granite.frontendcontroller.server.control.preference.SavePreferencesView;
 import granite.frontendcontroller.server.control.session.CompleteOktaLoginView;
 import granite.frontendcontroller.server.control.session.LoginMethodsView;
 import granite.frontendcontroller.server.control.session.LoginView;
@@ -17,15 +19,21 @@ import granite.frontendcontroller.server.control.user.DeleteUsersView;
 import granite.frontendcontroller.server.control.user.InitializeUsersView;
 import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
+import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandlePreferencesInputReply;
+import granite.frontendcontroller.service.requestreply.HandlePreferencesInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
+import granite.frontendcontroller.service.requestreply.PreferencesInput;
+import granite.frontendcontroller.service.requestreply.PreferencesOutput;
 import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.frontendcontroller.service.requestreply.UsersInput;
@@ -55,6 +63,8 @@ class GraniteFrontEndControllerService
     private final Map<String,IOutputAction<GetUsersOutputRequest,UsersOutput>>     usersOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
     private final Map<String,IOutputAction<GetSessionOutputRequest,SessionOutput>> sessionOutputActions;
+    private final Map<String,IInputAction<PreferencesInput,PreferencesOutput>>             preferencesInputActions;
+    private final Map<String,IOutputAction<GetPreferencesOutputRequest,PreferencesOutput>> preferencesOutputActions;
 
     public
     GraniteFrontEndControllerService(GraniteFrontEndControllerContext context)
@@ -86,6 +96,12 @@ class GraniteFrontEndControllerService
             Map.of(
                 "Session.New->LoginView",new LoginMethodsView(settings),
                 "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,requestContext));
+        preferencesInputActions =
+            Map.of(
+                "Preferences.Current->Save->PreferencesView",new SavePreferencesView(userQueryClient,userCommandClient,requestContext,context.getPreferenceDefinitions()));
+        preferencesOutputActions =
+            Map.of(
+                "Preferences.Current->PreferencesView",new InitializePreferencesView(userQueryClient,requestContext,context.getPreferenceDefinitions()));
     }
 
     @Override
@@ -114,6 +130,20 @@ class GraniteFrontEndControllerService
     getSessionOutput(GetSessionOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(sessionOutputActions,context),GetSessionOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandlePreferencesInputReply>
+    handlePreferencesInput(HandlePreferencesInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(preferencesInputActions,context),HandlePreferencesInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetPreferencesOutputReply>
+    getPreferencesOutput(GetPreferencesOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(preferencesOutputActions,context),GetPreferencesOutputReply::new);
     }
 
     protected GraniteFrontEndControllerContext

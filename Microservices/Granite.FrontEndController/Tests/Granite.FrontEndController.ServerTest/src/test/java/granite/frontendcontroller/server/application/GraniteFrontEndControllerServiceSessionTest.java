@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -48,7 +50,8 @@ class GraniteFrontEndControllerServiceSessionTest
                     Mockito.mock(ISessionQueryServiceClient.class),
                     SessionTestSupport.context(null,null,null),
                     new SessionLoginSettings(true,false),
-                    GraniteApplicationRoles.create()));
+                    GraniteApplicationRoles.create(),
+                    List.of()));
     }
 
     private HandleSessionInputReply

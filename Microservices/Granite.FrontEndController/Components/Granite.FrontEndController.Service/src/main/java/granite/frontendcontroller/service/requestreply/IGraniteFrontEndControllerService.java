@@ -23,6 +23,12 @@ interface IGraniteFrontEndControllerService
 
     CompletionStage<GetSessionOutputReply>
     getSessionOutput(GetSessionOutputRequest request);
+
+    CompletionStage<HandlePreferencesInputReply>
+    handlePreferencesInput(HandlePreferencesInputRequest request);
+
+    CompletionStage<GetPreferencesOutputReply>
+    getPreferencesOutput(GetPreferencesOutputRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////
