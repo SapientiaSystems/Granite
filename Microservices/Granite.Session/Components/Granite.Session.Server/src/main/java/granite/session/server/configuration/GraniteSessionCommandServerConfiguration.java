@@ -12,9 +12,10 @@ import granite.session.server.application.IRefreshTokenService;
 import granite.session.server.application.IServiceTokenProvider;
 import granite.session.server.application.JwkSetProvider;
 import granite.session.server.application.JwtTokenService;
-import granite.session.server.application.OktaAuthoritiesSource;
 import granite.session.server.application.OktaClient;
+import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
+import granite.session.server.application.OktaUnmappedGroups;
 import granite.session.server.application.RefreshTokenService;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ServiceTokenProvider;
@@ -129,9 +130,12 @@ class GraniteSessionCommandServerConfiguration
                 .setClientId(environment.getProperty("granite.session.okta.client-id"))
                 .setRedirectUri(environment.getProperty("granite.session.okta.redirect-uri"))
                 .setPostLogoutRedirectUri(environment.getProperty("granite.session.okta.post-logout-redirect-uri"))
-                .setAuthoritiesSource(
-                    OktaAuthoritiesSource.valueOf(
-                        environment.getProperty("granite.session.okta.authorities-source","USER").trim().toUpperCase()))
+                .setRoleAssignment(
+                    OktaRoleAssignment.valueOf(
+                        environment.getProperty("granite.session.okta.role-assignment","ON_CREATE").trim().toUpperCase()))
+                .setUnmappedGroups(
+                    OktaUnmappedGroups.valueOf(
+                        environment.getProperty("granite.session.okta.unmapped-groups","DEFAULT_ROLE").trim().toUpperCase()))
                 .setGroupMapping(
                     Binder
                         .get(environment)

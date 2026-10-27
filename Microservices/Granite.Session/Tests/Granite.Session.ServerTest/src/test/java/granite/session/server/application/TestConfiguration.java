@@ -94,8 +94,7 @@ class TestConfiguration
         return
             fakeOkta()
                 .settings()
-                .setAuthoritiesSource(OktaAuthoritiesSource.BOTH)
-                .setGroupMapping(Map.of("Granite Admins","ROLE_ADMIN"));
+                .setGroupMapping(Map.of("Granite Admins","ROLE_Admin"));
     }
 
     @Override
@@ -141,7 +140,7 @@ class TestConfiguration
                                 new UserData()
                                     .setUserId(ids.computeIfAbsent(userName,k -> next.incrementAndGet()))
                                     .setUserName(userName)
-                                    .setAuthorities(java.util.Set.of("ROLE_USER","ROLE_ADMIN")))
+                                    .setAuthorities(java.util.Set.of("ROLE_User","ROLE_Admin")))
                             .setSuccess(true);
                     else
                         reply

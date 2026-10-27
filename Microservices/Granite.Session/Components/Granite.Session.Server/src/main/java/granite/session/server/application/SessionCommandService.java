@@ -4,6 +4,8 @@
 
 package granite.session.server.application;
 
+import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.session.server.domain.ISessionEvent;
 import granite.session.server.domain.ISessionEventObserver;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
@@ -41,6 +43,9 @@ import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.FindUsersByKeyReply;
 import granite.user.service.requestreply.FindUsersByKeyRequest;
+import granite.user.service.requestreply.UpdateUserData;
+import granite.user.service.requestreply.UpdateUserReply;
+import granite.user.service.requestreply.UpdateUserRequest;
 import granite.user.service.requestreply.UserData;
 import granite.user.service.requestreply.UserKey;
 import jakarta.inject.Inject;
@@ -87,7 +92,7 @@ class SessionCommandService
     private final IUserQueryServiceClient         userQueryServiceClient;
     private final IOktaClient                     oktaClient;
     private final OktaSettings                    oktaSettings;
-    private final OktaAuthorities                 oktaAuthorities;
+    private final OktaRoles                       oktaRoles;
     private final ILoginGate                      loginGate;
     private final ISessionEventSender             sender;
     private final ModelMapper                     mapper;
@@ -102,9 +107,7 @@ class SessionCommandService
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
     private static final String   OKTA_PROVIDER       = "okta";
-    private static final String   OKTA_ROLE           = "ROLE_USER";
 
-    @Inject
     public
     SessionCommandService(
         ISessionRepository              repository,
@@ -122,6 +125,43 @@ class SessionCommandService
         Duration                        renewalMargin,
         Clock                           clock)
     {
+        this(
+            repository,
+            transactionRepository,
+            jwtTokenService,
+            refreshTokenService,
+            userCommandServiceClient,
+            userQueryServiceClient,
+            oktaClient,
+            oktaSettings,
+            loginGate,
+            sender,
+            mapper,
+            maxLifetime,
+            renewalMargin,
+            clock,
+            GraniteApplicationRoles.create());
+    }
+
+    @Inject
+    public
+    SessionCommandService(
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        ILoginGate                      loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
+        Duration                        maxLifetime,
+        Duration                        renewalMargin,
+        Clock                           clock,
+        ApplicationRoles                roles)
+    {
         this.repository               = repository;
         this.transactionRepository    = transactionRepository;
         this.jwtTokenService          = jwtTokenService;
@@ -130,7 +170,7 @@ class SessionCommandService
         this.userQueryServiceClient   = userQueryServiceClient;
         this.oktaClient               = oktaClient;
         this.oktaSettings             = oktaSettings != null ? oktaSettings : new OktaSettings();
-        this.oktaAuthorities          = new OktaAuthorities(this.oktaSettings);
+        this.oktaRoles                = new OktaRoles(this.oktaSettings,roles);
         this.loginGate                = loginGate;
         this.sender                   = sender;
         this.mapper                   = mapper;
@@ -649,7 +689,23 @@ class SessionCommandService
         UserData     user     = findUserByExternalIdentity(OKTA_PROVIDER,identity.getSubject());
 
         if (user == null)
-            user = createOktaUser(identity);
+        {
+            Optional<Set<String>> assigned = oktaRoles.rolesFor(identity.getGroups());
+
+            if (assigned.isEmpty())
+                return context.reject("user unavailable");
+
+            user = createOktaUser(identity,assigned.get());
+        }
+        else if (oktaSettings.getRoleAssignment() == OktaRoleAssignment.EVERY_LOGIN)
+        {
+            Optional<Set<String>> assigned = oktaRoles.rolesFor(identity.getGroups());
+
+            if (assigned.isEmpty())
+                return context.reject("user unavailable");
+
+            user = writeBackRoles(user,assigned.get());
+        }
 
         if (user == null || user.getUserId() == null)
             return context.reject("user unavailable");
@@ -658,7 +714,7 @@ class SessionCommandService
             context
                 .setUserId(user.getUserId())
                 .setUserName(user.getUserName())
-                .setAuthorities(oktaAuthorities.calculate(user.getAuthorities(),identity.getGroups()));
+                .setAuthorities(storedAuthorities(user));
     }
 
     protected CompleteOktaLoginContext
@@ -1564,7 +1620,7 @@ class SessionCommandService
     }
 
     private UserData
-    createOktaUser(OktaIdentity identity)
+    createOktaUser(OktaIdentity identity,Set<String> assigned)
     {
         CreateUserReply reply =
             userCommandServiceClient
@@ -1574,7 +1630,7 @@ class SessionCommandService
                             new CreateUserData()
                                 .setUserName(identity.getUserName())
                                 .setExternalIdentity(OKTA_PROVIDER + ":" + identity.getSubject())
-                                .setAuthorities(new LinkedHashSet<>(Set.of(OKTA_ROLE)))))
+                                .setAuthorities(new LinkedHashSet<>(assigned))))
                 .toCompletableFuture()
                 .join();
 
@@ -1591,15 +1647,48 @@ class SessionCommandService
     private Set<String>
     authoritiesFor(Session session,UserData user)
     {
-        Set<String> userAuthorities =
+        return storedAuthorities(user);
+    }
+
+    private Set<String>
+    storedAuthorities(UserData user)
+    {
+        return
             user.getAuthorities() != null
                 ? new LinkedHashSet<>(user.getAuthorities())
                 : new LinkedHashSet<>();
+    }
 
-        if (session.getSignInMethod() != SignInMethod.OKTA)
-            return userAuthorities;
+    private UserData
+    writeBackRoles(UserData user,Set<String> assigned)
+    {
+        if (assigned.equals(storedAuthorities(user)))
+            return user;
 
-        return oktaAuthorities.calculate(userAuthorities,session.getOktaGroups());
+        UpdateUserReply reply =
+            userCommandServiceClient
+                .updateUser(
+                    new UpdateUserRequest()
+                        .setUserToUpdate(
+                            new UpdateUserData()
+                                .setUserId(user.getUserId())
+                                .setAuthorities(new LinkedHashSet<>(assigned))))
+                .toCompletableFuture()
+                .join();
+
+        if (reply == null || !reply.isSuccess())
+        {
+            logger.info("<completeOktaLogin> role write-back failed for user: {}",user.getUserId());
+            return null;
+        }
+
+        logger.info("<completeOktaLogin> roles updated for user: {}",user.getUserId());
+        return
+            new UserData()
+                .setUserId(user.getUserId())
+                .setUserName(user.getUserName())
+                .setExternalIdentity(user.getExternalIdentity())
+                .setAuthorities(new LinkedHashSet<>(assigned));
     }
 
     private String

@@ -414,73 +414,30 @@ class ResolveSessionTest
 
     @Test
     public void
-    oktaRenewalUsesTheSessionsOwnGroups()
+    oktaRenewalUsesTheUsersStoredAuthorities()
     {
-        subject = subjectWith(OktaAuthoritiesSource.BOTH);
-
         stub(live().setSignInMethod(SignInMethod.OKTA).setOktaGroups(Set.of("Granite Admins")));
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
-        stubUser(Set.of("ROLE_USER"));
+        stubUser(Set.of("ROLE_User"));
 
         AtomicReference<Set<String>> minted = mintedAuthorities();
 
         assertTrue(resolve(HANDLE).isSuccess());
-        assertEquals(Set.of("ROLE_USER","ROLE_ADMIN"),minted.get());
+        assertEquals(Set.of("ROLE_User"),minted.get());
     }
 
     @Test
     public void
-    oktaRenewalUnderGroupsSourceIgnoresUserRoles()
+    passwordRenewalUsesTheUsersStoredAuthorities()
     {
-        subject = subjectWith(OktaAuthoritiesSource.OKTA_GROUPS);
-
-        stub(live().setSignInMethod(SignInMethod.OKTA).setOktaGroups(Set.of("Everyone")));
-        tokenExpires(NOW.plus(Duration.ofMinutes(1)));
-        stubUser(Set.of("ROLE_ADMIN"));
-
-        AtomicReference<Set<String>> minted = mintedAuthorities();
-
-        assertTrue(resolve(HANDLE).isSuccess());
-        assertEquals(Set.of(),minted.get());
-    }
-
-    @Test
-    public void
-    passwordRenewalIgnoresTheGroupMapping()
-    {
-        subject = subjectWith(OktaAuthoritiesSource.OKTA_GROUPS);
-
         stub(live().setSignInMethod(SignInMethod.PASSWORD));
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
-        stubUser(Set.of("ROLE_AUDITOR"));
+        stubUser(Set.of("ROLE_Auditor"));
 
         AtomicReference<Set<String>> minted = mintedAuthorities();
 
         assertTrue(resolve(HANDLE).isSuccess());
-        assertEquals(Set.of("ROLE_AUDITOR"),minted.get());
-    }
-
-    private SessionCommandService
-    subjectWith(OktaAuthoritiesSource source)
-    {
-        return
-            new SessionCommandService(
-                repository,
-                Mockito.mock(IOktaLoginTransactionRepository.class),
-                jwtTokenService,
-                refreshTokenService,
-                userCommandServiceClient,
-                userQueryServiceClient,
-                Mockito.mock(IOktaClient.class),
-                new OktaSettings()
-                    .setAuthoritiesSource(source)
-                    .setGroupMapping(java.util.Map.of("Granite Admins","ROLE_ADMIN")),
-                new RequiredAuthoritiesLoginGate(List.of()),
-                sender,
-                new ModelMapper().registerModule(new MappingModule()),
-                MAX_LIFETIME,
-                RENEWAL_MARGIN,
-                Clock.fixed(NOW,ZoneOffset.UTC));
+        assertEquals(Set.of("ROLE_Auditor"),minted.get());
     }
 
     private Session

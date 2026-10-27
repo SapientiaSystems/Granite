@@ -17,7 +17,8 @@ class OktaSettings
     private String                redirectUri;
     private String                postLogoutRedirectUri;
     private String                scope;
-    private OktaAuthoritiesSource authoritiesSource;
+    private OktaRoleAssignment    roleAssignment;
+    private OktaUnmappedGroups    unmappedGroups;
     private Map<String,String>    groupMapping;
     private Duration              transactionTtl;
     private Duration              discoveryCacheTtl;
@@ -33,7 +34,8 @@ class OktaSettings
         redirectUri           = null;
         postLogoutRedirectUri = null;
         scope                 = "openid profile email groups";
-        authoritiesSource     = OktaAuthoritiesSource.USER;
+        roleAssignment        = OktaRoleAssignment.ON_CREATE;
+        unmappedGroups        = OktaUnmappedGroups.DEFAULT_ROLE;
         groupMapping          = new LinkedHashMap<>();
         transactionTtl        = Duration.ofMinutes(5);
         discoveryCacheTtl     = Duration.ofHours(1);
@@ -77,12 +79,18 @@ class OktaSettings
     }
 
     public OktaSettings
-    setAuthoritiesSource(OktaAuthoritiesSource value)
+    setRoleAssignment(OktaRoleAssignment value)
     {
-        authoritiesSource = value != null ? value : OktaAuthoritiesSource.USER;
+        roleAssignment = value != null ? value : OktaRoleAssignment.ON_CREATE;
         return this;
     }
 
+    public OktaSettings
+    setUnmappedGroups(OktaUnmappedGroups value)
+    {
+        unmappedGroups = value != null ? value : OktaUnmappedGroups.DEFAULT_ROLE;
+        return this;
+    }
     public OktaSettings
     setGroupMapping(Map<String,String> value)
     {
@@ -136,8 +144,11 @@ class OktaSettings
     public String
     getScope() { return scope; }
 
-    public OktaAuthoritiesSource
-    getAuthoritiesSource() { return authoritiesSource; }
+    public OktaRoleAssignment
+    getRoleAssignment() { return roleAssignment; }
+
+    public OktaUnmappedGroups
+    getUnmappedGroups() { return unmappedGroups; }
 
     public Map<String,String>
     getGroupMapping() { return groupMapping; }

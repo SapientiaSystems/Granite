@@ -88,7 +88,7 @@ class CompleteOktaLoginTest
     setUp()
     {
         okta          = new FakeOkta();
-        settings      = okta.settings().setGroupMapping(Map.of("Granite Admins","ROLE_ADMIN"));
+        settings      = okta.settings().setGroupMapping(Map.of("Granite Admins","ROLE_Admin"));
         repository    = Mockito.mock(ISessionRepository.class);
         transactions  = Mockito.mock(IOktaLoginTransactionRepository.class);
         userCommands  = Mockito.mock(IUserCommandServiceClient.class);
@@ -112,7 +112,7 @@ class CompleteOktaLoginTest
         Mockito.when(repository.findOpenByDeviceId(Mockito.anyString())).thenReturn(List.of());
         Mockito.when(repository.findOpenByUserId(Mockito.anyLong())).thenReturn(List.of());
         stubSessionSave();
-        stubExistingUser(Set.of("ROLE_USER","ROLE_AUDITOR"));
+        stubExistingUser(Set.of("ROLE_User","ROLE_Auditor"));
         okta.stubTokenReturning(okta.idToken(SUB,NONCE));
     }
 
@@ -151,8 +151,9 @@ class CompleteOktaLoginTest
 
     @Test
     public void
-    firstLoginCreatesUserWithOnlyRoleUser()
+    firstLoginWithoutMappedGroupsCreatesUserWithDefaultRole()
     {
+        settings.setGroupMapping(Map.of());
         stubNoUser();
 
         CompleteOktaLoginReply reply = complete(request());
@@ -161,11 +162,11 @@ class CompleteOktaLoginTest
 
         Mockito.verify(userCommands).createUser(captor.capture());
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(Set.of("ROLE_USER"),captor.getValue().getUserToCreate().getAuthorities());
+        assertEquals(Set.of("ROLE_User"),captor.getValue().getUserToCreate().getAuthorities());
         assertEquals("okta:" + SUB,captor.getValue().getUserToCreate().getExternalIdentity());
         assertEquals(SUB + "@example.com",captor.getValue().getUserToCreate().getUserName());
         assertNull(captor.getValue().getUserToCreate().getPassword());
-        assertEquals(Set.of("ROLE_USER"),reply.getSessionData().getAuthorities());
+        assertEquals(Set.of("ROLE_User"),reply.getSessionData().getAuthorities());
     }
 
     @Test
@@ -184,38 +185,17 @@ class CompleteOktaLoginTest
 
     @Test
     public void
-    userSourceGivesTheUsersAuthorities()
+    storedRolesAreTheSessionAuthorities()
     {
-        settings.setAuthoritiesSource(OktaAuthoritiesSource.USER);
-
-        assertEquals(Set.of("ROLE_USER","ROLE_AUDITOR"),complete(request()).getSessionData().getAuthorities());
-    }
-
-    @Test
-    public void
-    groupsSourceGivesTheMappedGroups()
-    {
-        settings.setAuthoritiesSource(OktaAuthoritiesSource.OKTA_GROUPS);
-
-        assertEquals(Set.of("ROLE_ADMIN"),complete(request()).getSessionData().getAuthorities());
-    }
-
-    @Test
-    public void
-    bothSourceGivesTheUnion()
-    {
-        settings.setAuthoritiesSource(OktaAuthoritiesSource.BOTH);
-
-        assertEquals(
-            Set.of("ROLE_USER","ROLE_AUDITOR","ROLE_ADMIN"),
-            complete(request()).getSessionData().getAuthorities());
+        assertEquals(Set.of("ROLE_User","ROLE_Auditor"),complete(request()).getSessionData().getAuthorities());
     }
 
     @Test
     public void
     gateRefusesUngatedNewUser()
     {
-        gate = new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR"));
+        gate = new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin","ROLE_Auditor"));
+        settings.setGroupMapping(Map.of());
         stubNoUser();
 
         CompleteOktaLoginReply reply = complete(request());
@@ -229,8 +209,7 @@ class CompleteOktaLoginTest
     public void
     gatePermitsAMappedGroupRole()
     {
-        gate = new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN"));
-        settings.setAuthoritiesSource(OktaAuthoritiesSource.BOTH);
+        gate = new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin"));
         stubNoUser();
 
         assertTrue(complete(request()).isSuccess());

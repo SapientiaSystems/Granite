@@ -8,8 +8,9 @@ import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.IOktaClient;
-import granite.session.server.application.OktaAuthoritiesSource;
+import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
+import granite.session.server.application.OktaUnmappedGroups;
 import granite.session.server.application.RefreshTokenService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -240,9 +241,10 @@ class GraniteSessionCommandServerConfigurationTest
                 .withProperty("granite.session.okta.client-id","client-1")
                 .withProperty("granite.session.okta.redirect-uri","https://app.example.com/login/callback")
                 .withProperty("granite.session.okta.post-logout-redirect-uri","https://app.example.com/")
-                .withProperty("granite.session.okta.authorities-source","both")
-                .withProperty("granite.session.okta.group-mapping[Granite Admins]","ROLE_ADMIN")
-                .withProperty("granite.session.okta.group-mapping.auditors","ROLE_AUDITOR");
+                .withProperty("granite.session.okta.role-assignment","every_login")
+                .withProperty("granite.session.okta.unmapped-groups","refuse")
+                .withProperty("granite.session.okta.group-mapping[Granite Admins]","ROLE_Admin")
+                .withProperty("granite.session.okta.group-mapping.auditors","ROLE_Auditor");
         OktaSettings    settings = subject.oktaSettings(env);
 
         assertTrue(settings.isEnabled());
@@ -250,8 +252,9 @@ class GraniteSessionCommandServerConfigurationTest
         assertEquals("client-1",settings.getClientId());
         assertEquals("https://app.example.com/login/callback",settings.getRedirectUri());
         assertEquals("https://app.example.com/",settings.getPostLogoutRedirectUri());
-        assertEquals(OktaAuthoritiesSource.BOTH,settings.getAuthoritiesSource());
-        assertEquals(Map.of("Granite Admins","ROLE_ADMIN","auditors","ROLE_AUDITOR"),settings.getGroupMapping());
+        assertEquals(OktaRoleAssignment.EVERY_LOGIN,settings.getRoleAssignment());
+        assertEquals(OktaUnmappedGroups.REFUSE,settings.getUnmappedGroups());
+        assertEquals(Map.of("Granite Admins","ROLE_Admin","auditors","ROLE_Auditor"),settings.getGroupMapping());
         assertEquals(java.time.Duration.ofMinutes(5),settings.getTransactionTtl());
     }
 
@@ -263,7 +266,8 @@ class GraniteSessionCommandServerConfigurationTest
         OktaSettings    settings = subject.oktaSettings(env);
 
         assertFalse(settings.isEnabled());
-        assertEquals(OktaAuthoritiesSource.USER,settings.getAuthoritiesSource());
+        assertEquals(OktaRoleAssignment.ON_CREATE,settings.getRoleAssignment());
+        assertEquals(OktaUnmappedGroups.DEFAULT_ROLE,settings.getUnmappedGroups());
         assertInstanceOf(
             IOktaClient.class,
             subject.oktaClient(settings,env,new DefaultResourceLoader(),java.time.Clock.systemUTC()));

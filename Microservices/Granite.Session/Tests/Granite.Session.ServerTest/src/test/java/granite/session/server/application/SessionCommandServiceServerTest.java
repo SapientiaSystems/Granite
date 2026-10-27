@@ -112,7 +112,7 @@ class SessionCommandServiceServerTest
         assertNotNull(reply.getSessionHandle());
         assertEquals("/users?tab=1",reply.getReturnTo());
         assertEquals(sub + "@example.com",reply.getUserName());
-        assertEquals(Set.of("ROLE_USER","ROLE_ADMIN"),reply.getSessionData().getAuthorities());
+        assertEquals(Set.of("ROLE_Admin"),reply.getSessionData().getAuthorities());
         assertCreatedOutboxEvent(reply.getSessionData().getSessionId());
         assertEquals("OKTA",find(reply.getSessionData().getSessionId()).getSignInMethod().name());
         assertTrue(resolveSession(reply.getSessionHandle()).isSuccess());
