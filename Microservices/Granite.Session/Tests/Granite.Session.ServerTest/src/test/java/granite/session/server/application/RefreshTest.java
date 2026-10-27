@@ -15,6 +15,9 @@ import granite.session.service.requestreply.RefreshRequest;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
+import granite.user.service.requestreply.FindUsersByKeyReply;
+import granite.user.service.requestreply.FindUsersByKeyRequest;
+import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,8 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -95,6 +100,41 @@ class RefreshTest
         Mockito
             .when(jwtTokenService.mint(Mockito.any(Session.class)))
             .thenReturn(NEW_JWT);
+        stubUser(List.of(new UserData().setUserId(USER_ID).setAuthorities(Set.of("ROLE_User"))));
+    }
+
+    @Test
+    public void
+    refreshPicksUpChangedAuthorities()
+    {
+        Session existing =
+            stubCurrent(
+                session(NOW.minus(Duration.ofHours(1)),NOW.plus(Duration.ofMinutes(5)))
+                    .setAuthorities(Set.of("ROLE_User")));
+
+        stubUser(List.of(new UserData().setUserId(USER_ID).setAuthorities(Set.of("ROLE_Admin"))));
+
+        RefreshReply reply = refresh(REFRESH_TOKEN);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+
+        ArgumentCaptor<Session> mintCaptor = ArgumentCaptor.forClass(Session.class);
+
+        Mockito.verify(jwtTokenService).mint(mintCaptor.capture());
+        assertEquals(Set.of("ROLE_Admin"),mintCaptor.getValue().getAuthorities());
+        assertEquals(Set.of("ROLE_Admin"),existing.getAuthorities());
+    }
+
+    @Test
+    public void
+    refreshRejectsMissingUser()
+    {
+        stubCurrent(session(NOW.minus(Duration.ofHours(1)),NOW.plus(Duration.ofMinutes(5))));
+        stubUser(List.of());
+
+        RefreshReply reply = refresh(REFRESH_TOKEN);
+
+        assertRejected(reply,"user unavailable");
     }
 
     @Test
@@ -302,6 +342,19 @@ class RefreshTest
             .when(repository.findByRefreshTokenHash(refreshTokenService.hash(REFRESH_TOKEN)))
             .thenReturn(Optional.of(session));
         return session;
+    }
+
+    private void
+    stubUser(List<UserData> users)
+    {
+        Mockito
+            .when(userQueryServiceClient.findUsersByKey(Mockito.any(FindUsersByKeyRequest.class)))
+            .thenAnswer(
+                invocation ->
+                    CompletableFuture.completedFuture(
+                        new FindUsersByKeyReply(invocation.getArgument(0))
+                            .setFoundUsers(users)
+                            .setSuccess(true)));
     }
 
     private void

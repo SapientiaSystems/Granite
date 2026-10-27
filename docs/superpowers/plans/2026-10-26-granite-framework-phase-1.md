@@ -26,7 +26,7 @@
 
 ## Deviation from the spec
 
-The spec has Session rename stored session authorities. Session already re-reads the user's authorities on every JWT renewal (`SessionCommandService` renewal → `authoritiesFor`), so after Task 3 renames User records, sessions pick up the new names at their next renewal; no Session renamer is built. Until then an Admin holding a pre-rename JWT may see 403 on admin paths for at most one access-token lifetime.
+The spec has Session rename stored session authorities. Session re-reads the user's stored authorities on every JWT re-mint: `resolveSession` renewal and, since the final fix wave, `refresh` (`remintJwt` uses the user from `loadRefreshUser`; a missing user is rejected), so after Task 3 renames User records, sessions pick up the new names at their next renewal; no Session renamer is built. Until then an Admin holding a pre-rename JWT may see 403 on admin paths for at most one access-token lifetime.
 
 ## Review Focus
 

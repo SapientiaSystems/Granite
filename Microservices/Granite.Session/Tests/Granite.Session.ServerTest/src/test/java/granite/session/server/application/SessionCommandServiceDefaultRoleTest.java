@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,13 +51,16 @@ class SessionCommandServiceDefaultRoleTest
     private static final String  PASSWORD  = "hunter2";
     private static final String  DEVICE_ID = "device-A";
     private static final Instant NOW       = Instant.parse("2026-10-26T12:00:00Z");
+    private static final String  THEME     = "preferences.granite.theme";
+
+    private static final Set<String> EXPANDED_DEFAULT = Set.of("ROLE_PromotionsApprover","ROLE_PromotionsReviewer");
 
     private static final ApplicationRoles POPLAR =
         new ApplicationRoles(
             List.of(
                 new RoleDefinition("ROLE_PromotionsReviewer","Promotions Reviewer",Set.of()),
                 new RoleDefinition("ROLE_PromotionsApprover","Promotions Approver",Set.of("ROLE_PromotionsReviewer"))),
-            "ROLE_PromotionsReviewer");
+            "ROLE_PromotionsApprover");
 
     private ISessionRepository        repository;
     private IJwtTokenService          jwtTokenService;
@@ -120,12 +124,40 @@ class SessionCommandServiceDefaultRoleTest
 
         Mockito.verify(userCommandServiceClient).updateUser(update.capture());
         assertEquals(USER_ID,update.getValue().getUserToUpdate().getUserId());
-        assertEquals(Set.of("ROLE_PromotionsReviewer"),update.getValue().getUserToUpdate().getAuthorities().get());
+        assertEquals(EXPANDED_DEFAULT,update.getValue().getUserToUpdate().getAuthorities().get());
 
         ArgumentCaptor<Session> minted = ArgumentCaptor.forClass(Session.class);
 
         Mockito.verify(jwtTokenService).mint(minted.capture());
-        assertEquals(Set.of("ROLE_PromotionsReviewer"),minted.getValue().getAuthorities());
+        assertEquals(EXPANDED_DEFAULT,minted.getValue().getAuthorities());
+    }
+
+    @Test
+    public void
+    firstLoginSetsMarkerAndKeepsOtherValues()
+    {
+        stubAuthenticate(true,Set.of(),Map.of(THEME,"dark"));
+        stubUpdate(true);
+
+        assertTrue(login().isSuccess());
+
+        ArgumentCaptor<UpdateUserRequest> update = ArgumentCaptor.forClass(UpdateUserRequest.class);
+
+        Mockito.verify(userCommandServiceClient).updateUser(update.capture());
+        assertEquals(
+            Map.of(THEME,"dark",SessionCommandService.ROLES_ASSIGNED,true),
+            update.getValue().getUserToUpdate().getValues().get());
+        assertEquals(EXPANDED_DEFAULT,update.getValue().getUserToUpdate().getAuthorities().get());
+    }
+
+    @Test
+    public void
+    clearedRolesAreNotReGranted()
+    {
+        stubAuthenticate(true,Set.of(),Map.of(SessionCommandService.ROLES_ASSIGNED,true));
+
+        assertRefused(login());
+        Mockito.verify(userCommandServiceClient,Mockito.never()).updateUser(Mockito.any(UpdateUserRequest.class));
     }
 
     @Test
@@ -199,6 +231,12 @@ class SessionCommandServiceDefaultRoleTest
     private void
     stubAuthenticate(boolean valid,Set<String> authorities)
     {
+        stubAuthenticate(valid,authorities,Map.of());
+    }
+
+    private void
+    stubAuthenticate(boolean valid,Set<String> authorities,Map<String,Object> values)
+    {
         Mockito
             .when(userCommandServiceClient.authenticateUser(Mockito.any(AuthenticateUserRequest.class)))
             .thenAnswer(invocation ->
@@ -208,7 +246,11 @@ class SessionCommandServiceDefaultRoleTest
                         .setValid(valid)
                         .setUser(
                             valid
-                                ? new UserData().setUserId(USER_ID).setUserName(USER_NAME).setAuthorities(authorities)
+                                ? new UserData()
+                                    .setUserId(USER_ID)
+                                    .setUserName(USER_NAME)
+                                    .setAuthorities(authorities)
+                                    .setValues(values)
                                 : null)));
     }
 

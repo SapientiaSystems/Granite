@@ -167,6 +167,7 @@ class CompleteOktaLoginTest
         assertEquals("okta:" + SUB,captor.getValue().getUserToCreate().getExternalIdentity());
         assertEquals(SUB + "@example.com",captor.getValue().getUserToCreate().getUserName());
         assertNull(captor.getValue().getUserToCreate().getPassword());
+        assertEquals(Map.of(SessionCommandService.ROLES_ASSIGNED,true),captor.getValue().getUserToCreate().getValues());
         assertEquals(Set.of("ROLE_User"),reply.getSessionData().getAuthorities());
     }
 

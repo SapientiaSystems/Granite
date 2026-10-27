@@ -8,21 +8,24 @@ import granite.session.server.domain.Session;
 import granite.session.service.requestreply.LoginRequest;
 import granite.user.service.requestreply.CredentialKind;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public
 class LoginContext
 {
-    private LoginRequest   request;
-    private Long           validatedUserId;
-    private Set<String>    validatedAuthorities;
-    private boolean        unsupportedKind;
-    private Session        created;
-    private String         jwt;
-    private String         refreshToken;
-    private String         sessionHandle;
-    private LoginLifecycle lifecycle;
+    private LoginRequest       request;
+    private Long               validatedUserId;
+    private Set<String>        validatedAuthorities;
+    private Map<String,Object> validatedValues;
+    private boolean            unsupportedKind;
+    private Session            created;
+    private String             jwt;
+    private String             refreshToken;
+    private String             sessionHandle;
+    private LoginLifecycle     lifecycle;
 
     public
     LoginContext(LoginRequest req)
@@ -30,6 +33,7 @@ class LoginContext
         request              = req;
         validatedUserId      = null;
         validatedAuthorities = new LinkedHashSet<>();
+        validatedValues      = new LinkedHashMap<>();
         unsupportedKind      = false;
         created              = null;
         jwt                  = null;
@@ -49,6 +53,13 @@ class LoginContext
     setValidatedAuthorities(Set<String> values)
     {
         validatedAuthorities = values != null ? values : new LinkedHashSet<>();
+        return this;
+    }
+
+    public LoginContext
+    setValidatedValues(Map<String,Object> values)
+    {
+        validatedValues = values != null ? values : new LinkedHashMap<>();
         return this;
     }
 
@@ -114,6 +125,9 @@ class LoginContext
 
     public Set<String>
     getValidatedAuthorities() { return validatedAuthorities; }
+
+    public Map<String,Object>
+    getValidatedValues() { return validatedValues; }
 
     public boolean
     isUnsupportedKind() { return unsupportedKind; }

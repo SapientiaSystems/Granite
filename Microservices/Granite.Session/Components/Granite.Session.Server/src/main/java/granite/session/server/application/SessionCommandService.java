@@ -65,6 +65,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,8 @@ public
 class SessionCommandService
     implements ITransactionalSessionCommandService,ISessionEventObserver
 {
+    public static final String ROLES_ASSIGNED = "granite.rolesAssigned";
+
     private final ISessionRepository              repository;
     private final IOktaLoginTransactionRepository transactionRepository;
     private final IJwtTokenService                jwtTokenService;
@@ -261,6 +264,7 @@ class SessionCommandService
                 .thenApply(this::loadForRefresh)
                 .thenApply(this::revokeOnReuse)
                 .thenApply(this::verifyLive)
+                .thenApply(this::loadRefreshUser)
                 .thenApply(this::markUpdated)
                 .thenApply(this::rotateRefreshToken)
                 .thenApply(this::remintJwt)
@@ -384,18 +388,24 @@ class SessionCommandService
         if (context.getValidatedUserId() == null
             || context.isUnsupportedKind()
             || context.getCredentialKind() != CredentialKind.PASSWORD
-            || !context.getValidatedAuthorities().isEmpty())
+            || !context.getValidatedAuthorities().isEmpty()
+            || context.getValidatedValues().containsKey(ROLES_ASSIGNED))
             return context;
 
-        Set<String>     assigned = roles.expand(Set.of(roles.getDefaultRole()));
-        UpdateUserReply reply    =
+        Set<String>        assigned = roles.expand(Set.of(roles.getDefaultRole()));
+        Map<String,Object> values   = new LinkedHashMap<>(context.getValidatedValues());
+
+        values.put(ROLES_ASSIGNED,true);
+
+        UpdateUserReply reply =
             userCommandServiceClient
                 .updateUser(
                     new UpdateUserRequest()
                         .setUserToUpdate(
                             new UpdateUserData()
                                 .setUserId(context.getValidatedUserId())
-                                .setAuthorities(new LinkedHashSet<>(assigned))))
+                                .setAuthorities(new LinkedHashSet<>(assigned))
+                                .setValues(values)))
                 .toCompletableFuture()
                 .join();
 
@@ -829,7 +839,8 @@ class SessionCommandService
             return
                 context
                     .setValidatedUserId(reply.getUser().getUserId())
-                    .setValidatedAuthorities(reply.getUser().getAuthorities());
+                    .setValidatedAuthorities(reply.getUser().getAuthorities())
+                    .setValidatedValues(reply.getUser().getValues());
 
         return context;
     }
@@ -1092,6 +1103,22 @@ class SessionCommandService
     }
 
     protected RefreshContext
+    loadRefreshUser(RefreshContext context)
+    {
+        logger.debug("<refresh> loadRefreshUser");
+
+        if (context.isRejected())
+            return context;
+
+        UserData user = findUserById(context.getLoaded().getUserId());
+
+        if (user == null)
+            return context.setUserUnavailable(true);
+
+        return context.setUser(user);
+    }
+
+    protected RefreshContext
     markUpdated(RefreshContext context)
     {
         logger.debug("<refresh> markUpdated");
@@ -1131,7 +1158,10 @@ class SessionCommandService
             return context;
 
         Session session = context.getLoaded();
-        String  token   = jwtTokenService.mint(session);
+
+        session.setAuthorities(storedAuthorities(context.getUser()));
+
+        String token = jwtTokenService.mint(session);
 
         session.setAccessToken(token);
         return context.setJwt(token);
@@ -1368,6 +1398,15 @@ class SessionCommandService
                 new RefreshReply(context.getRequest())
                     .setSuccess(false)
                     .setFailureMessage("session expired");
+        }
+
+        if (context.isUserUnavailable())
+        {
+            logger.info("<refresh> user unavailable for session: {}",context.getLoaded().getSessionId());
+            return
+                new RefreshReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage("user unavailable");
         }
 
         Session     session = context.getLoaded();
@@ -1630,7 +1669,8 @@ class SessionCommandService
                             new CreateUserData()
                                 .setUserName(identity.getUserName())
                                 .setExternalIdentity(OKTA_PROVIDER + ":" + identity.getSubject())
-                                .setAuthorities(new LinkedHashSet<>(assigned))))
+                                .setAuthorities(new LinkedHashSet<>(assigned))
+                                .setValues(new LinkedHashMap<>(Map.of(ROLES_ASSIGNED,true)))))
                 .toCompletableFuture()
                 .join();
 

@@ -6,6 +6,7 @@ package granite.session.server.application;
 
 import granite.session.server.domain.Session;
 import granite.session.service.requestreply.RefreshRequest;
+import granite.user.service.requestreply.UserData;
 
 public
 class RefreshContext
@@ -16,20 +17,24 @@ class RefreshContext
     private boolean        reused;
     private boolean        expired;
     private boolean        closed;
+    private boolean        userUnavailable;
+    private UserData       user;
     private String         jwt;
     private String         refreshToken;
 
     public
     RefreshContext(RefreshRequest req)
     {
-        request      = req;
-        loaded       = null;
-        notFound     = false;
-        reused       = false;
-        expired      = false;
-        closed       = false;
-        jwt          = null;
-        refreshToken = null;
+        request         = req;
+        loaded          = null;
+        notFound        = false;
+        reused          = false;
+        expired         = false;
+        closed          = false;
+        userUnavailable = false;
+        user            = null;
+        jwt             = null;
+        refreshToken    = null;
     }
 
     public RefreshContext
@@ -64,6 +69,20 @@ class RefreshContext
     setClosed(boolean value)
     {
         closed = value;
+        return this;
+    }
+
+    public RefreshContext
+    setUserUnavailable(boolean value)
+    {
+        userUnavailable = value;
+        return this;
+    }
+
+    public RefreshContext
+    setUser(UserData value)
+    {
+        user = value;
         return this;
     }
 
@@ -103,7 +122,13 @@ class RefreshContext
     isClosed() { return closed; }
 
     public boolean
-    isRejected() { return notFound || reused || expired || closed || loaded == null; }
+    isUserUnavailable() { return userUnavailable; }
+
+    public UserData
+    getUser() { return user; }
+
+    public boolean
+    isRejected() { return notFound || reused || expired || closed || userUnavailable || loaded == null; }
 
     public String
     getJwt() { return jwt; }

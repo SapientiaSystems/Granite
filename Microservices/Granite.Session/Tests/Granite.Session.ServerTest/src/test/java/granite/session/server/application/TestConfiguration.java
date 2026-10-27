@@ -14,6 +14,8 @@ import granite.user.service.requestreply.CreateUserReply;
 import granite.user.service.requestreply.CreateUserRequest;
 import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
+import granite.user.service.requestreply.FindUsersByKeyReply;
+import granite.user.service.requestreply.FindUsersByKeyRequest;
 import granite.user.service.requestreply.UserData;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.ObjectProvider;
@@ -49,7 +51,8 @@ class TestConfiguration
     private static final String PASSWORD_PREFIX = "password-";
 
     private final Map<String,UserData> externalUsers = new ConcurrentHashMap<>();
-    private final AtomicLong          externalIds   = new AtomicLong(5000L);
+    private final Map<Long,UserData>   usersById     = new ConcurrentHashMap<>();
+    private final AtomicLong           externalIds   = new AtomicLong(5000L);
 
     @Override
     @Bean
@@ -134,14 +137,19 @@ class TestConfiguration
                     AuthenticateUserReply   reply    = new AuthenticateUserReply(request);
 
                     if (valid)
+                    {
+                        UserData user =
+                            new UserData()
+                                .setUserId(ids.computeIfAbsent(userName,k -> next.incrementAndGet()))
+                                .setUserName(userName)
+                                .setAuthorities(java.util.Set.of("ROLE_User","ROLE_Admin"));
+
+                        usersById.put(user.getUserId(),user);
                         reply
                             .setValid(true)
-                            .setUser(
-                                new UserData()
-                                    .setUserId(ids.computeIfAbsent(userName,k -> next.incrementAndGet()))
-                                    .setUserName(userName)
-                                    .setAuthorities(java.util.Set.of("ROLE_User","ROLE_Admin")))
+                            .setUser(user)
                             .setSuccess(true);
+                    }
                     else
                         reply
                             .setValid(false)
@@ -165,6 +173,7 @@ class TestConfiguration
                             .setAuthorities(request.getUserToCreate().getAuthorities());
 
                     externalUsers.put(created.getExternalIdentity(),created);
+                    usersById.put(created.getUserId(),created);
                     return
                         CompletableFuture.completedFuture(
                             new CreateUserReply(request)
@@ -202,6 +211,14 @@ class TestConfiguration
                                 .setUsers(found != null ? List.of(found) : List.of())
                                 .setSuccess(true));
                 });
+        Mockito
+            .when(client.findUsersByKey(any(FindUsersByKeyRequest.class)))
+            .thenAnswer(
+                invocation ->
+                    CompletableFuture.completedFuture(
+                        new FindUsersByKeyReply(invocation.getArgument(0))
+                            .setFoundUsers(List.copyOf(usersById.values()))
+                            .setSuccess(true)));
 
         return client;
     }
