@@ -23,7 +23,7 @@
         "build-granite-web-account": "cd Components/Granite.Web.Account && yarn run publish-package",
         "build-granite-web-authentication": "cd Components/Granite.Web.Authentication && yarn run publish-package",
         "build-granite-web-navigator": "cd Components/Granite.Web.Navigator && yarn run publish-package",
-        "build-components": "yarn run build-granite-web-user && yarn run build-granite-web-account && yarn run build-granite-web-authentication && yarn run build-granite-web-navigator",
+        "build-components": "yarn run build-granite-web-user && yarn run build-granite-web-authentication && yarn run build-granite-web-account && yarn run build-granite-web-navigator",
         "build-granite-web-apphost": "cd Applications/Granite.Web.AppHost && yarn run build",
         "build-applications": "yarn run build-granite-web-apphost",
         "build": "yarn run dev-init && yarn run build-components && yarn run build-applications",

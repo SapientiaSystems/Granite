@@ -6,7 +6,7 @@ import type { ReactElement }                             from "react";
 import { BrowserRouter, Routes, Route }                  from "react-router-dom";
 import { AuthenticationProvider, RequireAuthentication } from "granite.web.authentication/Authentication";
 import { LoginCallbackView, LoginView }                  from "granite.web.authentication/Login";
-import { PreferencesProvider }                       from "granite.web.account/Preference";
+import { PreferencesProvider }                           from "granite.web.account/Preference";
 import { MenuBar }                                       from "granite.web.navigator/Navigation";
 import { HomeView }                                      from "granite.web.navigator/Home";
 import { UsersView }                                     from "granite.web.navigator/User";

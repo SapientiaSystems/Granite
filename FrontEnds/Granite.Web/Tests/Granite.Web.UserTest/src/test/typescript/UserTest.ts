@@ -2,8 +2,9 @@
 // Granite.Web.UserTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                from "vitest";
-import { createEntry, isReservedValueKey }     from "granite.web.user/EditableView";
+import { describe, expect, it }                                  from "vitest";
+import { createEntry, entryMessages, isReservedValueKey, toEntries,
+         validateEntries }                                       from "granite.web.user/EditableView";
 
 describe("UserTest", () =>
 {
@@ -13,7 +14,24 @@ describe("UserTest", () =>
         expect(isReservedValueKey("granite.rolesAssigned")).toBe(true);
         expect(isReservedValueKey("department")).toBe(false);
         expect(isReservedValueKey("myPreferences.x")).toBe(false);
-        expect(isReservedValueKey(createEntry("granite.x").key)).toBe(true);
+    });
+
+    it("loadedReservedEntriesAreLockedAndValid", () =>
+    {
+        const entries = toEntries({ "granite.rolesAssigned": true, "preferences.granite.theme": "dark", department: "a" });
+
+        expect(entries.map(e => e.locked === true)).toEqual([true, true, false]);
+        expect(entryMessages(entries)).toEqual([]);
+    });
+
+    it("rejectsAddingOrRenamingToReservedKeys", () =>
+    {
+        const added   = createEntry("granite.x", "1");
+        const renamed = { ...toEntries({ department: "a" })[0], key: "preferences.department" };
+
+        expect(entryMessages([added])).toEqual(["Value keys cannot start with preferences. or granite. (granite.x)"]);
+        expect(entryMessages([renamed])).toEqual(["Value keys cannot start with preferences. or granite. (preferences.department)"]);
+        expect([...validateEntries({ "user-1": [added] }).keys()]).toEqual(["user-1"]);
     });
 });
 

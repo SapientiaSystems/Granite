@@ -2,12 +2,13 @@
 // Granite.Web.AccountTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { render }                                           from "@testing-library/react";
-import { MantineProvider }                                  from "@mantine/core";
-import type { ReactElement }                                from "react";
+import { render }                                       from "@testing-library/react";
+import { MantineProvider }                              from "@mantine/core";
+import type { ReactElement }                            from "react";
 import { AuthenticationProvider, createAuthentication } from "granite.web.authentication/Authentication";
-import type { IAuthentication, ISessionService }            from "granite.web.authentication/Authentication";
-import { PreferencesProvider }                              from "granite.web.account/Preference";
+import type { IAuthentication, ISessionService,
+              ISessionStatus }                          from "granite.web.authentication/Authentication";
+import { PreferencesProvider }                          from "granite.web.account/Preference";
 
 export interface IFakePreferences
 {
@@ -15,27 +16,42 @@ export interface IFakePreferences
     definitions: Array<Record<string,unknown>>;
 }
 
+export interface IDeferredSave
+{
+    input:   Record<string,unknown>;
+    resolve: (reply: unknown) => void;
+}
+
 export const THEME_DEFINITION: Record<string,unknown> =
     { key: "granite.theme", type: "ENUM", defaultValue: "light", allowedValues: ["light","dark"] };
 
+export const FLAG_DEFINITION: Record<string,unknown> =
+    { key: "app.flag", type: "BOOLEAN", defaultValue: false, allowedValues: [] };
+
 export class FakePreferencesClient
 {
-    readonly gets:   Array<Record<string,unknown>> = [];
-    readonly saves:  Array<Record<string,unknown>> = [];
-    closed:          number                        = 0;
-    state:           IFakePreferences;
-    holdLoad:        boolean                       = false;
-    failSave:        string | undefined            = undefined;
+    readonly gets:     Array<Record<string,unknown>> = [];
+    readonly saves:    Array<Record<string,unknown>> = [];
+    readonly deferred: Array<IDeferredSave>          = [];
+    closed:            number                        = 0;
+    state:             IFakePreferences;
+    holdLoad:          boolean                       = false;
+    failLoad:          string | undefined            = undefined;
+    failSave:          string | undefined            = undefined;
+    deferSaves:        boolean                       = false;
 
     constructor(state: IFakePreferences)
     {
         this.state = state;
     }
 
-    private output(): Record<string,unknown>
+    reply(values: Record<string,unknown> = this.state.values): unknown
     {
-        return { userId: 1, source: "Preferences.Current", destination: "PreferencesView", command: null,
-                 values: { ...this.state.values }, definitions: this.state.definitions, failureMessages: [] };
+        return {
+            success: true,
+            output:  { userId: 1, source: "Preferences.Current", destination: "PreferencesView", command: null,
+                       values: { ...values }, definitions: this.state.definitions, failureMessages: [] },
+        };
     }
 
     getPreferencesOutput(request: Record<string,unknown>): Promise<unknown>
@@ -45,7 +61,10 @@ export class FakePreferencesClient
         if (this.holdLoad)
             return new Promise(() => undefined);
 
-        return Promise.resolve({ success: true, output: this.output() });
+        if (this.failLoad !== undefined)
+            return Promise.resolve({ success: false, failureMessage: this.failLoad });
+
+        return Promise.resolve(this.reply());
     }
 
     handlePreferencesInput(request: { input: Record<string,unknown> }): Promise<unknown>
@@ -55,46 +74,69 @@ export class FakePreferencesClient
         if (this.failSave !== undefined)
             return Promise.resolve({ success: false, failureMessage: this.failSave });
 
+        if (this.deferSaves)
+            return new Promise(resolve => { this.deferred.push({ input: request.input, resolve }); });
+
         this.state.values = { ...this.state.values, ...(request.input.values as Record<string,unknown>) };
 
-        return Promise.resolve({ success: true, output: this.output() });
+        return Promise.resolve(this.reply());
+    }
+
+    complete(index: number,values: Record<string,unknown>): void
+    {
+        this.deferred[index].resolve(this.reply({ ...this.state.values, ...values }));
     }
 
     close(): void { this.closed++; }
 }
 
-function sessionService(authenticated: boolean): ISessionService
+export function status(userName: string | undefined): ISessionStatus
 {
-    const status = { authenticated, userName: authenticated ? "ann" : undefined, authorities: authenticated ? ["ROLE_USER"] : [] };
-
-    return {
-        getLoginMethods:   async () => ({ passwordEnabled: true, oktaEnabled: false }),
-        login:             async () => status,
-        startOktaLogin:    async () => undefined,
-        completeOktaLogin: async () => status,
-        getCurrent:        async () => status,
-        logout:            async () => ({ loggedOut: true }),
-    };
+    return { authenticated: userName !== undefined, userName, authorities: userName !== undefined ? ["ROLE_USER"] : [] };
 }
 
-export function authenticationWith(client: FakePreferencesClient,authenticated: boolean = true): IAuthentication
+export class FakeSession
+    implements ISessionService
+{
+    current: ISessionStatus = status("ann");
+
+    async getLoginMethods() { return { passwordEnabled: true, oktaEnabled: false }; }
+    async login(userName: string) { return status(userName); }
+    async startOktaLogin() { return undefined; }
+    async completeOktaLogin() { return this.current; }
+    async getCurrent() { return this.current; }
+    async logout() { return { loggedOut: true }; }
+}
+
+export function authenticationWith(client: FakePreferencesClient,session: FakeSession): IAuthentication
 {
     const base: IAuthentication =
-        createAuthentication({ apiBaseUrl: "", fetchFunction: async () => new Response("{}"), service: sessionService(authenticated) });
+        createAuthentication({ apiBaseUrl: "", fetchFunction: async () => new Response("{}"), service: session });
 
     return { manager: base.manager, createFrontEndClient: (() => client) as unknown as IAuthentication["createFrontEndClient"] };
 }
 
-export function renderWithPreferences(client: FakePreferencesClient,content: ReactElement,authenticated: boolean = true): void
+export function renderWithPreferences(
+    client:        FakePreferencesClient,
+    content:       ReactElement,
+    authenticated: boolean = true,
+    session:       FakeSession = new FakeSession()): IAuthentication
 {
+    const authentication: IAuthentication = authenticationWith(client,session);
+
+    if (!authenticated)
+        session.current = status(undefined);
+
     render(
         <MantineProvider defaultColorScheme="light">
-            <AuthenticationProvider authentication={authenticationWith(client,authenticated)}>
+            <AuthenticationProvider authentication={authentication}>
                 <PreferencesProvider>
                     {content}
                 </PreferencesProvider>
             </AuthenticationProvider>
         </MantineProvider>);
+
+    return authentication;
 }
 
 //////////////////////////////////////////////////////////////////////////////

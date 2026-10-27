@@ -2,13 +2,15 @@
 // Granite.Web.Account
 //////////////////////////////////////////////////////////////////////////////
 
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect,
+         useLayoutEffect, useMemo, useRef, useState }            from "react";
 import type { ReactElement, ReactNode }                          from "react";
 import { useMantineColorScheme }                                 from "@mantine/core";
 import { GraniteFrontEndControllerServiceClient }                from "granite.frontendcontroller.client/RequestReply";
 import type { IGraniteFrontEndControllerServiceClient }          from "granite.frontendcontroller.client/RequestReply";
-import type { GetPreferencesOutputReply, HandlePreferencesInputReply, PreferenceDefinitionData,
-              PreferencesInput, PreferencesOutput }              from "granite.frontendcontroller.service/RequestReply";
+import type { GetPreferencesOutputReply, HandlePreferencesInputReply,
+              PreferenceDefinitionData, PreferencesInput,
+              PreferencesOutput }                                from "granite.frontendcontroller.service/RequestReply";
 import { GetOutputRequestBuilder, HandleInputRequestBuilder }    from "strata.frontendcontroller.service/RequestReply";
 import { useAuthentication }                                     from "granite.web.authentication/Authentication";
 import { THEME_KEY, isTheme, readCachedTheme, writeCachedTheme } from "./ThemeCache";
@@ -45,29 +47,38 @@ function messageOf(error: unknown): string
 
 export function PreferencesProvider({ children }: IPreferencesProviderProps): ReactElement
 {
-    const { state, createFrontEndClient }   = useAuthentication();
-    const { setColorScheme }                = useMantineColorScheme();
-    const [values, setValues]               = useState<Record<string,unknown>>({});
-    const [definitions, setDefinitions]     = useState<Array<PreferenceDefinitionData>>([]);
-    const [status, setStatus]               = useState<PreferencesStatus>("idle");
-    const [error, setError]                = useState<string | null>(null);
-    const authenticated: boolean            = state.status === "authenticated";
-    const createRef                         = useRef(createFrontEndClient);
+    const { state, createFrontEndClient } = useAuthentication();
+    const { setColorScheme }              = useMantineColorScheme();
+    const [values, setValues]             = useState<Record<string,unknown>>({});
+    const [definitions, setDefinitions]   = useState<Array<PreferenceDefinitionData>>([]);
+    const [status, setStatus]             = useState<PreferencesStatus>("idle");
+    const [error, setError]               = useState<string | null>(null);
+    const authenticated: boolean          = state.status === "authenticated";
+    const anonymous: boolean              = state.status === "anonymous";
+    const userName: string | undefined    = state.userName;
+    const createRef                       = useRef(createFrontEndClient);
+    const schemeRef                       = useRef(setColorScheme);
+    const loadedUser                      = useRef<string | undefined>(undefined);
+    const saveCounter                     = useRef<number>(0);
+    const latestSave                      = useRef<Map<string,number>>(new Map());
+    const appliedSave                     = useRef<number>(0);
 
     createRef.current = createFrontEndClient;
+    schemeRef.current = setColorScheme;
 
     const createClient = useCallback((): IGraniteFrontEndControllerServiceClient =>
         createRef.current((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),PREFERENCES_SERVICE),[]);
 
     useLayoutEffect(() =>
     {
-        setColorScheme(readCachedTheme());
+        schemeRef.current(readCachedTheme());
     },[]);
 
     useEffect(() =>
     {
-        if (!authenticated)
+        if (anonymous)
         {
+            loadedUser.current = undefined;
             setValues({});
             setDefinitions([]);
             setStatus("idle");
@@ -75,10 +86,21 @@ export function PreferencesProvider({ children }: IPreferencesProviderProps): Re
             return;
         }
 
+        if (!authenticated)
+            return;
+
+        if (loadedUser.current !== userName)
+        {
+            loadedUser.current = userName;
+            setStatus("loading");
+            setValues({});
+            setDefinitions([]);
+        }
+
         let cancelled: boolean = false;
         const client           = createClient();
 
-        setStatus("loading");
+        setStatus((current: PreferencesStatus) => current === "ready" ? current : "loading");
 
         (async () =>
         {
@@ -119,7 +141,7 @@ export function PreferencesProvider({ children }: IPreferencesProviderProps): Re
         })();
 
         return () => { cancelled = true; };
-    },[authenticated,createClient]);
+    },[authenticated,anonymous,userName,createClient]);
 
     const serverTheme: unknown = values[THEME_KEY];
 
@@ -130,11 +152,14 @@ export function PreferencesProvider({ children }: IPreferencesProviderProps): Re
             setColorScheme(serverTheme);
             writeCachedTheme(serverTheme);
         }
-    },[status,serverTheme]);
+    },[status,serverTheme,setColorScheme]);
 
     const save = useCallback(async (key: string,value: unknown): Promise<string | null> =>
     {
-        const client = createClient();
+        const client: IGraniteFrontEndControllerServiceClient = createClient();
+        const id: number                                      = ++saveCounter.current;
+
+        latestSave.current.set(key,id);
 
         try
         {
@@ -150,7 +175,22 @@ export function PreferencesProvider({ children }: IPreferencesProviderProps): Re
             if ((output.failureMessages ?? []).length > 0)
                 return output.failureMessages.join("; ");
 
-            setValues(output.values ?? {});
+            if (id < appliedSave.current)
+                return null;
+
+            appliedSave.current = id;
+
+            const newer: Array<string> =
+                [...latestSave.current.entries()].filter(([,saveId]) => saveId !== id).map(([savedKey]) => savedKey);
+
+            setValues((previous: Record<string,unknown>) =>
+            {
+                const next: Record<string,unknown> = { ...(output.values ?? {}) };
+
+                newer.forEach((savedKey: string) => { next[savedKey] = previous[savedKey]; });
+
+                return next;
+            });
             setDefinitions(output.definitions ?? []);
             return null;
         }
@@ -160,6 +200,9 @@ export function PreferencesProvider({ children }: IPreferencesProviderProps): Re
         }
         finally
         {
+            if (latestSave.current.get(key) === id)
+                latestSave.current.delete(key);
+
             client.close();
         }
     },[createClient]);

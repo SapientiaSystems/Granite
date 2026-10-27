@@ -2,15 +2,13 @@
 // Granite.Web.Account
 //////////////////////////////////////////////////////////////////////////////
 
-import { useEffect }                  from "react";
 import type { ReactElement }          from "react";
 import { Alert, Stack, Group, Paper, Title, Text,
          Badge, Switch }              from "@mantine/core";
-import { useMantineColorScheme }      from "@mantine/core";
 import type { IPreferencesViewProps } from "./IPreferencesViewProps";
 import { usePreferences }             from "./PreferencesProvider";
 import { usePreference }              from "./usePreference";
-import { isTheme, writeCachedTheme }  from "./ThemeCache";
+import { isTheme }                    from "./ThemeCache";
 import type { Theme }                 from "./ThemeCache";
 
 const sunIcon =
@@ -39,19 +37,9 @@ const moonIcon =
 
 export function PreferencesView(props: IPreferencesViewProps): ReactElement
 {
-    const { setColorScheme }                  = useMantineColorScheme();
-    const { status }                          = usePreferences();
-    const [stored, setTheme, themeState]      = usePreference<string>("granite.theme");
-    const theme: Theme                        = isTheme(stored) ? stored : "light";
-
-    useEffect(() =>
-    {
-        if (status === "ready")
-        {
-            setColorScheme(theme);
-            writeCachedTheme(theme);
-        }
-    },[status,theme]);
+    const { status, error }              = usePreferences();
+    const [stored, setTheme, themeState] = usePreference<string>("granite.theme");
+    const theme: Theme                   = isTheme(stored) ? stored : "light";
 
     return (
         <Stack gap="lg" p="md" style={{ maxWidth: 520 }}>
@@ -77,6 +65,7 @@ export function PreferencesView(props: IPreferencesViewProps): ReactElement
                     label={theme === "dark" ? "Dark" : "Light"}
                 />
                 {themeState.error && <Alert color="red" mt="sm">{themeState.error}</Alert>}
+                {status === "error" && error && <Alert color="red" mt="sm">{error}</Alert>}
             </Paper>
 
             {props.children}

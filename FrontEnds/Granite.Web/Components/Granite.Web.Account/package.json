@@ -24,9 +24,6 @@
         "granite.frontendcontroller.service": "1.0.0-snapshot",
         "granite.web.authentication": "1.0.0-snapshot",
         "react": "^19.0.0",
-        "strata.client.core": "0.0.0-snapshot",
-        "strata.foundation.core": "0.0.0-snapshot",
-        "strata.frontendcontroller.client": "0.0.0-snapshot",
         "strata.frontendcontroller.service": "0.0.0-snapshot"
     },
     "devDependencies": {

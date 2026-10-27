@@ -2,11 +2,12 @@
 // Granite.Web.AccountTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it, vi } from "vitest";
-import { screen, waitFor }          from "@testing-library/react";
-import userEvent                    from "@testing-library/user-event";
-import { PreferencesView, usePreference } from "granite.web.account/Preference";
-import { FakePreferencesClient, THEME_DEFINITION, renderWithPreferences } from "./TestSupport";
+import { afterEach, describe, expect, it, vi }             from "vitest";
+import { act, screen, waitFor }                            from "@testing-library/react";
+import userEvent                                           from "@testing-library/user-event";
+import { PreferencesView, usePreference }                  from "granite.web.account/Preference";
+import { FLAG_DEFINITION, FakePreferencesClient, FakeSession,
+         THEME_DEFINITION, renderWithPreferences, status } from "./TestSupport";
 
 function scheme(): string | null
 {
@@ -16,6 +17,11 @@ function scheme(): string | null
 function clientWith(theme: string = "light",extra: Record<string,unknown> = {},definitions: Array<Record<string,unknown>> = []): FakePreferencesClient
 {
     return new FakePreferencesClient({ values: { "granite.theme": theme, ...extra }, definitions: [THEME_DEFINITION,...definitions] });
+}
+
+function flagClient(theme: string = "light"): FakePreferencesClient
+{
+    return clientWith(theme,{ "app.flag": false },[FLAG_DEFINITION]);
 }
 
 function Flag()
@@ -30,6 +36,11 @@ function Flag()
         </div>
     );
 }
+
+afterEach(() =>
+{
+    vi.restoreAllMocks();
+});
 
 describe("Preferences",() =>
 {
@@ -80,9 +91,25 @@ describe("Preferences",() =>
         expect(window.localStorage.getItem("granite.theme")).toBe("dark");
     });
 
+    it("failedThemeSaveKeepsSchemeAndCache",async () =>
+    {
+        const client = clientWith("light");
+
+        client.failSave = "Save rejected";
+        renderWithPreferences(client,<PreferencesView userName="ann" userRole="User" />);
+
+        await userEvent.click(await screen.findByRole("switch"));
+
+        await screen.findByText("Save rejected");
+
+        expect(scheme()).toBe("light");
+        expect((screen.getByRole("switch") as HTMLInputElement).checked).toBe(false);
+        expect(window.localStorage.getItem("granite.theme")).toBe("light");
+    });
+
     it("saveFailureShowsErrorAndRevertsValue",async () =>
     {
-        const client = clientWith("light",{ "app.flag": false },[{ key: "app.flag", type: "BOOLEAN", defaultValue: false, allowedValues: [] }]);
+        const client = flagClient();
 
         client.failSave = "Save rejected";
         renderWithPreferences(client,<Flag />);
@@ -94,9 +121,34 @@ describe("Preferences",() =>
         expect(screen.getByTestId("flag").textContent).toBe("false");
     });
 
+    it("overlappingSavesKeepLatestValue",async () =>
+    {
+        const client = flagClient();
+
+        client.deferSaves = true;
+        renderWithPreferences(client,<Flag />);
+
+        await waitFor(() => expect(client.gets).toHaveLength(1));
+
+        const toggle = await screen.findByText("toggle flag");
+
+        await userEvent.click(toggle);
+        await userEvent.click(toggle);
+        await waitFor(() => expect(client.deferred).toHaveLength(2));
+
+        expect(client.saves.map(save => (save.values as Record<string,unknown>)["app.flag"])).toEqual([true,false]);
+
+        await act(async () => { client.complete(1,{ "app.flag": false }); });
+        await waitFor(() => expect(screen.getByTestId("flag").textContent).toBe("false"));
+
+        await act(async () => { client.complete(0,{ "app.flag": true }); });
+
+        expect(screen.getByTestId("flag").textContent).toBe("false");
+    });
+
     it("childSectionUsesUsePreference",async () =>
     {
-        const client = clientWith("light",{ "app.flag": false },[{ key: "app.flag", type: "BOOLEAN", defaultValue: false, allowedValues: [] }]);
+        const client = flagClient();
 
         renderWithPreferences(client,<PreferencesView userName="ann" userRole="User"><Flag /></PreferencesView>);
 
@@ -105,6 +157,50 @@ describe("Preferences",() =>
 
         await waitFor(() => expect(screen.getByTestId("flag").textContent).toBe("true"));
         expect(client.saves[0].values).toEqual({ "app.flag": true });
+    });
+
+    it("showsLoadError",async () =>
+    {
+        const client = clientWith("light");
+
+        client.failLoad = "Preferences unavailable";
+        renderWithPreferences(client,<PreferencesView userName="ann" userRole="User" />);
+
+        expect(await screen.findByText("Preferences unavailable")).toBeTruthy();
+        expect((screen.getByRole("switch") as HTMLInputElement).disabled).toBe(true);
+    });
+
+    it("reloadsWhenTheUserChanges",async () =>
+    {
+        const client         = clientWith("light");
+        const authentication = renderWithPreferences(client,<PreferencesView userName="ann" userRole="User" />);
+
+        await waitFor(() => expect(client.gets).toHaveLength(1));
+
+        client.state.values = { "granite.theme": "dark" };
+
+        await act(async () => { await authentication.manager.login("bob","secret"); });
+
+        await waitFor(() => expect(client.gets).toHaveLength(2));
+        await waitFor(() => expect(scheme()).toBe("dark"));
+    });
+
+    it("keepsValuesWhileReauthenticating",async () =>
+    {
+        const client         = flagClient();
+        const session        = new FakeSession();
+        const authentication = renderWithPreferences(client,<Flag />,true,session);
+
+        await userEvent.click(await screen.findByText("toggle flag"));
+        await waitFor(() => expect(screen.getByTestId("flag").textContent).toBe("true"));
+
+        session.current = status(undefined);
+
+        await act(async () => { void authentication.manager.handleUnauthorized(); });
+        await waitFor(() => expect(authentication.manager.getState().status).toBe("reauthenticating"));
+
+        expect(screen.getByTestId("flag").textContent).toBe("true");
+        expect(client.gets).toHaveLength(1);
     });
 
     it("cachedThemeAppliesBeforeLoad",async () =>
@@ -135,6 +231,8 @@ describe("Preferences",() =>
 
         vi.spyOn(window.localStorage,"getItem").mockImplementation(failing);
         vi.spyOn(window.localStorage,"setItem").mockImplementation(failing);
+        vi.spyOn(console,"error").mockImplementation(() => undefined);
+        vi.spyOn(console,"warn").mockImplementation(() => undefined);
 
         const client = clientWith("light");
 
@@ -145,8 +243,6 @@ describe("Preferences",() =>
 
         await waitFor(() => expect(scheme()).toBe("dark"));
         expect(client.saves[0].values).toEqual({ "granite.theme": "dark" });
-
-        vi.restoreAllMocks();
     });
 });
 
