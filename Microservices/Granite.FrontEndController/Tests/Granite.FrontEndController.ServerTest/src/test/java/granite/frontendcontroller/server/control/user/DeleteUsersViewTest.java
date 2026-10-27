@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -39,7 +40,7 @@ class DeleteUsersViewTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        view = new DeleteUsersView(queryClient,commandClient);
+        view = new DeleteUsersView(queryClient,commandClient,GraniteApplicationRoles.create());
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
@@ -59,6 +60,8 @@ class DeleteUsersViewTest
         throws Exception
     {
         UsersOutput output = run(new UsersInput().setUserId(7L).setUserIdsToDelete(List.of(7L,8L)));
+
+        assertEquals(3,output.getRoles().size());
 
         Mockito.verify(commandClient).destroyUsers(Mockito.argThat(r -> r.getUserIds().equals(Set.of(8L))));
         assertEquals(1,output.getFailureMessages().size());

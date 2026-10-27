@@ -4,14 +4,18 @@
 
 package granite.frontendcontroller.server.configuration;
 
+import granite.foundation.core.security.ApplicationRoles;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerService;
 import granite.frontendcontroller.server.platform.GraniteApplicationFrontEndControllerServiceController;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import jakarta.inject.Named;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import strata.foundation.spring.inject.RequestScoped;
+
+import java.util.concurrent.Executor;
 
 @Configuration
 public
@@ -21,13 +25,25 @@ class GraniteFrontEndControllerConfiguration
     @Bean
     @RequestScoped
     @Named("Granite")
-    @Override
+    public IGraniteFrontEndControllerService
+    frontEndControllerService(
+        @Named("FrontEndController")
+        Executor         executor,
+        ModelMapper      mapper,
+        ApplicationRoles roles)
+    {
+        return createService(createContext(mapper,executor,roles));
+    }
+
+    @Bean
+    @RequestScoped
+    @Named("Granite")
     public GraniteApplicationFrontEndControllerServiceController
     frontEndControllerServiceController(
         @Named("Granite")
         IGraniteFrontEndControllerService service)
     {
-        return (GraniteApplicationFrontEndControllerServiceController)super.frontEndControllerServiceController(service);
+        return new GraniteApplicationFrontEndControllerServiceController(service);
     }
 
     @Override
@@ -35,13 +51,6 @@ class GraniteFrontEndControllerConfiguration
     createService(GraniteFrontEndControllerContext context)
     {
         return new GraniteFrontEndControllerService(context);
-    }
-
-    @Override
-    protected Object
-    createController(IGraniteFrontEndControllerService service)
-    {
-        return new GraniteApplicationFrontEndControllerServiceController(service);
     }
 }
 

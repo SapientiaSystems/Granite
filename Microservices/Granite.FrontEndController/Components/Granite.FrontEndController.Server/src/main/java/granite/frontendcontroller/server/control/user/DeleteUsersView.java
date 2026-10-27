@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
+import granite.foundation.core.security.ApplicationRoles;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -31,14 +32,17 @@ class DeleteUsersView
 
     private final IUserQueryServiceClient   queryClient;
     private final IUserCommandServiceClient commandClient;
+    private final ApplicationRoles          applicationRoles;
 
     public
     DeleteUsersView(
         IUserQueryServiceClient   queryClient,
-        IUserCommandServiceClient commandClient)
+        IUserCommandServiceClient commandClient,
+        ApplicationRoles          applicationRoles)
     {
-        this.queryClient = queryClient;
-        this.commandClient = commandClient;
+        this.queryClient      = queryClient;
+        this.commandClient    = commandClient;
+        this.applicationRoles = applicationRoles;
     }
 
     @Override
@@ -102,6 +106,7 @@ class DeleteUsersView
             new UsersOutput()
                 .setUsers(users)
                 .setFailureMessages(failures)
+                .setRoles(RoleCatalogData.from(applicationRoles))
                 .setUserId(input.getUserId())
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())

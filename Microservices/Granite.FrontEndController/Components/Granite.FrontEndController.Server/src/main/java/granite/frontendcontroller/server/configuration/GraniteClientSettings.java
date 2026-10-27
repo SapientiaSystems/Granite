@@ -1,22 +1,24 @@
 //////////////////////////////////////////////////////////////////////////////
-// GraniteClientConfiguration.java
+// GraniteClientSettings.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.server.configuration;
 
 import jakarta.ws.rs.client.ClientBuilder;
 
+import java.util.Objects;
+
 public
-class GraniteClientConfiguration
+class GraniteClientSettings
 {
     private final ClientBuilder builder;
     private final String        baseUrl;
 
     public
-    GraniteClientConfiguration(ClientBuilder builder,String baseUrl)
+    GraniteClientSettings(ClientBuilder builder,String baseUrl)
     {
-        this.builder = builder;
-        this.baseUrl = baseUrl;
+        this.builder = Objects.requireNonNull(builder,"builder");
+        this.baseUrl = Objects.requireNonNull(baseUrl,"baseUrl");
     }
 
     public ClientBuilder

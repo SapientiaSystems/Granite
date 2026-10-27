@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -43,7 +44,7 @@ class UpdateUsersViewTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        view = new UpdateUsersView(queryClient,commandClient);
+        view = new UpdateUsersView(queryClient,commandClient,GraniteApplicationRoles.create());
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
@@ -69,6 +70,8 @@ class UpdateUsersViewTest
         List<UpdateUserData> updates = List.of(new UpdateUserData().setUserId(2L).setUserName("renamed"));
 
         UsersOutput output = run(new UsersInput().setUsersToCreate(creates).setUsersToUpdate(updates));
+
+        assertEquals(3,output.getRoles().size());
 
         InOrder order = Mockito.inOrder(commandClient,queryClient);
         order

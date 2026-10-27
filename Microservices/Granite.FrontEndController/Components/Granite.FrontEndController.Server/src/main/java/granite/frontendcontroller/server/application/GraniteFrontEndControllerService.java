@@ -71,8 +71,8 @@ class GraniteFrontEndControllerService
 
         usersInputActions =
             Map.of(
-                "User.All->Save->UsersEditableView",new UpdateUsersView(userQueryClient,userCommandClient),
-                "User.All->Delete->UsersEditableView",new DeleteUsersView(userQueryClient,userCommandClient));
+                "User.All->Save->UsersEditableView",new UpdateUsersView(userQueryClient,userCommandClient,context.getApplicationRoles()),
+                "User.All->Delete->UsersEditableView",new DeleteUsersView(userQueryClient,userCommandClient,context.getApplicationRoles()));
         usersOutputActions =
             Map.of(
                 "User.All->UsersEditableView",new InitializeUsersView(userQueryClient,context.getApplicationRoles()));

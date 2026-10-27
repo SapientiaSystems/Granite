@@ -32,7 +32,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import strata.foundation.core.concurrent.BoundedExecutor;
 import strata.foundation.core.configuration.IConfiguration;
-import strata.foundation.spring.inject.RequestScoped;
 import strata.frontendcontroller.server.application.ApplicationConfiguration;
 
 import java.time.Duration;
@@ -66,30 +65,6 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     @Bean
-    @RequestScoped
-    @Named("Granite")
-    public S
-    frontEndControllerService(
-        @Named("FrontEndController")
-        Executor         executor,
-        ModelMapper      mapper,
-        ApplicationRoles roles)
-    {
-        return createService(createContext(mapper,executor,roles));
-    }
-
-    @Bean
-    @RequestScoped
-    @Named("Granite")
-    public Object
-    frontEndControllerServiceController(
-        @Named("Granite")
-        S service)
-    {
-        return createController(service);
-    }
-
-    @Bean
     public ResponseCookieAdvice
     responseCookieAdvice()
     {
@@ -115,13 +90,10 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     protected abstract S
     createService(GraniteFrontEndControllerContext context);
 
-    protected abstract Object
-    createController(S service);
-
     protected IUserQueryServiceClient
     createUserQueryClient()
     {
-        GraniteClientConfiguration client = createClientConfiguration("user-query-service.base-url");
+        GraniteClientSettings client = createClientConfiguration("user-query-service.base-url");
 
         return new UserQueryServiceClient(client.getBuilder(),client.getBaseUrl());
     }
@@ -129,7 +101,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     protected IUserCommandServiceClient
     createUserCommandClient()
     {
-        GraniteClientConfiguration client = createClientConfiguration("user-command-service.base-url");
+        GraniteClientSettings client = createClientConfiguration("user-command-service.base-url");
 
         return new UserCommandServiceClient(client.getBuilder(),client.getBaseUrl());
     }
@@ -137,7 +109,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     protected ISessionCommandServiceClient
     createSessionCommandClient()
     {
-        GraniteClientConfiguration client = createClientConfiguration("session-command-service.base-url");
+        GraniteClientSettings client = createClientConfiguration("session-command-service.base-url");
 
         return new SessionCommandServiceClient(client.getBuilder(),client.getBaseUrl());
     }
@@ -145,12 +117,12 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     protected ISessionQueryServiceClient
     createSessionQueryClient()
     {
-        GraniteClientConfiguration client = createClientConfiguration("session-query-service.base-url");
+        GraniteClientSettings client = createClientConfiguration("session-query-service.base-url");
 
         return new SessionQueryServiceClient(client.getBuilder(),client.getBaseUrl());
     }
 
-    protected GraniteClientConfiguration
+    protected GraniteClientSettings
     createClientConfiguration(String baseUrlProperty)
     {
         ClientBuilder builder =
@@ -162,7 +134,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                         .getBundle("granite-services")
                         .createSslContext());
 
-        return new GraniteClientConfiguration(builder,configuration.getProperty(baseUrlProperty));
+        return new GraniteClientSettings(builder,configuration.getProperty(baseUrlProperty));
     }
 }
 
