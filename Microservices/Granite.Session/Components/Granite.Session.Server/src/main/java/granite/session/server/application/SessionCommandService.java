@@ -429,6 +429,7 @@ class SessionCommandService
         logger.info("<login> default role assigned to user: {}",context.getValidatedUserId());
         return context.setValidatedAuthorities(new LinkedHashSet<>(assigned));
     }
+
     protected LoginContext
     applyLoginGate(LoginContext context)
     {
