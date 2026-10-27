@@ -4,6 +4,7 @@
 
 package granite.user.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import granite.user.service.event.IUserEventSender;
@@ -44,7 +45,9 @@ class AuthenticateUserTest
                 repository,
                 Mockito.mock(IUserEventSender.class),
                 new ModelMapper().registerModule(new MappingModule()),
-                encoder);
+                encoder,
+                LoginLockoutPolicy.defaults(),
+                GraniteApplicationRoles.create());
     }
 
     @Test

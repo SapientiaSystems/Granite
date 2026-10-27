@@ -5,6 +5,7 @@
 package granite.user.server.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import granite.user.service.event.IUserEventSender;
@@ -68,7 +69,9 @@ class UserPasswordMaskingTest
                 repository,
                 Mockito.mock(IUserEventSender.class),
                 mapper,
-                encoder);
+                encoder,
+                LoginLockoutPolicy.defaults(),
+                GraniteApplicationRoles.create());
         queryService = new UserQueryService(repository,mapper);
     }
 

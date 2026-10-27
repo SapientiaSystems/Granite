@@ -88,6 +88,32 @@ class UserCommandServiceRolesTest
 
     @Test
     public void
+    createUsersRejectsNonCatalogRoleWithoutSaving()
+    {
+        CreateUsersReply reply =
+            commandService
+                .createUsers(
+                    new CreateUsersRequest()
+                        .setUsersToCreate(
+                            List.of(
+                                new CreateUserData()
+                                    .setUserName("carol@example.com")
+                                    .setPassword("pw")
+                                    .setAuthorities(Set.of(REVIEWER)),
+                                new CreateUserData()
+                                    .setUserName("dave@example.com")
+                                    .setPassword("pw")
+                                    .setAuthorities(Set.of("ROLE_Bogus")))))
+                .toCompletableFuture()
+                .join();
+
+        assertFalse(reply.isSuccess());
+        assertEquals("unknown role: ROLE_Bogus",reply.getFailureMessage());
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(User.class));
+    }
+
+    @Test
+    public void
     updateExpandsAddedRole()
     {
         stored.setAuthorities(new LinkedHashSet<>(Set.of(REVIEWER)));

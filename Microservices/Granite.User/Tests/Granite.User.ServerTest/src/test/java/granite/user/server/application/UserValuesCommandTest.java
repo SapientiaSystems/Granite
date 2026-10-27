@@ -4,6 +4,7 @@
 
 package granite.user.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import granite.user.service.event.IUserEventSender;
@@ -56,7 +57,9 @@ class UserValuesCommandTest
                 repository,
                 Mockito.mock(IUserEventSender.class),
                 new ModelMapper().registerModule(new MappingModule()),
-                new BCryptPasswordEncoder(4));
+                new BCryptPasswordEncoder(4),
+                LoginLockoutPolicy.defaults(),
+                GraniteApplicationRoles.create());
     }
 
     @Test

@@ -5,7 +5,6 @@
 package granite.user.server.application;
 
 import granite.foundation.core.security.ApplicationRoles;
-import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.domain.IUserEvent;
 import granite.user.server.domain.IUserEventObserver;
 import granite.user.server.domain.IUserRepository;
@@ -44,21 +43,6 @@ class UserCommandService
     private final LoginLockoutPolicy lockoutPolicy;
     private final ApplicationRoles   roles;
     private final Logger             logger;
-
-    public UserCommandService(IUserRepository r,IUserEventSender s,ModelMapper m,PasswordEncoder e)
-    {
-        this(r,s,m,e,LoginLockoutPolicy.defaults());
-    }
-
-    public UserCommandService(
-        IUserRepository    r,
-        IUserEventSender   s,
-        ModelMapper        m,
-        PasswordEncoder    e,
-        LoginLockoutPolicy p)
-    {
-        this(r,s,m,e,p,GraniteApplicationRoles.create());
-    }
 
     @Inject
     public UserCommandService(
@@ -933,7 +917,7 @@ class UserCommandService
         return
             new UpdateUserReply(request)
                 .setSuccess(false)
-                .setFailureMessage(failureMessage(e,"Unable to create user"))
+                .setFailureMessage(failureMessage(e,"Unable to update user"))
                 .setException(ExceptionData.of(e));
     }
 
