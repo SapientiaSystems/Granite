@@ -10,7 +10,7 @@ export {AuthenticationManager,browserNavigator}                                 
 export type {IAuthentication,IAuthenticationOptions}                                 from "./createAuthentication";
 export {createAuthentication}                                                        from "./createAuthentication";
 export type {IAuthenticationContext}                                                 from "./AuthenticationContext";
-export {useAuthentication}                                                           from "./AuthenticationContext";
+export {AuthenticationContext,useAuthentication}                                    from "./AuthenticationContext";
 export type {IAuthenticationProviderProps}                                           from "./AuthenticationProvider";
 export {AuthenticationProvider}                                                      from "./AuthenticationProvider";
 export type {IRequireAuthenticationProps}                                            from "./RequireAuthentication";
