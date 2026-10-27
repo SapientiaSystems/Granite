@@ -8,6 +8,7 @@ import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import granite.user.service.event.IUserEventSender;
+import granite.user.service.event.UserEvent;
 import granite.user.service.requestreply.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -34,12 +35,14 @@ class UserValuesCommandTest
     private UserCommandService commandService;
     private User               stored;
     private IUserRepository    repository;
+    private IUserEventSender   sender;
 
     @BeforeEach
     public void
     setUp()
     {
         repository = Mockito.mock(IUserRepository.class);
+        sender     = Mockito.mock(IUserEventSender.class);
 
         stored =
             new User()
@@ -58,7 +61,7 @@ class UserValuesCommandTest
         commandService =
             new UserCommandService(
                 repository,
-                Mockito.mock(IUserEventSender.class),
+                sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 new BCryptPasswordEncoder(4),
                 LoginLockoutPolicy.defaults(),
@@ -189,6 +192,16 @@ class UserValuesCommandTest
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertEquals(Map.of("a","1","b","3","c","4"),reply.getMergedUser().getValues());
         assertEquals(Map.of("a","1","b","3","c","4"),stored.getValues());
+    }
+
+    @Test
+    public void
+    mergeFiresUserUpdated()
+    {
+        MergeUserValuesReply reply = merge(USER_ID,Map.of("c","4"));
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        Mockito.verify(sender,Mockito.atLeastOnce()).send(Mockito.any(UserEvent.class));
     }
 
     @Test
