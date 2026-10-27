@@ -1,4 +1,6 @@
 export type {IUsersEditableViewProps, IUsersResult} from "./IUsersEditableViewProps";
+export {applySelection,deselectRole,roleOptions,selectRole} from "./RoleCascade";
+export type {IRoleOption}                           from "./RoleCascade";
 export {UsersEditableView}                          from "./UsersEditableView";
 export type {IUserRow,IUsersChanges}                from "./UsersChangeSet";
 export {computeChanges,displayValue,findDuplicateKeys,isRefreshFailure,mergePending,

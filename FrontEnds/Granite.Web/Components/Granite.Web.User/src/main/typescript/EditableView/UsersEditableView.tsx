@@ -583,6 +583,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     {
         expandedKey,
         toggleExpand,
+        roles:           props.roles,
         isEditing:       (rowKey: string) => editingKeys.has(rowKey),
         removeAuthority: (rowKey: string, authority: string) =>
         {
