@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.session.server.platform.MockSessionEventSender;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
@@ -94,7 +94,7 @@ class LoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
 
         stubSaveAssignsSessionId(500L);
         Mockito.when(jwtTokenService.mint(Mockito.any(Session.class))).thenReturn(MINTED_JWT);
@@ -552,7 +552,7 @@ class LoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     private void

@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.session.server.platform.MockSessionEventSender;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
@@ -92,7 +92,7 @@ class RefreshTest
                 MAX_LIFETIME,
                 Duration.ofMinutes(2),
                 clock,
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
 
         Mockito
             .when(repository.save(Mockito.any(Session.class)))

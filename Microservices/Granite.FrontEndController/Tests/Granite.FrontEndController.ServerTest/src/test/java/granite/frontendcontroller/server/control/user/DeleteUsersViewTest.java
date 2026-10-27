@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -40,7 +40,7 @@ class DeleteUsersViewTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        view = new DeleteUsersView(queryClient,commandClient,GraniteApplicationRoles.create());
+        view = new DeleteUsersView(queryClient,commandClient,new GraniteApplicationRolesManagerSupplier().get());
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))

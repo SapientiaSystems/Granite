@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -47,7 +47,7 @@ class UpdateUsersViewTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        view = new UpdateUsersView(queryClient,commandClient,GraniteApplicationRoles.create());
+        view = new UpdateUsersView(queryClient,commandClient,new GraniteApplicationRolesManagerSupplier().get());
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))

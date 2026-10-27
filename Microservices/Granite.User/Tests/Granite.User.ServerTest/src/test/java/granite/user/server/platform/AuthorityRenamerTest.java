@@ -5,7 +5,7 @@
 package granite.user.server.platform;
 
 import granite.foundation.core.security.ApplicationRolesManager;
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.application.TestConfiguration;
 import granite.user.server.configuration.PoplarUserCommandServerConfiguration;
 import granite.user.server.domain.IUserRepository;
@@ -66,7 +66,7 @@ class AuthorityRenamerTest
     {
         String userName = create("ROLE_Admin","ROLE_User");
 
-        assertEquals(1,renamer(GraniteApplicationRoles.create()).rename());
+        assertEquals(1,renamer(new GraniteApplicationRolesManagerSupplier().get()).rename());
         assertEquals(Set.of("ROLE_ADMIN","ROLE_USER"),authorities(userName));
     }
 
@@ -76,7 +76,7 @@ class AuthorityRenamerTest
     {
         create("ROLE_Admin","ROLE_User");
 
-        AuthorityRenamer renamer = renamer(GraniteApplicationRoles.create());
+        AuthorityRenamer renamer = renamer(new GraniteApplicationRolesManagerSupplier().get());
 
         assertEquals(1,renamer.rename());
         assertEquals(0,renamer.rename());
@@ -98,7 +98,7 @@ class AuthorityRenamerTest
     {
         String userName = create("ROLE_Legacy");
 
-        assertEquals(0,renamer(GraniteApplicationRoles.create()).rename());
+        assertEquals(0,renamer(new GraniteApplicationRolesManagerSupplier().get()).rename());
         assertEquals(Set.of("ROLE_Legacy"),authorities(userName));
     }
 

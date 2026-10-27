@@ -8,7 +8,7 @@ import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.foundation.core.security.ApplicationRolesManager;
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.application.ApplicationConfiguration;
 import granite.user.server.application.LoginLockoutPolicy;
 import granite.user.server.application.MappingModule;
@@ -91,7 +91,7 @@ class AbstractGraniteUserServerConfiguration
     public ApplicationRolesManager
     applicationRoles()
     {
-        return GraniteApplicationRoles.create();
+        return new GraniteApplicationRolesManagerSupplier().get();
     }
 
     @Bean

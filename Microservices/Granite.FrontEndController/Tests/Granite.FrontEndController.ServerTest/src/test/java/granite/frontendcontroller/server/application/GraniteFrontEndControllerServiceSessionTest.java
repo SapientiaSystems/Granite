@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -50,7 +50,7 @@ class GraniteFrontEndControllerServiceSessionTest
                     Mockito.mock(ISessionQueryServiceClient.class),
                     SessionTestSupport.context(null,null,null),
                     new SessionLoginSettings(true,false),
-                    GraniteApplicationRoles.create(),
+                    new GraniteApplicationRolesManagerSupplier().get(),
                     List.of()));
     }
 

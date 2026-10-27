@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -493,7 +493,7 @@ class CompleteOktaLoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 Clock.fixed(NOW,ZoneOffset.UTC),
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     private void

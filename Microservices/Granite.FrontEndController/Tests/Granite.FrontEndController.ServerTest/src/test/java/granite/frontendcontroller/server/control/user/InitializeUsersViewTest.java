@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -40,7 +40,7 @@ class InitializeUsersViewTest
                         .setUsers(List.of(new UserData().setUserId(1L),new UserData().setUserId(2L)))));
 
         UsersOutput output =
-            new InitializeUsersView(queryClient,GraniteApplicationRoles.create())
+            new InitializeUsersView(queryClient,new GraniteApplicationRolesManagerSupplier().get())
                 .apply(
                     new GetUsersOutputRequest()
                         .setSource("User.All")
@@ -69,7 +69,7 @@ class InitializeUsersViewTest
                 CompletableFuture.completedFuture(new FindAllUsersReply().setSuccess(false)));
 
         UsersOutput output =
-            new InitializeUsersView(queryClient,GraniteApplicationRoles.create())
+            new InitializeUsersView(queryClient,new GraniteApplicationRolesManagerSupplier().get())
                 .apply(new GetUsersOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
                 .toCompletableFuture()
                 .get();

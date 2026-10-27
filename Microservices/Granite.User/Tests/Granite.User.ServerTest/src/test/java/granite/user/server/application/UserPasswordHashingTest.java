@@ -4,7 +4,7 @@
 
 package granite.user.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import granite.user.service.event.IUserEventSender;
@@ -58,7 +58,7 @@ class UserPasswordHashingTest
                 new ModelMapper().registerModule(new MappingModule()),
                 encoder,
                 LoginLockoutPolicy.defaults(),
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     @Test

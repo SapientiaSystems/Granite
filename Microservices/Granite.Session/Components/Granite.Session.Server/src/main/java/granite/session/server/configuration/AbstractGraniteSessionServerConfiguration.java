@@ -97,7 +97,7 @@ class AbstractGraniteSessionServerConfiguration
     public ApplicationRolesManager
     applicationRoles()
     {
-        return GraniteApplicationRoles.create();
+        return new GraniteApplicationRolesManagerSupplier().get();
     }
 
     @Bean

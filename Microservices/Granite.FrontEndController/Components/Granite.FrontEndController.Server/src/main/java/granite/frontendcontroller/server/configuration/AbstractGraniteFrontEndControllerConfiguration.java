@@ -5,7 +5,7 @@
 package granite.frontendcontroller.server.configuration;
 
 import granite.foundation.core.security.ApplicationRolesManager;
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
 import granite.frontendcontroller.server.application.PreferenceDefinition;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
@@ -66,7 +66,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public ApplicationRolesManager
     applicationRoles()
     {
-        return GraniteApplicationRoles.create();
+        return new GraniteApplicationRolesManagerSupplier().get();
     }
 
     @Bean

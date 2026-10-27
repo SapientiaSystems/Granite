@@ -9,8 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag("CommitStage")
@@ -162,9 +164,12 @@ class ApplicationRolesManagerTest
 
     @Test
     public void
-    graniteCatalogHasAuditorAndUser()
+    graniteSupplierYieldsAuditorAndUserCatalog()
     {
-        ApplicationRolesManager subject = GraniteApplicationRoles.create();
+        Supplier<ApplicationRolesManager> supplier = new GraniteApplicationRolesManagerSupplier();
+
+        assertInstanceOf(Supplier.class,supplier);
+        ApplicationRolesManager subject = supplier.get();
 
         assertEquals(
             List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),

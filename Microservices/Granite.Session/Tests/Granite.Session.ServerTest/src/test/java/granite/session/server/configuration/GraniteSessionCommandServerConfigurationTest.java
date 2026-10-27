@@ -4,7 +4,7 @@
 
 package granite.session.server.configuration;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
@@ -68,7 +68,7 @@ class GraniteSessionCommandServerConfigurationTest
 
         env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
 
-        ILoginGate gate = subject.loginGate(env,GraniteApplicationRoles.create());
+        ILoginGate gate = subject.loginGate(env,new GraniteApplicationRolesManagerSupplier().get());
 
         assertInstanceOf(RequiredAuthoritiesLoginGate.class,gate);
         assertFalse(gate.permits(Set.of("ROLE_USER")));
@@ -79,7 +79,7 @@ class GraniteSessionCommandServerConfigurationTest
     public void
     loginGateAbsentUsesCatalogRoles()
     {
-        ILoginGate gate = subject.loginGate(new MockEnvironment(),GraniteApplicationRoles.create());
+        ILoginGate gate = subject.loginGate(new MockEnvironment(),new GraniteApplicationRolesManagerSupplier().get());
 
         assertInstanceOf(CatalogRoleLoginGate.class,gate);
         assertTrue(gate.permits(Set.of("ROLE_USER")));
@@ -94,7 +94,7 @@ class GraniteSessionCommandServerConfigurationTest
         MockEnvironment env = new MockEnvironment();
 
         env.setProperty("granite.session.login.required-authorities","");
-        assertInstanceOf(CatalogRoleLoginGate.class,subject.loginGate(env,GraniteApplicationRoles.create()));
+        assertInstanceOf(CatalogRoleLoginGate.class,subject.loginGate(env,new GraniteApplicationRolesManagerSupplier().get()));
     }
 
     @Test
@@ -111,7 +111,7 @@ class GraniteSessionCommandServerConfigurationTest
 
         assertEquals(
             Set.of("GC-Bogus","GC-Blank"),
-            Set.copyOf(subject.oktaGroupMappingCheck(settings,GraniteApplicationRoles.create()).getIgnoredGroups()));
+            Set.copyOf(subject.oktaGroupMappingCheck(settings,new GraniteApplicationRolesManagerSupplier().get()).getIgnoredGroups()));
     }
 
     @Test
@@ -120,7 +120,7 @@ class GraniteSessionCommandServerConfigurationTest
     {
         OktaSettings settings = new OktaSettings().setGroupMapping(Map.of("GC-Admins","ROLE_ADMIN"));
 
-        assertTrue(subject.oktaGroupMappingCheck(settings,GraniteApplicationRoles.create()).getIgnoredGroups().isEmpty());
+        assertTrue(subject.oktaGroupMappingCheck(settings,new GraniteApplicationRolesManagerSupplier().get()).getIgnoredGroups().isEmpty());
     }
 
     @Test
@@ -133,7 +133,7 @@ class GraniteSessionCommandServerConfigurationTest
 
         assertEquals(
             List.of("ROLE_Nope","SCOPE_internal"),
-            subject.requiredAuthoritiesCheck(env,GraniteApplicationRoles.create()).getRejectedAuthorities());
+            subject.requiredAuthoritiesCheck(env,new GraniteApplicationRolesManagerSupplier().get()).getRejectedAuthorities());
     }
 
     @Test
@@ -142,10 +142,10 @@ class GraniteSessionCommandServerConfigurationTest
     {
         MockEnvironment env = new MockEnvironment();
 
-        assertTrue(subject.requiredAuthoritiesCheck(env,GraniteApplicationRoles.create()).getRejectedAuthorities().isEmpty());
+        assertTrue(subject.requiredAuthoritiesCheck(env,new GraniteApplicationRolesManagerSupplier().get()).getRejectedAuthorities().isEmpty());
 
         env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
-        assertTrue(subject.requiredAuthoritiesCheck(env,GraniteApplicationRoles.create()).getRejectedAuthorities().isEmpty());
+        assertTrue(subject.requiredAuthoritiesCheck(env,new GraniteApplicationRolesManagerSupplier().get()).getRejectedAuthorities().isEmpty());
     }
 
     @Test

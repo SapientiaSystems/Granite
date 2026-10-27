@@ -1,23 +1,26 @@
 //////////////////////////////////////////////////////////////////////////////
-// GraniteApplicationRoles.java
+// GraniteApplicationRolesManagerSupplier.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.foundation.core.security;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public
-class GraniteApplicationRoles
+class GraniteApplicationRolesManagerSupplier
+    implements Supplier<ApplicationRolesManager>
 {
     public static final String AUDITOR = "ROLE_AUDITOR";
     public static final String USER    = "ROLE_USER";
 
-    private
-    GraniteApplicationRoles() {}
+    public
+    GraniteApplicationRolesManagerSupplier() {}
 
-    public static ApplicationRolesManager
-    create()
+    @Override
+    public ApplicationRolesManager
+    get()
     {
         return
             new ApplicationRolesManager(
@@ -28,5 +31,4 @@ class GraniteApplicationRoles
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////

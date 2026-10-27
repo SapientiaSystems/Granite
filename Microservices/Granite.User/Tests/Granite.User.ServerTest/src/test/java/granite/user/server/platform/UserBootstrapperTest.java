@@ -4,7 +4,7 @@
 
 package granite.user.server.platform;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.application.TestConfiguration;
 import granite.user.server.configuration.GraniteUserCommandServerConfiguration;
 import granite.user.server.domain.IUserRepository;
@@ -125,14 +125,14 @@ class UserBootstrapperTest
         GraniteUserCommandServerConfiguration subject = new GraniteUserCommandServerConfiguration();
 
         for (String[] profiles : new String[][] {{"local"},{"development"}})
-            assertTrue(subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles),GraniteApplicationRoles.create()).isEnabled());
+            assertTrue(subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles),new GraniteApplicationRolesManagerSupplier().get()).isEnabled());
 
         for (String[] profiles : new String[][] {{"production"},{"test"},{"local","test"},{"development","production"},{}})
             assertThrows(
                 IllegalStateException.class,
-                () -> subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles),GraniteApplicationRoles.create()));
+                () -> subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles),new GraniteApplicationRolesManagerSupplier().get()));
 
-        assertFalse(subject.userBootstrapper(providers(),providers(),encoder,environment(false,"production"),GraniteApplicationRoles.create()).isEnabled());
+        assertFalse(subject.userBootstrapper(providers(),providers(),encoder,environment(false,"production"),new GraniteApplicationRolesManagerSupplier().get()).isEnabled());
     }
 
     @Test
@@ -150,7 +150,7 @@ class UserBootstrapperTest
                     context.getBeanProvider(ISpringUnitOfWorkManager.class),
                     encoder,
                     environment,
-                    GraniteApplicationRoles.create());
+                    new GraniteApplicationRolesManagerSupplier().get());
 
         assertTrue(bootstrapper.bootstrap());
         assertEquals(Set.of("ROLE_AUDITOR"),find(environment.getProperty("granite.user.bootstrap.user-name")).orElseThrow().getAuthorities());

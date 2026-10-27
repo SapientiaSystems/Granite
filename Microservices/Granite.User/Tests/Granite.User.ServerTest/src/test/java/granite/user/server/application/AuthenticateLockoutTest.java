@@ -4,7 +4,7 @@
 
 package granite.user.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import granite.user.service.event.IUserEventSender;
@@ -63,7 +63,7 @@ class AuthenticateLockoutTest
                 new ModelMapper().registerModule(new MappingModule()),
                 encoder,
                 new LoginLockoutPolicy(5,LOCK,clock),
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
         user       =
             new User()
                 .setPrimaryId(101L)

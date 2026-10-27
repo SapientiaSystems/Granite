@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public
 class CatalogRoleLoginGateTest
 {
-    private final ILoginGate gate = new CatalogRoleLoginGate(GraniteApplicationRoles.create());
+    private final ILoginGate gate = new CatalogRoleLoginGate(new GraniteApplicationRolesManagerSupplier().get());
 
     @Test
     public void

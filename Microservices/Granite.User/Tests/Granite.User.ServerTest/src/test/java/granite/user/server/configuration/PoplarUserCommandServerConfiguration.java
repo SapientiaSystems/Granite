@@ -5,7 +5,7 @@
 package granite.user.server.configuration;
 
 import granite.foundation.core.security.ApplicationRolesManager;
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.foundation.core.security.RoleDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,14 +37,14 @@ class PoplarUserCommandServerConfiguration
     {
         List<RoleDefinition> roles = new ArrayList<>();
 
-        for (RoleDefinition role : GraniteApplicationRoles.create().getRoles())
+        for (RoleDefinition role : new GraniteApplicationRolesManagerSupplier().get().getRoles())
             if (!ApplicationRolesManager.ADMIN.equals(role.getName()))
                 roles.add(role);
 
-        roles.add(new RoleDefinition(REVIEWER,"Promotions Reviewer",Set.of(GraniteApplicationRoles.USER)));
+        roles.add(new RoleDefinition(REVIEWER,"Promotions Reviewer",Set.of(GraniteApplicationRolesManagerSupplier.USER)));
         roles.add(new RoleDefinition(APPROVER,"Promotions Approver",Set.of(REVIEWER)));
 
-        return new ApplicationRolesManager(roles,GraniteApplicationRoles.USER);
+        return new ApplicationRolesManager(roles,GraniteApplicationRolesManagerSupplier.USER);
     }
 }
 

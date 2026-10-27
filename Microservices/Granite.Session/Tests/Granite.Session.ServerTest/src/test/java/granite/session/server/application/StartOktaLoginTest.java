@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.OktaLoginTransaction;
@@ -230,7 +230,7 @@ class StartOktaLoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                GraniteApplicationRoles.create());
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     private OktaLoginTransaction
