@@ -56,11 +56,13 @@ class GatewayDefaultSecurityTest
 
     @Test
     public void
-    defaultChainRequiresAuthenticationButNoAuthority()
+    defaultChainRequiresAdminForUserCommands()
         throws Exception
     {
         post("/user-command-service/create-user",null).expectStatus().isUnauthorized();
-        post("/user-command-service/create-user",backend.sign(List.of())).expectStatus().isOk();
+        post("/user-command-service/create-user",backend.sign(List.of())).expectStatus().isForbidden();
+        post("/user-command-service/create-user",backend.sign(List.of("ROLE_User"))).expectStatus().isForbidden();
+        post("/user-command-service/create-user",backend.sign(List.of("ROLE_Admin"))).expectStatus().isOk();
     }
 
     @Test

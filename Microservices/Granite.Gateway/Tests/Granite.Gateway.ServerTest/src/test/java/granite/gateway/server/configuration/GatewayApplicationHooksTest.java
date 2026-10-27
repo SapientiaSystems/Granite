@@ -27,8 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("CommitStage")
 @SpringBootTest(
     classes = ApplicationHooksGatewayTestConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "granite.gateway.authorization.role-rules.enabled=true")
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public
 class GatewayApplicationHooksTest
 {
@@ -83,6 +82,17 @@ class GatewayApplicationHooksTest
         String token = backend.sign(List.of("ROLE_PromotionsReviewer"));
 
         assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token));
+    }
+
+    @Test
+    public void
+    roleUserGetsCoreRulesWithoutRoleRulesFlag()
+        throws Exception
+    {
+        String token = backend.sign(List.of("ROLE_User"));
+
+        assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token));
+        assertEquals(403,call(HttpMethod.GET,"/unlisted-service/anything",token));
     }
 
     @Test

@@ -118,7 +118,8 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 - Base configuration keeps owning: cookie→JWT swap, CSRF, session body-key filter, public/current-session matchers, Granite routes, `ROLE_Admin` catch-all.
 - Core rules in the base: preferences paths → any authenticated user; `get-users-output`/`handle-users-input` → `ROLE_Admin`, `SCOPE_internal`; everything else → `ROLE_Admin`, `SCOPE_internal`.
 - Hooks: `configureApplicationRoutes(Builder,Environment)` (additive) and `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` invoked **after** Granite's specific rules and **before** the catch-all, so an application can't drop core rules.
-- Granite application rules (`ROLE_Auditor` read access to Users/Sessions) move to the Granite application's subclass. The existing `role-rules.enabled` flag keeps its meaning.
+- Granite application rules (`ROLE_Auditor` read access to Users/Sessions) move to the Granite application's subclass.
+- **Core rules are always registered** (user decision 2026-10-26, final review): the users-reader rules (`getUsersReaderAuthorities(Environment)`, default `ROLE_Admin`, `SCOPE_internal`), the Granite admin-only paths, then the application hook, then `/**` → `ROLE_Admin`, `SCOPE_internal`, regardless of any property. `configureAuthorization` is `final`. `granite.gateway.authorization.role-rules.enabled` no longer switches the core rules; it only controls whether the Granite application's `getUsersReaderAuthorities` adds `ROLE_Auditor` (default `false`: Admin/internal only).
 
 ### Web (phase 3)
 - `UsersView` moves from `Granite.Web.Navigator` into `Granite.Web.User` (reusable). Authorities editor becomes a pick list from the role catalog with hierarchy cascade (grant adds implied; removing removes dependents).

@@ -4,6 +4,10 @@
 
 package granite.gateway.server.configuration;
 
+import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRoles;
+import org.springframework.core.env.Environment;
+
 import java.util.List;
 
 public
@@ -12,9 +16,12 @@ class GraniteRoleRulesGatewayServerConfiguration
 {
     @Override
     protected List<String>
-    getUsersReaderAuthorities()
+    getUsersReaderAuthorities(Environment environment)
     {
-        return List.of("ROLE_Admin","ROLE_Auditor","SCOPE_internal");
+        if (!environment.getProperty("granite.gateway.authorization.role-rules.enabled",Boolean.class,false))
+            return super.getUsersReaderAuthorities(environment);
+
+        return List.of(ApplicationRoles.ADMIN,GraniteApplicationRoles.AUDITOR,"SCOPE_internal");
     }
 }
 

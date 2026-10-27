@@ -4,6 +4,7 @@
 
 package granite.gateway.server.configuration;
 
+import granite.foundation.core.security.ApplicationRoles;
 import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
@@ -348,14 +349,11 @@ class GraniteGatewayServerConfiguration
         return new CurrentSessionFrontEndInputMatcher();
     }
 
-    protected ServerHttpSecurity.AuthorizeExchangeSpec
+    protected final ServerHttpSecurity.AuthorizeExchangeSpec
     configureAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
     {
-        if (!environment.getProperty("granite.gateway.authorization.role-rules.enabled",Boolean.class,false))
-            return configureApplicationAuthorization(exchanges,environment);
-
-        String[] readers = getUsersReaderAuthorities().toArray(String[]::new);
-        String[] admins  = {"ROLE_Admin","SCOPE_internal"};
+        String[] readers = getUsersReaderAuthorities(environment).toArray(String[]::new);
+        String[] admins  = {ApplicationRoles.ADMIN,"SCOPE_internal"};
 
         exchanges
             .pathMatchers(
@@ -389,13 +387,13 @@ class GraniteGatewayServerConfiguration
         return
             exchanges
                 .pathMatchers("/**")
-                    .hasAnyAuthority("ROLE_Admin","SCOPE_internal");
+                    .hasAnyAuthority(admins);
     }
 
     protected List<String>
-    getUsersReaderAuthorities()
+    getUsersReaderAuthorities(Environment environment)
     {
-        return List.of("ROLE_Admin","SCOPE_internal");
+        return List.of(ApplicationRoles.ADMIN,"SCOPE_internal");
     }
 
     protected ServerHttpSecurity.AuthorizeExchangeSpec

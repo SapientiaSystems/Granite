@@ -113,10 +113,12 @@ class GatewayAuthorizationTest
 
     @Test
     public void
-    pathsWithoutApplicationRulesRequireOnlyAuthentication()
+    coreReaderRulesApplyWithoutRoleRulesFlag()
         throws Exception
     {
         post("/user-query-service/find-users-by-key",backend.sign(List.of("ROLE_User")))
+            .expectStatus().isForbidden();
+        post("/user-query-service/find-users-by-key",backend.sign(List.of("ROLE_Admin")))
             .expectStatus().isOk();
         post("/user-query-service/find-users-by-key",null)
             .expectStatus().isUnauthorized();

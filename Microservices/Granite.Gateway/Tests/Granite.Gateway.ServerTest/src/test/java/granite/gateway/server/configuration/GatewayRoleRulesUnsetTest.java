@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// GatewayRoleRulesDisabledTest.java
+// GatewayRoleRulesUnsetTest.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.gateway.server.configuration;
@@ -18,15 +18,15 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Tag("CommitStage")
 @SpringBootTest(
     classes = RoleRulesGatewayTestConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "granite.gateway.authorization.role-rules.enabled=false")
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public
-class GatewayRoleRulesDisabledTest
+class GatewayRoleRulesUnsetTest
 {
     private static GatewayTestBackend backend;
 
@@ -60,12 +60,44 @@ class GatewayRoleRulesDisabledTest
 
     @Test
     public void
-    rulesDisabledRequiresOnlyAuthentication()
+    roleUserCannotAdministerUsers()
         throws Exception
     {
         String token = backend.sign(List.of("ROLE_User"));
 
-        assertAllowed(HttpMethod.POST,"/user-command-service/create-user",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-users-input",token);
+        assertForbidden(HttpMethod.POST,"/user-command-service/create-user",token);
+    }
+
+    @Test
+    public void
+    unmatchedPathsAreAdminOnly()
+        throws Exception
+    {
+        assertForbidden(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_User")));
+        assertAllowed(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_Admin")));
+    }
+
+    @Test
+    public void
+    auditorIsNotGrantedReaderAccess()
+        throws Exception
+    {
+        String token = backend.sign(List.of("ROLE_Auditor"));
+
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
+        assertForbidden(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
+    }
+
+    @Test
+    public void
+    adminKeepsReaderAndAdministrationAccess()
+        throws Exception
+    {
+        String token = backend.sign(List.of("ROLE_Admin"));
+
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
     }
 
@@ -78,6 +110,12 @@ class GatewayRoleRulesDisabledTest
         assertNotEquals(403,status,method + " " + path);
     }
 
+    private void
+    assertForbidden(HttpMethod method,String path,String token)
+    {
+        assertEquals(403,call(method,path,token),method + " " + path);
+    }
+
     private int
     call(HttpMethod method,String path,String token)
     {
@@ -86,12 +124,7 @@ class GatewayRoleRulesDisabledTest
                 .method(method)
                 .uri(path)
                 .contentType(MediaType.APPLICATION_JSON)
-                .headers(
-                    headers ->
-                    {
-                        if (token != null)
-                            headers.setBearerAuth(token);
-                    })
+                .headers(headers -> headers.setBearerAuth(token))
                 .bodyValue("{}")
                 .exchange()
                 .returnResult(String.class)
