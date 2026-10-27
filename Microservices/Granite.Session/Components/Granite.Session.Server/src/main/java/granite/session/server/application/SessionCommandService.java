@@ -11,7 +11,7 @@ import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.OktaLoginTransaction;
 import granite.session.server.domain.Session;
-import granite.session.server.domain.SignInMethod;
+import granite.session.server.domain.LoginMethod;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
@@ -469,8 +469,8 @@ class SessionCommandService
                         refreshToken,
                         sessionHandle,
                         context.getCredentialKind() == CredentialKind.ACCESS_TOKEN
-                            ? SignInMethod.ACCESS_TOKEN
-                            : SignInMethod.PASSWORD))
+                            ? LoginMethod.ACCESS_TOKEN
+                            : LoginMethod.PASSWORD))
                 .setRefreshToken(refreshToken)
                 .setSessionHandle(sessionHandle);
     }
@@ -773,7 +773,7 @@ class SessionCommandService
                         context.getAuthorities(),
                         refreshToken,
                         sessionHandle,
-                        SignInMethod.OKTA)
+                        LoginMethod.OKTA)
                         .setOktaIdToken(context.getIdentity().getIdToken())
                         .setOktaGroups(context.getIdentity().getGroups()))
                 .setSessionHandle(sessionHandle);
@@ -1558,7 +1558,7 @@ class SessionCommandService
         Set<String>    authorities,
         String         refreshToken,
         String         sessionHandle,
-        SignInMethod   signInMethod)
+        LoginMethod    loginMethod)
     {
         Instant now     = Instant.now(clock);
         Session source  = lifecycle != null ? lifecycle.getSource() : null;
@@ -1571,7 +1571,7 @@ class SessionCommandService
                 .setRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .setHashedHandle(refreshTokenService.hash(sessionHandle))
                 .setLastActivity(now)
-                .setSignInMethod(signInMethod)
+                .setLoginMethod(loginMethod)
                 .setAuthorities(
                     authorities != null
                         ? new LinkedHashSet<>(authorities)
@@ -1728,7 +1728,7 @@ class SessionCommandService
     private String
     endSessionUrlFor(Session session)
     {
-        if (session.isClosed() || session.getSignInMethod() != SignInMethod.OKTA || isBlank(session.getOktaIdToken()))
+        if (session.isClosed() || session.getLoginMethod() != LoginMethod.OKTA || isBlank(session.getOktaIdToken()))
             return null;
 
         try

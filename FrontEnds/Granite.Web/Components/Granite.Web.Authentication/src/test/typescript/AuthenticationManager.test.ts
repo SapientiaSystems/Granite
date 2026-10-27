@@ -64,8 +64,8 @@ describe("AuthenticationManager",() =>
         const manager = managerFor(scriptedFrontEnd());
 
         await manager.restore();
-        await expect(manager.login("alice","nope")).rejects.toThrow("Sign-in failed");
-        expect(manager.getState()).toMatchObject({ status: "anonymous", error: "Sign-in failed" });
+        await expect(manager.login("alice","nope")).rejects.toThrow("Login failed");
+        expect(manager.getState()).toMatchObject({ status: "anonymous", error: "Login failed" });
     });
 
     it("sends the user to Okta with the return path",async () =>
@@ -84,7 +84,7 @@ describe("AuthenticationManager",() =>
         const frontEnd  = scriptedFrontEnd().respond(KEYS.start,() => sessionOutput(false));
         const navigator = new FakeNavigator();
 
-        await expect(managerFor(frontEnd,navigator).startOktaLogin("/")).rejects.toThrow("Sign-in failed");
+        await expect(managerFor(frontEnd,navigator).startOktaLogin("/")).rejects.toThrow("Login failed");
         expect(navigator.assigned).toEqual([]);
     });
 
@@ -109,7 +109,7 @@ describe("AuthenticationManager",() =>
     {
         const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(false));
 
-        await expect(managerFor(frontEnd).completeOktaLogin("c","s")).rejects.toThrow("Sign-in failed");
+        await expect(managerFor(frontEnd).completeOktaLogin("c","s")).rejects.toThrow("Login failed");
     });
 
     it("logs out and goes anonymous",async () =>
@@ -145,7 +145,7 @@ describe("AuthenticationManager",() =>
         expect(manager.getState().status).toBe("authenticated");
     });
 
-    it("treats a 401 on logout as already signed out",async () =>
+    it("treats a 401 on logout as already logged out",async () =>
     {
         const frontEnd = scriptedFrontEnd().respond(KEYS.logout,() => serviceError(401));
         const manager  = managerFor(frontEnd);
@@ -159,7 +159,7 @@ describe("AuthenticationManager",() =>
 
 describe("AuthenticationManager.handleUnauthorized",() =>
 {
-    async function signedIn(frontEnd = scriptedFrontEnd()): Promise<AuthenticationManager>
+    async function loggedIn(frontEnd = scriptedFrontEnd()): Promise<AuthenticationManager>
     {
         const manager = managerFor(frontEnd);
 
@@ -167,10 +167,10 @@ describe("AuthenticationManager.handleUnauthorized",() =>
         return manager;
     }
 
-    it("retries without a prompt when SessionView shows another tab signed in",async () =>
+    it("retries without a prompt when SessionView shows another tab logged in",async () =>
     {
         const frontEnd = scriptedFrontEnd();
-        const manager  = await signedIn(frontEnd);
+        const manager  = await loggedIn(frontEnd);
 
         frontEnd.respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_USER"]));
 
@@ -178,9 +178,9 @@ describe("AuthenticationManager.handleUnauthorized",() =>
         expect(manager.getState().status).toBe("authenticated");
     });
 
-    it("prompts, then resolves true after a password sign-in",async () =>
+    it("prompts, then resolves true after a password login",async () =>
     {
-        const manager = await signedIn();
+        const manager = await loggedIn();
         const result  = manager.handleUnauthorized();
 
         await flush();
@@ -194,7 +194,7 @@ describe("AuthenticationManager.handleUnauthorized",() =>
 
     it("stays in the prompt after a refused password",async () =>
     {
-        const manager = await signedIn();
+        const manager = await loggedIn();
 
         void manager.handleUnauthorized();
         await flush();
@@ -206,7 +206,7 @@ describe("AuthenticationManager.handleUnauthorized",() =>
     it("shares one prompt between concurrent 401s",async () =>
     {
         const frontEnd = scriptedFrontEnd();
-        const manager  = await signedIn(frontEnd);
+        const manager  = await loggedIn(frontEnd);
         const before   = frontEnd.callsFor(KEYS.current).length;
         const first    = manager.handleUnauthorized();
         const second   = manager.handleUnauthorized();
@@ -221,7 +221,7 @@ describe("AuthenticationManager.handleUnauthorized",() =>
 
     it("resolves false and signs out when the prompt is cancelled",async () =>
     {
-        const manager = await signedIn();
+        const manager = await loggedIn();
         const result  = manager.handleUnauthorized();
 
         await flush();
@@ -231,7 +231,7 @@ describe("AuthenticationManager.handleUnauthorized",() =>
         expect(manager.getState().status).toBe("anonymous");
     });
 
-    it("resolves false for a caller that was never signed in",async () =>
+    it("resolves false for a caller that was never logged in",async () =>
     {
         const manager = managerFor(scriptedFrontEnd());
 

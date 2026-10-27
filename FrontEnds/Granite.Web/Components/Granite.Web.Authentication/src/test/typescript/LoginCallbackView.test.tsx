@@ -70,8 +70,8 @@ describe("LoginCallbackView",() =>
 
         renderCallback(frontEnd,"?error=access_denied&state=s");
 
-        expect((await screen.findByRole("alert")).textContent).toContain("Sign-in was not completed");
-        expect(screen.getByRole("link",{ name: "Back to sign in" })).toBeTruthy();
+        expect((await screen.findByRole("alert")).textContent).toContain("Login was not completed");
+        expect(screen.getByRole("link",{ name: "Back to login" })).toBeTruthy();
         expect(frontEnd.callsFor(KEYS.complete)).toHaveLength(0);
     });
 
@@ -91,7 +91,7 @@ describe("LoginCallbackView",() =>
 
         renderCallback(frontEnd,"?code=c&state=s");
 
-        expect((await screen.findByRole("alert")).textContent).toContain("Sign-in failed");
+        expect((await screen.findByRole("alert")).textContent).toContain("Login failed");
     });
 });
 

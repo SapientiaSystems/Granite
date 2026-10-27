@@ -101,13 +101,13 @@ class SessionTest
     {
         Session target = new Session();
 
-        assertNull(target.getSignInMethod());
+        assertNull(target.getLoginMethod());
         assertNull(target.getOktaIdToken());
         assertTrue(target.getOktaGroups().isEmpty());
-        assertSame(target,target.setSignInMethod(SignInMethod.OKTA));
+        assertSame(target,target.setLoginMethod(LoginMethod.OKTA));
         assertSame(target,target.setOktaIdToken("id.token.value"));
         assertSame(target,target.setOktaGroups(Set.of("Admins")));
-        assertEquals(SignInMethod.OKTA,target.getSignInMethod());
+        assertEquals(LoginMethod.OKTA,target.getLoginMethod());
         assertEquals("id.token.value",target.getOktaIdToken());
         assertEquals(Set.of("Admins"),target.getOktaGroups());
     }
@@ -118,14 +118,14 @@ class SessionTest
     {
         Session target =
             new Session()
-                .setSignInMethod(SignInMethod.OKTA)
+                .setLoginMethod(LoginMethod.OKTA)
                 .setOktaIdToken("id.token.value")
                 .setOktaGroups(Set.of("Admins"));
 
         target.close(SessionClosedReason.LOGOUT,Instant.parse("2026-10-24T12:00:00Z"));
 
         assertNull(target.getOktaIdToken());
-        assertEquals(SignInMethod.OKTA,target.getSignInMethod());
+        assertEquals(LoginMethod.OKTA,target.getLoginMethod());
         assertEquals(Set.of("Admins"),target.getOktaGroups());
     }
 

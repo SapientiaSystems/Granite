@@ -42,7 +42,7 @@ class Session
     private UUID                       continuityId;
     private Long                       replacedBy;
     private Long                       copiedFrom;
-    private SignInMethod               signInMethod;
+    private LoginMethod                loginMethod;
     private String                     oktaIdToken;
     private Set<String>                oktaGroups;
 
@@ -67,7 +67,7 @@ class Session
         continuityId             = null;
         replacedBy               = null;
         copiedFrom               = null;
-        signInMethod             = null;
+        loginMethod              = null;
         oktaIdToken              = null;
         oktaGroups               = new LinkedHashSet<>();
     }
@@ -200,9 +200,9 @@ class Session
     }
 
     public Session
-    setSignInMethod(SignInMethod method)
+    setLoginMethod(LoginMethod method)
     {
-        signInMethod = method;
+        loginMethod = method;
         return this;
     }
 
@@ -304,8 +304,8 @@ class Session
     public Long
     getCopiedFrom() { return copiedFrom; }
 
-    public SignInMethod
-    getSignInMethod() { return signInMethod; }
+    public LoginMethod
+    getLoginMethod() { return loginMethod; }
 
     public String
     getOktaIdToken() { return oktaIdToken; }

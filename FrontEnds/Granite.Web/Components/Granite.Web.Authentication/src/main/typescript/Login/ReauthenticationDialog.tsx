@@ -5,7 +5,7 @@
 import type { ReactElement }        from "react";
 import { Modal, Text }              from "@mantine/core";
 import { useAuthentication }        from "../Authentication/AuthenticationContext";
-import { SignInForm }               from "./SignInForm";
+import { LoginForm }                from "./LoginForm";
 
 export function ReauthenticationDialog(): ReactElement
 {
@@ -19,13 +19,13 @@ export function ReauthenticationDialog(): ReactElement
             onClose={cancelReauthentication}
             title="Session expired"
             closeOnClickOutside={false}
-            closeButtonProps={{ "aria-label": "Cancel sign-in" }}
+            closeButtonProps={{ "aria-label": "Cancel login" }}
             transitionProps={{ duration: 0 }}
         >
             <Text size="sm" mb="md">
-                {state.userName ? state.userName + ", sign in again to continue." : "Sign in again to continue."}
+                {state.userName ? state.userName + ", log in again to continue." : "Log in again to continue."}
             </Text>
-            <SignInForm returnTo={returnTo} />
+            <LoginForm returnTo={returnTo} />
         </Modal>
     );
 }

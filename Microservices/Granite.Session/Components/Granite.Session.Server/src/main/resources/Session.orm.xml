@@ -74,8 +74,8 @@
             <basic name="copiedFrom">
                 <column name="copiedFrom"/>
             </basic>
-            <basic name="signInMethod">
-                <column name="signInMethod" column-definition="VARCHAR(32)"/>
+            <basic name="loginMethod">
+                <column name="loginMethod" column-definition="VARCHAR(32)"/>
                 <enumerated>STRING</enumerated>
             </basic>
             <basic name="oktaIdToken">

@@ -14,7 +14,7 @@ import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.OktaLoginTransaction;
 import granite.session.server.domain.Session;
-import granite.session.server.domain.SignInMethod;
+import granite.session.server.domain.LoginMethod;
 import granite.session.server.platform.MockSessionEventSender;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.CompleteOktaLoginRequest;
@@ -138,7 +138,7 @@ class CompleteOktaLoginTest
         assertEquals("alice",reply.getUserName());
         assertEquals(USER_ID,reply.getSessionData().getUserId());
         assertEquals(DEVICE_ID,reply.getSessionData().getDeviceId());
-        assertEquals(SignInMethod.OKTA,created.getSignInMethod());
+        assertEquals(LoginMethod.OKTA,created.getLoginMethod());
         assertNotNull(created.getOktaIdToken());
         assertEquals(Set.of("Granite Admins","Everyone"),created.getOktaGroups());
         assertEquals("minted.jwt",created.getAccessToken());

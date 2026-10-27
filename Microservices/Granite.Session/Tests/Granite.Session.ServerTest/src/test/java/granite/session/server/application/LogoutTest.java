@@ -9,7 +9,7 @@ import granite.session.server.platform.MockSessionEventSender;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
-import granite.session.server.domain.SignInMethod;
+import granite.session.server.domain.LoginMethod;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.LogoutReply;
 import granite.session.service.requestreply.LogoutRequest;
@@ -162,7 +162,7 @@ class LogoutTest
         IOktaClient okta = oktaSubject();
         Session     existing =
             stubExisting()
-                .setSignInMethod(SignInMethod.OKTA)
+                .setLoginMethod(LoginMethod.OKTA)
                 .setOktaIdToken("okta.id.token");
         String      url  = "https://okta.example.com/oauth2/default/v1/logout?id_token_hint=okta.id.token";
 
@@ -182,7 +182,7 @@ class LogoutTest
     {
         IOktaClient okta = oktaSubject();
 
-        stubExisting().setSignInMethod(SignInMethod.PASSWORD);
+        stubExisting().setLoginMethod(LoginMethod.PASSWORD);
 
         LogoutReply reply = logout(SESSION_ID);
 
@@ -193,10 +193,25 @@ class LogoutTest
 
     @Test
     public void
+    logoutWithoutLoginMethodSucceeds()
+    {
+        IOktaClient okta     = oktaSubject();
+        Session     existing = stubExisting().setLoginMethod(null).setOktaIdToken("okta.id.token");
+
+        LogoutReply reply = logout(SESSION_ID);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertNull(reply.getEndSessionUrl());
+        assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
+        Mockito.verifyNoInteractions(okta);
+    }
+
+    @Test
+    public void
     unavailableEndSessionUrlStillLogsOut()
     {
         IOktaClient okta     = oktaSubject();
-        Session     existing = stubExisting().setSignInMethod(SignInMethod.OKTA).setOktaIdToken("okta.id.token");
+        Session     existing = stubExisting().setLoginMethod(LoginMethod.OKTA).setOktaIdToken("okta.id.token");
 
         Mockito.when(okta.buildEndSessionUrl(Mockito.anyString())).thenThrow(new OktaLoginException("down"));
 
@@ -214,7 +229,7 @@ class LogoutTest
         IOktaClient okta = oktaSubject();
 
         stubExisting()
-            .setSignInMethod(SignInMethod.OKTA)
+            .setLoginMethod(LoginMethod.OKTA)
             .setOktaIdToken("okta.id.token")
             .setClosedReason(SessionClosedReason.REPLACED);
 

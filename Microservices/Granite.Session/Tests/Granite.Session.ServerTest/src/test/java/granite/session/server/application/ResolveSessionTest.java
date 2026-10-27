@@ -12,7 +12,7 @@ import ch.qos.logback.core.read.ListAppender;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
-import granite.session.server.domain.SignInMethod;
+import granite.session.server.domain.LoginMethod;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.server.platform.MockSessionEventSender;
 import granite.session.service.event.SessionEvent;
@@ -418,7 +418,7 @@ class ResolveSessionTest
     public void
     oktaRenewalUsesTheUsersStoredAuthorities()
     {
-        stub(live().setSignInMethod(SignInMethod.OKTA).setOktaGroups(Set.of("Granite Admins")));
+        stub(live().setLoginMethod(LoginMethod.OKTA).setOktaGroups(Set.of("Granite Admins")));
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
         stubUser(Set.of("ROLE_USER"));
 
@@ -432,7 +432,7 @@ class ResolveSessionTest
     public void
     passwordRenewalUsesTheUsersStoredAuthorities()
     {
-        stub(live().setSignInMethod(SignInMethod.PASSWORD));
+        stub(live().setLoginMethod(LoginMethod.PASSWORD));
         tokenExpires(NOW.plus(Duration.ofMinutes(1)));
         stubUser(Set.of("ROLE_AUDITOR"));
 

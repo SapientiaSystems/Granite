@@ -9,13 +9,13 @@ import { Alert, Button, Divider, Loader, PasswordInput, Stack,
 import { useAuthentication }                                     from "../Authentication/AuthenticationContext";
 import type { ILoginMethods }                                    from "../Authentication/ISessionService";
 
-export interface ISignInFormProps
+export interface ILoginFormProps
 {
     returnTo:    string;
-    onSignedIn?: () => void;
+    onLoggedIn?: () => void;
 }
 
-export function SignInForm({ returnTo, onSignedIn }: ISignInFormProps): ReactElement
+export function LoginForm({ returnTo, onLoggedIn }: ILoginFormProps): ReactElement
 {
     const { getLoginMethods, login, startOktaLogin } = useAuthentication();
     const [methods, setMethods]                      = useState<ILoginMethods | null>(null);
@@ -44,11 +44,11 @@ export function SignInForm({ returnTo, onSignedIn }: ISignInFormProps): ReactEle
         try
         {
             await action();
-            onSignedIn?.();
+            onLoggedIn?.();
         }
         catch (failure)
         {
-            setError(failure instanceof Error ? failure.message : "Sign-in failed");
+            setError(failure instanceof Error ? failure.message : "Login failed");
         }
         finally
         {
@@ -63,13 +63,13 @@ export function SignInForm({ returnTo, onSignedIn }: ISignInFormProps): ReactEle
     };
 
     if (loadFailed)
-        return <Alert color="red" role="alert">Unable to load sign-in options</Alert>;
+        return <Alert color="red" role="alert">Unable to load login options</Alert>;
 
     if (!methods)
-        return <Loader aria-label="Loading sign-in options" />;
+        return <Loader aria-label="Loading login options" />;
 
     if (!methods.passwordEnabled && !methods.oktaEnabled)
-        return <Text>No sign-in method is enabled.</Text>;
+        return <Text>No login method is enabled.</Text>;
 
     return (
         <Stack gap="md">
@@ -92,14 +92,14 @@ export function SignInForm({ returnTo, onSignedIn }: ISignInFormProps): ReactEle
                             onChange={(event) => setPassword(event.currentTarget.value)}
                         />
                         <Button type="submit" loading={busy} disabled={!userName || !password}>
-                            Sign in
+                            Log in
                         </Button>
                     </Stack>
                 </form>}
             {methods.passwordEnabled && methods.oktaEnabled && <Divider label="or" labelPosition="center" />}
             {methods.oktaEnabled &&
                 <Button variant="default" loading={busy} onClick={() => { void attempt(() => startOktaLogin(returnTo)); }}>
-                    Sign in with Okta
+                    Log in with Okta
                 </Button>}
         </Stack>
     );

@@ -29,13 +29,13 @@ export function LoginCallbackView(): ReactElement
 
         if (refusal || !code || !state)
         {
-            setError("Sign-in was not completed");
+            setError("Login was not completed");
             return;
         }
 
         completeOktaLogin(code,state).then(
             (returnTo: string) => navigate(returnTo,{ replace: true }),
-            () => setError("Sign-in failed"));
+            () => setError("Login failed"));
     },[completeOktaLogin,navigate,params]);
 
     return (
@@ -44,9 +44,9 @@ export function LoginCallbackView(): ReactElement
                 {error
                     ? <>
                           <Alert color="red" role="alert">{error}</Alert>
-                          <Anchor component={Link} to="/login">Back to sign in</Anchor>
+                          <Anchor component={Link} to="/login">Back to login</Anchor>
                       </>
-                    : <Loader aria-label="Completing sign-in" />}
+                    : <Loader aria-label="Completing login" />}
             </Stack>
         </Center>
     );

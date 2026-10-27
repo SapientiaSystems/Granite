@@ -25,8 +25,8 @@ interface IPrompt
     resolve: (retry: boolean) => void;
 }
 
-const SIGN_IN_FAILED:  string = "Sign-in failed";
-const SIGN_OUT_FAILED: string = "Sign-out failed";
+const LOGIN_FAILED:  string = "Login failed";
+const LOGOUT_FAILED: string = "Logout failed";
 
 export class AuthenticationManager
 {
@@ -107,8 +107,8 @@ export class AuthenticationManager
 
         if (!url)
         {
-            this.recordError(SIGN_IN_FAILED);
-            throw new Error(SIGN_IN_FAILED);
+            this.recordError(LOGIN_FAILED);
+            throw new Error(LOGIN_FAILED);
         }
 
         this.navigator.assign(url);
@@ -142,7 +142,7 @@ export class AuthenticationManager
 
             if (!result.loggedOut)
             {
-                this.recordError(SIGN_OUT_FAILED);
+                this.recordError(LOGOUT_FAILED);
                 return false;
             }
 
@@ -221,8 +221,8 @@ export class AuthenticationManager
         if (status.authenticated)
             return;
 
-        this.recordError(SIGN_IN_FAILED);
-        throw new Error(SIGN_IN_FAILED);
+        this.recordError(LOGIN_FAILED);
+        throw new Error(LOGIN_FAILED);
     }
 
     private settle(retry: boolean): void

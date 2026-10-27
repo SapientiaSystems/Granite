@@ -23,7 +23,7 @@ export function MenuBar(): ReactElement
 {
     const [opened, { toggle, close }] = useDisclosure(false);
     const { state, logout }           = useAuthentication();
-    const signedIn: boolean           = state.status === "authenticated";
+    const loggedIn: boolean           = state.status === "authenticated";
     const navigate                    = useNavigate();
     const location                    = useLocation();
     const isUserRouteActive: boolean  = location.pathname.startsWith("/user");
@@ -78,13 +78,13 @@ export function MenuBar(): ReactElement
                                         </svg>
                                     </ActionIcon>
                                     <Text c="var(--accent)" size="sm" fw={500}>
-                                        {signedIn ? state.userName : "Sign in"}
+                                        {loggedIn ? state.userName : "Log in"}
                                     </Text>
                                 </Group>
                             </UnstyledButton>
                         </Menu.Target>
                         <Menu.Dropdown>
-                            {signedIn
+                            {loggedIn
                                 ? <Menu.Item onClick={() => { void logout().then((done: boolean) => { if (done) navigate("/login"); }); }}>Logout</Menu.Item>
                                 : <Menu.Item onClick={() => navigate("/login")}>Login</Menu.Item>}
                             <Menu.Item onClick={() => navigate("/user")}>

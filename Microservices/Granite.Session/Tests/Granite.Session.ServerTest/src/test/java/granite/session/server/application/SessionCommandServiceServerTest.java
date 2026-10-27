@@ -114,7 +114,7 @@ class SessionCommandServiceServerTest
         assertEquals(sub + "@example.com",reply.getUserName());
         assertEquals(Set.of("ROLE_ADMIN"),reply.getSessionData().getAuthorities());
         assertCreatedOutboxEvent(reply.getSessionData().getSessionId());
-        assertEquals("OKTA",find(reply.getSessionData().getSessionId()).getSignInMethod().name());
+        assertEquals("OKTA",find(reply.getSessionData().getSessionId()).getLoginMethod().name());
         assertTrue(resolveSession(reply.getSessionHandle()).isSuccess());
 
         CompleteOktaLoginReply reused = completeOkta(start.getTransactionId(),query.get("state"),deviceId);

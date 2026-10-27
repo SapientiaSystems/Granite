@@ -17,7 +17,7 @@ function WhoAmI(): ReactElement
 {
     const { state } = useAuthentication();
 
-    return <div>signed in as {state.userName}</div>;
+    return <div>logged in as {state.userName}</div>;
 }
 
 const routes: ReactElement =
@@ -32,7 +32,7 @@ describe("RequireAuthentication and LoginView",() =>
     {
         renderWithAuthentication(authenticationFor(scriptedFrontEnd()),"/users",routes);
 
-        expect(await screen.findByRole("heading",{ name: "Sign in" })).toBeTruthy();
+        expect(await screen.findByRole("heading",{ name: "Log in" })).toBeTruthy();
     });
 
     it("signs in and returns to the protected route",async () =>
@@ -43,9 +43,9 @@ describe("RequireAuthentication and LoginView",() =>
 
         await userEvent.type(await screen.findByLabelText(/User name/),"alice");
         await userEvent.type(screen.getByLabelText(/Password/),"secret");
-        await userEvent.click(screen.getByRole("button",{ name: "Sign in" }));
+        await userEvent.click(screen.getByRole("button",{ name: "Log in" }));
 
-        expect(await screen.findByText("signed in as alice")).toBeTruthy();
+        expect(await screen.findByText("logged in as alice")).toBeTruthy();
         expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userName: "alice", password: "secret" });
     });
 
@@ -55,10 +55,10 @@ describe("RequireAuthentication and LoginView",() =>
 
         await userEvent.type(await screen.findByLabelText(/User name/),"alice");
         await userEvent.type(screen.getByLabelText(/Password/),"wrong");
-        await userEvent.click(screen.getByRole("button",{ name: "Sign in" }));
+        await userEvent.click(screen.getByRole("button",{ name: "Log in" }));
 
-        expect((await screen.findByRole("alert")).textContent).toContain("Sign-in failed");
-        expect(screen.getByRole("heading",{ name: "Sign in" })).toBeTruthy();
+        expect((await screen.findByRole("alert")).textContent).toContain("Login failed");
+        expect(screen.getByRole("heading",{ name: "Log in" })).toBeTruthy();
     });
 
     it("restores an existing session before rendering the protected route",async () =>
@@ -67,11 +67,11 @@ describe("RequireAuthentication and LoginView",() =>
 
         renderWithAuthentication(authenticationFor(frontEnd),"/users",routes);
 
-        expect(await screen.findByText("signed in as alice")).toBeTruthy();
+        expect(await screen.findByText("logged in as alice")).toBeTruthy();
         expect(frontEnd.callsFor(KEYS.login)).toHaveLength(0);
     });
 
-    it("leaves the login view when already signed in",async () =>
+    it("leaves the login view when already logged in",async () =>
     {
         const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_USER"]));
 
@@ -84,13 +84,13 @@ describe("RequireAuthentication and LoginView",() =>
         expect(await screen.findByText("home")).toBeTruthy();
     });
 
-    it("does not offer Google sign-in",async () =>
+    it("does not offer Google login",async () =>
     {
         renderWithAuthentication(authenticationFor(scriptedFrontEnd()),"/login",routes);
 
         await screen.findByLabelText(/User name/);
 
-        expect(screen.queryByTestId("google-sign-in")).toBeNull();
+        expect(screen.queryByTestId("google-login")).toBeNull();
     });
 });
 
