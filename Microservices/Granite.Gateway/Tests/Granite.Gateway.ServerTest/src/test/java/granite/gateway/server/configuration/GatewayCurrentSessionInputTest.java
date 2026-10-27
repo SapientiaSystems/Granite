@@ -74,9 +74,9 @@ class GatewayCurrentSessionInputTest
             String cookieBody = logout("cookie-" + UUID.randomUUID());
             String bearerBody = logout("bearer-" + UUID.randomUUID());
 
-            assertEquals(200,postWithCookie(host + "/handle-session-input",cookieBody,handleFor("ROLE_AUDITOR")));
+            assertEquals(200,postWithCookie(host + "/handle-session-input",cookieBody,handleFor("ROLE_Auditor")));
             assertTrue(backend.getReceivedBodies().contains(cookieBody));
-            assertEquals(200,postWithBearer(host + "/handle-session-input",bearerBody,backend.sign(List.of("ROLE_AUDITOR"))));
+            assertEquals(200,postWithBearer(host + "/handle-session-input",bearerBody,backend.sign(List.of("ROLE_Auditor"))));
             assertTrue(backend.getReceivedBodies().contains(bearerBody));
         }
     }
@@ -86,8 +86,8 @@ class GatewayCurrentSessionInputTest
     roleUserCanLogOutAndReadSessionView()
         throws Exception
     {
-        String handle = handleFor("ROLE_USER");
-        String bearer = backend.sign(List.of("ROLE_USER"));
+        String handle = handleFor("ROLE_User");
+        String bearer = backend.sign(List.of("ROLE_User"));
 
         for (String host : HOSTS)
         {
@@ -103,8 +103,8 @@ class GatewayCurrentSessionInputTest
     auditorIsStillDeniedOtherInputs()
         throws Exception
     {
-        String handle = handleFor("ROLE_AUDITOR");
-        String bearer = backend.sign(List.of("ROLE_AUDITOR"));
+        String handle = handleFor("ROLE_Auditor");
+        String bearer = backend.sign(List.of("ROLE_Auditor"));
 
         for (String host : HOSTS)
         {
@@ -139,8 +139,8 @@ class GatewayCurrentSessionInputTest
     spoofedKeysDoNotMatch()
         throws Exception
     {
-        String handle = handleFor("ROLE_USER");
-        String bearer = backend.sign(List.of("ROLE_USER"));
+        String handle = handleFor("ROLE_User");
+        String bearer = backend.sign(List.of("ROLE_User"));
 
         List<String> inputs =
             List.of(

@@ -66,7 +66,7 @@ class GatewayRevocationTest
         throws Exception
     {
         String sessionId = backend.newSessionId();
-        String token     = backend.sign(sessionId,List.of("ROLE_USER"));
+        String token     = backend.sign(sessionId,List.of("ROLE_User"));
 
         post(token).expectStatus().isOk();
         post(token).expectStatus().isOk();
@@ -83,8 +83,8 @@ class GatewayRevocationTest
 
         backend.revoke(sessionId);
 
-        post(backend.sign(sessionId,List.of("ROLE_USER"))).expectStatus().isUnauthorized();
-        post(backend.sign(sessionId,List.of("ROLE_USER"))).expectStatus().isUnauthorized();
+        post(backend.sign(sessionId,List.of("ROLE_User"))).expectStatus().isUnauthorized();
+        post(backend.sign(sessionId,List.of("ROLE_User"))).expectStatus().isUnauthorized();
         assertEquals(1,Collections.frequency(backend.getSessionLookups(),sessionId));
     }
 
@@ -94,7 +94,7 @@ class GatewayRevocationTest
         throws Exception
     {
         String sessionId = backend.newSessionId();
-        String token     = backend.sign(sessionId,List.of("ROLE_USER"));
+        String token     = backend.sign(sessionId,List.of("ROLE_User"));
 
         backend.failLookupsFor(sessionId);
 
@@ -120,7 +120,7 @@ class GatewayRevocationTest
         throws Exception
     {
         String sessionId = backend.newSessionId();
-        String token     = backend.sign(sessionId,List.of("ROLE_USER"));
+        String token     = backend.sign(sessionId,List.of("ROLE_User"));
 
         post(token).expectStatus().isOk();
         assertTrue(backend.getSessionLookups().contains(sessionId));

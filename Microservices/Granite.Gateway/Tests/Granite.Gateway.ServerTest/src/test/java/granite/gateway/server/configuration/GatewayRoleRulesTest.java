@@ -64,7 +64,7 @@ class GatewayRoleRulesTest
     adminMatrix()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_ADMIN"));
+        String token = backend.sign(List.of("ROLE_Admin"));
 
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-users-output",token);
@@ -83,7 +83,7 @@ class GatewayRoleRulesTest
     auditorMatrix()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_AUDITOR"));
+        String token = backend.sign(List.of("ROLE_Auditor"));
 
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-users-output",token);
@@ -102,8 +102,8 @@ class GatewayRoleRulesTest
     retiredSharedPathsFallToCatchAll()
         throws Exception
     {
-        String admin   = backend.sign(List.of("ROLE_ADMIN"));
-        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String admin   = backend.sign(List.of("ROLE_Admin"));
+        String auditor = backend.sign(List.of("ROLE_Auditor"));
 
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",admin);
         assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",auditor);
@@ -115,7 +115,7 @@ class GatewayRoleRulesTest
     roleUserIsForbiddenEverywhere()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_USER"));
+        String token = backend.sign(List.of("ROLE_User"));
 
         assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
         assertForbidden(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
@@ -137,8 +137,8 @@ class GatewayRoleRulesTest
     unlistedPathsAreAdminOnly()
         throws Exception
     {
-        assertForbidden(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_AUDITOR")));
-        assertAllowed(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_ADMIN")));
+        assertForbidden(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_Auditor")));
+        assertAllowed(HttpMethod.GET,"/unlisted-service/anything",backend.sign(List.of("ROLE_Admin")));
     }
 
     @Test

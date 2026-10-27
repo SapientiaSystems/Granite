@@ -63,7 +63,7 @@ class GatewayRoleRulesDisabledTest
     rulesDisabledRequiresOnlyAuthentication()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_USER"));
+        String token = backend.sign(List.of("ROLE_User"));
 
         assertAllowed(HttpMethod.POST,"/user-command-service/create-user",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);

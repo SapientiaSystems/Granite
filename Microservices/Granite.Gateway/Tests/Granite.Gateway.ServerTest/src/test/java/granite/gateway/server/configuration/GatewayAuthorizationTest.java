@@ -73,7 +73,7 @@ class GatewayAuthorizationTest
     tokenFromUntrustedKeyIsRejected()
         throws Exception
     {
-        post("/user-command-service/create-user",backend.signWithUntrustedKey(List.of("ROLE_ADMIN")))
+        post("/user-command-service/create-user",backend.signWithUntrustedKey(List.of("ROLE_Admin")))
             .expectStatus().isUnauthorized();
         assertTrue(backend.getReceivedAuthorizations().isEmpty());
     }
@@ -83,7 +83,7 @@ class GatewayAuthorizationTest
     applicationRuleForbidsCallerWithoutRequiredAuthority()
         throws Exception
     {
-        post("/user-command-service/create-user",backend.sign(List.of("ROLE_USER")))
+        post("/user-command-service/create-user",backend.sign(List.of("ROLE_User")))
             .expectStatus().isForbidden();
         assertTrue(backend.getReceivedAuthorizations().isEmpty());
     }
@@ -93,7 +93,7 @@ class GatewayAuthorizationTest
     applicationRuleAdmitsCallerWithRequiredAuthorityAndRelaysToken()
         throws Exception
     {
-        String token = backend.sign(List.of("ROLE_ADMIN"));
+        String token = backend.sign(List.of("ROLE_Admin"));
 
         post("/user-command-service/create-user",token)
             .expectStatus().isOk();
@@ -107,7 +107,7 @@ class GatewayAuthorizationTest
     {
         post("/session-query-service/find-sessions-by-key",backend.sign(List.of("SCOPE_internal")))
             .expectStatus().isOk();
-        post("/session-query-service/find-sessions-by-key",backend.sign(List.of("ROLE_USER")))
+        post("/session-query-service/find-sessions-by-key",backend.sign(List.of("ROLE_User")))
             .expectStatus().isForbidden();
     }
 
@@ -116,7 +116,7 @@ class GatewayAuthorizationTest
     pathsWithoutApplicationRulesRequireOnlyAuthentication()
         throws Exception
     {
-        post("/user-query-service/find-users-by-key",backend.sign(List.of("ROLE_USER")))
+        post("/user-query-service/find-users-by-key",backend.sign(List.of("ROLE_User")))
             .expectStatus().isOk();
         post("/user-query-service/find-users-by-key",null)
             .expectStatus().isUnauthorized();

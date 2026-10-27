@@ -351,6 +351,39 @@ class GraniteGatewayServerConfiguration
     protected ServerHttpSecurity.AuthorizeExchangeSpec
     configureAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
     {
+        if (!environment.getProperty("granite.gateway.authorization.role-rules.enabled",Boolean.class,false))
+            return configureApplicationAuthorization(exchanges,environment);
+
+        exchanges
+            .pathMatchers(
+                HttpMethod.POST,
+                "/frontendcontroller-user-service/get-users-output",
+                "/frontendcontroller-admin-service/get-users-output")
+                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new))
+            .pathMatchers("/user-query-service/**")
+                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new))
+            .pathMatchers(HttpMethod.POST,"/session-command-service/logout")
+                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new))
+            .pathMatchers("/session-query-service/**")
+                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new));
+
+        configureApplicationAuthorization(exchanges,environment);
+
+        return
+            exchanges
+                .pathMatchers("/**")
+                    .hasAnyAuthority("ROLE_Admin","SCOPE_internal");
+    }
+
+    protected List<String>
+    getUsersReaderAuthorities()
+    {
+        return List.of("ROLE_Admin","SCOPE_internal");
+    }
+
+    protected ServerHttpSecurity.AuthorizeExchangeSpec
+    configureApplicationAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
+    {
         return exchanges;
     }
 
@@ -371,7 +404,7 @@ class GraniteGatewayServerConfiguration
             environment);
 
         if (environment.acceptsProfiles(Profiles.of("production")))
-            return routes;
+            return configureApplicationRoutes(routes,environment);
 
         addRoute(
             routes,
@@ -403,6 +436,12 @@ class GraniteGatewayServerConfiguration
             "/outbox-service/**",
             "granite.outbox-service.host",
             environment);
+        return configureApplicationRoutes(routes,environment);
+    }
+
+    protected Builder
+    configureApplicationRoutes(Builder routes,Environment environment)
+    {
         return routes;
     }
 

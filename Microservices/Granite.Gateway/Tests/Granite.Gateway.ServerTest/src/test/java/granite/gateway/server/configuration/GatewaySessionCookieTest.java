@@ -81,7 +81,7 @@ class GatewaySessionCookieTest
         throws Exception
     {
         String handle = newHandle();
-        String token  = register(handle,"ROLE_ADMIN");
+        String token  = register(handle,"ROLE_Admin");
         String device = "device-" + UUID.randomUUID();
 
         assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,device,null));
@@ -106,11 +106,11 @@ class GatewaySessionCookieTest
         String device  = "device-" + UUID.randomUUID();
         String path    = "/session-command-service/resolve-session";
         String body    = "{\"handle\":\"" + handle + "\"}";
-        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String admin   = backend.sign(List.of("ROLE_Admin"));
         String service = backend.signServiceToken(List.of("SCOPE_internal"));
         int    before  = backend.getResolveCalls().size();
 
-        register(handle,"ROLE_ADMIN");
+        register(handle,"ROLE_Admin");
         assertEquals(403,post(path,body,handle,device,admin));
         assertEquals(403,post(path,body,handle,device,service));
         assertEquals(before,backend.getResolveCalls().size());
@@ -125,11 +125,11 @@ class GatewaySessionCookieTest
     oktaPathsAreDeniedExternallyAndNeverReachTheBackend()
         throws Exception
     {
-        String admin  = backend.sign(List.of("ROLE_ADMIN"));
+        String admin  = backend.sign(List.of("ROLE_Admin"));
         String handle = newHandle();
         String device = "device-" + UUID.randomUUID();
 
-        register(handle,"ROLE_ADMIN");
+        register(handle,"ROLE_Admin");
 
         for (String path : List.of("/session-command-service/start-okta-login","/session-command-service/complete-okta-login"))
         {
@@ -156,7 +156,7 @@ class GatewaySessionCookieTest
     {
         String handle = newHandle();
 
-        register(handle,"ROLE_ADMIN");
+        register(handle,"ROLE_Admin");
         backend.failResolvesFor(handle);
         assertEquals(401,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
@@ -168,7 +168,7 @@ class GatewaySessionCookieTest
     {
         String handle = newHandle();
 
-        register(handle,"ROLE_ADMIN");
+        register(handle,"ROLE_Admin");
         backend.delayResolvesFor(handle);
         assertEquals(401,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
@@ -180,7 +180,7 @@ class GatewaySessionCookieTest
     {
         String handle = newHandle();
 
-        register(handle,"ROLE_USER");
+        register(handle,"ROLE_User");
         assertEquals(403,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
 
@@ -192,7 +192,7 @@ class GatewaySessionCookieTest
         String handle    = newHandle();
         String sessionId = backend.newSessionId();
 
-        backend.registerHandle(handle,backend.sign(sessionId,List.of("ROLE_ADMIN")));
+        backend.registerHandle(handle,backend.sign(sessionId,List.of("ROLE_Admin")));
         backend.revoke(sessionId);
         assertEquals(401,post(GET_USERS_OUTPUT,users(),handle,null,null));
     }
@@ -204,9 +204,9 @@ class GatewaySessionCookieTest
     {
         String handle = newHandle();
         String device = "device-" + UUID.randomUUID();
-        String bearer = backend.sign(List.of("ROLE_ADMIN"));
+        String bearer = backend.sign(List.of("ROLE_Admin"));
 
-        register(handle,"ROLE_USER");
+        register(handle,"ROLE_User");
         assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,device,bearer));
         assertTrue(backend.getReceivedAuthorizations().contains("Bearer " + bearer));
         assertFalse(backend.getResolveCalls().contains(handle));
@@ -235,7 +235,7 @@ class GatewaySessionCookieTest
     {
         String handle = newHandle();
 
-        register(handle,"ROLE_ADMIN");
+        register(handle,"ROLE_Admin");
         assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,null,null));
         assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,null,null));
         assertEquals(1,Collections.frequency(backend.getResolveCalls(),handle));
@@ -253,9 +253,9 @@ class GatewaySessionCookieTest
         String                     good     = newHandle();
         String                     failing  = newHandle();
         String                     unknown  = newHandle();
-        String                     token    = register(good,"ROLE_ADMIN");
+        String                     token    = register(good,"ROLE_Admin");
 
-        register(failing,"ROLE_ADMIN");
+        register(failing,"ROLE_Admin");
         backend.failResolvesFor(failing);
         appender.start();
         root.addAppender(appender);

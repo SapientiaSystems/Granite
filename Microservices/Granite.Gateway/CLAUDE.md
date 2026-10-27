@@ -94,7 +94,10 @@ Downstream application systems reuse the gateway by depending on `granite-gatewa
 | `routeLocator(RouteLocatorBuilder,Environment)` → `configureRoutes(Builder,Environment)` | adds the seven Granite routes above |
 | `addRoute(Builder,id,pathPattern,hostProperty,Environment)` | helper: one route whose URI comes from the required property `hostProperty` |
 | `securityWebFilterChain(ServerHttpSecurity,ReactiveJwtDecoder,GraniteJwtAuthenticationConverter,ISessionResolver,Environment)` | reactive JWT resource server with the cookie path (see "Browser cookies"). First rule: `denyAll` on `/session-command-service/resolve-session`, `/session-command-service/start-okta-login` and `/session-command-service/complete-okta-login`, so no external caller reaches them through the direct Session route (Session lists them as public because the Gateway resolver and the FEC call them before there is a session; the FEC is the only entry for Okta login) (403 when authenticated, 401 when not; the Gateway's own resolver calls Session directly, not through the chain). `OPTIONS` and `getPublicExchangeMatcher(Environment)` are public. `getAuthenticatedExchangeMatcher(Environment)` then requires only authentication. Then come the `configureAuthorization(...)` rules, then `anyExchange().authenticated()` |
-| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | hook where an application declares its authorization rules; the default declares none (authentication only) |
+| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | template: with role rules enabled, Granite's users-reader rules, then `configureApplicationAuthorization(...)`, then the `ROLE_Admin` catch-all; with role rules disabled, only `configureApplicationAuthorization(...)`. Overridable, but applications extend through the hooks below |
+| `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` | hook: application rules, evaluated after Granite's users-reader rules and before the `ROLE_Admin` catch-all; default declares none |
+| `getUsersReaderAuthorities()` | hook: authorities allowed on Granite's users-reader rules; default `ROLE_Admin`, `SCOPE_internal` |
+| `configureApplicationRoutes(Builder,Environment)` | hook: called after Granite's routes in every profile, including `production`; default adds none |
 | `getPublicPathPatterns(Environment)` | hook: paths reachable without a token: `/health/**`, Session `login`, `refresh`, the static app (`/`, `/index.html`, `/config.js`, `/favicon.ico`, `/assets/**`), plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production` |
 | `getPublicExchangeMatcher(Environment)` | hook: the public paths OR `PublicFrontEndInputMatcher` (the `LoginView` FEC inputs) |
 | `getAuthenticatedExchangeMatcher(Environment)` | hook: `CurrentSessionFrontEndInputMatcher` (the `Session.Current` FEC inputs), which any authenticated caller reaches regardless of role. It is registered after the public matcher and before `configureAuthorization(...)`, so it applies whether or not role rules are enabled |
@@ -123,42 +126,44 @@ The browser holds only `GRANITE_SID` (session handle), `GRANITE_DID` (device) an
 
 The injected JWT then goes through the ordinary bearer authentication, `jti` revocation check and role rules. Public FEC inputs (`PublicFrontEndInputMatcher`), on both hosts: `get-session-output` with `Session.New->LoginView`; `handle-session-input` with `Session.New->Login->LoginView`, `Session.New->StartOktaLogin->LoginView`, `Session.New->CompleteOktaLogin->LoginView`. Authenticated-only FEC inputs (`CurrentSessionFrontEndInputMatcher`), on both hosts, open to any role: `get-session-output` with `Session.Current->SessionView`; `handle-session-input` with `Session.Current->Logout->LoginView`. Both matchers extend `FrontEndInputKeyMatcher`. The handle, tokens and CSRF token are never logged.
 
-Authorization rules live here and only here: User and Session only authenticate. Each application that instantiates a Gateway declares its rules by overriding `configureAuthorization`. Rules match on path and method, so they cannot inspect request bodies; only the FEC key matchers above, which run before them, look at the recorded key. The caller's `Authorization` header is relayed to the routed service unchanged.
+Authorization rules live here and only here: User and Session only authenticate. Each application that instantiates a Gateway declares its rules by overriding `configureApplicationAuthorization`. Rules match on path and method, so they cannot inspect request bodies; only the FEC key matchers above, which run before them, look at the recorded key. The caller's `Authorization` header is relayed to the routed service unchanged.
 
-Granite's own rules ship in `GraniteRoleRulesGatewayServerConfiguration` (`HostConfiguration` extends it) and apply only when `granite.gateway.authorization.role-rules.enabled=true` (default `false`: authentication only). The property is `true` in the ServiceHost `local` and `development` profiles and unset in `test` and `production`. Public paths are permitted, and the `Session.Current` FEC inputs need only authentication, before these rules. Every allowed list also includes `SCOPE_internal`. Rules are evaluated in this order:
+Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthorization` and apply only when `granite.gateway.authorization.role-rules.enabled=true` (default `false`: authentication only). The property is `true` in the ServiceHost `local` and `development` profiles and unset in `test` and `production`. Public paths are permitted, and the `Session.Current` FEC inputs need only authentication, before these rules. Every allowed list also includes `SCOPE_internal`. The denyAll, public and current-session matchers stay ahead of everything, so application rules cannot reopen a denied path. Rules are evaluated in this order:
 
 | Matcher | Authorities |
 |---|---|
-| `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
-| `/user-query-service/**` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
-| `POST /session-command-service/logout` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
-| `/session-query-service/**` | `ROLE_ADMIN`, `ROLE_AUDITOR` |
-| `/**` (catch-all, so everything else) | `ROLE_ADMIN` |
+| `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output` | `getUsersReaderAuthorities()` |
+| `/user-query-service/**` | `getUsersReaderAuthorities()` |
+| `POST /session-command-service/logout` | `getUsersReaderAuthorities()` |
+| `/session-query-service/**` | `getUsersReaderAuthorities()` |
+| application rules from `configureApplicationAuthorization` | as declared |
+| `/**` (catch-all, so everything else) | `ROLE_Admin` |
+
+`GraniteRoleRulesGatewayServerConfiguration` (`HostConfiguration` extends it) is the Granite application: it overrides `getUsersReaderAuthorities()` to `ROLE_Admin`, `ROLE_Auditor`, `SCOPE_internal`. Granite core knows only `ROLE_Admin`; `ROLE_Auditor` belongs to the Granite application, so a base configuration with `ROLE_Auditor` gets 403 on those paths.
 
 `POST .../handle-users-input` (both hosts) has no rule of its own and falls to the catch-all (ADMIN or `SCOPE_internal`); the retired `get-output` and `handle-input` paths also fall to it.
 
 The catch-all uses `pathMatchers("/**")`, not `anyExchange()`, because the base chain registers `anyExchange().authenticated()` afterwards.
 
-Example only, not part of Granite: how a downstream application declares its own rules by overriding `configureAuthorization` in its own host, distinct from Granite's built-in `GraniteRoleRulesGatewayServerConfiguration` above. Granite does not ship these rules.
+Example only, not part of Granite: how a downstream application (extending `GraniteGatewayServerConfiguration`, optionally overriding `getUsersReaderAuthorities()` to add its own reader roles) declares its own rules and routes through the hooks. Granite does not ship these rules.
 
 ```java
 @Override
 protected ServerHttpSecurity.AuthorizeExchangeSpec
-configureAuthorization(ServerHttpSecurity.AuthorizeExchangeSpec exchanges,Environment environment)
+configureApplicationAuthorization(ServerHttpSecurity.AuthorizeExchangeSpec exchanges,Environment environment)
 {
     return
-        super
-            .configureAuthorization(exchanges,environment)
+        exchanges
             .pathMatchers(HttpMethod.POST,"/user-command-service/**")
-                .hasAuthority("ROLE_ADMIN")
+                .hasAuthority("ROLE_Admin")
             .pathMatchers("/session-query-service/**")
-                .hasAnyAuthority("ROLE_ADMIN","SCOPE_internal");
+                .hasAnyAuthority("ROLE_Admin","SCOPE_internal");
 }
 ```
 
 `AuthorizingGatewayTestConfiguration` and `GatewayAuthorizationTest` in ServerTest show this end to end. `GatewayTestBackend` serves a JWKS and stands in for the routed services.
 
-To add routes, override `configureRoutes`, call `super`, then call `addRoute`. To expose only some Granite routes, override without calling `super` and add the ones you want.
+To add routes, override `configureApplicationRoutes` and call `addRoute`; it runs after Granite's routes in every profile. To expose only some Granite routes, override `configureRoutes` without calling `super` and add the ones you want.
 
 ```java
 @Configuration
@@ -168,9 +173,8 @@ class HostConfiguration
 {
     @Override
     protected RouteLocatorBuilder.Builder
-    configureRoutes(RouteLocatorBuilder.Builder routes,Environment environment)
+    configureApplicationRoutes(RouteLocatorBuilder.Builder routes,Environment environment)
     {
-        super.configureRoutes(routes,environment);
         return
             addRoute(
                 routes,
