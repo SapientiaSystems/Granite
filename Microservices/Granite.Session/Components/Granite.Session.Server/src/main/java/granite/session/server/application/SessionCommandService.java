@@ -390,9 +390,16 @@ class SessionCommandService
         if (context.getValidatedUserId() == null
             || context.isUnsupportedKind()
             || context.getCredentialKind() != CredentialKind.PASSWORD
-            || !context.getValidatedAuthorities().isEmpty()
             || context.getValidatedValues().containsKey(ROLES_ASSIGNED))
             return context;
+
+        if (!context.getValidatedAuthorities().isEmpty())
+        {
+            if (!mergeRolesAssignedMarker(context.getValidatedUserId()))
+                logger.warn("<login> roles-assigned marker backfill failed for user: {}",context.getValidatedUserId());
+
+            return context;
+        }
 
         Set<String> assigned = roles.expand(Set.of(roles.getDefaultRole()));
 
@@ -413,25 +420,7 @@ class SessionCommandService
             return context.setValidatedUserId(null);
         }
 
-        MergeUserValuesReply marker = null;
-
-        try
-        {
-            marker =
-                userCommandServiceClient
-                    .mergeUserValues(
-                        new MergeUserValuesRequest()
-                            .setUserId(context.getValidatedUserId())
-                            .setValues(new LinkedHashMap<>(Map.of(ROLES_ASSIGNED,true))))
-                    .toCompletableFuture()
-                    .join();
-        }
-        catch (RuntimeException e)
-        {
-            logger.info("<login> roles-assigned marker threw: {}",rootCauseName(e));
-        }
-
-        if (marker == null || !marker.isSuccess())
+        if (!mergeRolesAssignedMarker(context.getValidatedUserId()))
         {
             logger.info("<login> roles-assigned marker failed for user: {}",context.getValidatedUserId());
             return context.setValidatedUserId(null);
@@ -440,7 +429,6 @@ class SessionCommandService
         logger.info("<login> default role assigned to user: {}",context.getValidatedUserId());
         return context.setValidatedAuthorities(new LinkedHashSet<>(assigned));
     }
-
     protected LoginContext
     applyLoginGate(LoginContext context)
     {
@@ -1505,6 +1493,29 @@ class SessionCommandService
             return false;
 
         return session.getCreated() != null && session.getCreated().plus(maxLifetime).isAfter(now);
+    }
+
+    private boolean
+    mergeRolesAssignedMarker(Long userId)
+    {
+        try
+        {
+            MergeUserValuesReply reply =
+                userCommandServiceClient
+                    .mergeUserValues(
+                        new MergeUserValuesRequest()
+                            .setUserId(userId)
+                            .setValues(new LinkedHashMap<>(Map.of(ROLES_ASSIGNED,true))))
+                    .toCompletableFuture()
+                    .join();
+
+            return reply != null && reply.isSuccess();
+        }
+        catch (RuntimeException e)
+        {
+            logger.info("<login> roles-assigned marker for user: {} threw: {}",userId,rootCauseName(e));
+            return false;
+        }
     }
 
     private UserData

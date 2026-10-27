@@ -230,6 +230,71 @@ class SessionCommandServiceDefaultRoleTest
 
     @Test
     public void
+    backfillsMarkerForUserWithRolesButNoMarker()
+    {
+        stubAuthenticate(true,EXPANDED_DEFAULT);
+        stubMerge(true);
+
+        assertTrue(login().isSuccess());
+
+        ArgumentCaptor<MergeUserValuesRequest> merge = ArgumentCaptor.forClass(MergeUserValuesRequest.class);
+
+        Mockito.verify(userCommandServiceClient,Mockito.times(1)).mergeUserValues(merge.capture());
+        assertEquals(USER_ID,merge.getValue().getUserId());
+        assertEquals(Map.of(SessionCommandService.ROLES_ASSIGNED,true),merge.getValue().getValues());
+        Mockito.verify(userCommandServiceClient,Mockito.never()).updateUser(Mockito.any(UpdateUserRequest.class));
+    }
+
+    @Test
+    public void
+    backfillFailureStillLogsIn()
+    {
+        stubAuthenticate(true,EXPANDED_DEFAULT);
+        stubMerge(false);
+
+        assertTrue(login().isSuccess());
+    }
+
+    @Test
+    public void
+    backfillExceptionStillLogsIn()
+    {
+        stubAuthenticate(true,EXPANDED_DEFAULT);
+        Mockito
+            .when(userCommandServiceClient.mergeUserValues(Mockito.any(MergeUserValuesRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("boom")));
+
+        assertTrue(login().isSuccess());
+    }
+
+    @Test
+    public void
+    noBackfillWhenMarkerPresent()
+    {
+        stubAuthenticate(true,EXPANDED_DEFAULT,Map.of(SessionCommandService.ROLES_ASSIGNED,true));
+
+        assertTrue(login().isSuccess());
+        Mockito.verify(userCommandServiceClient,Mockito.never()).mergeUserValues(Mockito.any(MergeUserValuesRequest.class));
+    }
+
+    @Test
+    public void
+    roleWriteExceptionRepliesUnableToLogIn()
+    {
+        stubAuthenticate(true,Set.of());
+        Mockito
+            .when(userCommandServiceClient.updateUser(Mockito.any(UpdateUserRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("boom")));
+
+        LoginReply reply = login();
+
+        assertFalse(reply.isSuccess());
+        assertEquals("Unable to log in",reply.getFailureMessage());
+        Mockito.verify(userCommandServiceClient,Mockito.never()).mergeUserValues(Mockito.any(MergeUserValuesRequest.class));
+    }
+
+    @Test
+    public void
     defaultRoleWriteFailureRefuses()
     {
         stubAuthenticate(true,Set.of());
