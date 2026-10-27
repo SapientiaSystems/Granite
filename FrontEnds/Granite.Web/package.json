@@ -23,7 +23,7 @@
         "build-granite-web-account": "cd Components/Granite.Web.Account && yarn run publish-package",
         "build-granite-web-authentication": "cd Components/Granite.Web.Authentication && yarn run publish-package",
         "build-granite-web-navigator": "cd Components/Granite.Web.Navigator && yarn run publish-package",
-        "build-components": "yarn run build-granite-web-user && yarn run build-granite-web-authentication && yarn run build-granite-web-account && yarn run build-granite-web-navigator",
+        "build-components": "yarn run build-granite-web-authentication && yarn run build-granite-web-user && yarn run build-granite-web-account && yarn run build-granite-web-navigator",
         "build-granite-web-apphost": "cd Applications/Granite.Web.AppHost && yarn run build",
         "build-applications": "yarn run build-granite-web-apphost",
         "build": "yarn run dev-init && yarn run build-components && yarn run build-applications",
@@ -31,7 +31,7 @@
         "containerize-granite-web-apphost": "node docker-auth.js from && cd Applications/Granite.Web.AppHost && docker build -t ghcr.io/johnliebenau/granite/granite-web-apphost:latest .",
         "push-granite-web-apphost": "node docker-auth.js to && docker push ghcr.io/johnliebenau/granite/granite-web-apphost:latest",
         "test-granite-web-authentication": "yarn run build-granite-web-authentication && cd Tests/Granite.Web.AuthenticationTest && yarn run test",
-        "test-granite-web-user": "yarn run build-granite-web-user && cd Tests/Granite.Web.UserTest && yarn run test",
+        "test-granite-web-user": "yarn run build-granite-web-authentication && yarn run build-granite-web-user && cd Tests/Granite.Web.UserTest && yarn run test",
         "test-granite-web-account": "yarn run build-granite-web-account && cd Tests/Granite.Web.AccountTest && yarn run test",
         "test-granite-web": "yarn run test-granite-web-authentication && yarn run test-granite-web-user && yarn run test-granite-web-account",
         "test": "yarn run build"

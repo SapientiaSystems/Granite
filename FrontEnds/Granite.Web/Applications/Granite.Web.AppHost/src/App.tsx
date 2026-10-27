@@ -9,7 +9,7 @@ import { LoginCallbackView, LoginView }                  from "granite.web.authe
 import { PreferencesProvider }                           from "granite.web.account/Preference";
 import { MenuBar }                                       from "granite.web.navigator/Navigation";
 import { HomeView }                                      from "granite.web.navigator/Home";
-import { UsersView }                                     from "granite.web.navigator/User";
+import { UsersView }                                     from "granite.web.user/Users";
 import { HelpView }                                      from "granite.web.navigator/Help";
 import { AccountView }                                   from "granite.web.navigator/Account";
 

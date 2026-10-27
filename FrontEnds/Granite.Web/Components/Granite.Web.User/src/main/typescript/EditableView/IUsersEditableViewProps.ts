@@ -4,6 +4,7 @@
 
 import type { ReactElement }                                 from "react";
 import type { UserData, CreateUserData, UpdateUserData }     from "granite.user.service/RequestReply";
+import type { RoleData }                                     from "granite.frontendcontroller.service/RequestReply";
 
 export interface IUsersResult
 {
@@ -14,6 +15,7 @@ export interface IUsersResult
 export interface IUsersEditableViewProps
 {
     readonly users?:           Array<UserData>;
+    readonly roles?:           Array<RoleData>;
     readonly currentUserId?:   number;
     readonly showCreate?:      boolean;
     readonly showEdit?:        boolean;

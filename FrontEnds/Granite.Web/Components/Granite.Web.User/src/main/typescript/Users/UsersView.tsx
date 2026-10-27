@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Navigator
+// Granite.Web.User
 //////////////////////////////////////////////////////////////////////////////
 
 import { useEffect, useRef, useState }               from "react";
@@ -8,22 +8,29 @@ import { Alert, Stack, Group }                      from "@mantine/core";
 import { GraniteFrontEndControllerServiceClient }    from "granite.frontendcontroller.client/RequestReply";
 import type { IGraniteFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
 import { GetOutputRequestBuilder, HandleInputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
-import type { GetUsersOutputReply, HandleUsersInputReply, UsersOutput } from "granite.frontendcontroller.service/RequestReply";
+import type { GetUsersOutputReply, HandleUsersInputReply, RoleData, UsersOutput } from "granite.frontendcontroller.service/RequestReply";
 import type { UsersInput }                             from "granite.frontendcontroller.service/RequestReply";
 import type { UserData, CreateUserData, UpdateUserData } from "granite.user.service/RequestReply";
-import { UsersEditableView }                        from "granite.web.user/EditableView";
-import type { IUsersResult }                        from "granite.web.user/EditableView";
+import { UsersEditableView }                        from "../EditableView";
+import type { IUsersResult }                        from "../EditableView";
 import { canEdit, useAuthentication }                   from "granite.web.authentication/Authentication";
 
 const USERS_SOURCE:      string = "User.All";
 const USERS_DESTINATION: string = "UsersEditableView";
 const USERS_SERVICE:     string = "frontendcontroller-user-service";
 
-export function UsersView(): ReactElement
+export interface IUsersViewProps
 {
+    readonly service?: string;
+}
+
+export function UsersView(props: IUsersViewProps): ReactElement
+{
+    const service: string                 = props.service ?? USERS_SERVICE;
     const { state, createFrontEndClient } = useAuthentication();
     const editable: boolean             = canEdit(state);
     const [users, setUsers]             = useState<Array<UserData>>([]);
+    const [roles, setRoles]             = useState<Array<RoleData>>([]);
     const [loading, setLoading]         = useState<boolean>(true);
     const [loadError, setLoadError]     = useState<string | null>(null);
     const [toolbar, setToolbar]         = useState<ReactElement | null>(null);
@@ -33,7 +40,7 @@ export function UsersView(): ReactElement
     currentUserIdRef.current = currentUserId;
 
     const createClient = (): IGraniteFrontEndControllerServiceClient =>
-        createFrontEndClient((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),USERS_SERVICE);
+        createFrontEndClient((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),service);
 
     const sendInput = (command: string, usersToCreate: Array<CreateUserData>, usersToUpdate: Array<UpdateUserData>, userIdsToDelete: Array<number>): Promise<IUsersResult> =>
     {
@@ -96,9 +103,9 @@ export function UsersView(): ReactElement
 
     useEffect(() =>
     {
-        const service: IGraniteFrontEndControllerServiceClient = createClient();
+        const client: IGraniteFrontEndControllerServiceClient = createClient();
 
-        service
+        client
             .getUsersOutput(
                 GetOutputRequestBuilder
                     .newBuilder()
@@ -116,6 +123,7 @@ export function UsersView(): ReactElement
                     if (data)
                     {
                         setUsers(data.users ?? []);
+                        setRoles(data.roles ?? []);
 
                         if ((data.failureMessages ?? []).length > 0)
                             setLoadError(data.failureMessages.join("; "));
@@ -138,7 +146,7 @@ export function UsersView(): ReactElement
                 setLoading(false);
             });
 
-        return () => { service.close(); };
+        return () => { client.close(); };
     }, []);
 
     return (
@@ -150,6 +158,7 @@ export function UsersView(): ReactElement
             <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 <UsersEditableView
                     users={users}
+                    roles={roles}
                     loading={loading}
                     height="grow"
                     onRenderToolbar={setToolbar}
