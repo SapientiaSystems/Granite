@@ -19,7 +19,7 @@ import { computeChanges, isRefreshFailure, mergePending, normalizeAuthorities,
 import type { IUserRow }                         from "./UsersChangeSet";
 import { toEntries, toValues, validateEntries, entryMessages,
          removeOrphanEntries, isActionAllowed,
-         nextMacrotask }                            from "./UsersValueEntries";
+         nextMacrotask, createDetailGridRegistry }  from "./UsersValueEntries";
 import type { IValueEntry, UsersAction }         from "./UsersValueEntries";
 import { ExpandCellRenderer }                    from "./ExpandCellRenderer";
 import { AuthoritiesCellRenderer }               from "./AuthoritiesCellRenderer";
@@ -131,6 +131,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
     const expandedRef                     = useRef<string | null>(expandedKey);
     const busyRef                         = useRef<boolean>(false);
     const settlingRef                     = useRef<boolean>(false);
+    const detailGrids                     = useRef(createDetailGridRegistry());
     const newRowCounter                   = useRef<number>(0);
     const pendingVisibleKey               = useRef<string | null>(null);
     const actions                         = useRef<{ create: () => void; edit: () => void; save: () => void;
@@ -305,6 +306,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
         try
         {
             gridRef.current?.api?.stopEditing();
+            detailGrids.current.stopEditing();
             await nextMacrotask();
         }
         finally
@@ -571,9 +573,10 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
 
     const valuesContext: IUserValuesContext =
     {
-        entriesFor: (rowKey) => entriesRef.current[rowKey] ?? [],
+        entriesFor:         (rowKey) => entriesRef.current[rowKey] ?? [],
         setEntries,
-        isEditing:  (rowKey) => editingKeys.has(rowKey) && !busy,
+        isEditing:          (rowKey) => editingKeys.has(rowKey) && !busy,
+        registerDetailGrid: (rowKey, api) => detailGrids.current.register(rowKey,api),
     };
 
     const gridContext =

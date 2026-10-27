@@ -122,6 +122,27 @@ export function nextMacrotask(): Promise<void>
     return new Promise<void>(resolve => setTimeout(resolve, 0));
 }
 
+export interface IEditableGridApi
+{
+    stopEditing: () => void;
+}
+
+export interface IDetailGridRegistry
+{
+    register:    (rowKey: string, api: IEditableGridApi | null) => void;
+    stopEditing: () => void;
+}
+
+export function createDetailGridRegistry(): IDetailGridRegistry
+{
+    const apis: Map<string, IEditableGridApi> = new Map();
+
+    return {
+        register:    (rowKey, api) => { if (api === null) { apis.delete(rowKey); } else { apis.set(rowKey,api); } },
+        stopEditing: () => { for (const api of [...apis.values()]) { api.stopEditing(); } },
+    };
+}
+
 export function entryDisplay(entry: IValueEntry): string
 {
     return displayValue(entry.value);

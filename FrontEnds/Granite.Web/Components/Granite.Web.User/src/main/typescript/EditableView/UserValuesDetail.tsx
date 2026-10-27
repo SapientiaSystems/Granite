@@ -8,23 +8,26 @@ import { ActionIcon, Group, Text, Tooltip }                      from "@mantine/
 import { AgGridReact }                                           from "ag-grid-react";
 import type { CustomCellRendererProps }                          from "ag-grid-react";
 import { themeQuartz }                                           from "ag-grid-community";
-import type { CellValueChangedEvent, ColDef }                    from "ag-grid-community";
+import type { CellValueChangedEvent, ColDef, GridApi,
+              GridReadyEvent }                                   from "ag-grid-community";
 import type { IUserRow }                                         from "./UsersChangeSet";
 import { createEntry, entryDisplay }                             from "./UsersValueEntries";
 import type { IValueEntry }                                      from "./UsersValueEntries";
 
 export interface IUserValuesContext
 {
-    entriesFor: (rowKey: string) => Array<IValueEntry>;
-    setEntries: (rowKey: string, entries: Array<IValueEntry>) => void;
-    isEditing:  (rowKey: string) => boolean;
+    entriesFor:         (rowKey: string) => Array<IValueEntry>;
+    setEntries:         (rowKey: string, entries: Array<IValueEntry>) => void;
+    isEditing:          (rowKey: string) => boolean;
+    registerDetailGrid: (rowKey: string, api: GridApi<IValueEntry> | null) => void;
 }
 
 export const UserValuesContext = createContext<IUserValuesContext>(
 {
-    entriesFor: () => [],
-    setEntries: () => undefined,
-    isEditing:  () => false,
+    entriesFor:         () => [],
+    setEntries:         () => undefined,
+    isEditing:          () => false,
+    registerDetailGrid: () => undefined,
 });
 
 const maxVisibleEntries: number = 8;
@@ -52,6 +55,8 @@ export function UserValuesDetail(props: CustomCellRendererProps<IUserRow>): Reac
         props.api.onRowHeightChanged();
     }, [entries.length]);
 
+    useEffect(() => () => values.registerDetailGrid(rowKey,null),[rowKey]);
+
     const columnDefs: Array<ColDef<IValueEntry>> = useMemo(() =>
     [
         { field: "key",   headerName: "Key",   flex: 1, editable: (p) => editing && p.data?.locked !== true, headerTooltip: "Key"   },
@@ -73,6 +78,11 @@ export function UserValuesDetail(props: CustomCellRendererProps<IUserRow>): Reac
         {
             values.setEntries(rowKey, entries.filter(e => !selected.has(e.id)));
         }
+    }
+
+    function handleGridReady(event: GridReadyEvent<IValueEntry>): void
+    {
+        values.registerDetailGrid(rowKey,event.api);
     }
 
     function handleCellValueChanged(event: CellValueChangedEvent<IValueEntry>): void
@@ -126,6 +136,7 @@ export function UserValuesDetail(props: CustomCellRendererProps<IUserRow>): Reac
                     defaultColDef={{ sortable: true, resizable: true }}
                     getRowId={(params) => String(params.data.id)}
                     rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false }}
+                    onGridReady={handleGridReady}
                     onCellValueChanged={handleCellValueChanged}
                 />
             </div>
