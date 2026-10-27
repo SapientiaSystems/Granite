@@ -50,20 +50,20 @@ class SavePreferencesView
         Optional<Long> caller = context.getCallerUserId();
 
         if (caller.isEmpty())
-            return CompletableFuture.completedFuture(describe(input,assembler.unauthenticated()));
+            return CompletableFuture.completedFuture(describe(input,null,assembler.unauthenticated()));
 
         List<String>       failures = new ArrayList<>();
         Map<String,Object> entries  = assembler.validate(input.getValues(),failures);
 
         if (!failures.isEmpty() || entries.isEmpty())
-            return assembler.read(caller.get(),failures).thenApply(output -> describe(input,output));
+            return assembler.read(caller.get(),failures).thenApply(output -> describe(input,caller.get(),output));
 
         return
             commandClient
                 .mergeUserValues(new MergeUserValuesRequest().setUserId(caller.get()).setValues(entries))
                 .thenAccept(reply -> collectFailure(reply,failures))
                 .thenCompose(v -> assembler.read(caller.get(),failures))
-                .thenApply(output -> describe(input,output));
+                .thenApply(output -> describe(input,caller.get(),output));
     }
 
     protected void
@@ -78,11 +78,11 @@ class SavePreferencesView
     }
 
     private PreferencesOutput
-    describe(PreferencesInput input,PreferencesOutput output)
+    describe(PreferencesInput input,Long userId,PreferencesOutput output)
     {
         return
             output
-                .setUserId(input.getUserId())
+                .setUserId(userId)
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())
                 .setDestination(input.getDestination().orElse(null));

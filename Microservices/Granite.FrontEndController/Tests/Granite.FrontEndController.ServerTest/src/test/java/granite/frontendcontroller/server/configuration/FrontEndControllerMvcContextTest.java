@@ -121,6 +121,7 @@ class FrontEndControllerMvcContextTest
         for (String path : expected)
             assertTrue(paths.contains(PATH + path),"missing " + path + " in " + paths);
     }
+
     private void
     assertPreferences(MockMvc mvc)
         throws Exception
@@ -156,7 +157,6 @@ class FrontEndControllerMvcContextTest
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.output.failureMessages[0]").value("not authenticated"));
     }
-
 
     private void
     assertRoles(MockMvc mvc)

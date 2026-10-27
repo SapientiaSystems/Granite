@@ -148,12 +148,13 @@ class SavePreferencesViewTest
     ignoresRequestUserId()
         throws Exception
     {
-        run(7L,99L,Map.of("compact",true));
+        PreferencesOutput output = run(7L,99L,Map.of("compact",true));
 
         ArgumentCaptor<MergeUserValuesRequest> captor = ArgumentCaptor.forClass(MergeUserValuesRequest.class);
 
         Mockito.verify(commandClient).mergeUserValues(captor.capture());
         assertEquals(7L,captor.getValue().getUserId());
+        assertEquals(7L,output.getUserId());
     }
 
     @Test

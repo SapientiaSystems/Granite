@@ -162,50 +162,38 @@ class UpdateUsersViewTest
     adminSavePreservesReservedKeys()
         throws Exception
     {
-        Map<String,Object> storedValues = new HashMap<>();
-
-        storedValues.put("preferences.granite.theme","dark");
-        storedValues.put("granite.rolesAssigned",true);
-        storedValues.put("note","old");
-        Mockito
-            .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
-            .thenReturn(
-                CompletableFuture.completedFuture(
-                    new FindAllUsersReply()
-                        .setSuccess(true)
-                        .setUsers(List.of(new UserData().setUserId(1L),new UserData().setUserId(2L).setValues(storedValues)))));
-
         Map<String,Object> incoming = new HashMap<>();
 
         incoming.put("preferences.granite.theme","light");
-        incoming.put("preferences.extra","x");
         incoming.put("granite.rolesAssigned",false);
-        incoming.put("granite.other","y");
         incoming.put("note","new");
 
-        run(new UsersInput().setUsersToUpdate(List.of(new UpdateUserData().setUserId(2L).setUserName("renamed").setValues(incoming))));
+        run(new UsersInput().setUsersToUpdate(List.of(new UpdateUserData().setUserId(2L).setValues(incoming))));
 
         ArgumentCaptor<UpdateUsersRequest> captor = ArgumentCaptor.forClass(UpdateUsersRequest.class);
 
         Mockito.verify(commandClient).updateUsers(captor.capture());
-
-        UpdateUserData sent = captor.getValue().getUsersToUpdate().get(0);
-
-        assertEquals(
-            Map.of("preferences.granite.theme","dark","granite.rolesAssigned",true,"note","new"),
-            sent.getValues().get());
-        assertEquals(2L,sent.getUserId());
-        assertEquals("renamed",sent.getUserName().get());
+        assertEquals(Map.of("note","new"),captor.getValue().getUsersToUpdate().get(0).getValues().get());
+        Mockito.verify(queryClient,Mockito.times(1)).findAllUsers(Mockito.any(FindAllUsersRequest.class));
     }
 
     @Test
     public void
-    updateWithoutValuesQueriesUsersOnlyForTheRefresh()
+    adminCreateStripsReservedKeys()
         throws Exception
     {
-        run(new UsersInput().setUsersToUpdate(List.of(new UpdateUserData().setUserId(2L))));
+        Map<String,Object> incoming = new HashMap<>();
 
-        Mockito.verify(queryClient,Mockito.times(1)).findAllUsers(Mockito.any(FindAllUsersRequest.class));
+        incoming.put("granite.rolesAssigned",true);
+        incoming.put("preferences.x","1");
+        incoming.put("note","new");
+
+        run(new UsersInput().setUsersToCreate(List.of(new CreateUserData().setUserName("new").setValues(incoming))));
+
+        ArgumentCaptor<CreateUsersRequest> captor = ArgumentCaptor.forClass(CreateUsersRequest.class);
+
+        Mockito.verify(commandClient).createUsers(captor.capture());
+        assertEquals(Map.of("note","new"),captor.getValue().getUsersToCreate().get(0).getValues());
     }
 
     private UsersOutput

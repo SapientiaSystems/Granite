@@ -922,7 +922,29 @@ class UserCommandService
             .ifPresent(authorities -> user.setAuthorities(roles.expand(authorities)));
         data
             .getValues()
-            .ifPresent(values -> replaceValues(user,values));
+            .ifPresent(values -> replaceUnreservedValues(user,values));
+    }
+
+    private void
+    replaceUnreservedValues(User user,Map<String,Object> values)
+    {
+        Map<String,Object> reserved = new LinkedHashMap<>();
+
+        for (Map.Entry<String,Object> entry : user.getValues().entrySet())
+            if (ReservedValueKeys.isReserved(entry.getKey()))
+                reserved.put(entry.getKey(),entry.getValue());
+
+        Map<String,Object> unreserved = new LinkedHashMap<>();
+
+        if (values != null)
+            for (Map.Entry<String,Object> entry : values.entrySet())
+                if (!ReservedValueKeys.isReserved(entry.getKey()))
+                    unreserved.put(entry.getKey(),entry.getValue());
+
+        replaceValues(user,unreserved);
+
+        for (Map.Entry<String,Object> entry : reserved.entrySet())
+            user.setValue(entry.getKey(),entry.getValue());
     }
 
     private void

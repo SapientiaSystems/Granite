@@ -122,12 +122,13 @@ class InitializePreferencesViewTest
     ignoresRequestUserId()
         throws Exception
     {
-        run(7L,99L);
+        PreferencesOutput output = run(7L,99L);
 
         ArgumentCaptor<FindUsersByKeyRequest> captor = ArgumentCaptor.forClass(FindUsersByKeyRequest.class);
 
         Mockito.verify(queryClient).findUsersByKey(captor.capture());
         assertEquals("7",captor.getValue().getKey().getValue());
+        assertEquals(7L,output.getUserId());
     }
 
     @Test

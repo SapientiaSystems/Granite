@@ -21,7 +21,6 @@ import granite.user.service.requestreply.UserData;
 import granite.frontendcontroller.server.control.IInputAction;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +68,7 @@ class UpdateUsersView
     {
         if (users == null || users.isEmpty())
             return CompletableFuture.completedFuture(null);
+for (CreateUserData user : users)            if (user.getValues() != null)                user.setValues(withoutReserved(user.getValues()));
 
         return
             commandClient
@@ -82,87 +82,25 @@ class UpdateUsersView
         if (users == null || users.isEmpty())
             return CompletableFuture.completedFuture(null);
 
-        if (!carriesValues(users))
-            return sendUpdates(users,failures);
+        for (UpdateUserData user : users)
+            user.getValues().ifPresent(values -> user.setValues(withoutReserved(values)));
 
-        return
-            queryClient
-                .findAllUsers(new FindAllUsersRequest())
-                .thenCompose(
-                    reply ->
-                    {
-                        if (!reply.isSuccess())
-                        {
-                            failures.add("Unable to verify reserved values: " + reason(reply.getFailureMessage()));
-                            return CompletableFuture.<Void>completedFuture(null);
-                        }
-
-                        return sendUpdates(preserveReservedValues(users,reply.getUsers()),failures);
-                    });
-    }
-
-    protected CompletionStage<Void>
-    sendUpdates(List<UpdateUserData> users,List<String> failures)
-    {
         return
             commandClient
                 .updateUsers(new UpdateUsersRequest().setUsersToUpdate(users))
                 .thenAccept(reply -> collectUpdateFailures(reply,failures));
     }
 
-    protected boolean
-    carriesValues(List<UpdateUserData> users)
+    protected Map<String,Object>
+    withoutReserved(Map<String,Object> values)
     {
-        for (UpdateUserData user : users)
-            if (user.getValues().isPresent())
-                return true;
+        Map<String,Object> kept = new LinkedHashMap<>();
 
-        return false;
-    }
+        for (Map.Entry<String,Object> entry : values.entrySet())
+            if (!isReserved(entry.getKey()))
+                kept.put(entry.getKey(),entry.getValue());
 
-    protected List<UpdateUserData>
-    preserveReservedValues(List<UpdateUserData> users,List<UserData> storedUsers)
-    {
-        Map<Long,Map<String,Object>> storedById = new HashMap<>();
-
-        if (storedUsers != null)
-            for (UserData stored : storedUsers)
-                storedById.put(stored.getUserId(),stored.getValues());
-
-        List<UpdateUserData> result = new ArrayList<>();
-
-        for (UpdateUserData user : users)
-        {
-            if (user.getValues().isEmpty())
-            {
-                result.add(user);
-                continue;
-            }
-
-            Map<String,Object> values = new LinkedHashMap<>();
-
-            for (Map.Entry<String,Object> entry : user.getValues().get().entrySet())
-                if (!isReserved(entry.getKey()))
-                    values.put(entry.getKey(),entry.getValue());
-
-            Map<String,Object> stored = user.getUserId() == null ? null : storedById.get(user.getUserId());
-
-            if (stored != null)
-                for (Map.Entry<String,Object> entry : stored.entrySet())
-                    if (isReserved(entry.getKey()))
-                        values.put(entry.getKey(),entry.getValue());
-
-            result.add(
-                new UpdateUserData()
-                    .setUserId(user.getUserId())
-                    .setUserName(user.getUserName().orElse(null))
-                    .setPassword(user.getPassword().orElse(null))
-                    .setExternalIdentity(user.getExternalIdentity().orElse(null))
-                    .setAuthorities(user.getAuthorities().orElse(null))
-                    .setValues(values));
-        }
-
-        return result;
+        return kept;
     }
 
     private boolean
@@ -174,6 +112,7 @@ class UpdateUsersView
 
         return false;
     }
+
 
     protected void
     collectCreateFailures(CreateUsersReply reply,List<String> failures)

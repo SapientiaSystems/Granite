@@ -104,6 +104,41 @@ class UserValuesCommandTest
 
     @Test
     public void
+    updatePreservesReservedKeys()
+    {
+        stored.setValue("preferences.granite.theme","dark").setValue("granite.rolesAssigned","true");
+
+        Map<String,Object> incoming = new HashMap<>();
+
+        incoming.put("preferences.granite.theme","light");
+        incoming.put("granite.other","x");
+        incoming.put("b","3");
+
+        UpdateUserReply reply = update(new UpdateUserData().setUserId(USER_ID).setValues(incoming));
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(
+            Map.of("preferences.granite.theme","dark","granite.rolesAssigned","true","b","3"),
+            stored.getValues());
+
+        update(new UpdateUserData().setUserId(USER_ID).setValues(Map.of()));
+
+        assertEquals(Map.of("preferences.granite.theme","dark","granite.rolesAssigned","true"),stored.getValues());
+    }
+
+    @Test
+    public void
+    updateStillReplacesOtherKeys()
+    {
+        stored.setValue("preferences.x","1");
+
+        update(new UpdateUserData().setUserId(USER_ID).setValues(Map.of("c","4")));
+
+        assertEquals(Map.of("preferences.x","1","c","4"),stored.getValues());
+    }
+
+    @Test
+    public void
     updateWithoutValuesLeavesMapUnchanged()
     {
         UpdateUserReply reply =

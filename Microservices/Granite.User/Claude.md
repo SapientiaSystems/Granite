@@ -142,7 +142,7 @@ Security: User authenticates and validates stored roles against the catalog, but
 
 Domain extension is done through the `User` values map (`setValue`/`getValue`) together with `User.getRegistry()` (`StringMapperRegistry`), not by subclassing the entity.
 
-`values` on create and update: `CreateUserData.values` (default empty) seeds the new user's map and `UpdateUserData.values` is `null` for unchanged, otherwise it replaces the whole map (an empty map clears it). Entries with a null value are skipped. `values` is applied explicitly through `User.setValue`; the `CreateUserData → User` type map is explicit and does not map it.
+`values` on create and update: `CreateUserData.values` (default empty) seeds the new user's map and `UpdateUserData.values` is `null` for unchanged, otherwise it replaces the whole map (an empty map clears it) except that stored entries whose key starts with `preferences.` or `granite.` (`ReservedValueKeys`) are always kept and incoming entries with those prefixes are ignored on update; `merge-user-values` is the writer for reserved keys. Entries with a null value are skipped. `values` is applied explicitly through `User.setValue`; the `CreateUserData → User` type map is explicit and does not map it.
 
 ```java
 @Configuration

@@ -41,17 +41,17 @@ class InitializePreferencesView
         Optional<Long> caller = context.getCallerUserId();
 
         if (caller.isEmpty())
-            return CompletableFuture.completedFuture(describe(request,assembler.unauthenticated()));
+            return CompletableFuture.completedFuture(describe(request,null,assembler.unauthenticated()));
 
-        return assembler.read(caller.get(),new ArrayList<>()).thenApply(output -> describe(request,output));
+        return assembler.read(caller.get(),new ArrayList<>()).thenApply(output -> describe(request,caller.get(),output));
     }
 
     private PreferencesOutput
-    describe(GetPreferencesOutputRequest request,PreferencesOutput output)
+    describe(GetPreferencesOutputRequest request,Long userId,PreferencesOutput output)
     {
         return
             output
-                .setUserId(request.getUserId())
+                .setUserId(userId)
                 .setSource(request.getSource())
                 .setCommand(request.getCommand())
                 .setDestination(request.getDestination());
