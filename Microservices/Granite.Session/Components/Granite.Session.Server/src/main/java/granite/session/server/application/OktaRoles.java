@@ -5,11 +5,8 @@
 package granite.session.server.application;
 
 import granite.foundation.core.security.ApplicationRoles;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,12 +21,6 @@ class OktaRoles
     {
         this.settings = settings;
         this.roles    = roles;
-
-        Logger logger = LogManager.getLogger(OktaRoles.class);
-
-        for (Map.Entry<String,String> entry : settings.getGroupMapping().entrySet())
-            if (entry.getValue() == null || !roles.isRole(entry.getValue().trim()))
-                logger.warn("Okta group mapping ignored: not a catalog role (group: {})",entry.getKey());
     }
 
     public Optional<Set<String>>

@@ -20,6 +20,8 @@ import granite.user.service.requestreply.AuthenticateUserRequest;
 import granite.user.service.requestreply.CredentialKind;
 import granite.user.service.requestreply.FindUsersByKeyReply;
 import granite.user.service.requestreply.FindUsersByKeyRequest;
+import granite.user.service.requestreply.UpdateUserReply;
+import granite.user.service.requestreply.UpdateUserRequest;
 import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -202,7 +204,7 @@ class LoginTest
     public void
     loginWithValidPasswordFlowsAuthoritiesThroughToSession()
     {
-        Set<String> authorities = Set.of("ROLE_USER","ROLE_ADMIN");
+        Set<String> authorities = Set.of("ROLE_User","ROLE_Admin");
 
         stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,authorities);
 
@@ -292,7 +294,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_USER"));
+        stubUser(Set.of("ROLE_User"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -320,7 +322,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_USER"));
+        stubUser(Set.of("ROLE_User"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -367,7 +369,7 @@ class LoginTest
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_USER"));
+        stubUser(Set.of("ROLE_User"));
 
         LoginReply reply = login(USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
 
@@ -433,7 +435,7 @@ class LoginTest
     {
         SessionCommandService gated = gatedSubject();
 
-        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_USER"));
+        stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_User"));
 
         LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
 
@@ -449,7 +451,7 @@ class LoginTest
         SessionCommandService gated = gatedSubject();
 
         stubAuthenticate(
-            USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_USER","ROLE_AUDITOR"));
+            USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,Set.of("ROLE_User","ROLE_Auditor"));
 
         LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
 
@@ -463,6 +465,9 @@ class LoginTest
         SessionCommandService gated = gatedSubject();
 
         stubAuthenticate(USER_NAME,PASSWORD,CredentialKind.PASSWORD,true,USER_ID,null);
+        Mockito
+            .when(userCommandServiceClient.updateUser(Mockito.any(UpdateUserRequest.class)))
+            .thenReturn(CompletableFuture.completedFuture(new UpdateUserReply().setSuccess(false)));
 
         LoginReply reply = login(gated,USER_NAME,PASSWORD,CredentialKind.PASSWORD,DEVICE_ID);
 
@@ -483,12 +488,12 @@ class LoginTest
                 .setDeviceId(DEVICE_ID)
                 .setExpires(NOW.plus(Duration.ofMinutes(10)))
                 .setAccessToken(existingToken)
-                .setAuthorities(Set.of("ROLE_ADMIN"));
+                .setAuthorities(Set.of("ROLE_Admin"));
 
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_AUDITOR"));
+        stubUser(Set.of("ROLE_Auditor"));
 
         LoginReply reply =
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
@@ -498,7 +503,7 @@ class LoginTest
         ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
 
         Mockito.verify(repository,Mockito.atLeastOnce()).save(captor.capture());
-        assertEquals(Set.of("ROLE_AUDITOR"),captor.getValue().getAuthorities());
+        assertEquals(Set.of("ROLE_Auditor"),captor.getValue().getAuthorities());
     }
 
     @Test
@@ -513,12 +518,12 @@ class LoginTest
                 .setDeviceId(DEVICE_ID)
                 .setExpires(NOW.plus(Duration.ofMinutes(10)))
                 .setAccessToken(existingToken)
-                .setAuthorities(Set.of("ROLE_ADMIN"));
+                .setAuthorities(Set.of("ROLE_Admin"));
 
         Mockito
             .when(repository.findByAccessToken(existingToken))
             .thenReturn(Optional.of(existing));
-        stubUser(Set.of("ROLE_USER"));
+        stubUser(Set.of("ROLE_User"));
 
         LoginReply reply =
             login(gatedSubject(),USER_NAME,existingToken,CredentialKind.ACCESS_TOKEN,DEVICE_ID);
@@ -541,7 +546,7 @@ class LoginTest
                 userQueryServiceClient,
                 Mockito.mock(IOktaClient.class),
                 new OktaSettings(),
-                new RequiredAuthoritiesLoginGate(List.of("ROLE_ADMIN","ROLE_AUDITOR")),
+                new RequiredAuthoritiesLoginGate(List.of("ROLE_Admin","ROLE_Auditor")),
                 sender,
                 new ModelMapper().registerModule(new MappingModule()),
                 Duration.ofHours(24),
@@ -598,7 +603,7 @@ class LoginTest
         boolean        valid,
         Long           userId)
     {
-        stubAuthenticate(userName,credential,kind,valid,userId,Set.of());
+        stubAuthenticate(userName,credential,kind,valid,userId,Set.of("ROLE_User"));
     }
 
     private void

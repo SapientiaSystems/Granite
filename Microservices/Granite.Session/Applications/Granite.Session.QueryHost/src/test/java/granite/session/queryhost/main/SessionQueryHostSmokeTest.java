@@ -135,7 +135,7 @@ class SessionQueryHostSmokeTest
                 .audience("granite-services")
                 .issueTime(Date.from(now))
                 .expirationTime(Date.from(now.plusSeconds(300)))
-                .claim("authorities",List.of("ROLE_USER"))
+                .claim("authorities",List.of("ROLE_User"))
                 .build();
         SignedJWT    jwt    =
             new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(keyId).build(),claims);

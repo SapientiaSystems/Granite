@@ -4,7 +4,10 @@
 
 package granite.session.server.configuration;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.IJwkSetProvider;
+import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.IOktaClient;
@@ -63,19 +66,61 @@ class GraniteSessionCommandServerConfigurationTest
     {
         MockEnvironment env = new MockEnvironment();
 
-        env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
+        env.setProperty("granite.session.login.required-authorities","ROLE_Admin,ROLE_Auditor");
 
-        ILoginGate gate = subject.loginGate(env);
+        ILoginGate gate = subject.loginGate(env,GraniteApplicationRoles.create());
 
-        assertFalse(gate.permits(Set.of("ROLE_USER")));
-        assertTrue(gate.permits(Set.of("ROLE_AUDITOR")));
+        assertInstanceOf(RequiredAuthoritiesLoginGate.class,gate);
+        assertFalse(gate.permits(Set.of("ROLE_User")));
+        assertTrue(gate.permits(Set.of("ROLE_Auditor")));
     }
 
     @Test
     public void
-    loginGateAbsentPermitsEveryone()
+    loginGateAbsentUsesCatalogRoles()
     {
-        assertTrue(subject.loginGate(new MockEnvironment()).permits(Set.of("ROLE_USER")));
+        ILoginGate gate = subject.loginGate(new MockEnvironment(),GraniteApplicationRoles.create());
+
+        assertInstanceOf(CatalogRoleLoginGate.class,gate);
+        assertTrue(gate.permits(Set.of("ROLE_User")));
+        assertFalse(gate.permits(Set.of("SCOPE_internal")));
+        assertFalse(gate.permits(Set.of()));
+    }
+
+    @Test
+    public void
+    loginGateEmptyPropertyUsesCatalogRoles()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setProperty("granite.session.login.required-authorities","");
+        assertInstanceOf(CatalogRoleLoginGate.class,subject.loginGate(env,GraniteApplicationRoles.create()));
+    }
+
+    @Test
+    public void
+    groupMappingCheckIdentifiesNonCatalogKeys()
+    {
+        OktaSettings settings =
+            new OktaSettings()
+                .setGroupMapping(
+                    Map.of(
+                        "GC-Admins","ROLE_Admin",
+                        "GC-Bogus","ROLE_Nope",
+                        "GC-Blank"," "));
+
+        assertEquals(
+            Set.of("GC-Bogus","GC-Blank"),
+            Set.copyOf(subject.oktaGroupMappingCheck(settings,GraniteApplicationRoles.create()).getIgnoredGroups()));
+    }
+
+    @Test
+    public void
+    groupMappingCheckIsEmptyWhenAllMappingsAreCatalogRoles()
+    {
+        OktaSettings settings = new OktaSettings().setGroupMapping(Map.of("GC-Admins","ROLE_Admin"));
+
+        assertTrue(subject.oktaGroupMappingCheck(settings,GraniteApplicationRoles.create()).getIgnoredGroups().isEmpty());
     }
 
     @Test

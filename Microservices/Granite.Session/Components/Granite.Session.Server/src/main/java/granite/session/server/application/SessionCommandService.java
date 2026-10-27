@@ -92,6 +92,7 @@ class SessionCommandService
     private final IOktaClient                     oktaClient;
     private final OktaSettings                    oktaSettings;
     private final OktaRoles                       oktaRoles;
+    private final ApplicationRoles                roles;
     private final ILoginGate                      loginGate;
     private final ISessionEventSender             sender;
     private final ModelMapper                     mapper;
@@ -134,6 +135,7 @@ class SessionCommandService
         this.userQueryServiceClient   = userQueryServiceClient;
         this.oktaClient               = oktaClient;
         this.oktaSettings             = oktaSettings != null ? oktaSettings : new OktaSettings();
+        this.roles                    = roles;
         this.oktaRoles                = new OktaRoles(this.oktaSettings,roles);
         this.loginGate                = loginGate;
         this.sender                   = sender;
@@ -158,6 +160,7 @@ class SessionCommandService
                 .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
                 .thenApply(this::mapToContext)
                 .thenApply(this::dispatch)
+                .thenApply(this::assignDefaultRole)
                 .thenApply(this::applyLoginGate)
                 .thenApply(this::applyLifecycle)
                 .thenApply(this::createSession)
@@ -371,6 +374,39 @@ class SessionCommandService
             default:
                 return context.setUnsupportedKind(true);
         }
+    }
+
+    protected LoginContext
+    assignDefaultRole(LoginContext context)
+    {
+        logger.debug("<login> assignDefaultRole");
+
+        if (context.getValidatedUserId() == null
+            || context.isUnsupportedKind()
+            || context.getCredentialKind() != CredentialKind.PASSWORD
+            || !context.getValidatedAuthorities().isEmpty())
+            return context;
+
+        Set<String>     assigned = roles.expand(Set.of(roles.getDefaultRole()));
+        UpdateUserReply reply    =
+            userCommandServiceClient
+                .updateUser(
+                    new UpdateUserRequest()
+                        .setUserToUpdate(
+                            new UpdateUserData()
+                                .setUserId(context.getValidatedUserId())
+                                .setAuthorities(new LinkedHashSet<>(assigned))))
+                .toCompletableFuture()
+                .join();
+
+        if (reply == null || !reply.isSuccess())
+        {
+            logger.info("<login> default role assignment failed for user: {}",context.getValidatedUserId());
+            return context.setValidatedUserId(null);
+        }
+
+        logger.info("<login> default role assigned to user: {}",context.getValidatedUserId());
+        return context.setValidatedAuthorities(new LinkedHashSet<>(assigned));
     }
 
     protected LoginContext

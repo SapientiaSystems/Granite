@@ -4,6 +4,8 @@
 
 package granite.session.server.configuration;
 
+import granite.foundation.core.security.ApplicationRoles;
+import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
 import granite.session.server.application.ILoginGate;
@@ -13,6 +15,7 @@ import granite.session.server.application.IServiceTokenProvider;
 import granite.session.server.application.JwkSetProvider;
 import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.OktaClient;
+import granite.session.server.application.OktaGroupMappingCheck;
 import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
 import granite.session.server.application.OktaUnmappedGroups;
@@ -200,14 +203,27 @@ class GraniteSessionCommandServerConfiguration
     @Bean
     @Scope("singleton")
     public ILoginGate
-    loginGate(Environment environment)
+    loginGate(Environment environment,ApplicationRoles roles)
     {
-        return
-            new RequiredAuthoritiesLoginGate(
-                Binder
-                    .get(environment)
-                    .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
-                    .orElse(List.of()));
+        List<String> required =
+            Binder
+                .get(environment)
+                .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
+                .orElse(List.of());
+
+        for (String authority : required)
+            if (authority != null && !authority.isBlank())
+                return new RequiredAuthoritiesLoginGate(required);
+
+        return new CatalogRoleLoginGate(roles);
+    }
+
+    @Bean
+    @Scope("singleton")
+    public OktaGroupMappingCheck
+    oktaGroupMappingCheck(OktaSettings settings,ApplicationRoles roles)
+    {
+        return new OktaGroupMappingCheck(settings,roles);
     }
 
     @Bean
