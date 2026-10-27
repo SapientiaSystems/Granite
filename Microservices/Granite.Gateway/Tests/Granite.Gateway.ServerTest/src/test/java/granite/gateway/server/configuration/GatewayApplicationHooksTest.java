@@ -111,6 +111,31 @@ class GatewayApplicationHooksTest
 
     @Test
     public void
+    applicationPrefixRuleCannotGrantUserAdministration()
+        throws Exception
+    {
+        String token = backend.sign(List.of("ROLE_PromotionsReviewer"));
+
+        assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token));
+        assertEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-input",token));
+        assertNotEquals(403,call(HttpMethod.POST,"/frontendcontroller-user-service/other-output",token));
+    }
+
+    @Test
+    public void
+    applicationPermitAllCannotReopenUserCommandPaths()
+        throws Exception
+    {
+        assertEquals(
+            403,
+            call(
+                HttpMethod.POST,
+                "/user-command-service/create-user",
+                backend.sign(List.of("ROLE_PromotionsReviewer"))));
+    }
+
+    @Test
+    public void
     baseConfigurationDoesNotKnowAuditor()
         throws Exception
     {

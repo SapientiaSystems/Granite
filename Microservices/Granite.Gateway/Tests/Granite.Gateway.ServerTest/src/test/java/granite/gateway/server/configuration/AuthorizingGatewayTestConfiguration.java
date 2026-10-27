@@ -25,11 +25,10 @@ class AuthorizingGatewayTestConfiguration
 {
     @Override
     protected ServerHttpSecurity.AuthorizeExchangeSpec
-    configureAuthorization(ServerHttpSecurity.AuthorizeExchangeSpec exchanges,Environment environment)
+    configureApplicationAuthorization(ServerHttpSecurity.AuthorizeExchangeSpec exchanges,Environment environment)
     {
         return
-            super
-                .configureAuthorization(exchanges,environment)
+            exchanges
                 .pathMatchers(HttpMethod.POST,"/user-command-service/**")
                     .hasAuthority("ROLE_Admin")
                 .pathMatchers("/session-query-service/**")

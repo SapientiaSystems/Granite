@@ -196,7 +196,7 @@ class SessionCommandSessionResolverTest
     registerSession(String handle,Duration lifetime)
         throws Exception
     {
-        String token = backend.sign(backend.newSessionId(),List.of("ROLE_USER"),lifetime);
+        String token = backend.sign(backend.newSessionId(),List.of("ROLE_User"),lifetime);
 
         backend.registerHandle(handle,token);
         return token;

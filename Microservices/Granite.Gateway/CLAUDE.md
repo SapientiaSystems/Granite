@@ -136,12 +136,13 @@ Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthori
 | `/user-query-service/**` | `getUsersReaderAuthorities()` |
 | `POST /session-command-service/logout` | `getUsersReaderAuthorities()` |
 | `/session-query-service/**` | `getUsersReaderAuthorities()` |
+| `POST ./handle-users-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/outbox-service/**` | `ROLE_Admin` |
 | application rules from `configureApplicationAuthorization` | as declared |
 | `/**` (catch-all, so everything else) | `ROLE_Admin` |
 
 `GraniteRoleRulesGatewayServerConfiguration` (`HostConfiguration` extends it) is the Granite application: it overrides `getUsersReaderAuthorities()` to `ROLE_Admin`, `ROLE_Auditor`, `SCOPE_internal`. Granite core knows only `ROLE_Admin`; `ROLE_Auditor` belongs to the Granite application, so a base configuration with `ROLE_Auditor` gets 403 on those paths.
 
-`POST .../handle-users-input` (both hosts) has no rule of its own and falls to the catch-all (ADMIN or `SCOPE_internal`); the retired `get-output` and `handle-input` paths also fall to it.
+The Granite-owned admin-only paths are registered before the application hook, so a broad application rule such as `/frontendcontroller-user-service/**` or a `permitAll` on `/user-command-service/**` cannot widen access to them. Rules appended after `super.configureAuthorization(...)` in an override are dead when role rules are enabled, because the `/**` catch-all already matched; use the hooks.
 
 The catch-all uses `pathMatchers("/**")`, not `anyExchange()`, because the base chain registers `anyExchange().authenticated()` afterwards.
 

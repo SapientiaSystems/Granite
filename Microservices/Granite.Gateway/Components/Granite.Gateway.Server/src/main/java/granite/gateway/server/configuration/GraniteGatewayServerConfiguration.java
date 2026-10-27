@@ -354,18 +354,35 @@ class GraniteGatewayServerConfiguration
         if (!environment.getProperty("granite.gateway.authorization.role-rules.enabled",Boolean.class,false))
             return configureApplicationAuthorization(exchanges,environment);
 
+        String[] readers = getUsersReaderAuthorities().toArray(String[]::new);
+        String[] admins  = {"ROLE_Admin","SCOPE_internal"};
+
         exchanges
             .pathMatchers(
                 HttpMethod.POST,
                 "/frontendcontroller-user-service/get-users-output",
                 "/frontendcontroller-admin-service/get-users-output")
-                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new))
+                .hasAnyAuthority(readers)
             .pathMatchers("/user-query-service/**")
-                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new))
+                .hasAnyAuthority(readers)
             .pathMatchers(HttpMethod.POST,"/session-command-service/logout")
-                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new))
+                .hasAnyAuthority(readers)
             .pathMatchers("/session-query-service/**")
-                .hasAnyAuthority(getUsersReaderAuthorities().toArray(String[]::new));
+                .hasAnyAuthority(readers)
+            .pathMatchers(
+                HttpMethod.POST,
+                "/frontendcontroller-user-service/handle-users-input",
+                "/frontendcontroller-admin-service/handle-users-input")
+                .hasAnyAuthority(admins)
+            .pathMatchers(
+                "/frontendcontroller-user-service/handle-input",
+                "/frontendcontroller-admin-service/handle-input",
+                "/frontendcontroller-user-service/get-output",
+                "/frontendcontroller-admin-service/get-output",
+                "/user-command-service/**",
+                "/session-command-service/**",
+                "/outbox-service/**")
+                .hasAnyAuthority(admins);
 
         configureApplicationAuthorization(exchanges,environment);
 
