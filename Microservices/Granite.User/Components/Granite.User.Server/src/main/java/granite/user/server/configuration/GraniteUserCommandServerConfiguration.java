@@ -6,6 +6,7 @@ package granite.user.server.configuration;
 
 import granite.foundation.core.security.ApplicationRoles;
 import granite.user.server.domain.IUserRepository;
+import granite.user.server.platform.AuthorityRenamer;
 import granite.user.server.platform.CommandPlatformConfiguration;
 import granite.user.server.platform.OutboxEventUserEventSender;
 import granite.user.server.platform.UserBootstrapper;
@@ -24,8 +25,10 @@ import org.springframework.web.context.annotation.RequestScope;
 import strata.outbox.core.repository.IOutboxEventRepository;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @Import({CommandPlatformConfiguration.class})
@@ -75,6 +78,28 @@ class GraniteUserCommandServerConfiguration
                             .get(environment)
                             .bind("granite.user.bootstrap.authorities",Bindable.listOf(String.class))
                             .orElse(List.of("ROLE_User")))));
+    }
+
+    @Bean
+    @Scope("singleton")
+    public AuthorityRenamer
+    authorityRenamer(
+        ObjectProvider<IUserRepository>          repositories,
+        ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
+        ApplicationRoles                         roles)
+    {
+        return new AuthorityRenamer(repositories,unitOfWorkManagers,legacyAuthorityRenames(),roles);
+    }
+
+    protected Map<String,String>
+    legacyAuthorityRenames()
+    {
+        Map<String,String> renames = new LinkedHashMap<>();
+
+        renames.put("ROLE_ADMIN","ROLE_Admin");
+        renames.put("ROLE_AUDITOR","ROLE_Auditor");
+        renames.put("ROLE_USER","ROLE_User");
+        return renames;
     }
 
     @Override
