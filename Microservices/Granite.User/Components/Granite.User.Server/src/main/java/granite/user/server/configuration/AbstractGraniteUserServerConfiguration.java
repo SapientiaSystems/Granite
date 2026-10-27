@@ -13,10 +13,12 @@ import granite.user.server.application.ApplicationConfiguration;
 import granite.user.server.application.LoginLockoutPolicy;
 import granite.user.server.application.MappingModule;
 import granite.user.server.domain.DomainConfiguration;
+import org.apache.logging.log4j.LogManager;
 import org.modelmapper.ModelMapper;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.ObjectMapperProvider;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.ssl.SslBundles;
@@ -90,6 +92,21 @@ class AbstractGraniteUserServerConfiguration
     applicationRoles()
     {
         return GraniteApplicationRoles.create();
+    }
+
+    @Bean
+    @Scope("singleton")
+    public InitializingBean
+    applicationRolesStartupLog(ApplicationRoles roles)
+    {
+        return
+            () ->
+                LogManager
+                    .getLogger(getClass())
+                    .info(
+                        "application role catalog: {} (default {})",
+                        roles.getRoleNames(),
+                        roles.getDefaultRole());
     }
 
     @Bean

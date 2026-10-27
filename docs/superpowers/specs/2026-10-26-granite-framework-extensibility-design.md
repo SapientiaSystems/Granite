@@ -91,7 +91,7 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 
 ### Shared role catalog
 - New type in `Granite.Foundation.Core`, e.g. `granite.foundation.core.security.ApplicationRoles`: list of role definitions (name, label, implied roles), `adminRole()` (always `ROLE_Admin`, always present), `defaultRole()`, and `expand(Set<String>)` (transitive closure).
-- `GraniteApplicationRoles` (Admin, Auditor, User; default User) lives beside it. An application defines its own (Poplar: in `Poplar.Foundation.Core`) and returns it from an overridable `applicationRoles()` `@Bean` on each of its four host configurations.
+- `GraniteApplicationRoles` (Admin, Auditor, User; default User) lives beside it. An application defines its own (Poplar: in `Poplar.Foundation.Core`) and returns it from an overridable `applicationRoles()` `@Bean` on each of its host configurations that use the catalog (User, Session, FrontEndController; each logs the catalog role names once at startup).
 - Granite's concrete `Granite*ServerConfiguration` classes default `applicationRoles()` to `GraniteApplicationRoles`; applications override.
 
 ### User service

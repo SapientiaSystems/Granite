@@ -23,7 +23,9 @@ import granite.user.client.requestreply.UserCommandServiceClient;
 import granite.user.client.requestreply.UserQueryServiceClient;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.ClientBuilder;
+import org.apache.logging.log4j.LogManager;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
@@ -58,10 +60,26 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     @Bean
+    @Scope("singleton")
     public ApplicationRoles
     applicationRoles()
     {
         return GraniteApplicationRoles.create();
+    }
+
+    @Bean
+    @Scope("singleton")
+    public InitializingBean
+    applicationRolesStartupLog(ApplicationRoles roles)
+    {
+        return
+            () ->
+                LogManager
+                    .getLogger(getClass())
+                    .info(
+                        "application role catalog: {} (default {})",
+                        roles.getRoleNames(),
+                        roles.getDefaultRole());
     }
 
     @Bean

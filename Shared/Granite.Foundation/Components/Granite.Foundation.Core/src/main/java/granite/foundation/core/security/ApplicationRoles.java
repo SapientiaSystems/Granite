@@ -71,6 +71,9 @@ class ApplicationRoles
     public List<RoleDefinition>
     getRoles() { return roles; }
 
+    public List<String>
+    getRoleNames() { return roles.stream().map(RoleDefinition::getName).toList(); }
+
     public String
     getDefaultRole() { return defaultRole; }
 

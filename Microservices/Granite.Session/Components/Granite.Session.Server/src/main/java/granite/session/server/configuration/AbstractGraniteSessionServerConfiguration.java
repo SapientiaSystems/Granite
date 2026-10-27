@@ -14,6 +14,7 @@ import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.MappingModule;
 import granite.session.server.domain.DomainConfiguration;
 import jakarta.persistence.EntityManagerFactory;
+import org.apache.logging.log4j.LogManager;
 import org.modelmapper.ModelMapper;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springdoc.core.properties.SpringDocConfigProperties;
@@ -100,6 +101,21 @@ class AbstractGraniteSessionServerConfiguration
     applicationRoles()
     {
         return GraniteApplicationRoles.create();
+    }
+
+    @Bean
+    @Scope("singleton")
+    public InitializingBean
+    applicationRolesStartupLog(ApplicationRoles roles)
+    {
+        return
+            () ->
+                LogManager
+                    .getLogger(getClass())
+                    .info(
+                        "application role catalog: {} (default {})",
+                        roles.getRoleNames(),
+                        roles.getDefaultRole());
     }
 
     @Bean

@@ -156,6 +156,7 @@ class ApplicationRolesTest
         assertEquals(
             List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),
             subject.getRoles().stream().map(RoleDefinition::getName).toList());
+        assertEquals(List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),subject.getRoleNames());
         assertEquals("ROLE_User",subject.getDefaultRole());
     }
 
