@@ -125,6 +125,31 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    requiredAuthoritiesCheckIdentifiesNonCatalogValues()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN, ROLE_Nope ,SCOPE_internal,");
+
+        assertEquals(
+            List.of("ROLE_Nope","SCOPE_internal"),
+            subject.requiredAuthoritiesCheck(env,GraniteApplicationRoles.create()).getRejectedAuthorities());
+    }
+
+    @Test
+    public void
+    requiredAuthoritiesCheckIsEmptyWhenAbsentOrAllCatalogRoles()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        assertTrue(subject.requiredAuthoritiesCheck(env,GraniteApplicationRoles.create()).getRejectedAuthorities().isEmpty());
+
+        env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
+        assertTrue(subject.requiredAuthoritiesCheck(env,GraniteApplicationRoles.create()).getRejectedAuthorities().isEmpty());
+    }
+
+    @Test
+    public void
     refreshTokenServiceDefaultsToRefreshTokenService()
     {
         assertInstanceOf(RefreshTokenService.class,subject.refreshTokenService());

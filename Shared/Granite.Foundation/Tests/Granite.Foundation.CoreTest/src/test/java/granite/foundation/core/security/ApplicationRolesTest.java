@@ -94,7 +94,7 @@ class ApplicationRolesTest
     public void
     rejectsNonUpperSnakeName()
     {
-        for (String name : List.of("ROLE_PromotionsReviewer","ROLE_promotions","ADMIN"))
+        for (String name : List.of("ROLE_PromotionsReviewer","ROLE_promotions","ADMIN","ROLE_","ROLE_PROMOTIONS-REVIEWER"))
             assertThrows(
                 IllegalArgumentException.class,
                 () ->

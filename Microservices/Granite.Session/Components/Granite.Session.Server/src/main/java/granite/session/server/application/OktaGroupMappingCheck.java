@@ -27,7 +27,7 @@ class OktaGroupMappingCheck
             if (entry.getValue() == null || !roles.isRole(entry.getValue().trim()))
             {
                 ignored.add(entry.getKey());
-                logger.warn("Okta group mapping ignored: not a catalog role (group: {})",entry.getKey());
+                logger.warn("Okta group mapping ignored: role values must be catalog role names in ROLE_ + UPPER_SNAKE form (group: {})",entry.getKey());
             }
 
         this.ignoredGroups = List.copyOf(ignored);

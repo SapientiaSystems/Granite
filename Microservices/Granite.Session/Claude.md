@@ -78,6 +78,8 @@ Each layer is organized into a dedicated Java package (`granite.session.server.*
 | `oktaGroups` | `Set<String>` | Groups from this session's own Okta ID token; used to recalculate authorities at re-mint; never copied to another session |
 | `version` | `Long` | Optimistic locking |
 
+Deployment note: `Session.orm.xml` maps a `loginMethod` column. Environments with `spring.jpa.hibernate.ddl-auto=validate` (the `test` and `production` profiles of the Command and Query hosts) need a nullable `loginMethod VARCHAR(32)` column added to the Session table before rollout. The old `signInMethod` column is unused. The repository holds no DDL files.
+
 Closing (`Session.close(reason,at)`) sets `closedReason`, clears `activeMarker`, clears `oktaIdToken`, sets `expires = min(expires,at)` and fires one `SessionUpdated`. Closed rows stay until `SessionPurgeJob` deletes them (their `expires` is in the past). Because `expires` is truncated, the Gateway's `jti` revocation check (`sessions` non-empty and `expires > now`) treats a closed session as revoked; `SessionJwtValidator` also rejects a non-null `closedReason`.
 
 `OktaLoginTransaction` extends `AbstractEntity` (table `OktaLoginTransaction`, mapped in `Session.orm.xml`; the schema comes from the ORM mapping, `schema.sql` is not involved): `hashedTransactionId` (SHA-256 hex of the random transaction id, unique; the raw id lives only in the `GRANITE_LOGIN` cookie), `state`, `nonce`, `codeVerifier` (PKCE), `returnTo`, `deviceId`, `expires` (`created + granite.session.okta.transaction-ttl`, `PT5M`). A row is deleted by the first completion attempt that finds it, and `SessionPurgeJob` deletes expired rows. Repository: `IOktaLoginTransactionRepository` (`findByHashedTransactionId`, `findExpiredBefore`).

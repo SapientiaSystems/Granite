@@ -17,7 +17,7 @@ An application (for example Poplar) reuses Granite by extending the entry config
 - An application provides ONE catalog factory (for example a static `create()` in its Foundation library, as `GraniteApplicationRoles.create()` is for Granite) and returns it from the `applicationRoles()` override on all three hosts that use the catalog: User, Session and FrontEndController. Each of those hosts logs the catalog's role names (names only) once at startup (`applicationRolesStartupLog`), so a host left on a different catalog is visible in the logs.
 - Granite core owns only `ROLE_ADMIN`; it implies no application role and is implied by none. `ROLE_AUDITOR` and `ROLE_USER` belong to the Granite application catalog.
 - Role names are `ROLE_` plus UPPER_SNAKE (`ROLE_[A-Z0-9_]+`, enforced by `ApplicationRoles`). Stored authority sets are always closed under the role hierarchy (the expanded set is stored).
-- Renames, applied once at User startup by `AuthorityRenamer`: `ROLE_Admin` to `ROLE_ADMIN`, `ROLE_Auditor` to `ROLE_AUDITOR`, `ROLE_User` to `ROLE_USER` (the earlier mixed-case names are converted back to the uppercase standard).
+- Renames, applied once at User startup by `AuthorityRenamer`: `ROLE_Admin` to `ROLE_ADMIN`, `ROLE_Auditor` to `ROLE_AUDITOR`, `ROLE_User` to `ROLE_USER` (the interim mixed-case names become uppercase).
 - Request authorization rules (which caller may reach which path) live only in the Gateway chain. Outside it, Session gates login (default: the user must hold at least one catalog role; `granite.session.login.required-authorities` overrides with an explicit list) and User rejects stored roles outside the catalog.
 - Gateway core rules (users readers, Granite admin-only paths, application hook, `/**` → `ROLE_ADMIN`) are always registered; `granite.gateway.authorization.role-rules.enabled` only makes the Granite application grant `ROLE_AUDITOR` reader access.
 
@@ -29,6 +29,6 @@ An application (for example Poplar) reuses Granite by extending the entry config
 
 ## TypeScript tests
 
-- Layout mirrors Java: `<Group>/Tests/<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (for example `FrontEnds/Granite.Web/Tests/Granite.Web.AuthenticationTest`). The same convention applies to microservice TypeScript components when they get tests; none exist today.
-- A test project is private and never published. It depends on the component's published package (`1.0.0-snapshot` from the local Verdaccio) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source.
+- Layout mirrors Java: `<Group>/Tests/<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (for example `FrontEnds/Granite.Web/Tests/Granite.Web.AuthenticationTest`). The same convention applies to microservice TypeScript components when they get tests; the only microservice TypeScript test project today is `Granite.FrontEndController.ServiceTest`, which has no tests yet and is not wired into `test-granite`.
+- A test project is private and never published. It depends on the component's published package (`1.0.0-snapshot` from the local Verdaccio) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source. Test projects run vitest without type-checking (no `tsc`).
 - Root scripts: `yarn run test-granite-web` (web test projects) and `yarn run test-granite` (every TypeScript test project). Each publishes the component to the local Verdaccio first (the component's existing `publish-package`), then runs its test project.

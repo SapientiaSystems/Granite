@@ -20,6 +20,7 @@ import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
 import granite.session.server.application.OktaUnmappedGroups;
 import granite.session.server.application.RefreshTokenService;
+import granite.session.server.application.RequiredAuthoritiesCheck;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ServiceTokenProvider;
 import granite.session.server.platform.CommandPlatformConfiguration;
@@ -216,6 +217,20 @@ class GraniteSessionCommandServerConfiguration
                 return new RequiredAuthoritiesLoginGate(required);
 
         return new CatalogRoleLoginGate(roles);
+    }
+
+    @Bean
+    @Scope("singleton")
+    public RequiredAuthoritiesCheck
+    requiredAuthoritiesCheck(Environment environment,ApplicationRoles roles)
+    {
+        List<String> required =
+            Binder
+                .get(environment)
+                .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
+                .orElse(List.of());
+
+        return new RequiredAuthoritiesCheck(required,roles);
     }
 
     @Bean
