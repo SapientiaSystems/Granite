@@ -1,6 +1,6 @@
 {
   "name": "granite.user.service",
-  "version": "1.0.0-snapshot.1793045217204",
+  "version": "1.0.0-snapshot.1793067435261",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",

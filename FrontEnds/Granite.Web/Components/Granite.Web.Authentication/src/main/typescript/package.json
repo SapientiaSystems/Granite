@@ -1,6 +1,6 @@
 {
   "name": "granite.web.authentication",
-  "version": "1.0.0-snapshot.1793045340305",
+  "version": "1.0.0-snapshot.1793067595860",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
