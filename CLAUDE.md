@@ -27,6 +27,35 @@ An application (for example Poplar) reuses Granite by extending the entry config
 - Server side: an application overrides `preferenceDefinitions()` on its FrontEndController configuration, calls `super.preferenceDefinitions()` and adds `PreferenceDefinition` entries (STRING, BOOLEAN, NUMBER or ENUM) with its own namespaced keys, for example `poplar.defaultRegion`. Undeclared keys or wrong types are rejected on save.
 - Web side: write a section component that reads and saves with `usePreference("poplar.defaultRegion")` and pass it as a child of `<PreferencesView>`. Saving is per change. `PreferencesProvider` (Granite.Web.Account) needs `MantineProvider` (it drives the colour scheme) and `AuthenticationProvider` above it.
 
+### UI building blocks
+
+Import from the published subpaths:
+
+- `granite.web.authentication/Authentication`: `AuthenticationProvider`, `RequireAuthentication`, `useAuthentication` (including `createFrontEndClient`), `AuthenticationContext`, `hasAuthority`, `canEdit`
+- `granite.web.authentication/Login`: `LoginView`, `LoginCallbackView`, `LoginForm`, `ReauthenticationDialog` (rendered by `AuthenticationProvider`), `UserMenu({ preferencesPath?, loginPath = "/login", items? })`
+- `granite.web.user/Users`: `UsersView({ service? })`, default service `frontendcontroller-user-service`; authorities are edited as a pick list of the role catalog with hierarchy cascade
+- `granite.web.account/Preference`: `PreferencesProvider`, `PreferencesView({ userName, userRole, children })`, `usePreference`
+
+An application frame (providers, its own header, routes); `MantineProvider` sits above everything:
+
+```tsx
+<AuthenticationProvider>
+    <PreferencesProvider>
+        <BrowserRouter>
+            <PoplarHeader />   {/* contains <UserMenu preferencesPath="/preferences" /> */}
+            <Routes>
+                <Route path="login"          element={<LoginView />} />
+                <Route path="login/callback" element={<LoginCallbackView />} />
+                <Route path="users"          element={<RequireAuthentication><UsersView /></RequireAuthentication>} />
+                <Route path="preferences"    element={<RequireAuthentication><PreferencesView userName={name} userRole={role}><PoplarSection /></PreferencesView></RequireAuthentication>} />
+            </Routes>
+        </BrowserRouter>
+    </PreferencesProvider>
+</AuthenticationProvider>
+```
+
+`Granite.Web.Navigator` (`MenuBar`, Home, Help, Account) is Granite's own frame; an application builds its own instead of reusing it. Yarn build order: authentication, user, account, navigator.
+
 ### Okta properties (Session)
 
 - `granite.session.okta.role-assignment`: `ON_CREATE` (default) or `EVERY_LOGIN`.

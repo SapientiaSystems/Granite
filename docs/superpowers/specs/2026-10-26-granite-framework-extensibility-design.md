@@ -122,6 +122,8 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 - **Core rules are always registered** (user decision 2026-10-26, final review): the users-reader rules (`getUsersReaderAuthorities(Environment)`, default `ROLE_ADMIN`, `SCOPE_internal`), the Granite admin-only paths, then the application hook, then `/**` → `ROLE_ADMIN`, `SCOPE_internal`, regardless of any property. `configureAuthorization` is `final`. `granite.gateway.authorization.role-rules.enabled` no longer switches the core rules; it only controls whether the Granite application's `getUsersReaderAuthorities` adds `ROLE_AUDITOR` (default `false`: Admin/internal only).
 
 ### Web (phase 3)
+**Implemented 2026-10-27** on `feature/granite-ui-packaging`. Decisions: a full `UserMenu` (user name or "Log in", optional Preferences item, extra items, Log out) exported from `granite.web.authentication/Login`; the authorities editor is a Mantine `MultiSelect` chips pick list over the role catalog with hierarchy cascade (chip removal cascades too); `Granite.Web.Navigator` is kept as Granite's own frame (its `MenuBar` uses `UserMenu`); `UsersView` takes an optional `service` prop. Build order: authentication, user, account, navigator.
+
 - `UsersView` moves from `Granite.Web.Navigator` into `Granite.Web.User` (reusable). Authorities editor becomes a pick list from the role catalog with hierarchy cascade (grant adds implied; removing removes dependents).
 - `Granite.Web.Account`: `PreferencesProvider` + `usePreference(key)` hook; `PreferencesView` takes `children` sections; theme loads from and saves to the server.
 - `Authorities.ts`: `canEdit` checks `ROLE_ADMIN`; a generic `hasRole` helper exported.
