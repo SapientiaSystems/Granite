@@ -116,6 +116,39 @@ class ApplicationRolesTest
 
     @Test
     public void
+    rejectsDuplicateNames()
+    {
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ApplicationRoles(
+                    List.of(
+                        new RoleDefinition("ROLE_A","A",Set.of()),
+                        new RoleDefinition("ROLE_A","Other A",Set.of())),
+                    "ROLE_A"));
+    }
+
+    @Test
+    public void
+    rejectsAdminAsDefault()
+    {
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ApplicationRoles(
+                    List.of(new RoleDefinition("ROLE_A","A",Set.of())),
+                    ApplicationRoles.ADMIN));
+    }
+
+    @Test
+    public void
+    expandTreatsNullAsEmpty()
+    {
+        assertEquals(Set.of(),poplar().expand(null));
+    }
+
+    @Test
+    public void
     graniteCatalogHasAuditorAndUser()
     {
         ApplicationRoles subject = GraniteApplicationRoles.create();

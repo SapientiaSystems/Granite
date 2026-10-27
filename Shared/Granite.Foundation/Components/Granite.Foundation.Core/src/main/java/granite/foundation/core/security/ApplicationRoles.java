@@ -80,6 +80,9 @@ class ApplicationRoles
     public Set<String>
     expand(Set<String> authorities)
     {
+        if (authorities == null)
+            return new LinkedHashSet<>();
+
         Set<String> result = new LinkedHashSet<>(authorities);
 
         for (String authority : authorities)
