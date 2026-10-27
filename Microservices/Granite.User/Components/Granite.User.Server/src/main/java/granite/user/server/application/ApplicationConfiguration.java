@@ -4,6 +4,7 @@
 
 package granite.user.server.application;
 
+import granite.foundation.core.security.ApplicationRoles;
 import granite.user.server.domain.IUserRepository;
 import granite.user.service.event.IUserEventSender;
 import org.modelmapper.ModelMapper;
@@ -26,9 +27,10 @@ class ApplicationConfiguration
         IUserEventSender sender,
         ModelMapper            mapper,
         PasswordEncoder        encoder,
-        LoginLockoutPolicy     lockoutPolicy)
+        LoginLockoutPolicy     lockoutPolicy,
+        ApplicationRoles       roles)
     {
-        return new UserCommandService(repository,sender,mapper,encoder,lockoutPolicy);
+        return new UserCommandService(repository,sender,mapper,encoder,lockoutPolicy,roles);
     }
     @Bean
     @RequestScope

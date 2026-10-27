@@ -142,7 +142,7 @@ class UserServiceServerTest
         return
             new CreateUserData()
                 .setUserName("user-" + UUID.randomUUID() + "@example.com")
-                .setAuthorities(Set.of("ROLE_USER"));
+                .setAuthorities(Set.of("ROLE_User"));
     }
 
     private void

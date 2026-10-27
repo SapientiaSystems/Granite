@@ -154,7 +154,7 @@ class UserTest
                 .setUserId(1L)
                 .setUserName("alice@example.com")
                 .setExternalIdentity("google:abc")
-                .setAuthorities(Set.of("ROLE_USER"))
+                .setAuthorities(Set.of("ROLE_User"))
                 .setPassword("********");
         String json = new ObjectMapper().writeValueAsString(data);
 

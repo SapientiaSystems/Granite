@@ -4,6 +4,8 @@
 
 package granite.user.server.application;
 
+import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.domain.IUserEvent;
 import granite.user.server.domain.IUserEventObserver;
 import granite.user.server.domain.IUserRepository;
@@ -24,6 +26,7 @@ import strata.foundation.core.transfer.ExceptionData;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -39,11 +42,22 @@ class UserCommandService
     private final ModelMapper        mapper;
     private final PasswordEncoder    encoder;
     private final LoginLockoutPolicy lockoutPolicy;
+    private final ApplicationRoles   roles;
     private final Logger             logger;
 
     public UserCommandService(IUserRepository r,IUserEventSender s,ModelMapper m,PasswordEncoder e)
     {
         this(r,s,m,e,LoginLockoutPolicy.defaults());
+    }
+
+    public UserCommandService(
+        IUserRepository    r,
+        IUserEventSender   s,
+        ModelMapper        m,
+        PasswordEncoder    e,
+        LoginLockoutPolicy p)
+    {
+        this(r,s,m,e,p,GraniteApplicationRoles.create());
     }
 
     @Inject
@@ -52,13 +66,15 @@ class UserCommandService
         IUserEventSender   s,
         ModelMapper        m,
         PasswordEncoder    e,
-        LoginLockoutPolicy p)
+        LoginLockoutPolicy p,
+        ApplicationRoles   a)
     {
         repository    = r;
         sender        = s;
         mapper        = m;
         encoder       = e;
         lockoutPolicy = p;
+        roles         = a;
         logger        = LogManager.getLogger(UserCommandService.class);
     }
 
@@ -538,7 +554,10 @@ class UserCommandService
 
         logger.debug("update User");
 
-        applyUpdate(context.getUpdatedUser().orElseThrow(),data);
+        User user = context.getUpdatedUser().orElseThrow();
+
+        requireAddedRoles(user,data);
+        applyUpdate(user,data);
 
         return context;
     }
@@ -620,6 +639,14 @@ class UserCommandService
                     Collectors.toMap(
                         UpdateUserData::getUserId,
                         d -> d));
+
+        for (User entity : context.getUpdatedUsers())
+        {
+            UpdateUserData data = dataById.get(entity.getPrimaryId());
+
+            if (data != null)
+                requireAddedRoles(entity,data);
+        }
 
         for (User entity : context.getUpdatedUsers())
         {
@@ -714,10 +741,49 @@ class UserCommandService
         return context.setUpdatedUsers(persisted);
     }
 
+    private String
+    failureMessage(Throwable e,String fallback)
+    {
+        Throwable cause = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
+
+        return cause instanceof UnknownRoleException ? cause.getMessage() : fallback;
+    }
+
+    private void
+    requireRoles(Set<String> authorities)
+    {
+        if (authorities == null)
+            return;
+
+        for (String authority : authorities)
+            if (!roles.isRole(authority))
+                throw new UnknownRoleException(authority);
+    }
+
+    private void
+    requireAddedRoles(User user,UpdateUserData data)
+    {
+        Set<String> requested = data.getAuthorities().orElse(null);
+
+        if (requested == null)
+            return;
+
+        Set<String> added = new LinkedHashSet<>(requested);
+
+        if (user.getAuthorities() != null)
+            added.removeAll(user.getAuthorities());
+
+        requireRoles(added);
+    }
+
     private User
     mapToUser(CreateUserData data)
     {
+        requireRoles(data.getAuthorities());
+
         User user = mapper.map(data,User.class);
+
+        user.setAuthorities(roles.expand(user.getAuthorities()));
 
         user.setPassword(hash(data.getPassword()));
         replaceValues(user,data.getValues());
@@ -741,7 +807,7 @@ class UserCommandService
             .ifPresent(password -> user.setPassword(hash(password)));
         data
             .getAuthorities()
-            .ifPresent(user::setAuthorities);
+            .ifPresent(authorities -> user.setAuthorities(roles.expand(authorities)));
         data
             .getValues()
             .ifPresent(values -> replaceValues(user,values));
@@ -799,7 +865,7 @@ class UserCommandService
         return
             new CreateUserReply(request)
                 .setSuccess(false)
-                .setFailureMessage("Unable to create user")
+                .setFailureMessage(failureMessage(e,"Unable to create user"))
                 .setException(ExceptionData.of(e));
     }
 
@@ -839,7 +905,7 @@ class UserCommandService
         return
             new CreateUsersReply(request)
                 .setSuccess(false)
-                .setFailureMessage("Unable to create users")
+                .setFailureMessage(failureMessage(e,"Unable to create users"))
                 .setException(ExceptionData.of(e));
     }
 
@@ -867,7 +933,7 @@ class UserCommandService
         return
             new UpdateUserReply(request)
                 .setSuccess(false)
-                .setFailureMessage("Unable to create user")
+                .setFailureMessage(failureMessage(e,"Unable to create user"))
                 .setException(ExceptionData.of(e));
     }
 
@@ -910,7 +976,7 @@ class UserCommandService
         return
             new UpdateUsersReply(request)
                 .setSuccess(false)
-                .setFailureMessage("Unable to update users")
+                .setFailureMessage(failureMessage(e,"Unable to update users"))
                 .setException(ExceptionData.of(e));
     }
 

@@ -51,7 +51,7 @@ class AuthenticateUserTest
     public void
     returnsValidTrueWithUserIdForCorrectPassword()
     {
-        Set<String> authorities = Set.of("ROLE_USER","ROLE_ADMIN");
+        Set<String> authorities = Set.of("ROLE_User","ROLE_Admin");
 
         stubUser(
             new User()
@@ -87,7 +87,7 @@ class AuthenticateUserTest
                 .setPrimaryId(USER_ID)
                 .setUserName(USER_NAME)
                 .setPassword(encoder.encode(PLAINTEXT))
-                .setAuthorities(Set.of("ROLE_ADMIN")));
+                .setAuthorities(Set.of("ROLE_Admin")));
 
         AuthenticateUserReply reply =
             subject

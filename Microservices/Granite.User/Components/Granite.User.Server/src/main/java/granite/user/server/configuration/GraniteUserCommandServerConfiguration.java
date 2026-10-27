@@ -4,6 +4,7 @@
 
 package granite.user.server.configuration;
 
+import granite.foundation.core.security.ApplicationRoles;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.platform.CommandPlatformConfiguration;
 import granite.user.server.platform.OutboxEventUserEventSender;
@@ -47,7 +48,8 @@ class GraniteUserCommandServerConfiguration
         ObjectProvider<IUserRepository>          repositories,
         ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
         PasswordEncoder                          encoder,
-        Environment                              environment)
+        Environment                              environment,
+        ApplicationRoles                         roles)
     {
         boolean enabled = environment.getProperty("granite.user.bootstrap.enabled",Boolean.class,false);
 
@@ -67,11 +69,12 @@ class GraniteUserCommandServerConfiguration
                 enabled,
                 environment.getProperty("granite.user.bootstrap.user-name",""),
                 environment.getProperty("granite.user.bootstrap.password",""),
-                new LinkedHashSet<>(
-                    Binder
-                        .get(environment)
-                        .bind("granite.user.bootstrap.authorities",Bindable.listOf(String.class))
-                        .orElse(List.of("ROLE_USER"))));
+                roles.expand(
+                    new LinkedHashSet<>(
+                        Binder
+                            .get(environment)
+                            .bind("granite.user.bootstrap.authorities",Bindable.listOf(String.class))
+                            .orElse(List.of("ROLE_User")))));
     }
 
     @Override

@@ -4,6 +4,7 @@
 
 package granite.user.server.platform;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.application.TestConfiguration;
 import granite.user.server.configuration.GraniteUserCommandServerConfiguration;
 import granite.user.server.domain.IUserRepository;
@@ -79,7 +80,7 @@ class UserBootstrapperTest
 
         assertTrue(encoder.matches("first-secret",created.getPassword()));
         assertFalse(created.getPassword().contains("first-secret"));
-        assertEquals(Set.of("ROLE_USER","ROLE_ADMIN"),created.getAuthorities());
+        assertEquals(Set.of("ROLE_User","ROLE_Admin"),created.getAuthorities());
     }
 
     @Test
@@ -124,14 +125,14 @@ class UserBootstrapperTest
         GraniteUserCommandServerConfiguration subject = new GraniteUserCommandServerConfiguration();
 
         for (String[] profiles : new String[][] {{"local"},{"development"}})
-            assertTrue(subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles)).isEnabled());
+            assertTrue(subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles),GraniteApplicationRoles.create()).isEnabled());
 
         for (String[] profiles : new String[][] {{"production"},{"test"},{"local","test"},{"development","production"},{}})
             assertThrows(
                 IllegalStateException.class,
-                () -> subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles)));
+                () -> subject.userBootstrapper(providers(),providers(),encoder,environment(true,profiles),GraniteApplicationRoles.create()));
 
-        assertFalse(subject.userBootstrapper(providers(),providers(),encoder,environment(false,"production")).isEnabled());
+        assertFalse(subject.userBootstrapper(providers(),providers(),encoder,environment(false,"production"),GraniteApplicationRoles.create()).isEnabled());
     }
 
     @Test
@@ -140,7 +141,7 @@ class UserBootstrapperTest
     {
         MockEnvironment environment = environment(true,"local");
 
-        environment.setProperty("granite.user.bootstrap.authorities","ROLE_AUDITOR");
+        environment.setProperty("granite.user.bootstrap.authorities","ROLE_Auditor");
 
         UserBootstrapper bootstrapper =
             new GraniteUserCommandServerConfiguration()
@@ -148,10 +149,11 @@ class UserBootstrapperTest
                     context.getBeanProvider(IUserRepository.class),
                     context.getBeanProvider(ISpringUnitOfWorkManager.class),
                     encoder,
-                    environment);
+                    environment,
+                    GraniteApplicationRoles.create());
 
         assertTrue(bootstrapper.bootstrap());
-        assertEquals(Set.of("ROLE_AUDITOR"),find(environment.getProperty("granite.user.bootstrap.user-name")).orElseThrow().getAuthorities());
+        assertEquals(Set.of("ROLE_Auditor"),find(environment.getProperty("granite.user.bootstrap.user-name")).orElseThrow().getAuthorities());
     }
 
     private UserBootstrapper
@@ -165,7 +167,7 @@ class UserBootstrapperTest
                 enabled,
                 userName,
                 password,
-                Set.of("ROLE_USER","ROLE_ADMIN"));
+                Set.of("ROLE_User","ROLE_Admin"));
     }
 
     private Optional<User>

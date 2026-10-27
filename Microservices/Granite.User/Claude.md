@@ -118,6 +118,7 @@ Downstream application systems reuse Granite.User by depending on `granite-user-
 |---|---|---|
 | `configuration(Environment)` | Abstract | `SpringConfigurationProvider(environment).get()` |
 | `mapper()` / `configureMapper(ModelMapper)` | Abstract | registers `MappingModule`; override `configureMapper`, call `super`, then add modules |
+| `applicationRoles()` | Abstract | `GraniteApplicationRoles.create()` (Admin, Auditor, User). `UserCommandService` rejects non-catalog roles (`unknown role: <name>`; on update only newly added ones) and stores the hierarchy-expanded set |
 | `passwordEncoder()` | Abstract | `BCryptPasswordEncoder(12)` |
 | `loginLockoutPolicy(Environment)` | Abstract | `LoginLockoutPolicy`: `granite.user.lockout.max-attempts` (default 5) failed password attempts lock the account for `granite.user.lockout.duration` (default `PT15M`) |
 | `requestLoggingFilter()` | Abstract | query string only (payloads and headers would leak passwords and bearer tokens) |
@@ -126,9 +127,9 @@ Downstream application systems reuse Granite.User by depending on `granite-user-
 | `jwtDecoder(Environment,ObjectProvider<SslBundles>)` | Abstract | `GraniteJwtDecoderFactory` against `granite.security.jwt.jwk-set-uri` (Session's JWKS), validating `iss`, `aud`, `exp`. The JWKS is fetched through `createJwkSetRestOperations(...)`, which trusts the SSL bundle named by `granite.security.jwt.ssl-bundle` when it is set (`development` uses the `granite-services` truststore) |
 | `jwtAuthenticationConverter()` | Abstract | `GraniteJwtAuthenticationConverter`: principal is `sub`, and the `authorities` claim becomes the GrantedAuthorities |
 | `userEventSender(IOutboxEventRepository)` | Command | `OutboxEventUserEventSender` |
-| `userBootstrapper(ObjectProvider<IUserRepository>,ObjectProvider<ISpringUnitOfWorkManager>,PasswordEncoder,Environment)` | Command | `UserBootstrapper`: once the context refreshes, creates the user `granite.user.bootstrap.user-name` (BCrypt password from `granite.user.bootstrap.password`, authorities from `granite.user.bootstrap.authorities`) if it does not exist. It never overwrites an existing user and fires no event. Enabled by `granite.user.bootstrap.enabled=true`, which is permitted only in `local`/`development`; startup fails if it is enabled elsewhere. A blank password skips it with a warning |
+| `userBootstrapper(ObjectProvider<IUserRepository>,ObjectProvider<ISpringUnitOfWorkManager>,PasswordEncoder,Environment,ApplicationRoles)` | Command | `UserBootstrapper`: once the context refreshes, creates the user `granite.user.bootstrap.user-name` (BCrypt password from `granite.user.bootstrap.password`, authorities from `granite.user.bootstrap.authorities`) if it does not exist. It never overwrites an existing user and fires no event. Enabled by `granite.user.bootstrap.enabled=true`, which is permitted only in `local`/`development`; startup fails if it is enabled elsewhere. A blank password skips it with a warning |
 
-First sign-in on a fresh `local` or `development` database: the CommandHost files enable the bootstrap user `admin` (`ROLE_USER,ROLE_ADMIN`) with its password taken from the environment variable `GRANITE_BOOTSTRAP_ADMIN_PASSWORD`. Set that variable before starting User CommandHost, then sign in as `admin`.
+First sign-in on a fresh `local` or `development` database: the CommandHost files enable the bootstrap user `admin` (`ROLE_User,ROLE_Admin`) with its password taken from the environment variable `GRANITE_BOOTSTRAP_ADMIN_PASSWORD`. Set that variable before starting User CommandHost, then sign in as `admin`.
 
 `authenticateUser` (password) pipeline: `lookupUser → checkLockout → checkCredential → recordOutcome`.
 - `checkCredential` always runs one BCrypt comparison. Unknown users and users without a password are compared against a cached dummy hash, so response time does not reveal whether a user name exists.
