@@ -14,20 +14,20 @@ import type { AuthenticationStatus,
 import { UserMenu }                                    from "granite.web.authentication/Login";
 import type { IUserMenuProps }                         from "granite.web.authentication/Login";
 
-function renderMenu(status: AuthenticationStatus,props: IUserMenuProps,logout: () => Promise<boolean> = () => Promise.resolve(true)): void
+function renderMenu(status: AuthenticationStatus,props: IUserMenuProps,logout: () => Promise<boolean> = () => Promise.resolve(true),path: string = "/home"): void
 {
     const context =
     {
-        state:  { status,userName: status === "anonymous" ? undefined : "alice",authorities: [] },
+        state:  { status,userName: status === "anonymous" || status === "restoring" ? undefined : "alice",authorities: [] },
         logout,
     } as unknown as IAuthenticationContext;
 
     render(
         <MantineProvider>
             <AuthenticationContext.Provider value={context}>
-                <MemoryRouter initialEntries={["/home"]}>
+                <MemoryRouter initialEntries={[path]}>
                     <Routes>
-                        <Route path="/home" element={<UserMenu {...props} />} />
+                        <Route path="*" element={<UserMenu {...props} />} />
                         <Route path="/login" element={<div>login page</div>} />
                         <Route path="/prefs" element={<div>prefs page</div>} />
                     </Routes>
@@ -107,6 +107,56 @@ describe("UserMenu",() =>
         expect(await screen.findByText("login page")).toBeTruthy();
         expect(logout).toHaveBeenCalledTimes(1);
     });
+
+    it("restoringShowsNoLogIn",async () =>
+    {
+        renderMenu("restoring",{});
+
+        expect(screen.queryByText("Log in")).toBeNull();
+        await userEvent.click(screen.getByLabelText("User menu"));
+        expect(screen.queryByRole("menuitem",{ name: "Log in" })).toBeNull();
+        expect(screen.queryByRole("menuitem",{ name: "Log out" })).toBeNull();
+    });
+
+    it("logoutFailureDoesNotNavigate",async () =>
+    {
+        const logout = vi.fn().mockResolvedValue(false);
+
+        renderMenu("authenticated",{},logout,"/home");
+
+        await userEvent.click(screen.getByLabelText("User menu"));
+        await userEvent.click(await screen.findByRole("menuitem",{ name: "Log out" }));
+
+        expect(logout).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText("login page")).toBeNull();
+        expect(screen.getByText("alice")).toBeTruthy();
+    });
+
+    it("activeMatchesPathSegments",() =>
+    {
+        renderMenu("authenticated",{ preferencesPath: "/user" },undefined,"/users");
+        expect(screen.getByLabelText("User menu").closest(".app-bar-user-menu")?.classList.contains("active")).toBe(false);
+    });
+
+    it("activeOnExactAndNestedPath",() =>
+    {
+        renderMenu("authenticated",{ preferencesPath: "/user" },undefined,"/user/detail");
+        expect(screen.getByLabelText("User menu").closest(".app-bar-user-menu")?.classList.contains("active")).toBe(true);
+    });
+
+    it("rendersWithoutAppHostCss",() =>
+    {
+        renderMenu("authenticated",{ className: "custom",style: { height: 40 } });
+
+        const button: HTMLElement | null | undefined = screen.getByLabelText("User menu").closest(".app-bar-user-menu");
+
+        expect(button?.classList.contains("custom")).toBe(true);
+        expect(button?.style.height).toBe("40px");
+        expect(screen.getByText("alice")).toBeTruthy();
+        expect(button?.querySelector("svg")?.getAttribute("stroke")).toBe("currentColor");
+        expect(button?.innerHTML.toLowerCase().includes("white")).toBe(false);
+    });
 });
+
 
 //////////////////////////////////////////////////////////////////////////////

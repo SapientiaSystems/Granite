@@ -3,8 +3,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { useEffect, useRef, useState }               from "react";
-import type { ReactElement }                        from "react";
-import { Alert, Stack, Group }                      from "@mantine/core";
+import type { CSSProperties, ReactElement }      from "react";
+import { Alert, Stack, Group, useComputedColorScheme } from "@mantine/core";
 import { GraniteFrontEndControllerServiceClient }    from "granite.frontendcontroller.client/RequestReply";
 import type { IGraniteFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
 import { GetOutputRequestBuilder, HandleInputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
@@ -21,7 +21,10 @@ const USERS_SERVICE:     string = "frontendcontroller-user-service";
 
 export interface IUsersViewProps
 {
-    readonly service?: string;
+    readonly service?:   string;
+    readonly height?:    string;
+    readonly className?: string;
+    readonly style?:     CSSProperties;
 }
 
 export function UsersView(props: IUsersViewProps): ReactElement
@@ -29,6 +32,7 @@ export function UsersView(props: IUsersViewProps): ReactElement
     const service: string                 = props.service ?? USERS_SERVICE;
     const { state, createFrontEndClient } = useAuthentication();
     const editable: boolean             = canEdit(state);
+    const dark: boolean                 = useComputedColorScheme("light") === "dark";
     const [users, setUsers]             = useState<Array<UserData>>([]);
     const [roles, setRoles]             = useState<Array<RoleData>>([]);
     const [loading, setLoading]         = useState<boolean>(true);
@@ -150,9 +154,21 @@ export function UsersView(props: IUsersViewProps): ReactElement
     }, []);
 
     return (
-        <Stack gap={0} className="view-container">
+        <Stack
+            gap={0}
+            className={props.className === undefined ? "view-container" : "view-container " + props.className}
+            style={{ height: props.height ?? "100%", minHeight: 0, display: "flex", flexDirection: "column", ...props.style }}
+        >
             {loadError && <Alert color="red" mx="sm" mt="xs">{loadError}</Alert>}
-            <Group gap="sm" className="view-toolbar" px="sm" py={6} justify="flex-start" wrap="nowrap">
+            <Group
+                gap="sm"
+                className="view-toolbar"
+                px="sm"
+                py={6}
+                justify="flex-start"
+                wrap="nowrap"
+                style={{ backgroundColor: dark ? "#353535" : "#d6d6d6", flexShrink: 0, alignItems: "center", height: 64 }}
+            >
                 {toolbar}
             </Group>
             <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
