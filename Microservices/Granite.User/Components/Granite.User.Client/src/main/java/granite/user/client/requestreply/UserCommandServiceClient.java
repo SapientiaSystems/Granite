@@ -47,6 +47,17 @@ class UserCommandServiceClient
     }
 
     @Override
+    public CompletionStage<MergeUserValuesReply>
+    mergeUserValues(MergeUserValuesRequest request)
+    {
+        return
+            doPostAsync(
+                "merge-user-values",
+                MergeUserValuesReply.class,
+                request);
+    }
+
+    @Override
     public CompletionStage<UpdateUsersReply>
     updateUsers(UpdateUsersRequest request)
     {

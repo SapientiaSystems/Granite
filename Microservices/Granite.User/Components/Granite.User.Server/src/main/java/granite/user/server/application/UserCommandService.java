@@ -109,6 +109,22 @@ class UserCommandService
     }
 
     @Override
+    public CompletionStage<MergeUserValuesReply>
+    mergeUserValues(MergeUserValuesRequest request)
+    {
+        logger.debug("mergeUserValues({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(mergeRequest -> mapToContext(mergeRequest))
+                .thenApply(context -> findUser(context))
+                .thenApply(context -> mergeValues(context))
+                .thenApply(context -> saveUser(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
     public CompletionStage<UpdateUsersReply>
     updateUsers(UpdateUsersRequest request)
     {
@@ -259,6 +275,118 @@ class UserCommandService
             request.getUserToUpdate(),
             "validation failed: id was not provided");
         return request;
+    }
+
+    protected MergeUserValuesRequest
+    validate(MergeUserValuesRequest request)
+    {
+        logger.debug("<merge values> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(
+            request.getUserId(),
+            "validation failed: userId was not provided");
+        Objects.requireNonNull(
+            request.getValues(),
+            "validation failed: values were not provided");
+        return request;
+    }
+
+    protected MergeUserValuesContext
+    mapToContext(MergeUserValuesRequest request)
+    {
+        logger.debug("<merge values> mapToContext({})",request.getRequestId());
+        return new MergeUserValuesContext(request);
+    }
+
+    protected MergeUserValuesContext
+    findUser(MergeUserValuesContext context)
+    {
+        logger.debug("<merge values> find User");
+        return
+            context
+                .setMergedUser(
+                    repository
+                        .findById(context.getUserId())
+                        .map(entity -> entity.attach(this)));
+    }
+
+    protected MergeUserValuesContext
+    mergeValues(MergeUserValuesContext context)
+    {
+        logger.debug("<merge values> merge values");
+
+        User user =
+            context
+                .getMergedUser()
+                .orElseThrow(
+                    () ->
+                        new NoSuchElementException(
+                            "User not found: " + context.getUserId()));
+
+        for (Map.Entry<String,Object> entry : context.getValues().entrySet())
+            if (entry.getValue() != null)
+                user.setValue(entry.getKey(),entry.getValue());
+            else
+                user.getValues().remove(entry.getKey());
+
+        return context;
+    }
+
+    protected MergeUserValuesContext
+    saveUser(MergeUserValuesContext context)
+    {
+        logger.debug("<merge values> save User");
+        return
+            context
+                .setMergedUser(
+                    repository
+                        .save(
+                            context
+                                .getMergedUser()
+                                .orElseThrow(
+                                    () ->
+                                        new IllegalStateException(
+                                            "Error during user values merge.")))
+                        .notifyUpdated());
+    }
+
+    private MergeUserValuesReply
+    buildReply(MergeUserValuesContext context)
+    {
+        User merged =
+            context
+                .getMergedUser()
+                .orElseThrow();
+
+        logger.info("building successful reply");
+
+        return
+            new MergeUserValuesReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("User: " + merged.getPrimaryId() + " values merged")
+                .setMergedUser(mapper.map(merged,UserData.class));
+    }
+
+    private String
+    mergeFailureMessage(Throwable e)
+    {
+        Throwable cause = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
+
+        return
+            cause instanceof NoSuchElementException
+                ? cause.getMessage()
+                : failureMessage(e,"Unable to merge user values");
+    }
+
+    private MergeUserValuesReply
+    buildReply(Throwable e,MergeUserValuesRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new MergeUserValuesReply(request)
+                .setSuccess(false)
+                .setFailureMessage(mergeFailureMessage(e))
+                .setException(ExceptionData.of(e));
     }
 
     protected UpdateUsersRequest

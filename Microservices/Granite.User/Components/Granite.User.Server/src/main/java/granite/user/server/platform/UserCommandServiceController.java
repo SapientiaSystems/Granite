@@ -54,6 +54,16 @@ class UserCommandServiceController
     }
 
     @PostMapping(
+        value = "/merge-user-values",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<MergeUserValuesReply>
+    mergeUserValues(@RequestBody MergeUserValuesRequest request)
+    {
+        logger.info("delegating mergeUserValues to implementation service");
+        return implementation.mergeUserValues(request);
+    }
+
+    @PostMapping(
         value = "/destroy-user",
         produces = MediaType.APPLICATION_JSON_VALUE)
     //@Operation(security = @SecurityRequirement(name = "bearerAuth"))

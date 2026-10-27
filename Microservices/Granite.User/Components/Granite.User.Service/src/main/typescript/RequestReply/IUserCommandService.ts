@@ -5,6 +5,8 @@ import {CreateUsersRequest} from "./CreateUsersRequest";
 import {CreateUsersReply} from "./CreateUsersReply";
 import {UpdateUserRequest} from "./UpdateUserRequest";
 import {UpdateUserReply} from "./UpdateUserReply";
+import {MergeUserValuesRequest} from "./MergeUserValuesRequest";
+import {MergeUserValuesReply} from "./MergeUserValuesReply";
 import {DestroyUserRequest} from "./DestroyUserRequest";
 import {DestroyUserReply} from "./DestroyUserReply";
 import {DestroyUsersRequest} from "./DestroyUsersRequest";
@@ -23,6 +25,9 @@ interface IUserCommandService
 
     updateUser(request: UpdateUserRequest):
         ICompletionStage<UpdateUserReply>;
+
+    mergeUserValues(request: MergeUserValuesRequest):
+        ICompletionStage<MergeUserValuesReply>;
 
     destroyUser(request: DestroyUserRequest):
         ICompletionStage<DestroyUserReply>;

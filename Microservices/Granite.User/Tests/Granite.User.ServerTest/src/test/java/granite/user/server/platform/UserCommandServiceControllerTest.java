@@ -5,6 +5,7 @@
 package granite.user.server.platform;
 
 import granite.user.service.requestreply.IUserCommandService;
+import granite.user.service.requestreply.MergeUserValuesRequest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +40,18 @@ class UserCommandServiceControllerTest
             assertTrue(mapping != null,"no @PostMapping on " + operation.getName());
             assertArrayEquals(new String[] {"/" + toPath(operation.getName())},mapping.value(),operation.getName());
         }
+    }
+
+    @Test
+    public void
+    mergeUserValuesMapsToMergeUserValuesPath() throws NoSuchMethodException
+    {
+        Method handler =
+            UserCommandServiceController.class.getMethod("mergeUserValues",MergeUserValuesRequest.class);
+
+        assertArrayEquals(
+            new String[] {"/merge-user-values"},
+            handler.getAnnotation(PostMapping.class).value());
     }
 
     private String

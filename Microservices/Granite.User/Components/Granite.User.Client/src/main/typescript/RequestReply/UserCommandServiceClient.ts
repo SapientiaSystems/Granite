@@ -11,6 +11,8 @@ import {
     CreateUsersRequest,
     UpdateUserReply,
     UpdateUserRequest,
+    MergeUserValuesReply,
+    MergeUserValuesRequest,
     DestroyUserReply,
     DestroyUserRequest,
     DestroyUsersReply,
@@ -66,6 +68,14 @@ class UserCommandServiceClient
         console.log("UserCommandServiceClient.updateUser");
         return this.doPost<UpdateUserReply,UpdateUserRequest>(
             "update-user",
+            this.initializeRequest(request));
+    }
+
+    mergeUserValues(request: MergeUserValuesRequest): ICompletionStage<MergeUserValuesReply>
+    {
+        console.log("UserCommandServiceClient.mergeUserValues");
+        return this.doPost<MergeUserValuesReply,MergeUserValuesRequest>(
+            "merge-user-values",
             this.initializeRequest(request));
     }
 

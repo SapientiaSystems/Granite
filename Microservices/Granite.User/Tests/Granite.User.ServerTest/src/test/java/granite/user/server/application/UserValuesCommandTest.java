@@ -17,9 +17,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,12 +33,13 @@ class UserValuesCommandTest
 
     private UserCommandService commandService;
     private User               stored;
+    private IUserRepository    repository;
 
     @BeforeEach
     public void
     setUp()
     {
-        IUserRepository repository = Mockito.mock(IUserRepository.class);
+        repository = Mockito.mock(IUserRepository.class);
 
         stored =
             new User()
@@ -135,6 +138,84 @@ class UserValuesCommandTest
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         assertEquals(Map.of("b","x"),reply.getUpdatedUser().getValues());
+    }
+
+    @Test
+    public void
+    mergeAddsAndReplacesKeys()
+    {
+        Map<String,Object> values = new LinkedHashMap<>();
+
+        values.put("b","3");
+        values.put("c","4");
+
+        MergeUserValuesReply reply = merge(USER_ID,values);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(Map.of("a","1","b","3","c","4"),reply.getMergedUser().getValues());
+        assertEquals(Map.of("a","1","b","3","c","4"),stored.getValues());
+    }
+
+    @Test
+    public void
+    mergeRemovesNullKeys()
+    {
+        Map<String,Object> values = new LinkedHashMap<>();
+
+        values.put("a",null);
+
+        MergeUserValuesReply reply = merge(USER_ID,values);
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(Map.of("b","2"),reply.getMergedUser().getValues());
+        assertEquals(Map.of("b","2"),stored.getValues());
+    }
+
+    @Test
+    public void
+    mergeKeepsOtherKeys()
+    {
+        MergeUserValuesReply reply = merge(USER_ID,Map.of("c","4"));
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals("1",stored.getValues().get("a"));
+        assertEquals("2",stored.getValues().get("b"));
+        assertEquals("4",stored.getValues().get("c"));
+    }
+
+    @Test
+    public void
+    mergeLeavesAuthoritiesUnchanged()
+    {
+        stored.setAuthorities(new HashSet<>(Set.of("ROLE_ADMIN")));
+
+        MergeUserValuesReply reply = merge(USER_ID,Map.of("c","4"));
+
+        assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        assertEquals(Set.of("ROLE_ADMIN"),stored.getAuthorities());
+    }
+
+    @Test
+    public void
+    mergeUnknownUserFails()
+    {
+        MergeUserValuesReply reply = merge(999L,Map.of("c","4"));
+
+        assertFalse(reply.isSuccess());
+        assertNotNull(reply.getFailureMessage());
+        assertTrue(reply.getFailureMessage().contains("999"),reply.getFailureMessage());
+        assertEquals(Map.of("a","1","b","2"),stored.getValues());
+        Mockito.verify(repository,Mockito.never()).save(Mockito.any(User.class));
+    }
+
+    private MergeUserValuesReply
+    merge(Long userId,Map<String,Object> values)
+    {
+        return
+            commandService
+                .mergeUserValues(new MergeUserValuesRequest().setUserId(userId).setValues(values))
+                .toCompletableFuture()
+                .join();
     }
 
     private UpdateUserReply

@@ -18,6 +18,9 @@ interface IUserCommandService
     CompletionStage<UpdateUserReply>
     updateUser(UpdateUserRequest request);
 
+    CompletionStage<MergeUserValuesReply>
+    mergeUserValues(MergeUserValuesRequest request);
+
     CompletionStage<UpdateUsersReply>
     updateUsers(UpdateUsersRequest request);
 
