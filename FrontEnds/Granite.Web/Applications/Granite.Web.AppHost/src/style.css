@@ -38,7 +38,7 @@ html {
 }
 
 [data-mantine-color-scheme="dark"] .app-bar-tab {
-    border-bottom-width: 3px !important;
+    border-bottom-width: 3px;
 }
 
 .app-bar-tab:hover {
@@ -57,7 +57,7 @@ html {
     align-items: center;
     height: 100%;
     padding: 6px 0 0;
-    border-bottom: 5px solid transparent !important;
+    --user-menu-border-width: 5px;
     color: white;
     transition: border-color 0.15s;
 }
@@ -67,11 +67,11 @@ html {
 }
 
 [data-mantine-color-scheme="dark"] .app-bar-user-menu {
-    border-bottom-width: 3px;
+    --user-menu-border-width: 3px;
 }
 
 .app-bar-user-menu.active {
-    border-bottom-color: var(--accent) !important;
+    --user-menu-active-color: var(--accent);
 }
 
 /* ---- Nav Links (mobile, inside Mantine AppShell.Navbar) ---- */

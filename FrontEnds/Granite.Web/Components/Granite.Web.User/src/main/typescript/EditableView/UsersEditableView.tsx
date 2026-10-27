@@ -561,7 +561,7 @@ export function UsersEditableView(props: IUsersEditableViewProps): ReactElement
           cellEditor: PasswordCellEditor,
           valueFormatter: (p) => p.data?.isNew ? "•".repeat((p.value ?? "").length) : "********",
           cellClassRules: newRowEditableRules },
-        { field: "authorities", headerName: "Authorities", flex: 2, headerTooltip: "Authorities",
+        { field: "authorities", headerName: "Authorities", flex: 2, headerTooltip: "Authorities", cellDataType: false,
           editable: (p) => isMasterEditable(p.data),
           cellEditor: AuthoritiesCellEditor, cellEditorPopup: true,
           suppressKeyboardEvent: (p) => p.editing && p.event.key === "Enter",

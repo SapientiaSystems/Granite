@@ -2,8 +2,8 @@
 // Granite.Web.User
 //////////////////////////////////////////////////////////////////////////////
 
-import { useEffect, useRef, useState }               from "react";
-import type { CSSProperties, ReactElement }      from "react";
+import { useEffect, useRef, useState }                from "react";
+import type { CSSProperties, ReactElement }            from "react";
 import { Alert, Stack, Group, useComputedColorScheme } from "@mantine/core";
 import { GraniteFrontEndControllerServiceClient }    from "granite.frontendcontroller.client/RequestReply";
 import type { IGraniteFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
@@ -157,7 +157,7 @@ export function UsersView(props: IUsersViewProps): ReactElement
         <Stack
             gap={0}
             className={props.className === undefined ? "view-container" : "view-container " + props.className}
-            style={{ height: props.height ?? "100%", minHeight: 0, display: "flex", flexDirection: "column", ...props.style }}
+            style={{ height: props.height ?? "calc(100vh - var(--app-header-height, 0px))", minHeight: 0, display: "flex", flexDirection: "column", ...props.style }}
         >
             {loadError && <Alert color="red" mx="sm" mt="xs">{loadError}</Alert>}
             <Group
@@ -167,7 +167,7 @@ export function UsersView(props: IUsersViewProps): ReactElement
                 py={6}
                 justify="flex-start"
                 wrap="nowrap"
-                style={{ backgroundColor: dark ? "#353535" : "#d6d6d6", flexShrink: 0, alignItems: "center", height: 64 }}
+                style={{ backgroundColor: dark ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-3)", flexShrink: 0, alignItems: "center", height: 64 }}
             >
                 {toolbar}
             </Group>

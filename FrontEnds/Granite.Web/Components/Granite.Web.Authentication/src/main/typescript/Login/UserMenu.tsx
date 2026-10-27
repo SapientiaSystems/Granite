@@ -45,7 +45,7 @@ export function UserMenu(props: IUserMenuProps): ReactElement
                         marginLeft:   "auto",
                         display:      "flex",
                         alignItems:   "center",
-                        borderBottom: "3px solid " + (active ? "var(--mantine-primary-color-filled)" : "transparent"),
+                        borderBottom: "var(--user-menu-border-width, 3px) solid " + (active ? "var(--user-menu-active-color, var(--mantine-primary-color-filled))" : "var(--user-menu-border-color, transparent)"),
                         ...props.style
                     }}
                 >
