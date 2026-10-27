@@ -42,7 +42,7 @@ class ResponseCookieAdviceTest
         service = Mockito.mock(IGraniteFrontEndControllerService.class);
         mvc =
             MockMvcBuilders
-                .standaloneSetup(new GraniteFrontEndControllerServiceController(service))
+                .standaloneSetup(new GraniteApplicationFrontEndControllerServiceController(service))
                 .addPlaceholderValue("granite.frontendcontroller.service-path","/frontendcontroller-user-service")
                 .setControllerAdvice(new ResponseCookieAdvice())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapperSupplier().get()))

@@ -6,7 +6,7 @@ package granite.frontendcontroller.server.configuration;
 
 import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
-import granite.frontendcontroller.server.platform.GraniteFrontEndControllerServiceController;
+import granite.frontendcontroller.server.platform.GraniteApplicationFrontEndControllerServiceController;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
@@ -26,6 +26,7 @@ import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -73,21 +74,25 @@ class SessionHttpTest
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
-        GraniteFrontEndControllerServiceFactory factory = new GraniteFrontEndControllerServiceFactory(configuration,sslBundles);
-        IGraniteFrontEndControllerService       service = Mockito.mock(IGraniteFrontEndControllerService.class);
+        GraniteFrontEndControllerConfiguration factory = new GraniteFrontEndControllerConfiguration();
+
+        ReflectionTestUtils.setField(factory,"configuration",configuration);
+        ReflectionTestUtils.setField(factory,"sslBundles",sslBundles);
+
+        IGraniteFrontEndControllerService service = Mockito.mock(IGraniteFrontEndControllerService.class);
 
         Mockito
             .when(service.handleSessionInput(Mockito.any(HandleSessionInputRequest.class)))
             .thenAnswer(
-                i -> factory.createService(new ModelMapper(),Runnable::run).handleSessionInput(i.getArgument(0)));
+                i -> factory.frontEndControllerService(Runnable::run,new ModelMapper(),factory.applicationRoles()).handleSessionInput(i.getArgument(0)));
         Mockito
             .when(service.getSessionOutput(Mockito.any(GetSessionOutputRequest.class)))
             .thenAnswer(
-                i -> factory.createService(new ModelMapper(),Runnable::run).getSessionOutput(i.getArgument(0)));
+                i -> factory.frontEndControllerService(Runnable::run,new ModelMapper(),factory.applicationRoles()).getSessionOutput(i.getArgument(0)));
 
         mvc =
             MockMvcBuilders
-                .standaloneSetup(new GraniteFrontEndControllerServiceController(service))
+                .standaloneSetup(new GraniteApplicationFrontEndControllerServiceController(service))
                 .addPlaceholderValue("granite.frontendcontroller.service-path","/frontendcontroller-user-service")
                 .setControllerAdvice(new ResponseCookieAdvice())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapperSupplier().get()))

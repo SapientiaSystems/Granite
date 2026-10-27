@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// GraniteFrontEndControllerServiceFactoryTest.java
+// GraniteFrontEndControllerConfigurationClientsTest.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.frontendcontroller.server.configuration;
@@ -27,6 +27,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import strata.foundation.core.configuration.IConfiguration;
@@ -42,10 +43,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
-class GraniteFrontEndControllerServiceFactoryTest
+class GraniteFrontEndControllerConfigurationClientsTest
 {
     private FakeSessionBackend                     backend;
-    private GraniteFrontEndControllerServiceFactory factory;
+    private GraniteFrontEndControllerConfiguration subject;
     private MockHttpServletRequest                 inbound;
     private String                                 bearer;
 
@@ -66,7 +67,9 @@ class GraniteFrontEndControllerServiceFactoryTest
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
-        factory = new GraniteFrontEndControllerServiceFactory(configuration,sslBundles);
+        subject = new GraniteFrontEndControllerConfiguration();
+        ReflectionTestUtils.setField(subject,"configuration",configuration);
+        ReflectionTestUtils.setField(subject,"sslBundles",sslBundles);
 
         bearer = SessionRequestContextTest.bearer("{\"jti\":\"11\",\"sub\":\"7\"}");
         inbound = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-session-input");
@@ -105,7 +108,7 @@ class GraniteFrontEndControllerServiceFactoryTest
 
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
-        IGraniteFrontEndControllerService service = factory.createService(new ModelMapper(),Runnable::run);
+        IGraniteFrontEndControllerService service = subject.frontEndControllerService(Runnable::run,new ModelMapper(),subject.applicationRoles());
 
         RequestContextHolder.resetRequestAttributes();
 

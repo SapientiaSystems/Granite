@@ -34,7 +34,6 @@ import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
-import org.modelmapper.ModelMapper;
 import strata.frontendcontroller.server.application.FrontEndControllerService;
 import strata.frontendcontroller.server.application.GetOutputContext;
 import strata.frontendcontroller.server.application.HandleInputContext;
@@ -45,47 +44,48 @@ import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
 
 public
 class GraniteFrontEndControllerService
     extends    FrontEndControllerService
     implements IGraniteFrontEndControllerService
 {
+    private final GraniteFrontEndControllerContext                                 context;
     private final Map<String,IInputAction<UsersInput,UsersOutput>>                 usersInputActions;
     private final Map<String,IOutputAction<GetUsersOutputRequest,UsersOutput>>     usersOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
     private final Map<String,IOutputAction<GetSessionOutputRequest,SessionOutput>> sessionOutputActions;
 
     public
-    GraniteFrontEndControllerService(
-        ModelMapper                  mapper,
-        Executor                     executor,
-        IUserQueryServiceClient      userQueryClient,
-        IUserCommandServiceClient    userCommandClient,
-        ISessionCommandServiceClient sessionCommandClient,
-        ISessionQueryServiceClient   sessionQueryClient,
-        SessionRequestContext        context,
-        SessionLoginSettings         settings)
+    GraniteFrontEndControllerService(GraniteFrontEndControllerContext context)
     {
-        super(mapper,executor);
+        super(context.getMapper(),context.getExecutor());
+        this.context = context;
+
+        IUserQueryServiceClient      userQueryClient      = context.getUserQueryClient();
+        IUserCommandServiceClient    userCommandClient    = context.getUserCommandClient();
+        ISessionCommandServiceClient sessionCommandClient = context.getSessionCommandClient();
+        ISessionQueryServiceClient   sessionQueryClient   = context.getSessionQueryClient();
+        SessionRequestContext        requestContext       = context.getSessionRequestContext();
+        SessionLoginSettings         settings             = context.getSessionLoginSettings();
+
         usersInputActions =
             Map.of(
                 "User.All->Save->UsersEditableView",new UpdateUsersView(userQueryClient,userCommandClient),
                 "User.All->Delete->UsersEditableView",new DeleteUsersView(userQueryClient,userCommandClient));
         usersOutputActions =
             Map.of(
-                "User.All->UsersEditableView",new InitializeUsersView(userQueryClient));
+                "User.All->UsersEditableView",new InitializeUsersView(userQueryClient,context.getApplicationRoles()));
         sessionInputActions =
             Map.of(
-                "Session.New->Login->LoginView",new LoginView(sessionCommandClient,context,settings),
-                "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(sessionCommandClient,context,settings),
-                "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(sessionCommandClient,context,settings),
-                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,context));
+                "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings),
+                "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(sessionCommandClient,requestContext,settings),
+                "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(sessionCommandClient,requestContext,settings),
+                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext));
         sessionOutputActions =
             Map.of(
                 "Session.New->LoginView",new LoginMethodsView(settings),
-                "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,context));
+                "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,requestContext));
     }
 
     @Override
@@ -115,6 +115,9 @@ class GraniteFrontEndControllerService
     {
         return getOutput(request,context -> dispatchOutput(sessionOutputActions,context),GetSessionOutputReply::new);
     }
+
+    protected GraniteFrontEndControllerContext
+    getContext() { return context; }
 
     protected <I extends FrontEndInput,O extends FrontEndOutput> CompletionStage<HandleInputContext<I,O>>
     dispatchInput(Map<String,IInputAction<I,O>> actions,HandleInputContext<I,O> context)

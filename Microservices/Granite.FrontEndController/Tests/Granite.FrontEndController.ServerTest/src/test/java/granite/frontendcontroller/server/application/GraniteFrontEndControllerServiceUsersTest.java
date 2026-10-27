@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
@@ -53,14 +54,16 @@ class GraniteFrontEndControllerServiceUsersTest
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
         service =
             new GraniteFrontEndControllerService(
-                new ModelMapper(),
-                Runnable::run,
-                queryClient,
-                commandClient,
-                Mockito.mock(ISessionCommandServiceClient.class),
-                Mockito.mock(ISessionQueryServiceClient.class),
-                SessionTestSupport.context(null,null,null),
-                new SessionLoginSettings(true,false));
+                new GraniteFrontEndControllerContext(
+                    new ModelMapper(),
+                    Runnable::run,
+                    queryClient,
+                    commandClient,
+                    Mockito.mock(ISessionCommandServiceClient.class),
+                    Mockito.mock(ISessionQueryServiceClient.class),
+                    SessionTestSupport.context(null,null,null),
+                    new SessionLoginSettings(true,false),
+                    GraniteApplicationRoles.create()));
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))

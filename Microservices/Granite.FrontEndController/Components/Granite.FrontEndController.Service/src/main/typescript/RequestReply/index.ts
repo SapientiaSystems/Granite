@@ -7,6 +7,7 @@ export {GetHomeOutputReply}                from "./GetHomeOutputReply";
 export {IHomeFrontEndControllerService}    from "./IHomeFrontEndControllerService";
 export {UsersInput}                        from "./UsersInput";
 export {UsersOutput}                       from "./UsersOutput";
+export {RoleData}                          from "./RoleData";
 export {HandleUsersInputRequest}           from "./HandleUsersInputRequest";
 export {HandleUsersInputReply}             from "./HandleUsersInputReply";
 export {GetUsersOutputRequest}             from "./GetUsersOutputRequest";

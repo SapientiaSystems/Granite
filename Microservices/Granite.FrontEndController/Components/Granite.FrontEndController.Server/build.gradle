@@ -13,6 +13,7 @@ dependencies {
     api project(":Components:Granite.FrontEndController.Service")
     api "granite.user:granite-user-client:$system_version"
     api "granite.session:granite-session-client:$system_version"
+    api "granite.foundation:granite-foundation-core:$system_version"
     api "strata.server:strata-server-spring:$strata_server_version"
     api "strata.frontendcontroller:strata-frontendcontroller-server:$strata_frontendcontroller_version"
     api "org.springframework.boot:spring-boot-starter-security:$springboot_version"

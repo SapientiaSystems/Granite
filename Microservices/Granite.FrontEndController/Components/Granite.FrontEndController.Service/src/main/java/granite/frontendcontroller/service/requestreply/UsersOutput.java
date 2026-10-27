@@ -16,6 +16,7 @@ class UsersOutput
 {
     private List<UserData> users;
     private List<String>   failureMessages;
+    private List<RoleData> roles;
 
     public
     UsersOutput()
@@ -23,6 +24,7 @@ class UsersOutput
         super();
         users           = new ArrayList<>();
         failureMessages = new ArrayList<>();
+        roles           = new ArrayList<>();
     }
 
     @Override
@@ -67,11 +69,21 @@ class UsersOutput
         return this;
     }
 
+    public UsersOutput
+    setRoles(List<RoleData> roles)
+    {
+        this.roles = roles;
+        return this;
+    }
+
     public List<UserData>
     getUsers() { return users; }
 
     public List<String>
     getFailureMessages() { return failureMessages; }
+
+    public List<RoleData>
+    getRoles() { return roles; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

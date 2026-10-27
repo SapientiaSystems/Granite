@@ -13,31 +13,20 @@ import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 import strata.frontendcontroller.server.platform.AbstractFrontEndControllerServiceController;
 
 import java.util.concurrent.CompletionStage;
 
-@RestController
-@CrossOrigin(origins = "*")
-@RequestMapping("${granite.frontendcontroller.service-path}")
 public
-class GraniteFrontEndControllerServiceController
-    extends AbstractFrontEndControllerServiceController<IGraniteFrontEndControllerService>
+class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndControllerService>
+    extends AbstractFrontEndControllerServiceController<S>
 {
-    @Inject
     public
-    GraniteFrontEndControllerServiceController(
-        @Named("Granite")
-        IGraniteFrontEndControllerService service)
+    GraniteFrontEndControllerServiceController(S service)
     {
         super(service);
     }

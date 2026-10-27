@@ -14,6 +14,7 @@ import granite.frontendcontroller.service.requestreply.SessionInput;
 import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
+import granite.frontendcontroller.service.requestreply.RoleData;
 import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -95,6 +96,26 @@ class FrontEndJsonSerializationTest
         assertEquals(List.of("bad user"),actual.getOutput().getFailureMessages());
         assertFalse(json.contains("@class"));
         assertFalse(json.contains("@type"));
+    }
+
+    @Test
+    public void
+    usersOutputSerializesRoles()
+        throws Exception
+    {
+        GetUsersOutputReply reply =
+            new GetUsersOutputReply()
+                .setSuccess(true)
+                .setOutput(
+                    new UsersOutput()
+                        .setRoles(List.of(new RoleData().setName("ROLE_Manager").setLabel("Manager").setImpliedRoles(List.of("ROLE_Clerk")))));
+
+        String              json   = mapper.writeValueAsString(reply);
+        GetUsersOutputReply actual = mapper.readValue(json,GetUsersOutputReply.class);
+
+        assertTrue(json.contains("\"roles\":[{\"name\":\"ROLE_Manager\",\"label\":\"Manager\",\"impliedRoles\":[\"ROLE_Clerk\"]}]"),json);
+        assertEquals("ROLE_Manager",actual.getOutput().getRoles().get(0).getName());
+        assertEquals(List.of("ROLE_Clerk"),actual.getOutput().getRoles().get(0).getImpliedRoles());
     }
 
     @Test

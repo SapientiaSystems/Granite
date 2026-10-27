@@ -101,7 +101,7 @@ class GraniteFrontEndControllerConfigurationTest
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         IGraniteFrontEndControllerService service =
-            subject.graniteFrontEndControllerService(Runnable::run,new ModelMapper());
+            subject.frontEndControllerService(Runnable::run,new ModelMapper(),subject.applicationRoles());
 
         RequestContextHolder.resetRequestAttributes();
 

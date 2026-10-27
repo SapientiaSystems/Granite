@@ -18,7 +18,7 @@ class GraniteControllerMappingTest
 
     @Override
     protected Class<?>
-    getControllerClass() { return GraniteFrontEndControllerServiceController.class; }
+    getControllerClass() { return GraniteApplicationFrontEndControllerServiceController.class; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

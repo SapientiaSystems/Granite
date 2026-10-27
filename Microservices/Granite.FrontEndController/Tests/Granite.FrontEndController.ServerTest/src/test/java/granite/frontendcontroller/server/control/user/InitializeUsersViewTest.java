@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -39,7 +40,7 @@ class InitializeUsersViewTest
                         .setUsers(List.of(new UserData().setUserId(1L),new UserData().setUserId(2L)))));
 
         UsersOutput output =
-            new InitializeUsersView(queryClient)
+            new InitializeUsersView(queryClient,GraniteApplicationRoles.create())
                 .apply(
                     new GetUsersOutputRequest()
                         .setSource("User.All")
@@ -48,6 +49,9 @@ class InitializeUsersViewTest
                 .get();
 
         assertEquals(2,output.getUsers().size());
+        assertEquals(List.of("ROLE_Admin","ROLE_Auditor","ROLE_User"),output.getRoles().stream().map(role -> role.getName()).toList());
+        assertEquals("Admin",output.getRoles().get(0).getLabel());
+        assertEquals(List.of(),output.getRoles().get(0).getImpliedRoles());
         assertTrue(output.getFailureMessages().isEmpty());
         assertEquals("User.All",output.getSource());
         assertEquals("UsersEditableView",output.getDestination());
@@ -65,7 +69,7 @@ class InitializeUsersViewTest
                 CompletableFuture.completedFuture(new FindAllUsersReply().setSuccess(false)));
 
         UsersOutput output =
-            new InitializeUsersView(queryClient)
+            new InitializeUsersView(queryClient,GraniteApplicationRoles.create())
                 .apply(new GetUsersOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
                 .toCompletableFuture()
                 .get();
