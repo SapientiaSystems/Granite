@@ -94,8 +94,8 @@ Downstream application systems reuse the gateway by depending on `granite-gatewa
 | `routeLocator(RouteLocatorBuilder,Environment)` → `configureRoutes(Builder,Environment)` | adds the seven Granite routes above |
 | `addRoute(Builder,id,pathPattern,hostProperty,Environment)` | helper: one route whose URI comes from the required property `hostProperty` |
 | `securityWebFilterChain(ServerHttpSecurity,ReactiveJwtDecoder,GraniteJwtAuthenticationConverter,ISessionResolver,Environment)` | reactive JWT resource server with the cookie path (see "Browser cookies"). First rule: `denyAll` on `/session-command-service/resolve-session`, `/session-command-service/start-okta-login` and `/session-command-service/complete-okta-login`, so no external caller reaches them through the direct Session route (Session lists them as public because the Gateway resolver and the FEC call them before there is a session; the FEC is the only entry for Okta login) (403 when authenticated, 401 when not; the Gateway's own resolver calls Session directly, not through the chain). `OPTIONS` and `getPublicExchangeMatcher(Environment)` are public. `getAuthenticatedExchangeMatcher(Environment)` then requires only authentication. Then come the `configureAuthorization(...)` rules, then `anyExchange().authenticated()` |
-| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | `final` template, always applied: Granite's users-reader rules, Granite's admin-only paths, then `configureApplicationAuthorization(...)`, then the `ROLE_ADMIN` catch-all. Not overridable; applications extend through the hooks below |
-| `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` | hook: application rules, evaluated after Granite's users-reader rules and before the `ROLE_ADMIN` catch-all; default declares none |
+| `configureAuthorization(AuthorizeExchangeSpec,Environment)` | `final` template, always applied: the Preferences `authenticated()` rules, Granite's users-reader rules, Granite's admin-only paths, then `configureApplicationAuthorization(...)`, then the `ROLE_ADMIN` catch-all. Not overridable; applications extend through the hooks below |
+| `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` | hook: application rules, evaluated after Granite's Preferences, users-reader and admin-only rules and before the `ROLE_ADMIN` catch-all; default declares none |
 | `getUsersReaderAuthorities(Environment)` | hook: authorities allowed on Granite's users-reader rules; default `ROLE_ADMIN`, `SCOPE_internal` |
 | `configureApplicationRoutes(Builder,Environment)` | hook: called after Granite's routes in every profile, including `production`; default adds none |
 | `getPublicPathPatterns(Environment)` | hook: paths reachable without a token: `/health/**`, Session `login`, `refresh`, the static app (`/`, `/index.html`, `/config.js`, `/favicon.ico`, `/assets/**`), plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production` |
@@ -132,6 +132,7 @@ Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthori
 
 | Matcher | Authorities |
 |---|---|
+| `POST /frontendcontroller-{user,admin}-service/get-preferences-output` and `handle-preferences-input` (both hosts) | any authenticated caller (the operations act on the caller's own user) |
 | `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output` | `getUsersReaderAuthorities()` |
 | `/user-query-service/**` | `getUsersReaderAuthorities()` |
 | `POST /session-command-service/logout` | `getUsersReaderAuthorities()` |

@@ -358,6 +358,13 @@ class GraniteGatewayServerConfiguration
         exchanges
             .pathMatchers(
                 HttpMethod.POST,
+                "/frontendcontroller-user-service/get-preferences-output",
+                "/frontendcontroller-admin-service/get-preferences-output",
+                "/frontendcontroller-user-service/handle-preferences-input",
+                "/frontendcontroller-admin-service/handle-preferences-input")
+                .authenticated()
+            .pathMatchers(
+                HttpMethod.POST,
                 "/frontendcontroller-user-service/get-users-output",
                 "/frontendcontroller-admin-service/get-users-output")
                 .hasAnyAuthority(readers)
