@@ -119,6 +119,26 @@ class InitializePreferencesViewTest
 
     @Test
     public void
+    getReportsOverlongStoredStringAsDefault()
+        throws Exception
+    {
+        storedValues(Map.of("preferences.note","x".repeat(1025),"preferences.short","ok"));
+
+        PreferencesOutput output =
+            new InitializePreferencesView(
+                    queryClient,
+                    SessionTestSupport.context("d",11L,7L),
+                    List.of(PreferenceDefinition.string("note","none"),PreferenceDefinition.string("short","",5)))
+                .apply(new GetPreferencesOutputRequest().setSource("Preferences.Current").setDestination("PreferencesView"))
+                .toCompletableFuture()
+                .get();
+
+        assertEquals("none",output.getValues().get("note"));
+        assertEquals("ok",output.getValues().get("short"));
+    }
+
+    @Test
+    public void
     getNormalisesStoredBooleanText()
         throws Exception
     {

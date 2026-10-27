@@ -200,6 +200,62 @@ class SavePreferencesViewTest
 
     @Test
     public void
+    saveUsesMergedUserValues()
+        throws Exception
+    {
+        Mockito
+            .when(commandClient.mergeUserValues(Mockito.any(MergeUserValuesRequest.class)))
+            .thenReturn(
+                CompletableFuture.completedFuture(
+                    new MergeUserValuesReply()
+                        .setSuccess(true)
+                        .setMergedUser(new UserData().setUserId(7L).setValues(new HashMap<>(Map.of("preferences.granite.theme","dark","preferences.compact","true"))))));
+
+        PreferencesOutput output = run(7L,null,Map.of("granite.theme","dark"));
+
+        assertEquals("dark",output.getValues().get("granite.theme"));
+        assertEquals(true,output.getValues().get("compact"));
+        assertTrue(output.getFailureMessages().isEmpty());
+    }
+
+    @Test
+    public void
+    saveSucceedsWithoutFollowUpRead()
+        throws Exception
+    {
+        Mockito
+            .when(queryClient.findUsersByKey(Mockito.any(FindUsersByKeyRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("user service down")));
+        Mockito
+            .when(commandClient.mergeUserValues(Mockito.any(MergeUserValuesRequest.class)))
+            .thenReturn(
+                CompletableFuture.completedFuture(
+                    new MergeUserValuesReply()
+                        .setSuccess(true)
+                        .setMergedUser(new UserData().setUserId(7L).setValues(new HashMap<>(Map.of("preferences.granite.theme","dark"))))));
+
+        PreferencesOutput output = run(7L,null,Map.of("granite.theme","dark"));
+
+        assertEquals("dark",output.getValues().get("granite.theme"));
+        assertTrue(output.getFailureMessages().isEmpty());
+        Mockito.verify(queryClient,Mockito.never()).findUsersByKey(Mockito.any(FindUsersByKeyRequest.class));
+    }
+
+    @Test
+    public void
+    stringPreferenceHasMaxLength()
+        throws Exception
+    {
+        PreferenceDefinition note = PreferenceDefinition.string("note","");
+
+        assertTrue(note.isValid("x".repeat(1024)));
+        assertFalse(note.isValid("x".repeat(1025)));
+        assertTrue(PreferenceDefinition.string("short","",5).isValid("12345"));
+        assertFalse(PreferenceDefinition.string("short","",5).isValid("123456"));
+    }
+
+    @Test
+    public void
     mergeFailureIsReported()
         throws Exception
     {

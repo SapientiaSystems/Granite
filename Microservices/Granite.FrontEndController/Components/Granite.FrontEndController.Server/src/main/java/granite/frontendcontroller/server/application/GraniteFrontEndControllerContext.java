@@ -13,8 +13,10 @@ import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import org.modelmapper.ModelMapper;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 public
@@ -54,6 +56,12 @@ class GraniteFrontEndControllerContext
         this.sessionLoginSettings  = Objects.requireNonNull(sessionLoginSettings,"sessionLoginSettings");
         this.applicationRoles      = Objects.requireNonNull(applicationRoles,"applicationRoles");
         this.preferenceDefinitions = List.copyOf(Objects.requireNonNull(preferenceDefinitions,"preferenceDefinitions"));
+
+        Set<String> keys = new HashSet<>();
+
+        for (PreferenceDefinition definition : this.preferenceDefinitions)
+            if (!keys.add(definition.getKey()))
+                throw new IllegalArgumentException("duplicate preference key: " + definition.getKey());
     }
 
     public ModelMapper

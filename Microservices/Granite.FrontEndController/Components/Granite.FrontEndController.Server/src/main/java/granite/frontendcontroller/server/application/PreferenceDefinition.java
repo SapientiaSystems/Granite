@@ -10,24 +10,37 @@ import java.util.Objects;
 public
 class PreferenceDefinition
 {
+    public static final int DEFAULT_MAX_LENGTH = 1024;
+
     private final String         key;
     private final PreferenceType type;
     private final Object         defaultValue;
     private final List<Object>   allowedValues;
+    private final int            maxLength;
 
     public
     PreferenceDefinition(String key,PreferenceType type,Object defaultValue,List<Object> allowedValues)
+    {
+        this(key,type,defaultValue,allowedValues,DEFAULT_MAX_LENGTH);
+    }
+
+    public
+    PreferenceDefinition(String key,PreferenceType type,Object defaultValue,List<Object> allowedValues,int maxLength)
     {
         this.key           = Objects.requireNonNull(key,"key");
         this.type          = Objects.requireNonNull(type,"type");
         this.defaultValue  = Objects.requireNonNull(defaultValue,"defaultValue");
         this.allowedValues = allowedValues == null ? List.of() : List.copyOf(allowedValues);
+        this.maxLength     = maxLength;
 
         if (key.isBlank())
             throw new IllegalArgumentException("preference key must not be blank");
 
         if (type == PreferenceType.ENUM && this.allowedValues.isEmpty())
             throw new IllegalArgumentException("preference " + key + " is an ENUM without allowed values");
+
+        if (maxLength < 1)
+            throw new IllegalArgumentException("preference " + key + " has an invalid maximum length");
 
         if (!isValid(defaultValue))
             throw new IllegalArgumentException("preference " + key + " has an invalid default value");
@@ -37,6 +50,12 @@ class PreferenceDefinition
     string(String key,String defaultValue)
     {
         return new PreferenceDefinition(key,PreferenceType.STRING,defaultValue,List.of());
+    }
+
+    public static PreferenceDefinition
+    string(String key,String defaultValue,int maxLength)
+    {
+        return new PreferenceDefinition(key,PreferenceType.STRING,defaultValue,List.of(),maxLength);
     }
 
     public static PreferenceDefinition
@@ -63,7 +82,7 @@ class PreferenceDefinition
         switch (type)
         {
             case STRING:
-                return value instanceof String;
+                return value instanceof String text && text.length() <= maxLength;
             case BOOLEAN:
                 return value instanceof Boolean;
             case NUMBER:
@@ -86,6 +105,9 @@ class PreferenceDefinition
 
     public List<Object>
     getAllowedValues() { return allowedValues; }
+
+    public int
+    getMaxLength() { return maxLength; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

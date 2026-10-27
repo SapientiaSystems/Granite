@@ -12,6 +12,7 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindUsersByKeyReply;
 import granite.user.service.requestreply.FindUsersByKeyRequest;
 import granite.user.service.requestreply.UserKey;
+import granite.user.service.requestreply.UserData;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -49,6 +50,14 @@ class PreferencesAssembler
                         failures.add(UNREADABLE);
                         return toOutput(Map.of(),failures);
                     });
+    }
+
+    public PreferencesOutput
+    fromUser(UserData user,Map<String,Object> fallback,List<String> failures)
+    {
+        Map<String,Object> values = user == null ? null : user.getValues();
+
+        return toOutput(values == null ? fallback : values,failures);
     }
 
     public PreferencesOutput

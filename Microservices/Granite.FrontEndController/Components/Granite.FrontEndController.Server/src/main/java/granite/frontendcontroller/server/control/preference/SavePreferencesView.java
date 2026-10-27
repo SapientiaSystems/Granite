@@ -61,9 +61,20 @@ class SavePreferencesView
         return
             commandClient
                 .mergeUserValues(new MergeUserValuesRequest().setUserId(caller.get()).setValues(entries))
-                .thenAccept(reply -> collectFailure(reply,failures))
-                .thenCompose(v -> assembler.read(caller.get(),failures))
+                .thenCompose(reply -> afterMerge(reply,caller.get(),entries,failures))
                 .thenApply(output -> describe(input,caller.get(),output));
+    }
+
+    protected CompletionStage<PreferencesOutput>
+    afterMerge(MergeUserValuesReply reply,Long userId,Map<String,Object> entries,List<String> failures)
+    {
+        if (!reply.isSuccess())
+        {
+            collectFailure(reply,failures);
+            return assembler.read(userId,failures);
+        }
+
+        return CompletableFuture.completedFuture(assembler.fromUser(reply.getMergedUser(),entries,failures));
     }
 
     protected void
