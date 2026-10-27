@@ -1,0 +1,37 @@
+{
+    "name": "granite.web.authenticationtest",
+    "version": "0.0.0",
+    "private": true,
+    "description": "",
+    "scripts": {
+        "clean": "del-cli -f .build",
+        "build-init": "yarn install && yarn upgrade --pattern \"granite|strata\"",
+        "test": "yarn run build-init && vitest run"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@mantine/core": "^7.17.0",
+        "@testing-library/dom": "^10.4.0",
+        "@testing-library/react": "^16.1.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "granite.frontendcontroller.client": "1.0.0-snapshot",
+        "granite.frontendcontroller.service": "1.0.0-snapshot",
+        "granite.web.authentication": "1.0.0-snapshot",
+        "jsdom": "^25.0.1",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-router-dom": "^7.0.0",
+        "strata.client.core": "0.0.0-snapshot",
+        "strata.foundation.core": "0.0.0-snapshot",
+        "strata.frontendcontroller.service": "0.0.0-snapshot",
+        "typescript": "~6.0.2",
+        "vitest": "^3.2.4"
+    },
+    "devDependencies": {
+        "del-cli": "^5.1.0"
+    }
+}

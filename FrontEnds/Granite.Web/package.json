@@ -30,7 +30,9 @@
         "start-application": "cd Applications/Granite.Web.AppHost && yarn run dev",
         "containerize-granite-web-apphost": "node docker-auth.js from && cd Applications/Granite.Web.AppHost && docker build -t ghcr.io/johnliebenau/granite/granite-web-apphost:latest .",
         "push-granite-web-apphost": "node docker-auth.js to && docker push ghcr.io/johnliebenau/granite/granite-web-apphost:latest",
-        "test-granite-web-authentication": "cd Components/Granite.Web.Authentication && yarn run dev-init && yarn run test",
+        "test-granite-web-authentication": "yarn run build-granite-web-authentication && cd Tests/Granite.Web.AuthenticationTest && yarn run test",
+        "test-granite-web-user": "yarn run build-granite-web-user && cd Tests/Granite.Web.UserTest && yarn run test",
+        "test-granite-web": "yarn run test-granite-web-authentication && yarn run test-granite-web-user",
         "test": "yarn run build"
     },
     "devDependencies": {

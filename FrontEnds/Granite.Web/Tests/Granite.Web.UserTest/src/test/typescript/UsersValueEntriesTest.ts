@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.User
+// Granite.Web.UserTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it } from "vitest";
 import { createEntry, entryMessages, isActionAllowed, nextMacrotask, removeOrphanEntries, toEntries, toValues, validateEntries }
-    from "../../main/typescript/EditableView/UsersValueEntries";
+    from "granite.web.user/EditableView";
 
 describe("UsersValueEntries", () =>
 {

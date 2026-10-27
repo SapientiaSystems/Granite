@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }                                                     from "vitest";
-import { FrontEndSessionService }                                                   from "../../main/typescript/Authentication/FrontEndSessionService";
+import { FrontEndSessionService }                                                   from "granite.web.authentication/Authentication";
 import { FakeFrontEnd, KEYS, logoutOutput, methodsOutput, redirectOutput,
          serviceError, sessionOutput }                                              from "./TestSupport";
 

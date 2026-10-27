@@ -31,6 +31,8 @@
         "build": "yarn run dev-init && yarn run build-microservices && yarn run build-frontends",
         "containerize-granite-web": "cd FrontEnds/Granite.Web && yarn run containerize-granite-web-apphost",
         "push-granite-web": "cd FrontEnds/Granite.Web && yarn run push-granite-web-apphost",
+        "test-granite-web": "cd FrontEnds/Granite.Web && yarn run test-granite-web",
+        "test-granite": "yarn run test-granite-web",
         "test": "yarn run build"
     },
     "devDependencies": {

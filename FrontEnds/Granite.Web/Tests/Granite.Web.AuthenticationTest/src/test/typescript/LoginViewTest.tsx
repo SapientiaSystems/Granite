@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }                                from "vitest";
@@ -7,9 +7,9 @@ import { screen }                                              from "@testing-li
 import userEvent                                               from "@testing-library/user-event";
 import { Route, Routes }                                       from "react-router-dom";
 import type { ReactElement }                                   from "react";
-import { useAuthentication }                                   from "../../main/typescript/Authentication/AuthenticationContext";
-import { RequireAuthentication }                               from "../../main/typescript/Authentication/RequireAuthentication";
-import { LoginView }                                           from "../../main/typescript/Login/LoginView";
+import { useAuthentication }                                   from "granite.web.authentication/Authentication";
+import { RequireAuthentication }                               from "granite.web.authentication/Authentication";
+import { LoginView }                                           from "granite.web.authentication/Login";
 import { authenticationFor, KEYS, scriptedFrontEnd, sessionOutput } from "./TestSupport";
 import { renderWithAuthentication }                            from "./RenderSupport";
 

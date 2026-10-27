@@ -26,3 +26,9 @@ An application (for example Poplar) reuses Granite by extending the entry config
 - `granite.session.okta.role-assignment`: `ON_CREATE` (default) or `EVERY_LOGIN`.
 - `granite.session.okta.unmapped-groups`: `DEFAULT_ROLE` (default) or `REFUSE`.
 - `granite.session.okta.authorities-source` is removed.
+
+## TypeScript tests
+
+- Layout mirrors Java: `<Group>/Tests/<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (for example `FrontEnds/Granite.Web/Tests/Granite.Web.AuthenticationTest`). The same convention applies to microservice TypeScript components when they get tests; none exist today.
+- A test project is private and never published. It depends on the component's published package (`1.0.0-snapshot` from the local Verdaccio) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source.
+- Root scripts: `yarn run test-granite-web` (web test projects) and `yarn run test-granite` (every TypeScript test project). Each publishes the component to the local Verdaccio first (the component's existing `publish-package`), then runs its test project.

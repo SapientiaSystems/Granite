@@ -6,7 +6,8 @@ React 19 and TypeScript single-page app, built as yarn components published to t
 
 ## Commands (from `FrontEnds/Granite.Web`, or the root `build-granite-web`)
 
-- `yarn run test-granite-web-authentication`: Authentication unit and component tests.
+- `yarn run test-granite-web`: all test projects; `test-granite-web-authentication` and `test-granite-web-user` run one. Each publishes its component to the local Verdaccio, then runs Vitest in `Tests/Granite.Web.<Component>Test`.
+- Test layout: `Tests/Granite.Web.<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (private projects, never published, importing subpaths such as `granite.web.authentication/Authentication`). Export from the component's `index.ts` whatever a test needs. Header name is the test project, for example `Granite.Web.AuthenticationTest`.
 - `yarn run build-granite-web-<component>` and `yarn run build`: type-check, bump the snapshot version in each component's `src/main/typescript/package.json`, and publish to the local Verdaccio only. `dist/**` under the AppHost is build output and is not committed.
 - `containerize-*` and `push-*` publish images: never run them without approval.
 

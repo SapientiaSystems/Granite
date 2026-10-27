@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { StrictMode }                                          from "react";
@@ -8,8 +8,8 @@ import { render, screen }                                      from "@testing-li
 import { MantineProvider }                                     from "@mantine/core";
 import { MemoryRouter, Route, Routes }                         from "react-router-dom";
 import type { ReactElement }                                   from "react";
-import { AuthenticationProvider }                              from "../../main/typescript/Authentication/AuthenticationProvider";
-import { LoginCallbackView }                                   from "../../main/typescript/Login/LoginCallbackView";
+import { AuthenticationProvider }                              from "granite.web.authentication/Authentication";
+import { LoginCallbackView }                                   from "granite.web.authentication/Login";
 import { authenticationFor, KEYS, scriptedFrontEnd, sessionOutput } from "./TestSupport";
 import type { FakeFrontEnd }                                   from "./TestSupport";
 

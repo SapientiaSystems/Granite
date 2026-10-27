@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { vi }                                                                   from "vitest";
@@ -12,11 +12,11 @@ import type { GetSessionOutputReply, GetSessionOutputRequest,
               GetUsersOutputReply, GetUsersOutputRequest,
               HandleUsersInputReply, HandleUsersInputRequest }                   from "granite.frontendcontroller.service/RequestReply";
 import type { FrontEndOutput }                                                  from "strata.frontendcontroller.service/RequestReply";
-import { AuthenticationManager }                                                from "../../main/typescript/Authentication/AuthenticationManager";
-import type { INavigator }                                                      from "../../main/typescript/Authentication/AuthenticationManager";
-import { FrontEndSessionService }                                               from "../../main/typescript/Authentication/FrontEndSessionService";
-import { createAuthentication }                                                 from "../../main/typescript/Authentication/createAuthentication";
-import type { IAuthentication }                                                 from "../../main/typescript/Authentication/createAuthentication";
+import { AuthenticationManager }                                                from "granite.web.authentication/Authentication";
+import type { INavigator }                                                      from "granite.web.authentication/Authentication";
+import { FrontEndSessionService }                                               from "granite.web.authentication/Authentication";
+import { createAuthentication }                                                 from "granite.web.authentication/Authentication";
+import type { IAuthentication }                                                 from "granite.web.authentication/Authentication";
 
 export interface IRecordedCall
 {

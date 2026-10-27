@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }                                              from "vitest";
 import { screen, waitFor }                                                   from "@testing-library/react";
 import userEvent                                                             from "@testing-library/user-event";
-import { LoginForm }                                                        from "../../main/typescript/Login/LoginForm";
+import { LoginForm }                                                        from "granite.web.authentication/Login";
 import { authenticationFor, FakeNavigator, KEYS, methodsOutput, redirectOutput,
          scriptedFrontEnd, sessionOutput }                                   from "./TestSupport";
 import { renderWithAuthentication }                                          from "./RenderSupport";

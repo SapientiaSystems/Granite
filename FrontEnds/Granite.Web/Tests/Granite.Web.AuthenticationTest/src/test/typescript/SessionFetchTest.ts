@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it, vi } from "vitest";
-import { SessionFetch }            from "../../main/typescript/Http/SessionFetch";
+import { SessionFetch }            from "granite.web.authentication/Http";
 
 function response(status: number): Response
 {

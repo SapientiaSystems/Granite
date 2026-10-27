@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { beforeEach, describe, expect, it, vi }                           from "vitest";
@@ -10,9 +10,9 @@ import { useState }                                                       from "
 import type { ReactElement }                                              from "react";
 import { GetOutputRequestBuilder }                                        from "strata.frontendcontroller.service/RequestReply";
 import { GraniteFrontEndControllerServiceClient }                           from "granite.frontendcontroller.client/RequestReply";
-import { useAuthentication }                                              from "../../main/typescript/Authentication/AuthenticationContext";
-import { RequireAuthentication }                                          from "../../main/typescript/Authentication/RequireAuthentication";
-import { LoginView }                                                      from "../../main/typescript/Login/LoginView";
+import { useAuthentication }                                              from "granite.web.authentication/Authentication";
+import { RequireAuthentication }                                          from "granite.web.authentication/Authentication";
+import { LoginView }                                                      from "granite.web.authentication/Login";
 import { authenticationFor, FakeNavigator, KEYS, methodsOutput, redirectOutput,
          scriptedFrontEnd, sessionOutput }                                from "./TestSupport";
 import type { FakeFrontEnd }                                              from "./TestSupport";

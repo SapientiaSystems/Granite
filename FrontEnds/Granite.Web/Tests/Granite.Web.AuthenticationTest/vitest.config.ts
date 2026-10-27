@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { defineConfig } from "vitest/config";
@@ -7,7 +7,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
     test: {
         environment: "jsdom",
-        include:     ["src/test/typescript/**/*.test.{ts,tsx}"],
+        include:     ["src/test/typescript/**/*Test.{ts,tsx}"],
         setupFiles:  ["src/test/typescript/setup.ts"],
     },
 });

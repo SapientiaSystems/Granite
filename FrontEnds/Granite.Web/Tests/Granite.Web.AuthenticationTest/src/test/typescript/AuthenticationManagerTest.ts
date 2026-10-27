@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }                                                    from "vitest";
-import { AuthenticationManager }                                                   from "../../main/typescript/Authentication/AuthenticationManager";
+import { AuthenticationManager }                                                   from "granite.web.authentication/Authentication";
 import { FakeNavigator, KEYS, logoutOutput, managerFor, redirectOutput,
          scriptedFrontEnd, serviceError, sessionOutput, flush }                    from "./TestSupport";
 

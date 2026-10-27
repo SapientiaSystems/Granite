@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it, vi } from "vitest";
-import { CsrfFetch }               from "../../main/typescript/Http/CsrfFetch";
+import { CsrfFetch }               from "granite.web.authentication/Http";
 
 function response(status: number): Response
 {

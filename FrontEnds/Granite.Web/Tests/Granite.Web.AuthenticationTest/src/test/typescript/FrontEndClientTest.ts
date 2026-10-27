@@ -1,12 +1,12 @@
 //////////////////////////////////////////////////////////////////////////////
-// Granite.Web.Authentication
+// Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it, vi }               from "vitest";
 import { GetOutputRequestBuilder }                from "strata.frontendcontroller.service/RequestReply";
 import { ServiceError }                           from "strata.client.core/Service";
 import { GraniteFrontEndControllerServiceClient }  from "granite.frontendcontroller.client/RequestReply";
-import { CsrfFetch }                              from "../../main/typescript/Http/CsrfFetch";
+import { CsrfFetch }                              from "granite.web.authentication/Http";
 
 function jsonResponse(status: number,body: unknown): Response
 {
