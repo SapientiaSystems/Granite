@@ -19,13 +19,13 @@ An application (for example Poplar) reuses Granite by extending the entry config
 - Role names are `ROLE_` plus UPPER_SNAKE (`ROLE_[A-Z0-9_]+`, enforced by `ApplicationRoles`). Stored authority sets are always closed under the role hierarchy (the expanded set is stored).
 - Renames, applied once at User startup by `AuthorityRenamer`: `ROLE_Admin` to `ROLE_ADMIN`, `ROLE_Auditor` to `ROLE_AUDITOR`, `ROLE_User` to `ROLE_USER` (the interim mixed-case names become uppercase).
 - Request authorization rules (which caller may reach which path) live only in the Gateway chain. Outside it, Session gates login (default: the user must hold at least one catalog role; `granite.session.login.required-authorities` overrides with an explicit list) and User rejects stored roles outside the catalog.
-- Gateway core rules (users readers, Granite admin-only paths, application hook, `/**` → `ROLE_ADMIN`) are always registered; `granite.gateway.authorization.role-rules.enabled` only makes the Granite application grant `ROLE_AUDITOR` reader access.
+- Gateway core rules (Preferences operations `authenticated()` for any signed-in caller, users readers, Granite admin-only paths, application hook, `/**` → `ROLE_ADMIN`) are always registered; `granite.gateway.authorization.role-rules.enabled` only makes the Granite application grant `ROLE_AUDITOR` reader access.
 
 ### Preferences
 
 - Preferences are stored per user under `values["preferences.<key>"]` and always act on the caller's own user. Granite declares `granite.theme` (`light|dark`, default `light`). Value keys prefixed `preferences.` or `granite.` are reserved: admin create/update never changes them and the Users screen shows them read-only.
 - Server side: an application overrides `preferenceDefinitions()` on its FrontEndController configuration, calls `super.preferenceDefinitions()` and adds `PreferenceDefinition` entries (STRING, BOOLEAN, NUMBER or ENUM) with its own namespaced keys, for example `poplar.defaultRegion`. Undeclared keys or wrong types are rejected on save.
-- Web side: write a section component that reads and saves with `usePreference("poplar.defaultRegion")` and pass it as a child of `<PreferencesView>`. Saving is per change. `PreferencesProvider` (Granite.Web.Account) must be mounted inside `AuthenticationProvider`.
+- Web side: write a section component that reads and saves with `usePreference("poplar.defaultRegion")` and pass it as a child of `<PreferencesView>`. Saving is per change. `PreferencesProvider` (Granite.Web.Account) needs `MantineProvider` (it drives the colour scheme) and `AuthenticationProvider` above it.
 
 ### Okta properties (Session)
 

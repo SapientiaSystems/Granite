@@ -29,7 +29,7 @@
 1. A caller sends `handlePreferencesInput` with another user's `userId` → only the caller's own values change (Task 3 test `ignoresRequestUserId`).
 2. A save of `granite.theme=purple` or of an undeclared key → failure reply, nothing stored (Task 3 tests).
 3. An admin saves a user in the Users screen with edited/removed `preferences.*` / `granite.*` keys → stored reserved keys unchanged (Task 3 test `adminSavePreservesReservedKeys`).
-4. Two concurrent merges of different keys → both kept (Task 1 test `mergeKeepsOtherKeys`).
+4. Two concurrent merges on the same user conflict through optimistic locking: the second save fails and the UI reverts with the error (no lost update). Merges of different keys that do not overlap in time are all kept (Task 1 test `mergeKeepsOtherKeys`).
 5. `localStorage` throws (private mode) → theme still loads from the server and the page renders (Task 5 test `themeWorksWithoutLocalStorage`).
 
 ---
