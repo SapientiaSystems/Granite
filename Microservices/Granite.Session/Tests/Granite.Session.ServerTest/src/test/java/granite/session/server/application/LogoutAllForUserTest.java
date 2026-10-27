@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.session.server.platform.MockSessionEventSender;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
@@ -74,7 +75,8 @@ class LogoutAllForUserTest
                 new ModelMapper().registerModule(new MappingModule()),
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
-                clock);
+                clock,
+                GraniteApplicationRoles.create());
     }
 
     @Test

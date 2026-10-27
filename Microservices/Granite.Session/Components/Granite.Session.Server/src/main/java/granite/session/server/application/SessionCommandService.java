@@ -5,7 +5,6 @@
 package granite.session.server.application;
 
 import granite.foundation.core.security.ApplicationRoles;
-import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.session.server.domain.ISessionEvent;
 import granite.session.server.domain.ISessionEventObserver;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
@@ -107,41 +106,6 @@ class SessionCommandService
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
     private static final String   OKTA_PROVIDER       = "okta";
-
-    public
-    SessionCommandService(
-        ISessionRepository              repository,
-        IOktaLoginTransactionRepository transactionRepository,
-        IJwtTokenService                jwtTokenService,
-        IRefreshTokenService            refreshTokenService,
-        IUserCommandServiceClient       userCommandServiceClient,
-        IUserQueryServiceClient         userQueryServiceClient,
-        IOktaClient                     oktaClient,
-        OktaSettings                    oktaSettings,
-        ILoginGate                      loginGate,
-        ISessionEventSender             sender,
-        ModelMapper                     mapper,
-        Duration                        maxLifetime,
-        Duration                        renewalMargin,
-        Clock                           clock)
-    {
-        this(
-            repository,
-            transactionRepository,
-            jwtTokenService,
-            refreshTokenService,
-            userCommandServiceClient,
-            userQueryServiceClient,
-            oktaClient,
-            oktaSettings,
-            loginGate,
-            sender,
-            mapper,
-            maxLifetime,
-            renewalMargin,
-            clock,
-            GraniteApplicationRoles.create());
-    }
 
     @Inject
     public
@@ -1234,7 +1198,7 @@ class SessionCommandService
 
         session.attach(this);
         session
-            .setAuthorities(authoritiesFor(session,user))
+            .setAuthorities(storedAuthorities(user))
             .setAccessToken(jwtTokenService.mint(session))
             .notifyUpdated();
         return context.setRenewed(true);
@@ -1642,12 +1606,6 @@ class SessionCommandService
 
         logger.info("<completeOktaLogin> user creation failed; looking the identity up again");
         return findUserByExternalIdentity(OKTA_PROVIDER,identity.getSubject());
-    }
-
-    private Set<String>
-    authoritiesFor(Session session,UserData user)
-    {
-        return storedAuthorities(user);
     }
 
     private Set<String>

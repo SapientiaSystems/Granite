@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.Session;
@@ -90,7 +91,8 @@ class LoginLifecycleTest
                 new ModelMapper().registerModule(new MappingModule()),
                 MAX_LIFETIME,
                 Duration.ofMinutes(2),
-                Clock.fixed(NOW,ZoneOffset.UTC));
+                Clock.fixed(NOW,ZoneOffset.UTC),
+                GraniteApplicationRoles.create());
 
         stubSaveAssignsSessionId(500L);
         stubAuthenticate();

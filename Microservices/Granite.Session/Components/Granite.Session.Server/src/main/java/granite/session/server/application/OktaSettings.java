@@ -91,6 +91,7 @@ class OktaSettings
         unmappedGroups = value != null ? value : OktaUnmappedGroups.DEFAULT_ROLE;
         return this;
     }
+
     public OktaSettings
     setGroupMapping(Map<String,String> value)
     {

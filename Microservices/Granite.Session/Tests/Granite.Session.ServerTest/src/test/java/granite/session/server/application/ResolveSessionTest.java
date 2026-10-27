@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -96,7 +97,8 @@ class ResolveSessionTest
                 new ModelMapper().registerModule(new MappingModule()),
                 MAX_LIFETIME,
                 RENEWAL_MARGIN,
-                Clock.fixed(NOW,ZoneOffset.UTC));
+                Clock.fixed(NOW,ZoneOffset.UTC),
+                GraniteApplicationRoles.create());
 
         Mockito
             .when(repository.save(Mockito.any(Session.class)))

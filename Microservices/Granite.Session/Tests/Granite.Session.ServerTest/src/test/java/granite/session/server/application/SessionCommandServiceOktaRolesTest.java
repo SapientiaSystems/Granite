@@ -6,6 +6,7 @@ package granite.session.server.application;
 
 import granite.foundation.core.security.ApplicationRoles;
 import granite.foundation.core.security.GraniteApplicationRoles;
+import granite.foundation.core.security.RoleDefinition;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.server.domain.OktaLoginTransaction;
@@ -59,6 +60,7 @@ class SessionCommandServiceOktaRolesTest
     private static final String  SUB            = "00u1okta";
     private static final Long    USER_ID        = 42L;
     private static final Instant NOW            = Instant.parse("2026-10-24T12:00:00Z");
+    private static final String  APPROVER       = "ROLE_PromotionsApprover";
 
     private FakeOkta                        okta;
     private OktaSettings                    settings;
@@ -75,7 +77,13 @@ class SessionCommandServiceOktaRolesTest
     setUp()
     {
         okta          = new FakeOkta();
-        roles         = GraniteApplicationRoles.create();
+        roles         =
+            new ApplicationRoles(
+                List.of(
+                    new RoleDefinition(GraniteApplicationRoles.AUDITOR,"Auditor",Set.of()),
+                    new RoleDefinition(GraniteApplicationRoles.USER,"User",Set.of()),
+                    new RoleDefinition(APPROVER,"Approver",Set.of(GraniteApplicationRoles.AUDITOR,GraniteApplicationRoles.USER))),
+                GraniteApplicationRoles.USER);
         settings      = okta.settings().setGroupMapping(Map.of("Granite Admins",ApplicationRoles.ADMIN));
         repository    = Mockito.mock(ISessionRepository.class);
         transactions  = Mockito.mock(IOktaLoginTransactionRepository.class);
@@ -144,7 +152,7 @@ class SessionCommandServiceOktaRolesTest
     public void
     everyLoginWritesBackChangedRoles()
     {
-        settings.setRoleAssignment(OktaRoleAssignment.EVERY_LOGIN);
+        settings.setRoleAssignment(OktaRoleAssignment.EVERY_LOGIN).setGroupMapping(Map.of("Granite Admins",APPROVER));
         stubExistingUser(Set.of(GraniteApplicationRoles.USER));
 
         CompleteOktaLoginReply reply = complete();
@@ -155,9 +163,9 @@ class SessionCommandServiceOktaRolesTest
         Mockito.verify(userCommands,Mockito.times(1)).updateUser(captor.capture());
         assertEquals(USER_ID,captor.getValue().getUserToUpdate().getUserId());
         assertEquals(
-            Optional.of(Set.of(ApplicationRoles.ADMIN)),
+            Optional.of(Set.of(APPROVER,GraniteApplicationRoles.AUDITOR,GraniteApplicationRoles.USER)),
             captor.getValue().getUserToUpdate().getAuthorities());
-        assertEquals(Set.of(ApplicationRoles.ADMIN),reply.getSessionData().getAuthorities());
+        assertEquals(Set.of(APPROVER,GraniteApplicationRoles.AUDITOR,GraniteApplicationRoles.USER),reply.getSessionData().getAuthorities());
     }
 
     @Test
@@ -174,6 +182,23 @@ class SessionCommandServiceOktaRolesTest
         assertEquals(Set.of(ApplicationRoles.ADMIN),reply.getSessionData().getAuthorities());
     }
 
+    @Test
+    public void
+    everyLoginRefuseRejectsUnmappedExistingUser()
+    {
+        settings
+            .setRoleAssignment(OktaRoleAssignment.EVERY_LOGIN)
+            .setUnmappedGroups(OktaUnmappedGroups.REFUSE)
+            .setGroupMapping(Map.of());
+        stubExistingUser(Set.of(GraniteApplicationRoles.USER));
+
+        CompleteOktaLoginReply reply = complete();
+
+        assertFalse(reply.isSuccess());
+        assertEquals("invalid credentials",reply.getFailureMessage());
+        Mockito.verify(userCommands,Mockito.never()).updateUser(Mockito.any(UpdateUserRequest.class));
+        assertTrue(savedSessions.isEmpty());
+    }
     @Test
     public void
     everyLoginWriteFailureRefuses()

@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.session.server.platform.MockSessionEventSender;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
@@ -85,7 +86,8 @@ class RefreshTest
                 new ModelMapper().registerModule(new MappingModule()),
                 MAX_LIFETIME,
                 Duration.ofMinutes(2),
-                clock);
+                clock,
+                GraniteApplicationRoles.create());
 
         Mockito
             .when(repository.save(Mockito.any(Session.class)))
