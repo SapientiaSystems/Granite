@@ -11,7 +11,7 @@ export function hasAuthority(state: IAuthenticationState,authority: string): boo
 
 export function canEdit(state: IAuthenticationState): boolean
 {
-    return hasAuthority(state,"ROLE_ADMIN");
+    return hasAuthority(state,"ROLE_Admin");
 }
 
 //////////////////////////////////////////////////////////////////////////////

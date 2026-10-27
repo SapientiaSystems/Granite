@@ -57,8 +57,8 @@ function startRig(statuses: Array<number>): IRig
     const session   = { alive: true };
     const navigator = new FakeNavigator();
     const frontEnd  = scriptedFrontEnd()
-        .respond(KEYS.current,() => session.alive ? sessionOutput(true,"alice",["ROLE_USER"]) : sessionOutput(false))
-        .respond(KEYS.login,(payload) => payload.password === "secret" ? sessionOutput(true,"alice",["ROLE_USER"]) : sessionOutput(false))
+        .respond(KEYS.current,() => session.alive ? sessionOutput(true,"alice",["ROLE_User"]) : sessionOutput(false))
+        .respond(KEYS.login,(payload) => payload.password === "secret" ? sessionOutput(true,"alice",["ROLE_User"]) : sessionOutput(false))
         .respond(KEYS.methods,() => methodsOutput(true,true))
         .respond(KEYS.start,() => redirectOutput("https://okta.example/authorize"));
     const queue     = [...statuses];

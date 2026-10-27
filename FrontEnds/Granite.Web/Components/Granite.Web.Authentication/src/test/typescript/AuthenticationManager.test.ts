@@ -22,12 +22,12 @@ describe("AuthenticationManager",() =>
 
     it("restores an authenticated session",async () =>
     {
-        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_ADMIN"]));
+        const frontEnd = scriptedFrontEnd().respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_Admin"]));
         const manager  = managerFor(frontEnd);
 
         await manager.restore();
 
-        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_ADMIN"] });
+        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_Admin"] });
     });
 
     it("treats a 401 from SessionView as anonymous",async () =>
@@ -55,7 +55,7 @@ describe("AuthenticationManager",() =>
 
         await manager.login("alice","secret");
 
-        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_USER"] });
+        expect(manager.getState()).toMatchObject({ status: "authenticated", userName: "alice", authorities: ["ROLE_User"] });
         expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userName: "alice", password: "secret" });
     });
 
@@ -90,7 +90,7 @@ describe("AuthenticationManager",() =>
 
     it("completes the Okta callback and returns the local path",async () =>
     {
-        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_ADMIN"],"/users?tab=1"));
+        const frontEnd = scriptedFrontEnd().respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_Admin"],"/users?tab=1"));
         const manager  = managerFor(frontEnd);
 
         expect(await manager.completeOktaLogin("c0de","st8")).toBe("/users?tab=1");
@@ -172,7 +172,7 @@ describe("AuthenticationManager.handleUnauthorized",() =>
         const frontEnd = scriptedFrontEnd();
         const manager  = await signedIn(frontEnd);
 
-        frontEnd.respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_USER"]));
+        frontEnd.respond(KEYS.current,() => sessionOutput(true,"alice",["ROLE_User"]));
 
         expect(await manager.handleUnauthorized()).toBe(true);
         expect(manager.getState().status).toBe("authenticated");

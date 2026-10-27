@@ -70,7 +70,7 @@ describe("browser storage",() =>
     {
         const frontEnd = scriptedFrontEnd()
             .respond(KEYS.start,() => redirectOutput("https://okta.example/a"))
-            .respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_USER"],"/users"));
+            .respond(KEYS.complete,() => sessionOutput(true,"okta.user",["ROLE_User"],"/users"));
         const manager  = managerFor(frontEnd);
 
         await manager.startOktaLogin("/users");
