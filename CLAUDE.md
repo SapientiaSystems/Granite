@@ -21,6 +21,12 @@ An application (for example Poplar) reuses Granite by extending the entry config
 - Request authorization rules (which caller may reach which path) live only in the Gateway chain. Outside it, Session gates login (default: the user must hold at least one catalog role; `granite.session.login.required-authorities` overrides with an explicit list) and User rejects stored roles outside the catalog.
 - Gateway core rules (users readers, Granite admin-only paths, application hook, `/**` → `ROLE_ADMIN`) are always registered; `granite.gateway.authorization.role-rules.enabled` only makes the Granite application grant `ROLE_AUDITOR` reader access.
 
+### Preferences
+
+- Preferences are stored per user under `values["preferences.<key>"]` and always act on the caller's own user. Granite declares `granite.theme` (`light|dark`, default `light`). Value keys prefixed `preferences.` or `granite.` are reserved: admin create/update never changes them and the Users screen shows them read-only.
+- Server side: an application overrides `preferenceDefinitions()` on its FrontEndController configuration, calls `super.preferenceDefinitions()` and adds `PreferenceDefinition` entries (STRING, BOOLEAN, NUMBER or ENUM) with its own namespaced keys, for example `poplar.defaultRegion`. Undeclared keys or wrong types are rejected on save.
+- Web side: write a section component that reads and saves with `usePreference("poplar.defaultRegion")` and pass it as a child of `<PreferencesView>`. Saving is per change. `PreferencesProvider` (Granite.Web.Account) must be mounted inside `AuthenticationProvider`.
+
 ### Okta properties (Session)
 
 - `granite.session.okta.role-assignment`: `ON_CREATE` (default) or `EVERY_LOGIN`.

@@ -137,7 +137,7 @@ TS: `PoplarFrontEndControllerServiceClient extends GraniteFrontEndControllerServ
 
 ## Phasing (agreed order)
 1. Backend extension points: Gateway, FEC, User, Session; role catalog, hierarchy, renames + data conversion, default roles, Okta modes.
-2. Preferences end to end (User merge command, FEC ops, Gateway rule, web hook/provider/view).
+2. Preferences end to end (User merge command, FEC ops, Gateway rule, web hook/provider/view). **Implemented 2026-10-27** on `feature/granite-preferences`. Decisions made during implementation: saving is per change (no Save button); reserved value keys (`preferences.`, `granite.`) are shown read-only in the Users screen and preserved server-side on admin create/update; the theme is server-backed with the last value cached in `localStorage` (`granite.theme`) to avoid a flash and for the login page; BOOLEAN preferences are stored as text and normalised on read.
 3. UI packaging (reusable Users view, role pick list, user menu, docs).
 4. (Out of this branch) Poplar adoption.
 
