@@ -2,11 +2,11 @@
 // Granite.Web.UserTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it } from "vitest";
-import type { UserData } from "granite.user.service/RequestReply";
-import { computeChanges, displayValue, findDuplicateKeys, isRefreshFailure, mergePending, normalizeAuthorities,
-         toRows, validateRows }                   from "granite.web.user/EditableView";
-import type { IUserRow }                          from "granite.web.user/EditableView";
+import { describe, expect, it }                       from "vitest";
+import type { UserData }                              from "granite.user.service/RequestReply";
+import { computeChanges, displayValue, findDuplicateKeys, isRefreshFailure, mergePending,
+         normalizeAuthorities, toRows, validateRows } from "granite.web.user/EditableView";
+import type { IUserRow }                              from "granite.web.user/EditableView";
 
 function user(userId: number, userName: string, authorities: Array<string>, values?: Record<string, unknown>): UserData
 {

@@ -2,21 +2,20 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { beforeEach, describe, expect, it, vi }                           from "vitest";
-import { screen, waitFor, within }                                                from "@testing-library/react";
-import userEvent                                                          from "@testing-library/user-event";
-import { Route, Routes }                                                  from "react-router-dom";
-import { useState }                                                       from "react";
-import type { ReactElement }                                              from "react";
-import { GetOutputRequestBuilder }                                        from "strata.frontendcontroller.service/RequestReply";
-import { GraniteFrontEndControllerServiceClient }                           from "granite.frontendcontroller.client/RequestReply";
-import { useAuthentication }                                              from "granite.web.authentication/Authentication";
-import { RequireAuthentication }                                          from "granite.web.authentication/Authentication";
-import { LoginView }                                                      from "granite.web.authentication/Login";
-import { authenticationFor, FakeNavigator, KEYS, methodsOutput, redirectOutput,
-         scriptedFrontEnd, sessionOutput }                                from "./TestSupport";
-import type { FakeFrontEnd }                                              from "./TestSupport";
-import { renderWithAuthentication }                                       from "./RenderSupport";
+import { beforeEach, describe, expect, it, vi }     from "vitest";
+import { screen, waitFor, within }                  from "@testing-library/react";
+import userEvent                                    from "@testing-library/user-event";
+import { Route, Routes }                            from "react-router-dom";
+import { useState }                                 from "react";
+import type { ReactElement }                        from "react";
+import { GetOutputRequestBuilder }                  from "strata.frontendcontroller.service/RequestReply";
+import { GraniteFrontEndControllerServiceClient }   from "granite.frontendcontroller.client/RequestReply";
+import { useAuthentication, RequireAuthentication } from "granite.web.authentication/Authentication";
+import { LoginView }                                from "granite.web.authentication/Login";
+import { authenticationFor, FakeNavigator, KEYS, methodsOutput, redirectOutput, scriptedFrontEnd,
+         sessionOutput }                            from "./TestSupport";
+import type { FakeFrontEnd }                        from "./TestSupport";
+import { renderWithAuthentication }                 from "./RenderSupport";
 
 function jsonResponse(status: number,body: unknown = {}): Response
 {

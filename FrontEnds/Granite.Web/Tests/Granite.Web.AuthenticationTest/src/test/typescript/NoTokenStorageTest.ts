@@ -2,7 +2,7 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it }                                         from "vitest";
 import { KEYS, managerFor, redirectOutput, scriptedFrontEnd, sessionOutput, flush } from "./TestSupport";
 
 class MemoryStorage

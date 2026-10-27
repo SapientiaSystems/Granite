@@ -2,13 +2,13 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                                              from "vitest";
-import { screen, waitFor }                                                   from "@testing-library/react";
-import userEvent                                                             from "@testing-library/user-event";
-import { LoginForm }                                                        from "granite.web.authentication/Login";
-import { authenticationFor, FakeNavigator, KEYS, methodsOutput, redirectOutput,
-         scriptedFrontEnd, sessionOutput }                                   from "./TestSupport";
-import { renderWithAuthentication }                                          from "./RenderSupport";
+import { describe, expect, it }     from "vitest";
+import { screen, waitFor }          from "@testing-library/react";
+import userEvent                    from "@testing-library/user-event";
+import { LoginForm }                from "granite.web.authentication/Login";
+import { authenticationFor, FakeNavigator, KEYS, methodsOutput, redirectOutput, scriptedFrontEnd,
+         sessionOutput }            from "./TestSupport";
+import { renderWithAuthentication } from "./RenderSupport";
 
 function renderForm(passwordEnabled: boolean,oktaEnabled: boolean,navigator = new FakeNavigator())
 {

@@ -5,7 +5,7 @@
 import { describe, expect, it, vi }               from "vitest";
 import { GetOutputRequestBuilder }                from "strata.frontendcontroller.service/RequestReply";
 import { ServiceError }                           from "strata.client.core/Service";
-import { GraniteFrontEndControllerServiceClient }  from "granite.frontendcontroller.client/RequestReply";
+import { GraniteFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
 import { CsrfFetch }                              from "granite.web.authentication/Http";
 
 function jsonResponse(status: number,body: unknown): Response

@@ -2,9 +2,9 @@
 // Granite.Web.UserTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it } from "vitest";
-import { createEntry, entryMessages, isActionAllowed, nextMacrotask, removeOrphanEntries, toEntries, toValues, validateEntries }
-    from "granite.web.user/EditableView";
+import { describe, expect, it }      from "vitest";
+import { createEntry, entryMessages, isActionAllowed, nextMacrotask, removeOrphanEntries, toEntries,
+         toValues, validateEntries } from "granite.web.user/EditableView";
 
 describe("UsersValueEntries", () =>
 {

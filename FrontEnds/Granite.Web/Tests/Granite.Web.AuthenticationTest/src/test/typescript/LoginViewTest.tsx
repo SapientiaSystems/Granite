@@ -2,16 +2,15 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                                from "vitest";
-import { screen }                                              from "@testing-library/react";
-import userEvent                                               from "@testing-library/user-event";
-import { Route, Routes }                                       from "react-router-dom";
-import type { ReactElement }                                   from "react";
-import { useAuthentication }                                   from "granite.web.authentication/Authentication";
-import { RequireAuthentication }                               from "granite.web.authentication/Authentication";
-import { LoginView }                                           from "granite.web.authentication/Login";
+import { describe, expect, it }                                     from "vitest";
+import { screen }                                                   from "@testing-library/react";
+import userEvent                                                    from "@testing-library/user-event";
+import { Route, Routes }                                            from "react-router-dom";
+import type { ReactElement }                                        from "react";
+import { useAuthentication, RequireAuthentication }                 from "granite.web.authentication/Authentication";
+import { LoginView }                                                from "granite.web.authentication/Login";
 import { authenticationFor, KEYS, scriptedFrontEnd, sessionOutput } from "./TestSupport";
-import { renderWithAuthentication }                            from "./RenderSupport";
+import { renderWithAuthentication }                                 from "./RenderSupport";
 
 function WhoAmI(): ReactElement
 {
@@ -35,7 +34,7 @@ describe("RequireAuthentication and LoginView",() =>
         expect(await screen.findByRole("heading",{ name: "Log in" })).toBeTruthy();
     });
 
-    it("signs in and returns to the protected route",async () =>
+    it("logs in and returns to the protected route",async () =>
     {
         const frontEnd = scriptedFrontEnd();
 

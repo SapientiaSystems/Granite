@@ -2,10 +2,10 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                                                     from "vitest";
-import { FrontEndSessionService }                                                   from "granite.web.authentication/Authentication";
-import { FakeFrontEnd, KEYS, logoutOutput, methodsOutput, redirectOutput,
-         serviceError, sessionOutput }                                              from "./TestSupport";
+import { describe, expect, it }   from "vitest";
+import { FrontEndSessionService } from "granite.web.authentication/Authentication";
+import { FakeFrontEnd, KEYS, logoutOutput, methodsOutput, redirectOutput, serviceError,
+         sessionOutput }          from "./TestSupport";
 
 function serviceOver(frontEnd: FakeFrontEnd): FrontEndSessionService
 {

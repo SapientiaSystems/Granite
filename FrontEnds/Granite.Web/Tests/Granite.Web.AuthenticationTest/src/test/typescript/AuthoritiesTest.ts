@@ -2,10 +2,9 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                   from "vitest";
-import { canEdit, hasAuthority }                  from "granite.web.authentication/Authentication";
-import { ANONYMOUS }                              from "granite.web.authentication/Authentication";
-import type { IAuthenticationState }              from "granite.web.authentication/Authentication";
+import { describe, expect, it }             from "vitest";
+import { canEdit, hasAuthority, ANONYMOUS } from "granite.web.authentication/Authentication";
+import type { IAuthenticationState }        from "granite.web.authentication/Authentication";
 
 const AUTHENTICATED_ADMIN: IAuthenticationState = {
     status:      "authenticated",

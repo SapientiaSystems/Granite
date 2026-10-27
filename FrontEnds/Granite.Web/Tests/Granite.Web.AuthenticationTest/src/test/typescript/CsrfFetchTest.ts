@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it, vi } from "vitest";
-import { CsrfFetch }               from "granite.web.authentication/Http";
+import { CsrfFetch }                from "granite.web.authentication/Http";
 
 function response(status: number): Response
 {

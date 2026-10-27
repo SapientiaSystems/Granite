@@ -2,16 +2,16 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { StrictMode }                                          from "react";
-import { describe, expect, it }                                from "vitest";
-import { render, screen }                                      from "@testing-library/react";
-import { MantineProvider }                                     from "@mantine/core";
-import { MemoryRouter, Route, Routes }                         from "react-router-dom";
-import type { ReactElement }                                   from "react";
-import { AuthenticationProvider }                              from "granite.web.authentication/Authentication";
-import { LoginCallbackView }                                   from "granite.web.authentication/Login";
+import { StrictMode }                                               from "react";
+import type { ReactElement }                                        from "react";
+import { describe, expect, it }                                     from "vitest";
+import { render, screen }                                           from "@testing-library/react";
+import { MantineProvider }                                          from "@mantine/core";
+import { MemoryRouter, Route, Routes }                              from "react-router-dom";
+import { AuthenticationProvider }                                   from "granite.web.authentication/Authentication";
+import { LoginCallbackView }                                        from "granite.web.authentication/Login";
 import { authenticationFor, KEYS, scriptedFrontEnd, sessionOutput } from "./TestSupport";
-import type { FakeFrontEnd }                                   from "./TestSupport";
+import type { FakeFrontEnd }                                        from "./TestSupport";
 
 const routes: ReactElement =
     <Routes>

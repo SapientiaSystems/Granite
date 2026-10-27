@@ -2,21 +2,17 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { vi }                                                                   from "vitest";
-import { CompletableObservable }                                                from "strata.foundation.core/Concurrent";
-import type { ICompletionStage }                                                from "strata.foundation.core/Concurrent";
-import { ServiceError, StandardResponse }                                       from "strata.client.core/Service";
-import type { IGraniteFrontEndControllerServiceClient }                         from "granite.frontendcontroller.client/RequestReply";
-import type { GetSessionOutputReply, GetSessionOutputRequest,
-              HandleSessionInputReply, HandleSessionInputRequest,
-              GetUsersOutputReply, GetUsersOutputRequest,
-              HandleUsersInputReply, HandleUsersInputRequest }                   from "granite.frontendcontroller.service/RequestReply";
-import type { FrontEndOutput }                                                  from "strata.frontendcontroller.service/RequestReply";
-import { AuthenticationManager }                                                from "granite.web.authentication/Authentication";
-import type { INavigator }                                                      from "granite.web.authentication/Authentication";
-import { FrontEndSessionService }                                               from "granite.web.authentication/Authentication";
-import { createAuthentication }                                                 from "granite.web.authentication/Authentication";
-import type { IAuthentication }                                                 from "granite.web.authentication/Authentication";
+import { vi }                                                                  from "vitest";
+import { CompletableObservable }                                               from "strata.foundation.core/Concurrent";
+import type { ICompletionStage }                                               from "strata.foundation.core/Concurrent";
+import { ServiceError, StandardResponse }                                      from "strata.client.core/Service";
+import type { IGraniteFrontEndControllerServiceClient }                        from "granite.frontendcontroller.client/RequestReply";
+import type { GetSessionOutputReply, GetSessionOutputRequest, HandleSessionInputReply,
+              HandleSessionInputRequest, GetUsersOutputReply, GetUsersOutputRequest,
+              HandleUsersInputReply, HandleUsersInputRequest }                 from "granite.frontendcontroller.service/RequestReply";
+import type { FrontEndOutput }                                                 from "strata.frontendcontroller.service/RequestReply";
+import { AuthenticationManager, FrontEndSessionService, createAuthentication } from "granite.web.authentication/Authentication";
+import type { INavigator, IAuthentication }                                    from "granite.web.authentication/Authentication";
 
 export interface IRecordedCall
 {

@@ -2,10 +2,10 @@
 // Granite.Web.AuthenticationTest
 //////////////////////////////////////////////////////////////////////////////
 
-import { describe, expect, it }                                                    from "vitest";
-import { AuthenticationManager }                                                   from "granite.web.authentication/Authentication";
-import { FakeNavigator, KEYS, logoutOutput, managerFor, redirectOutput,
-         scriptedFrontEnd, serviceError, sessionOutput, flush }                    from "./TestSupport";
+import { describe, expect, it }               from "vitest";
+import { AuthenticationManager }              from "granite.web.authentication/Authentication";
+import { FakeNavigator, KEYS, logoutOutput, managerFor, redirectOutput, scriptedFrontEnd,
+         serviceError, sessionOutput, flush } from "./TestSupport";
 
 describe("AuthenticationManager",() =>
 {
@@ -48,7 +48,7 @@ describe("AuthenticationManager",() =>
         expect(manager.getState()).toMatchObject({ status: "anonymous", error: "offline" });
     });
 
-    it("signs in with a password",async () =>
+    it("logs in with a password",async () =>
     {
         const frontEnd = scriptedFrontEnd();
         const manager  = managerFor(frontEnd);
@@ -219,7 +219,7 @@ describe("AuthenticationManager.handleUnauthorized",() =>
         expect(frontEnd.callsFor(KEYS.current).length - before).toBe(1);
     });
 
-    it("resolves false and signs out when the prompt is cancelled",async () =>
+    it("resolves false and logs out when the prompt is cancelled",async () =>
     {
         const manager = await loggedIn();
         const result  = manager.handleUnauthorized();
