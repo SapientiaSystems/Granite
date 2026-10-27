@@ -7,7 +7,7 @@ package granite.user.server.configuration;
 import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.application.ApplicationConfiguration;
 import granite.user.server.application.LoginLockoutPolicy;
@@ -88,7 +88,7 @@ class AbstractGraniteUserServerConfiguration
 
     @Bean
     @Scope("singleton")
-    public ApplicationRoles
+    public ApplicationRolesManager
     applicationRoles()
     {
         return GraniteApplicationRoles.create();
@@ -97,7 +97,7 @@ class AbstractGraniteUserServerConfiguration
     @Bean
     @Scope("singleton")
     public InitializingBean
-    applicationRolesStartupLog(ApplicationRoles roles)
+    applicationRolesStartupLog(ApplicationRolesManager roles)
     {
         return
             () ->

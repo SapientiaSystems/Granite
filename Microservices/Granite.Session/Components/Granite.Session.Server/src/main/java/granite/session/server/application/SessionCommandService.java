@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.session.server.domain.ISessionEvent;
 import granite.session.server.domain.ISessionEventObserver;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
@@ -97,7 +97,7 @@ class SessionCommandService
     private final IOktaClient                     oktaClient;
     private final OktaSettings                    oktaSettings;
     private final OktaRoles                       oktaRoles;
-    private final ApplicationRoles                roles;
+    private final ApplicationRolesManager roles;
     private final ILoginGate                      loginGate;
     private final ISessionEventSender             sender;
     private final ModelMapper                     mapper;
@@ -130,7 +130,7 @@ class SessionCommandService
         Duration                        maxLifetime,
         Duration                        renewalMargin,
         Clock                           clock,
-        ApplicationRoles                roles)
+        ApplicationRolesManager roles)
     {
         this.repository               = repository;
         this.transactionRepository    = transactionRepository;

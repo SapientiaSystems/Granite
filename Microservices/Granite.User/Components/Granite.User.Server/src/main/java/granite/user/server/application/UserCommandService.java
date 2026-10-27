@@ -4,7 +4,7 @@
 
 package granite.user.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.user.server.domain.IUserEvent;
 import granite.user.server.domain.IUserEventObserver;
 import granite.user.server.domain.IUserRepository;
@@ -41,7 +41,7 @@ class UserCommandService
     private final ModelMapper        mapper;
     private final PasswordEncoder    encoder;
     private final LoginLockoutPolicy lockoutPolicy;
-    private final ApplicationRoles   roles;
+    private final ApplicationRolesManager roles;
     private final Logger             logger;
 
     @Inject
@@ -51,7 +51,7 @@ class UserCommandService
         ModelMapper        m,
         PasswordEncoder    e,
         LoginLockoutPolicy p,
-        ApplicationRoles   a)
+        ApplicationRolesManager a)
     {
         repository    = r;
         sender        = s;

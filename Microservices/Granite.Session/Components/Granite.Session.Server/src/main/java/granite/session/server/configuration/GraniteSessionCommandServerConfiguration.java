@@ -4,7 +4,7 @@
 
 package granite.session.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
@@ -204,7 +204,7 @@ class GraniteSessionCommandServerConfiguration
     @Bean
     @Scope("singleton")
     public ILoginGate
-    loginGate(Environment environment,ApplicationRoles roles)
+    loginGate(Environment environment,ApplicationRolesManager roles)
     {
         List<String> required =
             Binder
@@ -222,7 +222,7 @@ class GraniteSessionCommandServerConfiguration
     @Bean
     @Scope("singleton")
     public RequiredAuthoritiesCheck
-    requiredAuthoritiesCheck(Environment environment,ApplicationRoles roles)
+    requiredAuthoritiesCheck(Environment environment,ApplicationRolesManager roles)
     {
         List<String> required =
             Binder
@@ -236,7 +236,7 @@ class GraniteSessionCommandServerConfiguration
     @Bean
     @Scope("singleton")
     public OktaGroupMappingCheck
-    oktaGroupMappingCheck(OktaSettings settings,ApplicationRoles roles)
+    oktaGroupMappingCheck(OktaSettings settings,ApplicationRolesManager roles)
     {
         return new OktaGroupMappingCheck(settings,roles);
     }

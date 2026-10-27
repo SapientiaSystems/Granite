@@ -16,11 +16,11 @@ class GraniteApplicationRoles
     private
     GraniteApplicationRoles() {}
 
-    public static ApplicationRoles
+    public static ApplicationRolesManager
     create()
     {
         return
-            new ApplicationRoles(
+            new ApplicationRolesManager(
                 List.of(
                     new RoleDefinition(AUDITOR,"Auditor",Set.of()),
                     new RoleDefinition(USER,"User",Set.of())),

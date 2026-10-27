@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.RoleDefinition;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
@@ -57,8 +57,8 @@ class SessionCommandServiceDefaultRoleTest
 
     private static final Set<String> EXPANDED_DEFAULT = Set.of("ROLE_PROMOTIONS_APPROVER","ROLE_PROMOTIONS_REVIEWER");
 
-    private static final ApplicationRoles POPLAR =
-        new ApplicationRoles(
+    private static final ApplicationRolesManager POPLAR =
+        new ApplicationRolesManager(
             List.of(
                 new RoleDefinition("ROLE_PROMOTIONS_REVIEWER","Promotions Reviewer",Set.of()),
                 new RoleDefinition("ROLE_PROMOTIONS_APPROVER","Promotions Approver",Set.of("ROLE_PROMOTIONS_REVIEWER"))),

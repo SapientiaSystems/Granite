@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerService;
 import granite.frontendcontroller.server.platform.GraniteApplicationFrontEndControllerServiceController;
@@ -30,7 +30,7 @@ class GraniteFrontEndControllerConfiguration
         @Named("FrontEndController")
         Executor         executor,
         ModelMapper      mapper,
-        ApplicationRoles roles)
+        ApplicationRolesManager roles)
     {
         return createService(createContext(mapper,executor,roles));
     }

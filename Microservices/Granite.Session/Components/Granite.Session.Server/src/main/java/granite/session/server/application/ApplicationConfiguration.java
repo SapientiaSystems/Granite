@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
 import granite.session.service.event.ISessionEventSender;
@@ -43,7 +43,7 @@ class ApplicationConfiguration
         @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,
         @Value("${granite.session.token.renewal-margin:PT2M}") String renewalMargin,
         Clock                           clock,
-        ApplicationRoles                roles)
+        ApplicationRolesManager roles)
     {
         return
             new SessionCommandService(

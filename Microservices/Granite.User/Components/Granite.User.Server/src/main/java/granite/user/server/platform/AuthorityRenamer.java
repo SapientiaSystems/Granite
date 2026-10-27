@@ -4,7 +4,7 @@
 
 package granite.user.server.platform;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +30,7 @@ class AuthorityRenamer
     private final ObjectProvider<IUserRepository>          repositories;
     private final ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers;
     private final Map<String,String>                       renames;
-    private final ApplicationRoles                         roles;
+    private final ApplicationRolesManager roles;
     private final Logger                                   logger;
     private boolean                                        done;
 
@@ -39,7 +39,7 @@ class AuthorityRenamer
         ObjectProvider<IUserRepository>          repositories,
         ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
         Map<String,String>                       renames,
-        ApplicationRoles                         roles)
+        ApplicationRolesManager roles)
     {
         this.repositories       = Objects.requireNonNull(repositories,"repositories");
         this.unitOfWorkManagers = Objects.requireNonNull(unitOfWorkManagers,"unitOfWorkManagers");

@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// ApplicationRoles.java
+// ApplicationRolesManager.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.foundation.core.security;
@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public
-class ApplicationRoles
+class ApplicationRolesManager
 {
     public static final String ADMIN = "ROLE_ADMIN";
 
@@ -25,8 +25,7 @@ class ApplicationRoles
     private final Map<String,RoleDefinition> byName;
     private final String                     defaultRole;
 
-    public
-    ApplicationRoles(List<RoleDefinition> applicationRoles,String defaultRole)
+    public ApplicationRolesManager(List<RoleDefinition> applicationRoles,String defaultRole)
     {
         Objects.requireNonNull(applicationRoles,"applicationRoles");
         Objects.requireNonNull(defaultRole,"defaultRole");

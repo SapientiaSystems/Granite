@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +18,7 @@ class RequiredAuthoritiesCheck
     private final List<String> rejectedAuthorities;
 
     public
-    RequiredAuthoritiesCheck(Collection<String> requiredAuthorities,ApplicationRoles roles)
+    RequiredAuthoritiesCheck(Collection<String> requiredAuthorities,ApplicationRolesManager roles)
     {
         Logger       logger   = LogManager.getLogger(RequiredAuthoritiesCheck.class);
         List<String> rejected = new ArrayList<>();

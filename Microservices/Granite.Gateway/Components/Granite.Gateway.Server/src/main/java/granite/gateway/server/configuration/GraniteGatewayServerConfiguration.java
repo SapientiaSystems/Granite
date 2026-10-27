@@ -4,7 +4,7 @@
 
 package granite.gateway.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
@@ -353,7 +353,7 @@ class GraniteGatewayServerConfiguration
     configureAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
     {
         String[] readers = getUsersReaderAuthorities(environment).toArray(String[]::new);
-        String[] admins  = {ApplicationRoles.ADMIN,"SCOPE_internal"};
+        String[] admins  = {ApplicationRolesManager.ADMIN,"SCOPE_internal"};
 
         exchanges
             .pathMatchers(
@@ -400,7 +400,7 @@ class GraniteGatewayServerConfiguration
     protected List<String>
     getUsersReaderAuthorities(Environment environment)
     {
-        return List.of(ApplicationRoles.ADMIN,"SCOPE_internal");
+        return List.of(ApplicationRolesManager.ADMIN,"SCOPE_internal");
     }
 
     protected ServerHttpSecurity.AuthorizeExchangeSpec

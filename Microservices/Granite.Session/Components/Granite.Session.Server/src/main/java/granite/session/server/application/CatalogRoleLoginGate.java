@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -13,10 +13,10 @@ public
 class CatalogRoleLoginGate
     implements ILoginGate
 {
-    private final ApplicationRoles roles;
+    private final ApplicationRolesManager roles;
 
     public
-    CatalogRoleLoginGate(ApplicationRoles roles)
+    CatalogRoleLoginGate(ApplicationRolesManager roles)
     {
         this.roles = Objects.requireNonNull(roles,"roles");
     }

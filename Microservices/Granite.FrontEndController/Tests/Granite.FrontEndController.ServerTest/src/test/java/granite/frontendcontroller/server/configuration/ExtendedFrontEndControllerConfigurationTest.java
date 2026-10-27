@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.RoleDefinition;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
@@ -85,8 +85,8 @@ class ExtendedFrontEndControllerConfigurationTest
     public void
     extendedConfigurationOverridesCatalog()
     {
-        ApplicationRoles roles =
-            new ApplicationRoles(
+        ApplicationRolesManager roles =
+            new ApplicationRolesManager(
                 List.of(
                     new RoleDefinition("ROLE_CLERK","Clerk",Set.of()),
                     new RoleDefinition("ROLE_MANAGER","Manager",Set.of("ROLE_CLERK"))),
@@ -126,7 +126,7 @@ class ExtendedFrontEndControllerConfigurationTest
     }
 
     private ExtendedFrontEndControllerConfiguration
-    configuration(ApplicationRoles roles)
+    configuration(ApplicationRolesManager roles)
     {
         IUserQueryServiceClient queryClient = Mockito.mock(IUserQueryServiceClient.class);
 

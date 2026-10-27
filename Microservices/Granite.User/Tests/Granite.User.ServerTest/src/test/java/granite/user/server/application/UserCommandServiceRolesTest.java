@@ -4,7 +4,7 @@
 
 package granite.user.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.user.server.configuration.PoplarUserCommandServerConfiguration;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.domain.User;
@@ -178,7 +178,7 @@ class UserCommandServiceRolesTest
         try (AnnotationConfigApplicationContext context =
                 new AnnotationConfigApplicationContext(PoplarUserCommandServerConfiguration.class))
         {
-            ApplicationRoles roles = context.getBean(ApplicationRoles.class);
+            ApplicationRolesManager roles = context.getBean(ApplicationRolesManager.class);
 
             assertTrue(roles.isRole(APPROVER));
             assertTrue(roles.isRole("ROLE_ADMIN"));

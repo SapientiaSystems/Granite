@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
@@ -30,7 +30,7 @@ class GraniteFrontEndControllerContext
     private final ISessionQueryServiceClient   sessionQueryClient;
     private final SessionRequestContext        sessionRequestContext;
     private final SessionLoginSettings         sessionLoginSettings;
-    private final ApplicationRoles             applicationRoles;
+    private final ApplicationRolesManager applicationRoles;
     private final List<PreferenceDefinition>   preferenceDefinitions;
 
     public
@@ -43,7 +43,7 @@ class GraniteFrontEndControllerContext
         ISessionQueryServiceClient   sessionQueryClient,
         SessionRequestContext        sessionRequestContext,
         SessionLoginSettings         sessionLoginSettings,
-        ApplicationRoles             applicationRoles,
+        ApplicationRolesManager applicationRoles,
         List<PreferenceDefinition>   preferenceDefinitions)
     {
         this.mapper                = Objects.requireNonNull(mapper,"mapper");
@@ -88,7 +88,7 @@ class GraniteFrontEndControllerContext
     public SessionLoginSettings
     getSessionLoginSettings() { return sessionLoginSettings; }
 
-    public ApplicationRoles
+    public ApplicationRolesManager
     getApplicationRoles() { return applicationRoles; }
 
     public List<PreferenceDefinition>

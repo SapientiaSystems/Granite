@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.foundation.core.security.RoleDefinition;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
@@ -64,7 +64,7 @@ class SessionCommandServiceOktaRolesTest
 
     private FakeOkta                        okta;
     private OktaSettings                    settings;
-    private ApplicationRoles                roles;
+    private ApplicationRolesManager roles;
     private ISessionRepository              repository;
     private IOktaLoginTransactionRepository transactions;
     private IUserCommandServiceClient       userCommands;
@@ -78,13 +78,13 @@ class SessionCommandServiceOktaRolesTest
     {
         okta          = new FakeOkta();
         roles         =
-            new ApplicationRoles(
+            new ApplicationRolesManager(
                 List.of(
                     new RoleDefinition(GraniteApplicationRoles.AUDITOR,"Auditor",Set.of()),
                     new RoleDefinition(GraniteApplicationRoles.USER,"User",Set.of()),
                     new RoleDefinition(APPROVER,"Approver",Set.of(GraniteApplicationRoles.AUDITOR,GraniteApplicationRoles.USER))),
                 GraniteApplicationRoles.USER);
-        settings      = okta.settings().setGroupMapping(Map.of("Granite Admins",ApplicationRoles.ADMIN));
+        settings      = okta.settings().setGroupMapping(Map.of("Granite Admins",ApplicationRolesManager.ADMIN));
         repository    = Mockito.mock(ISessionRepository.class);
         transactions  = Mockito.mock(IOktaLoginTransactionRepository.class);
         userCommands  = Mockito.mock(IUserCommandServiceClient.class);
@@ -131,8 +131,8 @@ class SessionCommandServiceOktaRolesTest
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         Mockito.verify(userCommands).createUser(captor.capture());
-        assertEquals(Set.of(ApplicationRoles.ADMIN),captor.getValue().getUserToCreate().getAuthorities());
-        assertEquals(Set.of(ApplicationRoles.ADMIN),reply.getSessionData().getAuthorities());
+        assertEquals(Set.of(ApplicationRolesManager.ADMIN),captor.getValue().getUserToCreate().getAuthorities());
+        assertEquals(Set.of(ApplicationRolesManager.ADMIN),reply.getSessionData().getAuthorities());
     }
 
     @Test
@@ -173,13 +173,13 @@ class SessionCommandServiceOktaRolesTest
     everyLoginSkipsWriteWhenUnchanged()
     {
         settings.setRoleAssignment(OktaRoleAssignment.EVERY_LOGIN);
-        stubExistingUser(Set.of(ApplicationRoles.ADMIN));
+        stubExistingUser(Set.of(ApplicationRolesManager.ADMIN));
 
         CompleteOktaLoginReply reply = complete();
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
         Mockito.verify(userCommands,Mockito.never()).updateUser(Mockito.any(UpdateUserRequest.class));
-        assertEquals(Set.of(ApplicationRoles.ADMIN),reply.getSessionData().getAuthorities());
+        assertEquals(Set.of(ApplicationRolesManager.ADMIN),reply.getSessionData().getAuthorities());
     }
 
     @Test

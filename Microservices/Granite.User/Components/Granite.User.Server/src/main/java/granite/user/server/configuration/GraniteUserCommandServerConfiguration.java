@@ -4,7 +4,7 @@
 
 package granite.user.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.user.server.domain.IUserRepository;
 import granite.user.server.platform.AuthorityRenamer;
 import granite.user.server.platform.CommandPlatformConfiguration;
@@ -52,7 +52,7 @@ class GraniteUserCommandServerConfiguration
         ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
         PasswordEncoder                          encoder,
         Environment                              environment,
-        ApplicationRoles                         roles)
+        ApplicationRolesManager roles)
     {
         boolean enabled = environment.getProperty("granite.user.bootstrap.enabled",Boolean.class,false);
 
@@ -86,7 +86,7 @@ class GraniteUserCommandServerConfiguration
     authorityRenamer(
         ObjectProvider<IUserRepository>          repositories,
         ObjectProvider<ISpringUnitOfWorkManager> unitOfWorkManagers,
-        ApplicationRoles                         roles)
+        ApplicationRolesManager roles)
     {
         return new AuthorityRenamer(repositories,unitOfWorkManagers,legacyAuthorityRenames(),roles);
     }

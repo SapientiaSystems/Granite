@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -37,13 +37,13 @@ class UpdateUsersView
 
     private final IUserQueryServiceClient   queryClient;
     private final IUserCommandServiceClient commandClient;
-    private final ApplicationRoles          applicationRoles;
+    private final ApplicationRolesManager applicationRoles;
 
     public
     UpdateUsersView(
         IUserQueryServiceClient   queryClient,
         IUserCommandServiceClient commandClient,
-        ApplicationRoles          applicationRoles)
+        ApplicationRolesManager applicationRoles)
     {
         this.queryClient      = queryClient;
         this.commandClient    = commandClient;

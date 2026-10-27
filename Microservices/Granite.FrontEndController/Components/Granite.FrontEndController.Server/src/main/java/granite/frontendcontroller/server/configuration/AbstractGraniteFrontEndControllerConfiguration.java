@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
 import granite.frontendcontroller.server.application.PreferenceDefinition;
@@ -63,7 +63,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
 
     @Bean
     @Scope("singleton")
-    public ApplicationRoles
+    public ApplicationRolesManager
     applicationRoles()
     {
         return GraniteApplicationRoles.create();
@@ -72,7 +72,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     @Bean
     @Scope("singleton")
     public InitializingBean
-    applicationRolesStartupLog(ApplicationRoles roles)
+    applicationRolesStartupLog(ApplicationRolesManager roles)
     {
         return
             () ->
@@ -92,7 +92,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     protected GraniteFrontEndControllerContext
-    createContext(ModelMapper mapper,Executor executor,ApplicationRoles roles)
+    createContext(ModelMapper mapper,Executor executor,ApplicationRolesManager roles)
     {
         return
             new GraniteFrontEndControllerContext(

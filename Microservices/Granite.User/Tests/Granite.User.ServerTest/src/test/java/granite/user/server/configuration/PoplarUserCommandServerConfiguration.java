@@ -4,7 +4,7 @@
 
 package granite.user.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.foundation.core.security.RoleDefinition;
 import org.springframework.context.annotation.Bean;
@@ -26,25 +26,25 @@ class PoplarUserCommandServerConfiguration
     @Override
     @Bean
     @Scope("singleton")
-    public ApplicationRoles
+    public ApplicationRolesManager
     applicationRoles()
     {
         return poplarRoles();
     }
 
-    public static ApplicationRoles
+    public static ApplicationRolesManager
     poplarRoles()
     {
         List<RoleDefinition> roles = new ArrayList<>();
 
         for (RoleDefinition role : GraniteApplicationRoles.create().getRoles())
-            if (!ApplicationRoles.ADMIN.equals(role.getName()))
+            if (!ApplicationRolesManager.ADMIN.equals(role.getName()))
                 roles.add(role);
 
         roles.add(new RoleDefinition(REVIEWER,"Promotions Reviewer",Set.of(GraniteApplicationRoles.USER)));
         roles.add(new RoleDefinition(APPROVER,"Promotions Approver",Set.of(REVIEWER)));
 
-        return new ApplicationRoles(roles,GraniteApplicationRoles.USER);
+        return new ApplicationRolesManager(roles,GraniteApplicationRoles.USER);
     }
 }
 

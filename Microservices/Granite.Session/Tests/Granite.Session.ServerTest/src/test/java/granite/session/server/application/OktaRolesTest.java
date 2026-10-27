@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.RoleDefinition;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public
 class OktaRolesTest
 {
-    private static final ApplicationRoles ROLES =
-        new ApplicationRoles(
+    private static final ApplicationRolesManager ROLES =
+        new ApplicationRolesManager(
             List.of(
                 new RoleDefinition("ROLE_AUDITOR","Auditor",Set.of()),
                 new RoleDefinition("ROLE_USER","User",Set.of()),
@@ -88,7 +88,7 @@ class OktaRolesTest
     adminMappingIsAccepted()
     {
         assertEquals(
-            Optional.of(Set.of(ApplicationRoles.ADMIN)),
+            Optional.of(Set.of(ApplicationRolesManager.ADMIN)),
             subject(OktaUnmappedGroups.REFUSE).rolesFor(Set.of("GC-Admins")));
     }
 

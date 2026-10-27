@@ -4,11 +4,8 @@
 
 package granite.session.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
-import granite.foundation.core.security.GraniteApplicationRoles;
-import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
-import granite.foundation.core.security.GraniteJwtDecoderFactory;
-import granite.foundation.core.security.GraniteResourceServerSettings;
+import granite.foundation.core.security.*;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.session.server.application.ApplicationConfiguration;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.MappingModule;
@@ -97,7 +94,7 @@ class AbstractGraniteSessionServerConfiguration
 
     @Bean
     @Scope("singleton")
-    public ApplicationRoles
+    public ApplicationRolesManager
     applicationRoles()
     {
         return GraniteApplicationRoles.create();
@@ -106,7 +103,7 @@ class AbstractGraniteSessionServerConfiguration
     @Bean
     @Scope("singleton")
     public InitializingBean
-    applicationRolesStartupLog(ApplicationRoles roles)
+    applicationRolesStartupLog(ApplicationRolesManager roles)
     {
         return
             () ->

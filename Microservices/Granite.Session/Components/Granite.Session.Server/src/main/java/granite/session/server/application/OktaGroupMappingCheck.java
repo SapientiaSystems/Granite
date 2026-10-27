@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +18,7 @@ class OktaGroupMappingCheck
     private final List<String> ignoredGroups;
 
     public
-    OktaGroupMappingCheck(OktaSettings settings,ApplicationRoles roles)
+    OktaGroupMappingCheck(OktaSettings settings,ApplicationRolesManager roles)
     {
         Logger       logger  = LogManager.getLogger(OktaGroupMappingCheck.class);
         List<String> ignored = new ArrayList<>();

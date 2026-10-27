@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// ApplicationRolesTest.java
+// ApplicationRolesManagerTest.java
 //////////////////////////////////////////////////////////////////////////////
 
 package granite.foundation.core.security;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag("CommitStage")
 public
-class ApplicationRolesTest
+class ApplicationRolesManagerTest
 {
     private static final String REVIEWER = "ROLE_PROMOTIONS_REVIEWER";
     private static final String PLANNER  = "ROLE_PROMOTIONS_PLANNER";
@@ -39,10 +39,10 @@ class ApplicationRolesTest
     public void
     adminIsAlwaysPresentAndSeparate()
     {
-        ApplicationRoles subject = poplar();
+        ApplicationRolesManager subject = poplar();
 
-        assertEquals(ApplicationRoles.ADMIN,subject.getRoles().get(0).getName());
-        assertEquals(Set.of(ApplicationRoles.ADMIN),subject.expand(Set.of(ApplicationRoles.ADMIN)));
+        assertEquals(ApplicationRolesManager.ADMIN,subject.getRoles().get(0).getName());
+        assertEquals(Set.of(ApplicationRolesManager.ADMIN),subject.expand(Set.of(ApplicationRolesManager.ADMIN)));
     }
 
     @Test
@@ -59,7 +59,7 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
+                new ApplicationRolesManager(
                     List.of(
                         new RoleDefinition("ROLE_A","A",Set.of("ROLE_B")),
                         new RoleDefinition("ROLE_B","B",Set.of("ROLE_A"))),
@@ -73,7 +73,7 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
+                new ApplicationRolesManager(
                     List.of(new RoleDefinition("ROLE_A","A",Set.of("ROLE_Missing"))),
                     "ROLE_A"));
     }
@@ -85,7 +85,7 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
+                new ApplicationRolesManager(
                     List.of(new RoleDefinition("ROLE_A","A",Set.of())),
                     "ROLE_Other"));
     }
@@ -98,7 +98,7 @@ class ApplicationRolesTest
             assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ApplicationRoles(
+                    new ApplicationRolesManager(
                         List.of(new RoleDefinition(name,"Bad",Set.of())),
                         name));
     }
@@ -110,8 +110,8 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
-                    List.of(new RoleDefinition("ROLE_A","A",Set.of(ApplicationRoles.ADMIN))),
+                new ApplicationRolesManager(
+                    List.of(new RoleDefinition("ROLE_A","A",Set.of(ApplicationRolesManager.ADMIN))),
                     "ROLE_A"));
     }
 
@@ -122,9 +122,9 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
-                    List.of(new RoleDefinition(ApplicationRoles.ADMIN,"Admin",Set.of())),
-                    ApplicationRoles.ADMIN));
+                new ApplicationRolesManager(
+                    List.of(new RoleDefinition(ApplicationRolesManager.ADMIN,"Admin",Set.of())),
+                    ApplicationRolesManager.ADMIN));
     }
 
     @Test
@@ -134,7 +134,7 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
+                new ApplicationRolesManager(
                     List.of(
                         new RoleDefinition("ROLE_A","A",Set.of()),
                         new RoleDefinition("ROLE_A","Other A",Set.of())),
@@ -148,9 +148,9 @@ class ApplicationRolesTest
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ApplicationRoles(
+                new ApplicationRolesManager(
                     List.of(new RoleDefinition("ROLE_A","A",Set.of())),
-                    ApplicationRoles.ADMIN));
+                    ApplicationRolesManager.ADMIN));
     }
 
     @Test
@@ -164,7 +164,7 @@ class ApplicationRolesTest
     public void
     graniteCatalogHasAuditorAndUser()
     {
-        ApplicationRoles subject = GraniteApplicationRoles.create();
+        ApplicationRolesManager subject = GraniteApplicationRoles.create();
 
         assertEquals(
             List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),
@@ -173,11 +173,11 @@ class ApplicationRolesTest
         assertEquals("ROLE_USER",subject.getDefaultRole());
     }
 
-    private ApplicationRoles
+    private ApplicationRolesManager
     poplar()
     {
         return
-            new ApplicationRoles(
+            new ApplicationRolesManager(
                 List.of(
                     new RoleDefinition(REVIEWER,"Reviewer",Set.of()),
                     new RoleDefinition(PLANNER,"Planner",Set.of(REVIEWER)),

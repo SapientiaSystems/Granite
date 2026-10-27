@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.configuration;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
 import granite.frontendcontroller.server.application.PreferenceDefinition;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
@@ -31,7 +31,7 @@ class ExtendedFrontEndControllerConfiguration
     extends AbstractGraniteFrontEndControllerConfiguration<IExtendedFrontEndControllerService>
 {
     private final IUserQueryServiceClient userQueryClient;
-    private final ApplicationRoles        roles;
+    private final ApplicationRolesManager roles;
 
     public
     ExtendedFrontEndControllerConfiguration()
@@ -40,7 +40,7 @@ class ExtendedFrontEndControllerConfiguration
     }
 
     public
-    ExtendedFrontEndControllerConfiguration(IUserQueryServiceClient userQueryClient,ApplicationRoles roles)
+    ExtendedFrontEndControllerConfiguration(IUserQueryServiceClient userQueryClient,ApplicationRolesManager roles)
     {
         this.userQueryClient = userQueryClient;
         this.roles = roles;
@@ -59,7 +59,7 @@ class ExtendedFrontEndControllerConfiguration
     }
 
     @Override
-    public ApplicationRoles
+    public ApplicationRolesManager
     applicationRoles()
     {
         return roles == null ? super.applicationRoles() : roles;
@@ -91,7 +91,7 @@ class ExtendedFrontEndControllerConfiguration
         @Named("FrontEndController")
         Executor         executor,
         ModelMapper      mapper,
-        ApplicationRoles roles)
+        ApplicationRolesManager roles)
     {
         return createService(createContext(mapper,executor,roles));
     }

@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindAllUsersReply;
@@ -22,10 +22,10 @@ class InitializeUsersView
     implements IOutputAction<GetUsersOutputRequest,UsersOutput>
 {
     private final IUserQueryServiceClient queryClient;
-    private final ApplicationRoles        applicationRoles;
+    private final ApplicationRolesManager applicationRoles;
 
     public
-    InitializeUsersView(IUserQueryServiceClient queryClient,ApplicationRoles applicationRoles)
+    InitializeUsersView(IUserQueryServiceClient queryClient,ApplicationRolesManager applicationRoles)
     {
         this.queryClient      = queryClient;
         this.applicationRoles = applicationRoles;

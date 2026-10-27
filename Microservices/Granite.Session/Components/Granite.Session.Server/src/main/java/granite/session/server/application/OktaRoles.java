@@ -4,7 +4,7 @@
 
 package granite.session.server.application;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -14,10 +14,10 @@ public
 class OktaRoles
 {
     private final OktaSettings     settings;
-    private final ApplicationRoles roles;
+    private final ApplicationRolesManager roles;
 
     public
-    OktaRoles(OktaSettings settings,ApplicationRoles roles)
+    OktaRoles(OktaSettings settings,ApplicationRolesManager roles)
     {
         this.settings = settings;
         this.roles    = roles;

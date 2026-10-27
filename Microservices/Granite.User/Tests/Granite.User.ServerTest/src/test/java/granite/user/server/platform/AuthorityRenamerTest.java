@@ -4,7 +4,7 @@
 
 package granite.user.server.platform;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteApplicationRoles;
 import granite.user.server.application.TestConfiguration;
 import granite.user.server.configuration.PoplarUserCommandServerConfiguration;
@@ -103,7 +103,7 @@ class AuthorityRenamerTest
     }
 
     private AuthorityRenamer
-    renamer(ApplicationRoles roles)
+    renamer(ApplicationRolesManager roles)
     {
         return
             new AuthorityRenamer(

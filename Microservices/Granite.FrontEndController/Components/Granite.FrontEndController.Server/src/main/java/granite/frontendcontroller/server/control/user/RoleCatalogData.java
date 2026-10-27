@@ -4,7 +4,7 @@
 
 package granite.frontendcontroller.server.control.user;
 
-import granite.foundation.core.security.ApplicationRoles;
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.RoleDefinition;
 import granite.frontendcontroller.service.requestreply.RoleData;
 
@@ -19,7 +19,7 @@ class RoleCatalogData
     RoleCatalogData() {}
 
     public static List<RoleData>
-    from(ApplicationRoles applicationRoles)
+    from(ApplicationRolesManager applicationRoles)
     {
         List<RoleData> roles = new ArrayList<>();
 
