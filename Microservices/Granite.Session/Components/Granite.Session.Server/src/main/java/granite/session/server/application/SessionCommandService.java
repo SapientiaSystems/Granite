@@ -42,6 +42,8 @@ import granite.user.service.requestreply.FindUsersByExternalIdentityReply;
 import granite.user.service.requestreply.FindUsersByExternalIdentityRequest;
 import granite.user.service.requestreply.FindUsersByKeyReply;
 import granite.user.service.requestreply.FindUsersByKeyRequest;
+import granite.user.service.requestreply.MergeUserValuesReply;
+import granite.user.service.requestreply.MergeUserValuesRequest;
 import granite.user.service.requestreply.UpdateUserData;
 import granite.user.service.requestreply.UpdateUserReply;
 import granite.user.service.requestreply.UpdateUserRequest;
@@ -392,10 +394,7 @@ class SessionCommandService
             || context.getValidatedValues().containsKey(ROLES_ASSIGNED))
             return context;
 
-        Set<String>        assigned = roles.expand(Set.of(roles.getDefaultRole()));
-        Map<String,Object> values   = new LinkedHashMap<>(context.getValidatedValues());
-
-        values.put(ROLES_ASSIGNED,true);
+        Set<String> assigned = roles.expand(Set.of(roles.getDefaultRole()));
 
         UpdateUserReply reply =
             userCommandServiceClient
@@ -404,14 +403,37 @@ class SessionCommandService
                         .setUserToUpdate(
                             new UpdateUserData()
                                 .setUserId(context.getValidatedUserId())
-                                .setAuthorities(new LinkedHashSet<>(assigned))
-                                .setValues(values)))
+                                .setAuthorities(new LinkedHashSet<>(assigned))))
                 .toCompletableFuture()
                 .join();
 
         if (reply == null || !reply.isSuccess())
         {
             logger.info("<login> default role assignment failed for user: {}",context.getValidatedUserId());
+            return context.setValidatedUserId(null);
+        }
+
+        MergeUserValuesReply marker = null;
+
+        try
+        {
+            marker =
+                userCommandServiceClient
+                    .mergeUserValues(
+                        new MergeUserValuesRequest()
+                            .setUserId(context.getValidatedUserId())
+                            .setValues(new LinkedHashMap<>(Map.of(ROLES_ASSIGNED,true))))
+                    .toCompletableFuture()
+                    .join();
+        }
+        catch (RuntimeException e)
+        {
+            logger.info("<login> roles-assigned marker threw: {}",rootCauseName(e));
+        }
+
+        if (marker == null || !marker.isSuccess())
+        {
+            logger.info("<login> roles-assigned marker failed for user: {}",context.getValidatedUserId());
             return context.setValidatedUserId(null);
         }
 

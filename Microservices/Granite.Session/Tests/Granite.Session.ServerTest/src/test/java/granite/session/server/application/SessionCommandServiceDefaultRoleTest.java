@@ -17,6 +17,8 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
 import granite.user.service.requestreply.CredentialKind;
+import granite.user.service.requestreply.MergeUserValuesReply;
+import granite.user.service.requestreply.MergeUserValuesRequest;
 import granite.user.service.requestreply.UpdateUserReply;
 import granite.user.service.requestreply.UpdateUserRequest;
 import granite.user.service.requestreply.UserData;
@@ -115,6 +117,7 @@ class SessionCommandServiceDefaultRoleTest
     {
         stubAuthenticate(true,Set.of());
         stubUpdate(true);
+        stubMerge(true);
 
         LoginReply reply = login();
 
@@ -138,16 +141,69 @@ class SessionCommandServiceDefaultRoleTest
     {
         stubAuthenticate(true,Set.of(),Map.of(THEME,"dark"));
         stubUpdate(true);
+        stubMerge(true);
 
         assertTrue(login().isSuccess());
 
         ArgumentCaptor<UpdateUserRequest> update = ArgumentCaptor.forClass(UpdateUserRequest.class);
 
         Mockito.verify(userCommandServiceClient).updateUser(update.capture());
-        assertEquals(
-            Map.of(THEME,"dark",SessionCommandService.ROLES_ASSIGNED,true),
-            update.getValue().getUserToUpdate().getValues().get());
+        assertTrue(update.getValue().getUserToUpdate().getValues().isEmpty());
         assertEquals(EXPANDED_DEFAULT,update.getValue().getUserToUpdate().getAuthorities().get());
+
+        ArgumentCaptor<MergeUserValuesRequest> merge = ArgumentCaptor.forClass(MergeUserValuesRequest.class);
+
+        Mockito.verify(userCommandServiceClient).mergeUserValues(merge.capture());
+        assertEquals(USER_ID,merge.getValue().getUserId());
+        assertEquals(Map.of(SessionCommandService.ROLES_ASSIGNED,true),merge.getValue().getValues());
+    }
+
+    @Test
+    public void
+    markerMergeFailureRefuses()
+    {
+        stubAuthenticate(true,Set.of());
+        stubUpdate(true);
+        stubMerge(false);
+
+        assertRefused(login());
+    }
+
+    @Test
+    public void
+    markerMergeNullReplyRefuses()
+    {
+        stubAuthenticate(true,Set.of());
+        stubUpdate(true);
+        Mockito
+            .when(userCommandServiceClient.mergeUserValues(Mockito.any(MergeUserValuesRequest.class)))
+            .thenReturn(CompletableFuture.completedFuture(null));
+
+        assertRefused(login());
+    }
+
+    @Test
+    public void
+    markerMergeExceptionRefuses()
+    {
+        stubAuthenticate(true,Set.of());
+        stubUpdate(true);
+        Mockito
+            .when(userCommandServiceClient.mergeUserValues(Mockito.any(MergeUserValuesRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("boom")));
+
+        assertRefused(login());
+    }
+
+    @Test
+    public void
+    roleWriteFailureSkipsMerge()
+    {
+        stubAuthenticate(true,Set.of());
+        stubUpdate(false);
+
+        assertRefused(login());
+        Mockito.verify(userCommandServiceClient,Mockito.never()).mergeUserValues(Mockito.any(MergeUserValuesRequest.class));
     }
 
     @Test
@@ -252,6 +308,16 @@ class SessionCommandServiceDefaultRoleTest
                                     .setAuthorities(authorities)
                                     .setValues(values)
                                 : null)));
+    }
+
+    private void
+    stubMerge(boolean success)
+    {
+        Mockito
+            .when(userCommandServiceClient.mergeUserValues(Mockito.any(MergeUserValuesRequest.class)))
+            .thenAnswer(invocation ->
+                CompletableFuture.completedFuture(
+                    new MergeUserValuesReply((MergeUserValuesRequest)invocation.getArgument(0)).setSuccess(success)));
     }
 
     private void
