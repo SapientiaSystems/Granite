@@ -84,6 +84,41 @@ class SessionSecurityFilterChainTest
 
     @Test
     public void
+    oktaLoginStepsRequireToken()
+        throws Exception
+    {
+        for (String path : List.of(
+                "/session-command-service/start-okta-login",
+                "/session-command-service/complete-okta-login"))
+        {
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain         chain    = run("POST",path,null,response);
+
+            assertEquals(401,response.getStatus(),path);
+            assertNull(chain.getRequest(),path);
+        }
+    }
+
+    @Test
+    public void
+    oktaLoginStepsAcceptServiceToken()
+        throws Exception
+    {
+        String token = tokens.mintServiceToken("granite-frontendcontroller",List.of("SCOPE_internal"),Duration.ofMinutes(5));
+
+        for (String path : List.of(
+                "/session-command-service/start-okta-login",
+                "/session-command-service/complete-okta-login"))
+        {
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain         chain    = run("POST",path,token,response);
+
+            assertNotNull(chain.getRequest(),path);
+        }
+    }
+
+    @Test
+    public void
     tokenlessPathsAreOpen()
         throws Exception
     {

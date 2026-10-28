@@ -29,6 +29,9 @@ interface ISessionCommandService
 
     CompletionStage<ResolveSessionReply>
     resolveSession(ResolveSessionRequest request);
+
+    CompletionStage<IssueServiceTokenReply>
+    issueServiceToken(IssueServiceTokenRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////

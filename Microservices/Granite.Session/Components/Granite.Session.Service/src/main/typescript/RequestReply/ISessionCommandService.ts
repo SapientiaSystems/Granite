@@ -13,6 +13,8 @@ import {RefreshRequest} from "./RefreshRequest";
 import {RefreshReply} from "./RefreshReply";
 import {ResolveSessionRequest} from "./ResolveSessionRequest";
 import {ResolveSessionReply} from "./ResolveSessionReply";
+import {IssueServiceTokenRequest} from "./IssueServiceTokenRequest";
+import {IssueServiceTokenReply} from "./IssueServiceTokenReply";
 
 export
 interface ISessionCommandService
@@ -37,4 +39,7 @@ interface ISessionCommandService
 
     resolveSession(request: ResolveSessionRequest):
         ICompletionStage<ResolveSessionReply>;
+
+    issueServiceToken(request: IssueServiceTokenRequest):
+        ICompletionStage<IssueServiceTokenReply>;
 }

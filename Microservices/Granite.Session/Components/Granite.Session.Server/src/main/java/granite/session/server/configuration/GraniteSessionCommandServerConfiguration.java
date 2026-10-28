@@ -12,6 +12,7 @@ import granite.session.server.application.ILoginGate;
 import granite.session.server.application.IOktaClient;
 import granite.session.server.application.IRefreshTokenService;
 import granite.session.server.application.IServiceTokenProvider;
+import granite.session.server.application.IServiceTokenIssuer;
 import granite.session.server.application.JwkSetProvider;
 import granite.session.server.application.JwtTokenService;
 import granite.session.server.application.OktaClient;
@@ -22,6 +23,8 @@ import granite.session.server.application.OktaUnmappedGroups;
 import granite.session.server.application.RefreshTokenService;
 import granite.session.server.application.RequiredAuthoritiesCheck;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
+import granite.session.server.application.ServiceClientRegistration;
+import granite.session.server.application.ServiceTokenIssuer;
 import granite.session.server.application.ServiceTokenProvider;
 import granite.session.server.platform.CommandPlatformConfiguration;
 import granite.session.server.platform.JwtKeyLoader;
@@ -38,6 +41,7 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.client.requestreply.UserCommandServiceClient;
 import granite.user.client.requestreply.UserQueryServiceClient;
 import jakarta.ws.rs.client.ClientBuilder;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -46,6 +50,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.context.annotation.RequestScope;
@@ -203,6 +208,44 @@ class GraniteSessionCommandServerConfiguration
 
     @Bean
     @Scope("singleton")
+    public IServiceTokenIssuer
+    serviceTokenIssuer(IJwtTokenService jwtTokenService,Environment environment)
+    {
+        Map<String,Map<String,String>>  clients       =
+            Binder
+                .get(environment)
+                .bind(
+                    "granite.session.service-clients",
+                    Bindable.<Map<String,Map<String,String>>>of(
+                        ResolvableType.forClassWithGenerics(
+                            Map.class,
+                            ResolvableType.forClass(String.class),
+                            ResolvableType.forClassWithGenerics(Map.class,String.class,String.class))))
+                .orElse(Map.of());
+        List<ServiceClientRegistration> registrations = new ArrayList<>();
+
+        for (Map.Entry<String,Map<String,String>> client : clients.entrySet())
+        {
+            String hash = client.getValue().getOrDefault("secret-sha256","");
+
+            if (hash.isBlank())
+            {
+                LogManager.getLogger(getClass()).warn("service client {} has no secret hash; ignored",client.getKey());
+                continue;
+            }
+
+            registrations.add(
+                new ServiceClientRegistration(
+                    client.getKey(),
+                    hash,
+                    Duration.parse(client.getValue().getOrDefault("lifetime","PT10M"))));
+        }
+
+        return new ServiceTokenIssuer(jwtTokenService,registrations);
+    }
+
+    @Bean
+    @Scope("singleton")
     public ILoginGate
     loginGate(Environment environment,ApplicationRolesManager roles)
     {
@@ -278,8 +321,6 @@ class GraniteSessionCommandServerConfiguration
         paths.addAll(
             List.of(
                 "/session-command-service/login",
-                "/session-command-service/start-okta-login",
-                "/session-command-service/complete-okta-login",
                 "/session-command-service/refresh",
                 "/session-command-service/resolve-session",
                 "/session-command-service/issue-service-token",

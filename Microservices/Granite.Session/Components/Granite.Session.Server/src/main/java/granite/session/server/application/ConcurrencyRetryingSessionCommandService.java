@@ -5,6 +5,8 @@
 package granite.session.server.application;
 
 import granite.session.service.requestreply.ISessionCommandService;
+import granite.session.service.requestreply.IssueServiceTokenReply;
+import granite.session.service.requestreply.IssueServiceTokenRequest;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
@@ -106,6 +108,13 @@ class ConcurrencyRetryingSessionCommandService
     resolveSession(ResolveSessionRequest request)
     {
         return delegate.resolveSession(request);
+    }
+
+    @Override
+    public CompletionStage<IssueServiceTokenReply>
+    issueServiceToken(IssueServiceTokenRequest request)
+    {
+        return delegate.issueServiceToken(request);
     }
 
     private <R> CompletionStage<R>

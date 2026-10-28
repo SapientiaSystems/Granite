@@ -19,23 +19,32 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public
 class FakeSessionBackend
 {
-    private final HttpServer           server;
-    private final ObjectMapper         mapper;
-    private final Map<String,String>   responses;
-    private final List<String>         paths;
-    private final List<String>         authorizations;
-    private final List<String>         bodies;
+    public static final String SERVICE_TOKEN       = "service.jwt.token";
+    public static final String ISSUE_SERVICE_TOKEN = "issue-service-token";
+
+    private final HttpServer         server;
+    private final ObjectMapper       mapper;
+    private final Map<String,String> responses;
+    private final List<String>       paths;
+    private final List<String>       authorizations;
+    private final List<String>       bodies;
+    private final List<String>       serviceTokenAuthorizations;
 
     public
     FakeSessionBackend()
         throws Exception
     {
-        server         = HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
-        mapper         = new ObjectMapperSupplier().get();
-        responses      = new ConcurrentHashMap<>();
-        paths          = new CopyOnWriteArrayList<>();
-        authorizations = new CopyOnWriteArrayList<>();
-        bodies         = new CopyOnWriteArrayList<>();
+        server                     = HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
+        mapper                     = new ObjectMapperSupplier().get();
+        responses                  = new ConcurrentHashMap<>();
+        paths                      = new CopyOnWriteArrayList<>();
+        authorizations             = new CopyOnWriteArrayList<>();
+        bodies                     = new CopyOnWriteArrayList<>();
+        serviceTokenAuthorizations = new CopyOnWriteArrayList<>();
+
+        responses.put(
+            ISSUE_SERVICE_TOKEN,
+            "{\"success\":true,\"token\":\"" + SERVICE_TOKEN + "\",\"expiresAt\":\"2099-01-01T00:00:00Z\"}");
 
         server.createContext("/",exchange ->
         {
@@ -49,9 +58,14 @@ class FakeSessionBackend
                     reply = entry.getValue();
             }
 
-            paths.add(path);
-            authorizations.add(String.valueOf(exchange.getRequestHeaders().getFirst("Authorization")));
-            bodies.add(body);
+            if (path.endsWith("/" + ISSUE_SERVICE_TOKEN))
+                serviceTokenAuthorizations.add(String.valueOf(exchange.getRequestHeaders().getFirst("Authorization")));
+            else
+            {
+                paths.add(path);
+                authorizations.add(String.valueOf(exchange.getRequestHeaders().getFirst("Authorization")));
+                bodies.add(body);
+            }
 
             byte[] bytes = reply.getBytes(StandardCharsets.UTF_8);
 
@@ -85,6 +99,9 @@ class FakeSessionBackend
 
     public List<String>
     bodies() { return bodies; }
+
+    public List<String>
+    serviceTokenAuthorizations() { return serviceTokenAuthorizations; }
 
     public void
     stop() { server.stop(0); }

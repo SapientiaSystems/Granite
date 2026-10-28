@@ -43,7 +43,8 @@ class ApplicationConfiguration
         @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,
         @Value("${granite.session.token.renewal-margin:PT2M}") String renewalMargin,
         Clock                           clock,
-        ApplicationRolesManager roles)
+        ApplicationRolesManager         roles,
+        IServiceTokenIssuer             serviceTokenIssuer)
     {
         return
             new SessionCommandService(
@@ -61,7 +62,8 @@ class ApplicationConfiguration
                 Duration.parse(maxLifetime),
                 Duration.parse(renewalMargin),
                 clock,
-                roles);
+                roles,
+                serviceTokenIssuer);
     }
 
     @Bean

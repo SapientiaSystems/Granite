@@ -71,13 +71,13 @@ class GraniteSessionServerConfigurationTest
             paths.containsAll(
                 List.of(
                     "/session-command-service/login",
-                    "/session-command-service/start-okta-login",
-                    "/session-command-service/complete-okta-login",
                     "/session-command-service/refresh",
                     "/session-command-service/resolve-session",
                     "/session-command-service/issue-service-token",
                     "/.well-known/jwks.json")));
         assertFalse(paths.contains("/session-command-service/login-with-oauth2"));
+        assertFalse(paths.contains("/session-command-service/start-okta-login"));
+        assertFalse(paths.contains("/session-command-service/complete-okta-login"));
     }
 
     @Test

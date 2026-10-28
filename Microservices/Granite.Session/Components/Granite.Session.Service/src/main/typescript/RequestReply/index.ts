@@ -16,6 +16,8 @@ export {RefreshRequest} from "./RefreshRequest";
 export {RefreshReply} from "./RefreshReply";
 export {ResolveSessionRequest} from "./ResolveSessionRequest";
 export {ResolveSessionReply} from "./ResolveSessionReply";
+export {IssueServiceTokenRequest} from "./IssueServiceTokenRequest";
+export {IssueServiceTokenReply} from "./IssueServiceTokenReply";
 export {FindSessionsByKeyRequest} from "./FindSessionsByKeyRequest";
 export {FindSessionsByKeyReply} from "./FindSessionsByKeyReply";
 export {FindSessionsByKeySetRequest} from "./FindSessionsByKeySetRequest";

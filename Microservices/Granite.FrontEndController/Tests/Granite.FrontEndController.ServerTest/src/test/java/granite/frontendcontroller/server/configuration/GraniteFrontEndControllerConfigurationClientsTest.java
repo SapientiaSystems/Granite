@@ -40,12 +40,15 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
 class GraniteFrontEndControllerConfigurationClientsTest
 {
+    private static final String SERVICE_BEARER = "Bearer " + FakeSessionBackend.SERVICE_TOKEN;
+
     private FakeSessionBackend                     backend;
     private GraniteFrontEndControllerConfiguration subject;
     private MockHttpServletRequest                 inbound;
@@ -156,7 +159,10 @@ class GraniteFrontEndControllerConfigurationClientsTest
         assertTrue(backend.bodies().get(0).contains("device-1"));
         assertTrue(backend.paths().get(1).endsWith("/session-query-service/find-sessions-by-key"));
         assertTrue(backend.paths().get(2).endsWith("/user-query-service/find-users-by-key"));
-        assertEquals(List.of(bearer,bearer,bearer),backend.authorizations());
+        assertEquals(List.of(SERVICE_BEARER,SERVICE_BEARER,SERVICE_BEARER),backend.authorizations());
+        assertFalse(backend.authorizations().contains(bearer));
+        assertFalse(backend.serviceTokenAuthorizations().isEmpty());
+        assertEquals(List.of("null"),backend.serviceTokenAuthorizations().stream().distinct().toList());
     }
 }
 

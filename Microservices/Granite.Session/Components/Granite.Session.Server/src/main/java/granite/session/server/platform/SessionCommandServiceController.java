@@ -101,6 +101,16 @@ class SessionCommandServiceController
         logger.debug("delegating resolveSession to implementation service");
         return implementation.resolveSession(request);
     }
+
+    @PostMapping(
+        value = "/issue-service-token",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<IssueServiceTokenReply>
+    issueServiceToken(@RequestBody IssueServiceTokenRequest request)
+    {
+        logger.debug("delegating issueServiceToken to implementation service");
+        return implementation.issueServiceToken(request);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

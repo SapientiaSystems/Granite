@@ -53,9 +53,13 @@ class GraniteFrontEndControllerConfigurationTest
             "/",
             exchange ->
             {
-                byte[] body = "{\"success\":true}".getBytes(StandardCharsets.UTF_8);
+                String path = exchange.getRequestURI().getPath();
+                byte[] body =
+                    (path.endsWith("/issue-service-token")
+                        ? "{\"success\":true,\"token\":\"service.jwt.token\",\"expiresAt\":\"2099-01-01T00:00:00Z\"}"
+                        : "{\"success\":true}").getBytes(StandardCharsets.UTF_8);
 
-                authorizations.add(String.valueOf(exchange.getRequestHeaders().getFirst("Authorization")));
+                authorizations.add(path + " " + exchange.getRequestHeaders().getFirst("Authorization"));
                 exchange.getResponseHeaders().add("Content-Type","application/json");
                 exchange.sendResponseHeaders(200,body.length);
 
@@ -75,6 +79,8 @@ class GraniteFrontEndControllerConfigurationTest
         Mockito.when(configuration.getProperty("user-query-service.base-url")).thenReturn(baseUrl + "/user-query-service");
         Mockito.when(configuration.getProperty("session-command-service.base-url")).thenReturn(baseUrl + "/session-command-service");
         Mockito.when(configuration.getProperty("session-query-service.base-url")).thenReturn(baseUrl + "/session-query-service");
+        Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.id","granite-frontendcontroller")).thenReturn("granite-frontendcontroller");
+        Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.secret","")).thenReturn("fec-secret");
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
@@ -93,7 +99,7 @@ class GraniteFrontEndControllerConfigurationTest
 
     @Test
     public void
-    usersServiceForwardsCallersBearerTokenToUser()
+    usersServiceSendsServiceTokenNotCallersBearer()
     {
         MockHttpServletRequest inbound = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-users-input");
 
@@ -119,8 +125,23 @@ class GraniteFrontEndControllerConfigurationTest
                 .join();
 
         assertTrue(reply.isSuccess());
-        assertTrue(authorizations.size() >= 2);
-        assertEquals(List.of("Bearer caller.jwt.token"),authorizations.stream().distinct().toList());
+        assertTrue(authorizations.size() >= 3);
+        assertEquals(
+            List.of("/issue-service-token null"),
+            authorizations
+                .stream()
+                .filter(a -> a.contains("issue-service-token"))
+                .map(a -> a.substring(a.lastIndexOf('/')))
+                .distinct()
+                .toList());
+        assertEquals(
+            List.of("Bearer service.jwt.token"),
+            authorizations
+                .stream()
+                .filter(a -> !a.contains("issue-service-token"))
+                .map(a -> a.substring(a.indexOf(' ') + 1))
+                .distinct()
+                .toList());
     }
 }
 

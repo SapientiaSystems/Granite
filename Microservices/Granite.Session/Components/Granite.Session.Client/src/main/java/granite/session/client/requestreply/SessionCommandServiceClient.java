@@ -102,6 +102,17 @@ class SessionCommandServiceClient
     }
 
     @Override
+    public CompletionStage<IssueServiceTokenReply>
+    issueServiceToken(IssueServiceTokenRequest request)
+    {
+        return
+            doPostAsync(
+                "issue-service-token",
+                IssueServiceTokenReply.class,
+                request);
+    }
+
+    @Override
     public SessionCommandServiceClient
     setAuthorizationHeader(String accessToken)
     {

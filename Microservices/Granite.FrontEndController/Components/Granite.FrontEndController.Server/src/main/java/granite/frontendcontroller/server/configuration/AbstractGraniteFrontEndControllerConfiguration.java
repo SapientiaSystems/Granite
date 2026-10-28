@@ -11,11 +11,13 @@ import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.foundation.core.security.JwtCheckMode;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
+import granite.frontendcontroller.server.application.IServiceTokenSource;
 import granite.frontendcontroller.server.application.PreferenceDefinition;
+import granite.frontendcontroller.server.application.ServiceTokenSource;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
-import granite.frontendcontroller.server.platform.ForwardedBearerClientRequestFilter;
 import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
+import granite.frontendcontroller.server.platform.ServiceTokenClientRequestFilter;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
@@ -37,6 +39,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -49,6 +52,7 @@ import strata.foundation.core.concurrent.BoundedExecutor;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.frontendcontroller.server.application.ApplicationConfiguration;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -59,6 +63,9 @@ import java.util.concurrent.Executor;
 public abstract
 class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndControllerService>
 {
+    public static final String SERVICE_CLIENT_ID     = "granite.frontendcontroller.service-client.id";
+    public static final String SERVICE_CLIENT_SECRET = "granite.frontendcontroller.service-client.secret";
+
     @Autowired
     private IConfiguration configuration;
 
@@ -102,6 +109,20 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     responseCookieAdvice()
     {
         return new ResponseCookieAdvice();
+    }
+
+    @Bean
+    @Lazy
+    @Scope("singleton")
+    public IServiceTokenSource
+    serviceTokenSource()
+    {
+        return
+            new ServiceTokenSource(
+                createServiceTokenClient(),
+                Clock.systemUTC(),
+                configuration.getProperty(SERVICE_CLIENT_ID,"granite-frontendcontroller"),
+                configuration.getProperty(SERVICE_CLIENT_SECRET,""));
     }
 
     @Bean
@@ -211,19 +232,35 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
         return new SessionQueryServiceClient(client.getBuilder(),client.getBaseUrl());
     }
 
+    protected ISessionCommandServiceClient
+    createServiceTokenClient()
+    {
+        return
+            new SessionCommandServiceClient(
+                createClientBuilder(),
+                configuration.getProperty("session-command-service.base-url"));
+    }
+
     protected GraniteClientSettings
     createClientConfiguration(String baseUrlProperty)
     {
         ClientBuilder builder =
+            createClientBuilder()
+                .register(new ServiceTokenClientRequestFilter(serviceTokenSource()));
+
+        return new GraniteClientSettings(builder,configuration.getProperty(baseUrlProperty));
+    }
+
+    private ClientBuilder
+    createClientBuilder()
+    {
+        return
             ClientBuilder
                 .newBuilder()
-                .register(ForwardedBearerClientRequestFilter.fromCurrentRequest())
                 .sslContext(
                     sslBundles
                         .getBundle("granite-services")
                         .createSslContext());
-
-        return new GraniteClientSettings(builder,configuration.getProperty(baseUrlProperty));
     }
 }
 

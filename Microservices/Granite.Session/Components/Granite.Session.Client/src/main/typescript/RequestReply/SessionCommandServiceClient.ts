@@ -18,7 +18,9 @@ import {
     RefreshReply,
     RefreshRequest,
     ResolveSessionReply,
-    ResolveSessionRequest
+    ResolveSessionRequest,
+    IssueServiceTokenReply,
+    IssueServiceTokenRequest
 } from "granite.session.service/RequestReply";
 
 export
@@ -100,6 +102,14 @@ class SessionCommandServiceClient
         console.log("SessionCommandServiceClient.resolveSession");
         return this.doPost<ResolveSessionReply,ResolveSessionRequest>(
             "resolve-session",
+            this.initializeRequest(request));
+    }
+
+    issueServiceToken(request: IssueServiceTokenRequest): ICompletionStage<IssueServiceTokenReply>
+    {
+        console.log("SessionCommandServiceClient.issueServiceToken");
+        return this.doPost<IssueServiceTokenReply,IssueServiceTokenRequest>(
+            "issue-service-token",
             this.initializeRequest(request));
     }
 

@@ -17,6 +17,8 @@ import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.CompleteOktaLoginRequest;
+import granite.session.service.requestreply.IssueServiceTokenReply;
+import granite.session.service.requestreply.IssueServiceTokenRequest;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
 import granite.session.service.requestreply.LogoutAllForUserReply;
@@ -105,6 +107,7 @@ class SessionCommandService
     private final Duration                        renewalMargin;
     private final Clock                           clock;
     private final ConflictDetector                conflictDetector;
+    private final IServiceTokenIssuer             serviceTokenIssuer;
     private final Map<String,OktaIdentity>        exchangedIdentities;
     private final Logger                          logger;
 
@@ -112,8 +115,8 @@ class SessionCommandService
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
     private static final String   OKTA_PROVIDER       = "okta";
+    private static final String   INVALID_CLIENT      = "invalid client";
 
-    @Inject
     public
     SessionCommandService(
         ISessionRepository              repository,
@@ -132,7 +135,46 @@ class SessionCommandService
         Clock                           clock,
         ApplicationRolesManager roles)
     {
-        this.repository               = repository;
+        this(
+            repository,
+            transactionRepository,
+            jwtTokenService,
+            refreshTokenService,
+            userCommandServiceClient,
+            userQueryServiceClient,
+            oktaClient,
+            oktaSettings,
+            loginGate,
+            sender,
+            mapper,
+            maxLifetime,
+            renewalMargin,
+            clock,
+            roles,
+            null);
+    }
+
+    @Inject
+    public
+    SessionCommandService(
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        ILoginGate                      loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
+        Duration                        maxLifetime,
+        Duration                        renewalMargin,
+        Clock                           clock,
+        ApplicationRolesManager         roles,
+        IServiceTokenIssuer             serviceTokenIssuer)
+    {
+        this.repository              = repository;
         this.transactionRepository    = transactionRepository;
         this.jwtTokenService          = jwtTokenService;
         this.refreshTokenService      = refreshTokenService;
@@ -149,6 +191,7 @@ class SessionCommandService
         this.renewalMargin            = renewalMargin;
         this.clock                    = clock;
         this.conflictDetector         = new ConflictDetector();
+        this.serviceTokenIssuer       = serviceTokenIssuer;
         this.exchangedIdentities      = new ConcurrentHashMap<>();
         this.logger                   = LogManager.getLogger(SessionCommandService.class);
     }
@@ -293,6 +336,21 @@ class SessionCommandService
                 .thenApply(this::saveResolved)
                 .thenApply(this::buildResolveReply)
                 .exceptionally(e -> buildResolveReply(e,request));
+    }
+
+    @Override
+    public CompletionStage<IssueServiceTokenReply>
+    issueServiceToken(IssueServiceTokenRequest request)
+    {
+        return
+            CompletableFuture
+                .supplyAsync(
+                    () ->
+                        serviceTokenIssuer != null
+                            ? serviceTokenIssuer.issue(request)
+                            : buildIssueReply(new IllegalStateException("no service clients"),request),
+                    new CurrentThreadExecutor())
+                .exceptionally(e -> buildIssueReply(e,request));
     }
 
     @Override
@@ -1485,6 +1543,16 @@ class SessionCommandService
             new ResolveSessionReply(request)
                 .setSuccess(false)
                 .setFailureMessage(INVALID_SESSION);
+    }
+
+    private IssueServiceTokenReply
+    buildIssueReply(Throwable e,IssueServiceTokenRequest request)
+    {
+        logger.warn("<issueServiceToken> exception reply: {}",e.getClass().getName());
+        return
+            (request != null ? new IssueServiceTokenReply(request) : new IssueServiceTokenReply())
+                .setSuccess(false)
+                .setFailureMessage(INVALID_CLIENT);
     }
 
     private boolean
