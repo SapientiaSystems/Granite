@@ -9,12 +9,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,6 +39,7 @@ class SessionRequestContextTest
     tearDown()
     {
         RequestContextHolder.resetRequestAttributes();
+        SecurityContextHolder.clearContext();
     }
 
     public static String
@@ -48,14 +55,32 @@ class SessionRequestContextTest
                 + ".signature";
     }
 
+    public static Jwt
+    jwt(Long sessionId,Long userId)
+    {
+        Jwt.Builder builder = Jwt.withTokenValue("verified.token.value").header("alg","RS256");
+
+        if (sessionId != null)
+            builder.jti(String.valueOf(sessionId));
+
+        if (userId != null)
+            builder.subject(String.valueOf(userId));
+
+        return builder.claim("verified",true).build();
+    }
+
+    public static void
+    authenticate(Jwt jwt)
+    {
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt,List.of(),jwt.getSubject()));
+    }
+
     @Test
     public void
-    readsCookiesAndBearerClaims()
+    readsCookiesAndVerifiedTokenClaims()
     {
         SessionRequestContext context =
-            new SessionRequestContext(
-                Map.of("GRANITE_DID","device-1","other","x"),
-                bearer("{\"jti\":\"42\",\"sub\":\"7\"}"));
+            new SessionRequestContext(Map.of("GRANITE_DID","device-1","other","x"),jwt(42L,7L));
 
         assertEquals("device-1",context.getCookie("GRANITE_DID").orElseThrow());
         assertTrue(context.getCookie("missing").isEmpty());
@@ -65,16 +90,15 @@ class SessionRequestContextTest
 
     @Test
     public void
-    malformedOrAbsentBearerGivesNoIdentity()
+    absentOrNonNumericClaimsGiveNoIdentity()
     {
-        String[] bad = {null,"","Basic abc","Bearer ","Bearer a.b.c","Bearer onlyone",bearer("{\"jti\":\"x\"}"),bearer("[]")};
+        SessionRequestContext none = new SessionRequestContext(Map.of(),null);
+        SessionRequestContext text = new SessionRequestContext(Map.of(),Jwt.withTokenValue("t").header("alg","RS256").jti("x").subject("y").build());
 
-        for (String authorization : bad)
+        for (SessionRequestContext context : List.of(none,text))
         {
-            SessionRequestContext context = new SessionRequestContext(Map.of(),authorization);
-
-            assertTrue(context.getSessionId().isEmpty(),String.valueOf(authorization));
-            assertTrue(context.getCallerUserId().isEmpty(),String.valueOf(authorization));
+            assertTrue(context.getSessionId().isEmpty());
+            assertTrue(context.getCallerUserId().isEmpty());
         }
     }
 
@@ -85,7 +109,7 @@ class SessionRequestContextTest
         MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-input");
 
         request.setCookies(new Cookie("GRANITE_DID","device-9"),new Cookie("XSRF-TOKEN","t"));
-        request.addHeader("Authorization",bearer("{\"jti\":5,\"sub\":6}"));
+        authenticate(jwt(5L,6L));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
@@ -95,6 +119,35 @@ class SessionRequestContextTest
         assertEquals(6L,context.getCallerUserId().orElseThrow());
         assertSame(context,request.getAttribute(SessionRequestContext.ATTRIBUTE));
         assertSame(context,SessionRequestContext.fromCurrentRequest());
+    }
+
+    @Test
+    public void
+    anUnverifiedBearerHeaderIsNeverTrusted()
+    {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-input");
+
+        request.addHeader("Authorization",bearer("{\"jti\":\"5\",\"sub\":\"6\"}"));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
+
+        assertTrue(context.getSessionId().isEmpty());
+        assertTrue(context.getCallerUserId().isEmpty());
+    }
+
+    @Test
+    public void
+    anAnonymousAuthenticationGivesNoIdentity()
+    {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-input");
+
+        SecurityContextHolder
+            .getContext()
+            .setAuthentication(new AnonymousAuthenticationToken("key","anonymousUser",List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        assertTrue(SessionRequestContext.fromCurrentRequest().getCallerUserId().isEmpty());
     }
 
     @Test

@@ -4,16 +4,15 @@
 
 package granite.frontendcontroller.server.platform;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,22 +24,17 @@ class SessionRequestContext
 {
     public static final String ATTRIBUTE = "granite.session-request-context";
 
-    private static final String       BEARER_PREFIX = "Bearer ";
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     private final Map<String,String> cookies;
     private final Optional<Long>     sessionId;
     private final Optional<Long>     callerUserId;
     private final List<String>       setCookies;
 
     public
-    SessionRequestContext(Map<String,String> cookies,String authorization)
+    SessionRequestContext(Map<String,String> cookies,Jwt verifiedToken)
     {
-        JsonNode claims = claims(authorization);
-
         this.cookies = Map.copyOf(cookies);
-        this.sessionId = number(claims,"jti");
-        this.callerUserId = number(claims,"sub");
+        this.sessionId = number(verifiedToken == null ? null : verifiedToken.getId());
+        this.callerUserId = number(verifiedToken == null ? null : verifiedToken.getSubject());
         this.setCookies = new CopyOnWriteArrayList<>();
     }
 
@@ -80,43 +74,34 @@ class SessionRequestContext
                 cookies.putIfAbsent(cookie.getName(),cookie.getValue());
         }
 
-        SessionRequestContext context =
-            new SessionRequestContext(cookies,request.getHeader(HttpHeaders.AUTHORIZATION));
+        SessionRequestContext context = new SessionRequestContext(cookies,verifiedToken());
 
         request.setAttribute(ATTRIBUTE,context);
         return context;
     }
 
-    private static JsonNode
-    claims(String authorization)
+    private static Jwt
+    verifiedToken()
     {
-        if (authorization == null || !authorization.regionMatches(true,0,BEARER_PREFIX,0,BEARER_PREFIX.length()))
-            return null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        String[] parts = authorization.substring(BEARER_PREFIX.length()).trim().split("\\.");
+        if (authentication != null
+            && authentication.isAuthenticated()
+            && authentication.getPrincipal() instanceof Jwt jwt)
+            return jwt;
 
-        if (parts.length < 2)
-            return null;
-
-        try
-        {
-            return MAPPER.readTree(Base64.getUrlDecoder().decode(parts[1]));
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
+        return null;
     }
 
     private static Optional<Long>
-    number(JsonNode claims,String name)
+    number(String value)
     {
-        if (claims == null || !claims.isObject() || !claims.hasNonNull(name))
+        if (value == null)
             return Optional.empty();
 
         try
         {
-            return Optional.of(Long.valueOf(claims.get(name).asText()));
+            return Optional.of(Long.valueOf(value));
         }
         catch (NumberFormatException e)
         {

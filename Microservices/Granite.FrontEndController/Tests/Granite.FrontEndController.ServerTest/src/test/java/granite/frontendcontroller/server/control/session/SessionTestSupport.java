@@ -23,12 +23,8 @@ class SessionTestSupport
     context(String deviceId,Long sessionId,Long userId)
     {
         Map<String,String> cookies = deviceId == null ? Map.of() : Map.of("GRANITE_DID",deviceId);
-        String             bearer =
-            sessionId == null
-                ? null
-                : SessionRequestContextTest.bearer("{\"jti\":\"" + sessionId + "\",\"sub\":\"" + userId + "\"}");
 
-        return new SessionRequestContext(cookies,bearer);
+        return new SessionRequestContext(cookies,sessionId == null ? null : SessionRequestContextTest.jwt(sessionId,userId));
     }
 
     public static SessionInput

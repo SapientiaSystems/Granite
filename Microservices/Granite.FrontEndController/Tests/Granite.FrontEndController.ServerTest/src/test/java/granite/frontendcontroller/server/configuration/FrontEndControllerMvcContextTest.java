@@ -101,7 +101,7 @@ class FrontEndControllerMvcContextTest
         context
             .getEnvironment()
             .getPropertySources()
-            .addFirst(new MapPropertySource("test",Map.of("granite.frontendcontroller.service-path",PATH)));
+            .addFirst(new MapPropertySource("test",Map.of("granite.frontendcontroller.service-path",PATH,"granite.security.jwt.jwk-set-uri","https://session.invalid/.well-known/jwks.json")));
         context.register(MvcTestSupport.class,configuration);
         context.refresh();
 

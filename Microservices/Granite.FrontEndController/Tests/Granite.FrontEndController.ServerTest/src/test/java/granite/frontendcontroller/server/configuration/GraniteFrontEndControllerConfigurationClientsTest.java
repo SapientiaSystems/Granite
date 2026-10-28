@@ -27,6 +27,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -82,6 +83,7 @@ class GraniteFrontEndControllerConfigurationClientsTest
     tearDown()
     {
         RequestContextHolder.resetRequestAttributes();
+        SecurityContextHolder.clearContext();
         backend.stop();
     }
 
@@ -106,6 +108,7 @@ class GraniteFrontEndControllerConfigurationClientsTest
                 "find-users-by-key",
                 new FindUsersByKeyReply().setFoundUsers(List.of(new UserData().setUserId(7L).setUserName("amy"))).setSuccess(true));
 
+        SessionRequestContextTest.authenticate(SessionRequestContextTest.jwt(11L,7L));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         IGraniteFrontEndControllerService service = subject.frontEndControllerService(Runnable::run,new ModelMapper(),subject.applicationRoles());

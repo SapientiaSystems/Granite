@@ -26,6 +26,7 @@ import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -103,6 +104,7 @@ class SessionHttpTest
     public void
     tearDown()
     {
+        SecurityContextHolder.clearContext();
         backend.stop();
     }
 
@@ -177,10 +179,11 @@ class SessionHttpTest
     {
         backend.respond("logout",new LogoutReply().setSuccess(true));
 
+        SessionRequestContextTest.authenticate(SessionRequestContextTest.jwt(11L,7L));
+
         MvcResult result =
             send(
                 post("/frontendcontroller-user-service/handle-session-input")
-                    .header("Authorization",SessionRequestContextTest.bearer("{\"jti\":\"11\",\"sub\":\"7\"}"))
                     .content(
                         "{\"input\":{\"source\":\"Session.Current\",\"command\":\"Logout\","
                             + "\"destination\":\"LoginView\"}}"));
