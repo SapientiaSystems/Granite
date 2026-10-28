@@ -5,6 +5,7 @@
 package granite.session.server.configuration;
 
 import granite.foundation.core.security.ApplicationRolesManager;
+import granite.foundation.core.security.GraniteAuthorities;
 import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
@@ -202,7 +203,7 @@ class GraniteSessionCommandServerConfiguration
                 Binder
                     .get(environment)
                     .bind("granite.session.service-token.authorities",Bindable.listOf(String.class))
-                    .orElse(List.of("SCOPE_internal")),
+                    .orElse(List.of(GraniteAuthorities.SCOPE_INTERNAL)),
                 Duration.parse(environment.getProperty("granite.session.service-token.ttl","PT5M")));
     }
 

@@ -5,6 +5,7 @@
 package granite.gateway.server.configuration;
 
 import granite.foundation.core.security.ApplicationRolesManager;
+import granite.foundation.core.security.GraniteAuthorities;
 import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
@@ -71,7 +72,6 @@ import java.util.List;
 public
 class GraniteGatewayServerConfiguration
 {
-    public static final String INTERNAL_SCOPE           = "SCOPE_internal";
     public static final String ISSUE_SERVICE_TOKEN_PATH = "/session-command-service/issue-service-token";
 
     @Bean
@@ -133,7 +133,7 @@ class GraniteGatewayServerConfiguration
                             .pathMatchers(
                                 "/session-command-service/start-okta-login",
                                 "/session-command-service/complete-okta-login")
-                            .hasAuthority(INTERNAL_SCOPE);
+                            .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
                         exchanges.matchers(getAuthenticatedExchangeMatcher(environment)).authenticated();
@@ -379,7 +379,7 @@ class GraniteGatewayServerConfiguration
     configureAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
     {
         String[] readers = getUsersReaderAuthorities(environment).toArray(String[]::new);
-        String[] admins  = {ApplicationRolesManager.ADMIN,INTERNAL_SCOPE};
+        String[] admins  = {ApplicationRolesManager.ADMIN,GraniteAuthorities.SCOPE_INTERNAL};
 
         if (environment.acceptsProfiles(Profiles.of("production")))
             exchanges
@@ -389,7 +389,7 @@ class GraniteGatewayServerConfiguration
                     "/session-query-service/**",
                     "/session-command-service/**",
                     "/outbox-service/**")
-                    .hasAuthority(INTERNAL_SCOPE);
+                    .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
 
         exchanges
             .pathMatchers(
@@ -436,7 +436,7 @@ class GraniteGatewayServerConfiguration
     protected List<String>
     getUsersReaderAuthorities(Environment environment)
     {
-        return List.of(ApplicationRolesManager.ADMIN,"SCOPE_internal");
+        return List.of(ApplicationRolesManager.ADMIN,GraniteAuthorities.SCOPE_INTERNAL);
     }
 
     protected ServerHttpSecurity.AuthorizeExchangeSpec

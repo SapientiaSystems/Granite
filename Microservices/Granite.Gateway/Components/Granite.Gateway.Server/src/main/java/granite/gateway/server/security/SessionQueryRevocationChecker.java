@@ -5,6 +5,7 @@
 package granite.gateway.server.security;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import granite.foundation.core.security.GraniteAuthorities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
@@ -28,7 +29,6 @@ class SessionQueryRevocationChecker
     implements ISessionRevocationChecker
 {
     public static final String SERVICE_SUBJECT_PREFIX = "service:";
-    public static final String INTERNAL_SCOPE         = "SCOPE_internal";
     public static final String AUTHORITIES_CLAIM      = "authorities";
     public static final String DEVICE_ID_CLAIM        = "did";
 
@@ -111,7 +111,7 @@ class SessionQueryRevocationChecker
         return
             !jwt.hasClaim(DEVICE_ID_CLAIM)
                 && authorities != null
-                && authorities.contains(INTERNAL_SCOPE);
+                && authorities.contains(GraniteAuthorities.SCOPE_INTERNAL);
     }
 
     private boolean

@@ -4,6 +4,7 @@
 
 package granite.session.server.application;
 
+import granite.foundation.core.security.GraniteAuthorities;
 import granite.session.service.requestreply.IssueServiceTokenReply;
 import granite.session.service.requestreply.IssueServiceTokenRequest;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +20,6 @@ public
 class ServiceTokenIssuer
     implements IServiceTokenIssuer
 {
-    public static final String INTERNAL_SCOPE = "SCOPE_internal";
     public static final String INVALID_CLIENT = "invalid client";
 
     private static final byte[] UNKNOWN_HASH = ServiceClientRegistration.hash("unknown-service-client");
@@ -70,7 +70,7 @@ class ServiceTokenIssuer
         String token =
             jwtTokenService.mintServiceToken(
                 registration.getClientId(),
-                List.of(INTERNAL_SCOPE),
+                List.of(GraniteAuthorities.SCOPE_INTERNAL),
                 registration.getLifetime());
 
         logger.info("service token issued to client {}",registration.getClientId());
