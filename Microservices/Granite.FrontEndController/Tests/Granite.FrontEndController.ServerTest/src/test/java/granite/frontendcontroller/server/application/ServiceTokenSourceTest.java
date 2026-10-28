@@ -135,7 +135,9 @@ class ServiceTokenSourceTest
     public void
     failedRenewalKeepsStillValidToken()
     {
-        Mockito.when(clock.instant()).thenReturn(NOW,NOW.plus(Duration.ofMinutes(9)),NOW.plus(Duration.ofMinutes(10)));
+        Mockito
+            .when(clock.instant())
+            .thenReturn(NOW,NOW.plus(Duration.ofMinutes(9)),NOW.plus(Duration.ofMinutes(9)),NOW.plus(Duration.ofMinutes(10)));
         Mockito
             .when(client.issueServiceToken(Mockito.any()))
             .thenReturn(
@@ -146,6 +148,56 @@ class ServiceTokenSourceTest
         assertEquals("token-1",subject.getToken());
         assertEquals("token-1",subject.getToken());
         assertThrows(IllegalStateException.class,() -> subject.getToken());
+    }
+
+    @Test
+    public void
+    failedIssueIsCachedBrieflySoCallersFailFast()
+    {
+        Mockito
+            .when(clock.instant())
+            .thenReturn(
+                NOW,
+                NOW,
+                NOW.plus(Duration.ofSeconds(2)),
+                NOW.plus(ServiceTokenSource.FAILURE_BACKOFF).plusMillis(1));
+        Mockito
+            .when(client.issueServiceToken(Mockito.any()))
+            .thenReturn(
+                CompletableFuture.completedFuture(new IssueServiceTokenReply().setSuccess(false)),
+                issued("token-1",NOW.plus(Duration.ofMinutes(10))));
+
+        assertThrows(IllegalStateException.class,() -> subject.getToken());
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,() -> subject.getToken());
+
+        assertFalse(e.getMessage().contains("fec-secret"));
+        Mockito.verify(client,Mockito.times(1)).issueServiceToken(Mockito.any());
+        assertEquals("token-1",subject.getToken());
+        Mockito.verify(client,Mockito.times(2)).issueServiceToken(Mockito.any());
+    }
+
+    @Test
+    public void
+    failedRenewalIsNotRetriedWhileBackingOff()
+    {
+        Mockito
+            .when(clock.instant())
+            .thenReturn(
+                NOW,
+                NOW.plus(Duration.ofMinutes(9)),
+                NOW.plus(Duration.ofMinutes(9)),
+                NOW.plus(Duration.ofMinutes(9)).plusSeconds(2));
+        Mockito
+            .when(client.issueServiceToken(Mockito.any()))
+            .thenReturn(
+                issued("token-1",NOW.plus(Duration.ofMinutes(10))),
+                CompletableFuture.completedFuture(new IssueServiceTokenReply().setSuccess(false)));
+
+        assertEquals("token-1",subject.getToken());
+        assertEquals("token-1",subject.getToken());
+        assertEquals("token-1",subject.getToken());
+        Mockito.verify(client,Mockito.times(2)).issueServiceToken(Mockito.any());
     }
 
     private static CompletableFuture<IssueServiceTokenReply>

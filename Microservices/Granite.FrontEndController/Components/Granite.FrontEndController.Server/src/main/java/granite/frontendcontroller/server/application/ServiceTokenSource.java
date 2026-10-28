@@ -22,6 +22,7 @@ class ServiceTokenSource
     implements IServiceTokenSource
 {
     public static final Duration DEFAULT_ISSUE_TIMEOUT = Duration.ofSeconds(5);
+    public static final Duration FAILURE_BACKOFF       = Duration.ofSeconds(5);
 
     private static final Duration RENEWAL_MARGIN = Duration.ofSeconds(60);
 
@@ -34,6 +35,7 @@ class ServiceTokenSource
     private String                             token;
     private Instant                            expiresAt;
     private Instant                            renewAt;
+    private Instant                            retryAt;
 
     public
     ServiceTokenSource(
@@ -52,6 +54,7 @@ class ServiceTokenSource
         this.token        = null;
         this.expiresAt    = null;
         this.renewAt      = null;
+        this.retryAt      = null;
     }
 
     @Override
@@ -63,12 +66,18 @@ class ServiceTokenSource
         if (token != null && now.isBefore(renewAt))
             return token;
 
+        if (retryAt != null && now.isBefore(retryAt))
+            return cachedOrFail(now);
+
         try
         {
             issue(now);
+            retryAt = null;
         }
         catch (RuntimeException e)
         {
+            retryAt = clock.instant().plus(FAILURE_BACKOFF);
+
             if (token != null && expiresAt != null && now.isBefore(expiresAt))
             {
                 logger.warn("service token renewal failed for client {}; using the cached token",clientId);
@@ -82,6 +91,15 @@ class ServiceTokenSource
         }
 
         return token;
+    }
+
+    private String
+    cachedOrFail(Instant now)
+    {
+        if (token != null && expiresAt != null && now.isBefore(expiresAt))
+            return token;
+
+        throw new IllegalStateException("service token unavailable for client " + clientId);
     }
 
     private void
