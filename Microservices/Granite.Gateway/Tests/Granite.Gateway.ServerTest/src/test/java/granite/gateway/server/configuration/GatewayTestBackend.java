@@ -173,7 +173,28 @@ class GatewayTestBackend
     signServiceToken(List<String> authorities)
         throws JOSEException
     {
-        return sign(trusted,"service:granite-session",UUID.randomUUID().toString(),authorities);
+        return
+            sign(
+                trusted,
+                "service:granite-session",
+                UUID.randomUUID().toString(),
+                authorities,
+                Duration.ofSeconds(300),
+                false);
+    }
+
+    public String
+    signClientServiceToken(String clientId)
+        throws JOSEException
+    {
+        return
+            sign(
+                trusted,
+                clientId,
+                UUID.randomUUID().toString(),
+                List.of("SCOPE_internal"),
+                Duration.ofSeconds(300),
+                false);
     }
 
     public String
@@ -284,8 +305,21 @@ class GatewayTestBackend
     sign(KeyPair keys,String subject,String sessionId,List<String> authorities,Duration lifetime)
         throws JOSEException
     {
-        Instant      now    = Instant.now();
-        JWTClaimsSet claims =
+        return sign(keys,subject,sessionId,authorities,lifetime,true);
+    }
+
+    private String
+    sign(
+        KeyPair      keys,
+        String       subject,
+        String       sessionId,
+        List<String> authorities,
+        Duration     lifetime,
+        boolean      session)
+        throws JOSEException
+    {
+        Instant              now     = Instant.now();
+        JWTClaimsSet.Builder builder =
             new JWTClaimsSet.Builder()
                 .issuer("granite-session")
                 .subject(subject)
@@ -293,8 +327,12 @@ class GatewayTestBackend
                 .audience("granite-services")
                 .issueTime(Date.from(now))
                 .expirationTime(Date.from(now.plus(lifetime)))
-                .claim("authorities",authorities)
-                .build();
+                .claim("authorities",authorities);
+
+        if (session)
+            builder.claim("did","device-" + sessionId);
+
+        JWTClaimsSet claims = builder.build();
         SignedJWT    jwt    =
             new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(keyId).build(),claims);
 

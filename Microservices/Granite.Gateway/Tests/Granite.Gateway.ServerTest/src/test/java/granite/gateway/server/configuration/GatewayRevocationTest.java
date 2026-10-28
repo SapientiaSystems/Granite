@@ -116,6 +116,31 @@ class GatewayRevocationTest
 
     @Test
     public void
+    clientServiceTokensSkipTheSessionLookup()
+        throws Exception
+    {
+        int before = backend.getSessionLookups().size();
+
+        post(backend.signClientServiceToken("granite-frontendcontroller")).expectStatus().isOk();
+        post(backend.signClientServiceToken("granite-frontendcontroller")).expectStatus().isOk();
+        assertEquals(before,backend.getSessionLookups().size());
+    }
+
+    @Test
+    public void
+    sessionTokensWithInternalScopeAreStillChecked()
+        throws Exception
+    {
+        String sessionId = backend.newSessionId();
+
+        backend.revoke(sessionId);
+
+        post(backend.sign(sessionId,List.of("SCOPE_internal"))).expectStatus().isUnauthorized();
+        assertTrue(backend.getSessionLookups().contains(sessionId));
+    }
+
+    @Test
+    public void
     lookupUsesCallersToken()
         throws Exception
     {

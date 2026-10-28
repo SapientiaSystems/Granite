@@ -101,6 +101,18 @@ class GraniteGatewayServerConfigurationTest
             assertFalse(paths.contains(path),path);
     }
 
+    @Test
+    public void
+    testIssueServiceTokenIsPublicInEveryProfile()
+    {
+        for (String profile : new String[] {"local","development","test","production"})
+            assertTrue(
+                new GraniteGatewayServerConfiguration()
+                    .getPublicPathPatterns(environment(profile))
+                    .contains("/session-command-service/issue-service-token"),
+                profile);
+    }
+
     private Map<String,URI>
     getRoutes()
     {

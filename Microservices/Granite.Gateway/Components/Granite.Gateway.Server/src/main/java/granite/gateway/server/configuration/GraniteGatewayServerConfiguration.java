@@ -13,10 +13,12 @@ import granite.gateway.server.security.CookieCsrfProtectionMatcher;
 import granite.gateway.server.security.CsrfCookieWebFilter;
 import granite.gateway.server.security.CurrentSessionFrontEndInputMatcher;
 import granite.gateway.server.security.DeviceCookieWebFilter;
+import granite.gateway.server.security.FixedWindowRateLimiter;
 import granite.gateway.server.security.FrontEndInputKeyWebFilter;
 import granite.gateway.server.security.ISessionResolver;
 import granite.gateway.server.security.ISessionRevocationChecker;
 import granite.gateway.server.security.PublicFrontEndInputMatcher;
+import granite.gateway.server.security.RateLimitWebFilter;
 import granite.gateway.server.security.RevocationCheckingReactiveJwtDecoder;
 import granite.gateway.server.security.SessionCommandSessionResolver;
 import granite.gateway.server.security.SessionCookieWebFilter;
@@ -69,6 +71,9 @@ import java.util.List;
 public
 class GraniteGatewayServerConfiguration
 {
+    public static final String INTERNAL_SCOPE           = "SCOPE_internal";
+    public static final String ISSUE_SERVICE_TOKEN_PATH = "/session-command-service/issue-service-token";
+
     @Bean
     public InitializingBean
     initialize()
@@ -108,6 +113,7 @@ class GraniteGatewayServerConfiguration
                             .csrfTokenRepository(csrfRepository)
                             .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
                             .requireCsrfProtectionMatcher(new CookieCsrfProtectionMatcher()))
+                .addFilterBefore(createServiceTokenRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
                 .addFilterBefore(
                     new FrontEndInputKeyWebFilter(
                         environment.getProperty("granite.gateway.front-end-input.max-bytes",Integer.class,1048576)),
@@ -121,11 +127,13 @@ class GraniteGatewayServerConfiguration
                     exchanges ->
                     {
                         exchanges
+                            .pathMatchers("/session-command-service/resolve-session")
+                            .denyAll();
+                        exchanges
                             .pathMatchers(
-                                "/session-command-service/resolve-session",
                                 "/session-command-service/start-okta-login",
                                 "/session-command-service/complete-okta-login")
-                            .denyAll();
+                            .hasAuthority(INTERNAL_SCOPE);
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
                         exchanges.matchers(getAuthenticatedExchangeMatcher(environment)).authenticated();
@@ -308,6 +316,7 @@ class GraniteGatewayServerConfiguration
                     environment.getProperty("strata.health.base-path","/health") + "/**",
                     "/session-command-service/login",
                     "/session-command-service/refresh",
+                    ISSUE_SERVICE_TOKEN_PATH,
                     "/",
                     "/index.html",
                     "/config.js",
@@ -322,6 +331,23 @@ class GraniteGatewayServerConfiguration
                     "/*/v3/api-docs/**"));
 
         return paths;
+    }
+
+    protected RateLimitWebFilter
+    createServiceTokenRateLimitWebFilter(Environment environment)
+    {
+        return
+            new RateLimitWebFilter(
+                ServerWebExchangeMatchers.pathMatchers(ISSUE_SERVICE_TOKEN_PATH),
+                new FixedWindowRateLimiter(
+                    environment.getProperty("granite.gateway.issue-service-token.rate-limit.requests",Integer.class,10),
+                    Duration.parse(
+                        environment.getProperty("granite.gateway.issue-service-token.rate-limit.window","PT1M")),
+                    environment.getProperty(
+                        "granite.gateway.issue-service-token.rate-limit.max-clients",
+                        Integer.class,
+                        10000),
+                    Clock.systemUTC()));
     }
 
     protected CookieServerCsrfTokenRepository
@@ -353,7 +379,17 @@ class GraniteGatewayServerConfiguration
     configureAuthorization(AuthorizeExchangeSpec exchanges,Environment environment)
     {
         String[] readers = getUsersReaderAuthorities(environment).toArray(String[]::new);
-        String[] admins  = {ApplicationRolesManager.ADMIN,"SCOPE_internal"};
+        String[] admins  = {ApplicationRolesManager.ADMIN,INTERNAL_SCOPE};
+
+        if (environment.acceptsProfiles(Profiles.of("production")))
+            exchanges
+                .pathMatchers(
+                    "/user-query-service/**",
+                    "/user-command-service/**",
+                    "/session-query-service/**",
+                    "/session-command-service/**",
+                    "/outbox-service/**")
+                    .hasAuthority(INTERNAL_SCOPE);
 
         exchanges
             .pathMatchers(
@@ -424,9 +460,6 @@ class GraniteGatewayServerConfiguration
             "/frontendcontroller-admin-service/**",
             "granite.frontendcontroller-admin-service.host",
             environment);
-
-        if (environment.acceptsProfiles(Profiles.of("production")))
-            return configureApplicationRoutes(routes,environment);
 
         addRoute(
             routes,

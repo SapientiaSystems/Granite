@@ -122,12 +122,13 @@ class GatewaySessionCookieTest
 
     @Test
     public void
-    oktaPathsAreDeniedExternallyAndNeverReachTheBackend()
+    oktaPathsAreDeniedToBrowserSessionsAndOpenToServiceTokens()
         throws Exception
     {
-        String admin  = backend.sign(List.of("ROLE_ADMIN"));
-        String handle = newHandle();
-        String device = "device-" + UUID.randomUUID();
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String service = backend.signClientServiceToken("granite-frontendcontroller");
+        String handle  = newHandle();
+        String device  = "device-" + UUID.randomUUID();
 
         register(handle,"ROLE_ADMIN");
 
@@ -139,6 +140,8 @@ class GatewaySessionCookieTest
             assertEquals(403,postWithoutCookies(path,"{}",admin),path);
             assertEquals(403,post(path,"{}",handle,device,null),path);
             assertEquals(before,backend.getReceivedBodies().size(),path);
+            assertEquals(200,postWithoutCookies(path,"{}",service),path);
+            assertEquals(before + 1,backend.getReceivedBodies().size(),path);
         }
     }
 

@@ -33,6 +33,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public
 class GatewayProductionRoutesTest
 {
+    private static final List<String> INTERNAL_PATHS =
+        List.of(
+            "/user-query-service/find-users-by-key",
+            "/user-command-service/create-user",
+            "/session-query-service/get-sessions",
+            "/session-command-service/logout",
+            "/session-command-service/close-session",
+            "/outbox-service/get-entries");
+
     private static GatewayTestBackend backend;
 
     @LocalServerPort
@@ -68,33 +77,129 @@ class GatewayProductionRoutesTest
 
     @Test
     public void
-    productionExposesOnlyFrontEndControllerRoutes()
+    productionExposesAllGraniteRoutes()
     {
         List<Route> routes = routeLocator.getRoutes().collectList().block();
 
         assertEquals(
-            Set.of("frontendcontroller-user-route","frontendcontroller-admin-route"),
+            Set.of(
+                "frontendcontroller-user-route",
+                "frontendcontroller-admin-route",
+                "user-command-route",
+                "user-query-route",
+                "session-command-route",
+                "session-query-route",
+                "outbox-route"),
             routes.stream().map(Route::getId).collect(Collectors.toSet()));
     }
 
     @Test
     public void
-    productionDoesNotRouteDirectServicePaths()
+    browserSessionsAreForbiddenOnInternalRoutes()
         throws Exception
     {
-        int    before = backend.getReceivedAuthorizations().size();
-        String token  = backend.sign(List.of("ROLE_ADMIN"));
+        for (String role : List.of("ROLE_ADMIN","ROLE_USER","ROLE_AUDITOR"))
+        {
+            String token  = backend.sign(List.of(role));
+            int    before = backend.getReceivedAuthorizations().size();
 
-        client
-            .post()
-            .uri("/user-query-service/find-users-by-key")
-            .contentType(MediaType.APPLICATION_JSON)
-            .headers(headers -> headers.setBearerAuth(token))
-            .bodyValue("{}")
-            .exchange()
-            .expectStatus()
-            .isNotFound();
-        assertEquals(before,backend.getReceivedAuthorizations().size());
+            for (String path : INTERNAL_PATHS)
+                assertEquals(403,post(path,token),role + " " + path);
+
+            assertEquals(before,backend.getReceivedAuthorizations().size(),role);
+        }
+    }
+
+    @Test
+    public void
+    internalRoutesRequireAToken()
+    {
+        for (String path : INTERNAL_PATHS)
+            assertEquals(401,post(path,null),path);
+    }
+
+    @Test
+    public void
+    serviceTokensReachInternalRoutes()
+        throws Exception
+    {
+        for (String token :
+                List.of(
+                    backend.signClientServiceToken("granite-frontendcontroller"),
+                    backend.signServiceToken(List.of("SCOPE_internal"))))
+        {
+            for (String path : INTERNAL_PATHS)
+            {
+                int before = backend.getReceivedAuthorizations().size();
+
+                assertEquals(200,post(path,token),path);
+                assertEquals(before + 1,backend.getReceivedAuthorizations().size(),path);
+            }
+        }
+    }
+
+    @Test
+    public void
+    oktaStepsAreForbiddenToBrowserSessionsAndOpenToServiceTokens()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String service = backend.signClientServiceToken("granite-frontendcontroller");
+
+        for (String path : List.of("/session-command-service/start-okta-login","/session-command-service/complete-okta-login"))
+        {
+            assertEquals(401,post(path,null),path);
+            assertEquals(403,post(path,admin),path);
+            assertEquals(200,post(path,service),path);
+        }
+    }
+
+    @Test
+    public void
+    resolveSessionIsDeniedToEveryCaller()
+        throws Exception
+    {
+        String path = "/session-command-service/resolve-session";
+        int    seen = backend.getResolveCalls().size();
+
+        assertEquals(401,post(path,null));
+        assertEquals(403,post(path,backend.sign(List.of("ROLE_ADMIN"))));
+        assertEquals(403,post(path,backend.signClientServiceToken("granite-frontendcontroller")));
+        assertEquals(403,post(path,backend.signServiceToken(List.of("SCOPE_internal"))));
+        assertEquals(seen,backend.getResolveCalls().size());
+    }
+
+    @Test
+    public void
+    sessionEntryPathsStayPublic()
+    {
+        for (String path :
+                List.of(
+                    "/session-command-service/login",
+                    "/session-command-service/refresh",
+                    "/session-command-service/issue-service-token"))
+            assertEquals(200,post(path,null),path);
+    }
+
+    private int
+    post(String path,String token)
+    {
+        return
+            client
+                .post()
+                .uri(path)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(
+                    headers ->
+                    {
+                        if (token != null)
+                            headers.setBearerAuth(token);
+                    })
+                .bodyValue("{}")
+                .exchange()
+                .returnResult(String.class)
+                .getStatus()
+                .value();
     }
 }
 

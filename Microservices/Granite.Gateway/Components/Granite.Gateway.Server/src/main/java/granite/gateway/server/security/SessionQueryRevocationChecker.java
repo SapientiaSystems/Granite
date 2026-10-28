@@ -18,6 +18,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +28,9 @@ class SessionQueryRevocationChecker
     implements ISessionRevocationChecker
 {
     public static final String SERVICE_SUBJECT_PREFIX = "service:";
+    public static final String INTERNAL_SCOPE         = "SCOPE_internal";
+    public static final String AUTHORITIES_CLAIM      = "authorities";
+    public static final String DEVICE_ID_CLAIM        = "did";
 
     private static final int MAX_CACHE_ENTRIES = 10_000;
 
@@ -61,7 +65,7 @@ class SessionQueryRevocationChecker
     public Mono<Boolean>
     isActive(Jwt jwt)
     {
-        if (jwt.getSubject() != null && jwt.getSubject().startsWith(SERVICE_SUBJECT_PREFIX))
+        if (isServiceToken(jwt))
             return Mono.just(true);
 
         String  sessionId = jwt.getId();
@@ -94,6 +98,20 @@ class SessionQueryRevocationChecker
                         logger.warn("session revocation lookup failed; rejecting token: {}",e.getMessage());
                         return Mono.just(false);
                     });
+    }
+
+    private static boolean
+    isServiceToken(Jwt jwt)
+    {
+        if (jwt.getSubject() != null && jwt.getSubject().startsWith(SERVICE_SUBJECT_PREFIX))
+            return true;
+
+        List<String> authorities = jwt.getClaimAsStringList(AUTHORITIES_CLAIM);
+
+        return
+            !jwt.hasClaim(DEVICE_ID_CLAIM)
+                && authorities != null
+                && authorities.contains(INTERNAL_SCOPE);
     }
 
     private boolean
