@@ -10,6 +10,8 @@ sourceSets {
 
 dependencies {
     testImplementation project(':Components:Granite.Foundation.Core')
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springboot_version"
+    testImplementation "org.springframework.boot:spring-boot-starter-web:$springboot_version"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter_version"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter_version"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter_version"

@@ -7,6 +7,7 @@ wrapper.jarFile = ".gradle/wrapper/gradle-wrapper.jar"
 ext {
     strata_foundation_version = "1.0-SNAPSHOT"
     spring_security_version = "6.2.1"
+    springboot_version = "3.4.1"
 
     junit_jupiter_version = "5.13.3"
     junit_platform_version = "1.13.3"
