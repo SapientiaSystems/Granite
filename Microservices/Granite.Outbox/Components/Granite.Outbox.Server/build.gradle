@@ -13,4 +13,6 @@ dependencies {
     api "strata.outbox:strata-outbox-server:$strata_outbox_version"
     api "strata.foundation:strata-foundation-kafka:$strata_foundation_version"
     api "granite.user:granite-user-service:$version"
+    api "granite.foundation:granite-foundation-core:$system_version"
+    api "org.springframework.boot:spring-boot-starter-security:$springboot_version"
 }

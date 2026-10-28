@@ -5,6 +5,7 @@
 package granite.outbox.servicehost.main;
 
 import granite.user.service.event.UserEvent;
+import granite.outbox.server.configuration.GraniteOutboxSecurityConfiguration;
 import granite.outbox.server.user.KafkaAvroUserEventSender;
 import granite.outbox.server.user.UserEventOutboxEventReceiver;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ import java.util.Map;
 @Configuration
 @EnableTransactionManagement
 @EnableAsync
-@Import({HealthCheckConfiguration.class})
+@Import({HealthCheckConfiguration.class,GraniteOutboxSecurityConfiguration.class})
 public
 class HostConfiguration
     extends StrataPollingOutboxServerConfiguration
@@ -68,9 +69,8 @@ class HostConfiguration
         CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
 
         filter.setIncludeQueryString(true);
-        filter.setIncludePayload(true);
-        filter.setMaxPayloadLength(10000);
-        filter.setIncludeHeaders(true);
+        filter.setIncludePayload(false);
+        filter.setIncludeHeaders(false);
         filter.setAfterMessagePrefix("REQUEST DATA: ");
         return filter;
     }

@@ -51,6 +51,7 @@ spec:
                   - granite-user-commandhost
                   - granite-user-queryhost
                   - granite-session-queryhost
+                  - granite-outbox-servicehost
       ports:
         - protocol: TCP
           port: 8088
