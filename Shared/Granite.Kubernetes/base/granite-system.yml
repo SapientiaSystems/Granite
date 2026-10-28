@@ -33,6 +33,12 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
+          env:
+            - name: FEC_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: granite-fec-service-client
+                  key: secret
           envFrom:
             - configMapRef:
                 name: granite-environment
@@ -132,6 +138,12 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
+          env:
+            - name: FEC_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: granite-fec-service-client
+                  key: secret
           envFrom:
             - configMapRef:
                 name: granite-environment
@@ -432,6 +444,11 @@ spec:
               value: file:/mnt/secrets/jwt-private-key.pem
             - name: GRANITE_SESSION_JWT_PUBLIC_KEY_LOCATION
               value: file:/mnt/secrets/jwt-public-key.pem
+            - name: FEC_SERVICE_CLIENT_SECRET_SHA256
+              valueFrom:
+                secretKeyRef:
+                  name: granite-fec-service-client
+                  key: secret-sha256
           volumeMounts:
             - name: session-jwt
               mountPath: /mnt/secrets

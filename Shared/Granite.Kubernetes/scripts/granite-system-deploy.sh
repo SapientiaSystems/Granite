@@ -283,6 +283,35 @@ kubectl create secret generic granite-session-jwt \
     --from-file=jwt-public-key.pem="$JWT_PUBLIC_KEY_FILE" \
     --dry-run=client -o yaml | kubectl apply -f -
 
+# =============================================================================
+# Deploy FEC service client credential
+# =============================================================================
+FEC_SECRET_FILE="$JWT_KEY_DIR/fec-service-client-secret"
+
+say "Checking FEC service client secret..." "$CYAN"
+if [[ -n "${FEC_SERVICE_CLIENT_SECRET//[[:space:]]/}" ]]; then
+    fec_secret="$FEC_SERVICE_CLIENT_SECRET"
+    say "  Using FEC_SERVICE_CLIENT_SECRET from the environment." "$GREEN"
+elif [[ -s "$FEC_SECRET_FILE" ]]; then
+    fec_secret="$(tr -d '\r\n' < "$FEC_SECRET_FILE")"
+    say "  Using existing secret: $FEC_SECRET_FILE" "$GREEN"
+else
+    say "  Generating FEC service client secret..." "$YELLOW"
+    mkdir -p "$(dirname "$FEC_SECRET_FILE")"
+    fec_secret="$(openssl rand -base64 32 | tr -d '\r\n')"
+    printf '%s' "$fec_secret" > "$FEC_SECRET_FILE"
+    chmod 600 "$FEC_SECRET_FILE"
+    say "  Generated: $FEC_SECRET_FILE" "$GREEN"
+fi
+fec_secret_sha256="$(printf '%s' "$fec_secret" | openssl dgst -sha256 -hex | sed 's/^.*= *//')"
+
+say "Deploying granite-fec-service-client..." "$CYAN"
+kubectl create secret generic granite-fec-service-client \
+    --namespace="$NAMESPACE" \
+    --from-literal=secret="$fec_secret" \
+    --from-literal=secret-sha256="$fec_secret_sha256" \
+    --dry-run=client -o yaml | kubectl apply -f -
+
 
 
 # =============================================================================

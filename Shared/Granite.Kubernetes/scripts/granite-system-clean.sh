@@ -13,7 +13,7 @@ say() { printf '%s%s%s\n' "$2" "$1" "$RESET"; }
 echo ""
 say "This will delete ALL resources in the '$NAMESPACE' namespace:" "$YELLOW"
 echo "  - Deployments, Services, HPAs, Ingresses"
-echo "  - Secrets (granite-secrets, granite-tls, granite-ca-key-pair, ghcr-registry, granite-session-jwt)"
+echo "  - Secrets (granite-secrets, granite-tls, granite-ca-key-pair, ghcr-registry, granite-session-jwt, granite-fec-service-client)"
 echo "  - ClusterIssuers (granite-letsencrypt-staging, granite-letsencrypt-prod)"
 echo "  - Namespace"
 echo ""
@@ -45,6 +45,7 @@ kubectl delete secret granite-tls --namespace="$NAMESPACE" --ignore-not-found ||
 kubectl delete secret granite-ca-key-pair --namespace="$NAMESPACE" --ignore-not-found || true
 kubectl delete secret ghcr-registry --namespace="$NAMESPACE" --ignore-not-found || true
 kubectl delete secret granite-session-jwt --namespace="$NAMESPACE" --ignore-not-found || true
+kubectl delete secret granite-fec-service-client --namespace="$NAMESPACE" --ignore-not-found || true
 
 say "Deleting ClusterIssuers..." "$CYAN"
 kubectl delete clusterissuer granite-letsencrypt-staging granite-letsencrypt-prod --ignore-not-found || true

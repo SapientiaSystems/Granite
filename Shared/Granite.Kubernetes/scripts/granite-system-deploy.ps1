@@ -325,6 +325,43 @@ kubectl create secret generic granite-session-jwt `
     --dry-run=client -o yaml | kubectl apply -f -
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# =============================================================================
+# Deploy FEC service client credential
+# =============================================================================
+$fecSecretFile = Join-Path $jwtKeyDir "fec-service-client-secret"
+
+Write-Host "Checking FEC service client secret..." -ForegroundColor Cyan
+if (-not [string]::IsNullOrWhiteSpace($env:FEC_SERVICE_CLIENT_SECRET)) {
+    $fecSecret = $env:FEC_SERVICE_CLIENT_SECRET
+    Write-Host "  Using FEC_SERVICE_CLIENT_SECRET from the environment." -ForegroundColor Green
+}
+elseif ((Test-Path $fecSecretFile) -and (Get-Item $fecSecretFile).Length -gt 0) {
+    $fecSecret = (Get-Content -Raw $fecSecretFile).Trim()
+    Write-Host "  Using existing secret: $fecSecretFile" -ForegroundColor Green
+}
+else {
+    Write-Host "  Generating FEC service client secret..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Force -Path (Split-Path $fecSecretFile -Parent) | Out-Null
+    $fecSecretBytes = New-Object byte[] 32
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $rng.GetBytes($fecSecretBytes)
+    $rng.Dispose()
+    $fecSecret = [Convert]::ToBase64String($fecSecretBytes)
+    [System.IO.File]::WriteAllText($fecSecretFile, $fecSecret)
+    Write-Host "  Generated: $fecSecretFile" -ForegroundColor Green
+}
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+$fecSecretSha256 = ([BitConverter]::ToString($sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($fecSecret))) -replace '-', '').ToLowerInvariant()
+$sha256.Dispose()
+
+Write-Host "Deploying granite-fec-service-client..." -ForegroundColor Cyan
+kubectl create secret generic granite-fec-service-client `
+    --namespace=$Namespace `
+    "--from-literal=secret=$fecSecret" `
+    "--from-literal=secret-sha256=$fecSecretSha256" `
+    --dry-run=client -o yaml | kubectl apply -f -
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 
 
 # =============================================================================
