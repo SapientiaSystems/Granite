@@ -40,9 +40,13 @@ Contains Kafka event sender implementations for each entity type in the Granite 
 - **`server.user`**:
   - `KafkaAvroUserEventSender` — Extends `AbstractKafkaAvroEventSender<UserEvent>` and implements `IUserEventSender`. Serializes `UserEvent` instances to Avro format and publishes them to a configured Kafka topic. Uses the event's `sourceId` as the Kafka partition key to ensure ordering per entity.
 
+#### Granite.Outbox.Server security (`server.configuration`)
+
+- `GraniteOutboxSecurityConfiguration` — `@EnableWebSecurity`; declares exactly one `SecurityFilterChain`, built by the Granite.Foundation `GraniteJwtCheckSecurity.jwtCheckChain(...)` in `REQUIRED` mode: a request without a valid Session-issued bearer (signature against the Session JWKS, expiry, issuer, audience) gets 401, except on the tokenless paths. There are no role or authority rules (the Gateway authorizes `/outbox-service/**`; in `production` it requires `SCOPE_internal`). The `jwtDecoder` bean uses `GraniteJwtDecoderFactory` with `GraniteResourceServerSettings.from(environment)` (`granite.security.jwt.jwk-set-uri` direct to Session Command, `granite.security.jwt.ssl-bundle`). Protected seams: `getTokenlessPathPatterns(Environment)` (default `GraniteJwtCheckSecurity.defaultTokenlessPaths`: `OPTIONS`, `${strata.health.base-path}/**` (`/outbox-service/health/**`), `/error`, springdoc paths outside `production`) and `createJwkSetRestOperations(ObjectProvider<SslBundles>,Environment)`. `OutboxSecurityFilterChainTest` (ServerTest) covers no token, untrusted, expired and wrong-audience tokens (401), a valid token and the tokenless health path.
+
 #### Granite.Outbox.ServiceHost
 
-The Spring Boot application entry point (implementation in progress).
+The Spring Boot application entry point. `HostConfiguration` extends Strata `StrataPollingOutboxServerConfiguration` and imports `HealthCheckConfiguration` and `GraniteOutboxSecurityConfiguration`; `OutboxServiceHost` keeps `SecurityAutoConfiguration` excluded because the imported configuration enables web security itself. Every profile sets `granite.security.jwt.jwk-set-uri=https://granite-session-commandhost:443/.well-known/jwks.json` and `granite.security.jwt.ssl-bundle=granite-services` (as the User hosts do); the Session Command JWKS network policy admits the Outbox pods. The request-logging filter logs the query string only (no headers or payload, so bearer tokens are never logged).
 
 ### Dependencies
 
@@ -51,6 +55,7 @@ The Server component depends on:
 - `strata.outbox:strata-outbox-server` — Outbox polling and relay infrastructure
 - `strata.foundation:strata-foundation-kafka` — Kafka producer abstractions and Avro serialization (`AbstractKafkaAvroEventSender`, `IKafkaConfigurationProvider`)
 - `granite.user:granite-user-service` — User event interfaces (`IUserEventSender`, `UserEvent`)
+- `granite.foundation:granite-foundation-core` and `spring-boot-starter-security` — the shared JWT check chain
 
 As additional Granite microservices are added, corresponding event sender implementations will be added to the Server component (e.g., `KafkaAvroFrontEndControllerEventSender`).
 

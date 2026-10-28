@@ -2,7 +2,7 @@
 
 ## Overview
 
-Granite.Gateway is a Spring Cloud Gateway microservice that serves as the API gateway for the Granite system. It routes incoming HTTP requests to the appropriate backend microservice hosts (FrontEndController, User, Outbox) based on URL path prefixes. The gateway runs on the reactive WebFlux stack and does not manage any domain entities, persistence, or business logic.
+Granite.Gateway is a Spring Cloud Gateway microservice that serves as the API gateway for the Granite system. It routes incoming HTTP requests to the appropriate backend microservice hosts (FrontEndController, User, Session, Outbox) based on URL path prefixes. The gateway runs on the reactive WebFlux stack and does not manage any domain entities, persistence, or business logic.
 
 ## Technology Stack
 
@@ -67,7 +67,7 @@ Routes are defined in `GraniteGatewayServerConfiguration.configureRoutes(...)` a
 
 No path stripping is applied — backend controllers are mounted at these exact path prefixes.
 
-Every profile, including `production`, registers all seven routes. In `production` the User, Session and Outbox routes carry only service-to-service traffic: their paths require `SCOPE_internal` (see the rule table), so browser sessions of any role get 403 there and administer users through the FEC.
+Every profile, including `production`, registers all seven routes. In `production` the User, Session and Outbox routes carry only service-to-service traffic: their paths require `SCOPE_internal` (see the rule table), so browser sessions of any role get 403 there and administer users through the FEC. The production Ingress does not publish these paths at all (the `production` overlay removes them from `granite-ingress`), so they are reachable only from inside the cluster.
 
 ### Route Host Configuration
 
@@ -98,7 +98,7 @@ Downstream application systems reuse the gateway by depending on `granite-gatewa
 | `configureApplicationAuthorization(AuthorizeExchangeSpec,Environment)` | hook: application rules, evaluated after Granite's Preferences, users-reader and admin-only rules and before the `ROLE_ADMIN` catch-all; default declares none |
 | `getUsersReaderAuthorities(Environment)` | hook: authorities allowed on Granite's users-reader rules; default `ROLE_ADMIN`, `SCOPE_internal` |
 | `configureApplicationRoutes(Builder,Environment)` | hook: called after Granite's routes in every profile, including `production`; default adds none |
-| `getPublicPathPatterns(Environment)` | hook: paths reachable without a token: `/health/**`, Session `login`, `refresh`, `issue-service-token` (rate limited, see `createServiceTokenRateLimitWebFilter`), the static app (`/`, `/index.html`, `/config.js`, `/favicon.ico`, `/assets/**`), plus `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**` outside `production` |
+| `getPublicPathPatterns(Environment)` | hook: paths reachable without a token: `/health/**`, Session `issue-service-token` (rate limited, see `createServiceTokenRateLimitWebFilter`), the static app (`/`, `/index.html`, `/config.js`, `/favicon.ico`, `/assets/**`), plus, outside `production` only, Session `login` and `refresh`, `/*/swagger-ui/**`, `/*/swagger-ui.html` and `/*/v3/api-docs/**`. In `production` `login` and `refresh` fall under the production `SCOPE_internal` rule (401 without a token, 403 for browser sessions), so only the FEC reaches them with its service token; browser login still goes through the public FEC `LoginView` inputs (`GatewayProductionRoutesTest`) |
 | `createServiceTokenRateLimitWebFilter(Environment)` | hook: `RateLimitWebFilter` with a `FixedWindowRateLimiter` on `/session-command-service/issue-service-token` only, keyed by the request's remote address (`X-Forwarded-For` is not trusted; the Gateway has no forwarded-header strategy). Over the limit the request gets 429 and never reaches Session. `granite.gateway.issue-service-token.rate-limit.requests` (`10`) per `granite.gateway.issue-service-token.rate-limit.window` (`PT1M`), in memory per Gateway instance; at most `granite.gateway.issue-service-token.rate-limit.max-clients` (`10000`) addresses are tracked, expired windows are evicted when that bound is reached, and a new address is refused (429) while it is still full. Runs before `CSRF`. Deployment invariant: the key is the socket address, so the Gateway must not be exposed directly to untrusted clients and forwarded headers stay untrusted; behind a proxy all callers share one key, and a flood of distinct addresses fills the map and locks out new addresses, including the FEC's token issuance (the FEC falls back to its cached token until it expires) |
 | `getPublicExchangeMatcher(Environment)` | hook: the public paths OR `PublicFrontEndInputMatcher` (the `LoginView` FEC inputs) |
 | `getAuthenticatedExchangeMatcher(Environment)` | hook: `CurrentSessionFrontEndInputMatcher` (the `Session.Current` FEC inputs), which any authenticated caller reaches regardless of role. It is registered after the public matcher and before `configureAuthorization(...)`, so it always applies |
@@ -129,11 +129,11 @@ The injected JWT then goes through the ordinary bearer authentication, `jti` rev
 
 Request authorization rules live here and only here. Session additionally gates login (default: the user must hold at least one catalog role; `granite.session.login.required-authorities` overrides) and User rejects roles outside the role catalog, but neither authorizes requests by path. Each application that instantiates a Gateway declares its rules by overriding `configureApplicationAuthorization`. Rules match on path and method, so they cannot inspect request bodies; only the FEC key matchers above, which run before them, look at the recorded key. The caller's `Authorization` header is relayed to the routed service unchanged.
 
-Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthorization` (`final`) and are always registered, in every profile and regardless of any property. Public paths are permitted, and the `Session.Current` FEC inputs need only authentication, before these rules. Every allowed list also includes `SCOPE_internal`. The denyAll, public and current-session matchers stay ahead of everything, so application rules cannot reopen a denied path. Rules are evaluated in this order:
+Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthorization` (`final`) and are always registered, in every profile and regardless of any property. Public paths are permitted, and the `Session.Current` FEC inputs need only authentication, before these rules. Every allowed list also includes `SCOPE_internal` (`GraniteAuthorities.SCOPE_INTERNAL` from Granite.Foundation, the single definition used by the chain and `SessionQueryRevocationChecker`). The denyAll, public and current-session matchers stay ahead of everything, so application rules cannot reopen a denied path. Rules are evaluated in this order:
 
 | Matcher | Authorities |
 |---|---|
-| `production` only: `/user-query-service/**`, `/user-command-service/**`, `/session-query-service/**`, `/session-command-service/**`, `/outbox-service/**` (after the earlier `resolve-session` denyAll, Okta-step rule and public `login`, `refresh`, `issue-service-token`) | `SCOPE_internal` only (`ROLE_ADMIN`, `ROLE_AUDITOR` and every other browser role get 403) |
+| `production` only: `/user-query-service/**`, `/user-command-service/**`, `/session-query-service/**`, `/session-command-service/**`, `/outbox-service/**` (after the earlier `resolve-session` denyAll, Okta-step rule and public `issue-service-token`; this covers `login` and `refresh` too) | `SCOPE_internal` only (`ROLE_ADMIN`, `ROLE_AUDITOR` and every other browser role get 403) |
 | `POST /frontendcontroller-{user,admin}-service/get-preferences-output` and `handle-preferences-input` (both hosts) | any authenticated caller (the operations act on the caller's own user) |
 | `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output` | `getUsersReaderAuthorities()` |
 | `/user-query-service/**` (outside `production`) | `getUsersReaderAuthorities()` |
