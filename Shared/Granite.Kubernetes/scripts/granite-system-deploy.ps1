@@ -336,7 +336,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:FEC_SERVICE_CLIENT_SECRET)) {
     Write-Host "  Using FEC_SERVICE_CLIENT_SECRET from the environment." -ForegroundColor Green
 }
 elseif ((Test-Path $fecSecretFile) -and (Get-Item $fecSecretFile).Length -gt 0) {
-    $fecSecret = (Get-Content -Raw $fecSecretFile).Trim()
+    $fecSecret = (Get-Content -Raw $fecSecretFile).TrimEnd("`r","`n")
     Write-Host "  Using existing secret: $fecSecretFile" -ForegroundColor Green
 }
 else {
@@ -348,6 +348,7 @@ else {
     $rng.Dispose()
     $fecSecret = [Convert]::ToBase64String($fecSecretBytes)
     [System.IO.File]::WriteAllText($fecSecretFile, $fecSecret)
+    & icacls $fecSecretFile /inheritance:r /grant:r "$($env:USERNAME):F" | Out-Null
     Write-Host "  Generated: $fecSecretFile" -ForegroundColor Green
 }
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
@@ -355,12 +356,23 @@ $fecSecretSha256 = ([BitConverter]::ToString($sha256.ComputeHash([System.Text.En
 $sha256.Dispose()
 
 Write-Host "Deploying granite-fec-service-client..." -ForegroundColor Cyan
-kubectl create secret generic granite-fec-service-client `
-    --namespace=$Namespace `
-    "--from-literal=secret=$fecSecret" `
-    "--from-literal=secret-sha256=$fecSecretSha256" `
-    --dry-run=client -o yaml | kubectl apply -f -
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$fecTempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("granite-fec-" + [Guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $fecTempDir | Out-Null
+& icacls $fecTempDir /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F" | Out-Null
+try {
+    [System.IO.File]::WriteAllText((Join-Path $fecTempDir "secret"), $fecSecret)
+    [System.IO.File]::WriteAllText((Join-Path $fecTempDir "secret-sha256"), $fecSecretSha256)
+    kubectl create secret generic granite-fec-service-client `
+        --namespace=$Namespace `
+        "--from-file=secret=$(Join-Path $fecTempDir 'secret')" `
+        "--from-file=secret-sha256=$(Join-Path $fecTempDir 'secret-sha256')" `
+        --dry-run=client -o yaml | kubectl apply -f -
+    $fecExit = $LASTEXITCODE
+}
+finally {
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $fecTempDir
+}
+if ($fecExit -ne 0) { exit $fecExit }
 
 
 

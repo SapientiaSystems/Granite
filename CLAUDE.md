@@ -69,3 +69,9 @@ An application frame (providers, its own header, routes); `MantineProvider` sits
 - Layout mirrors Java: `<Group>/Tests/<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (for example `FrontEnds/Granite.Web/Tests/Granite.Web.AuthenticationTest`). The same convention applies to microservice TypeScript components when they get tests; the only microservice TypeScript test project today is `Granite.FrontEndController.ServiceTest`, which has no tests yet and is not wired into `test-granite`.
 - A test project is private and never published. It depends on the component's published package (`1.0.0-snapshot` from the local Verdaccio) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source. Test projects run vitest without type-checking (no `tsc`).
 - Root scripts: `yarn run test-granite-web` (web test projects) and `yarn run test-granite` (every TypeScript test project). Each publishes the component to the local Verdaccio first (the component's existing `publish-package`), then runs its test project.
+
+## Kubernetes network policies
+
+- `Shared/Granite.Kubernetes/base/granite-network-policies.yml` restricts ingress only. Egress is intentionally unrestricted.
+- Services accept ingress only from the Gateway pods. The JWKS rule opens Session Command's whole port to the FEC, User and Session Query pods (a layer 4 limitation): the tokenless resolve-session, login, refresh and issue-service-token endpoints are reachable from those pods.
+- The policies require a CNI that enforces NetworkPolicy. Kubelet probes are exempt.

@@ -289,8 +289,9 @@ kubectl create secret generic granite-session-jwt \
 FEC_SECRET_FILE="$JWT_KEY_DIR/fec-service-client-secret"
 
 say "Checking FEC service client secret..." "$CYAN"
-if [[ -n "${FEC_SERVICE_CLIENT_SECRET//[[:space:]]/}" ]]; then
-    fec_secret="$FEC_SERVICE_CLIENT_SECRET"
+fec_env_secret="${FEC_SERVICE_CLIENT_SECRET:-}"
+if [[ -n "${fec_env_secret//[[:space:]]/}" ]]; then
+    fec_secret="$fec_env_secret"
     say "  Using FEC_SERVICE_CLIENT_SECRET from the environment." "$GREEN"
 elif [[ -s "$FEC_SECRET_FILE" ]]; then
     fec_secret="$(tr -d '\r\n' < "$FEC_SECRET_FILE")"
@@ -306,11 +307,17 @@ fi
 fec_secret_sha256="$(printf '%s' "$fec_secret" | openssl dgst -sha256 -hex | sed 's/^.*= *//')"
 
 say "Deploying granite-fec-service-client..." "$CYAN"
+fec_tmp_dir="$(umask 077 && mktemp -d)"
+printf '%s' "$fec_secret" > "$fec_tmp_dir/secret"
+printf '%s' "$fec_secret_sha256" > "$fec_tmp_dir/secret-sha256"
+fec_status=0
 kubectl create secret generic granite-fec-service-client \
     --namespace="$NAMESPACE" \
-    --from-literal=secret="$fec_secret" \
-    --from-literal=secret-sha256="$fec_secret_sha256" \
-    --dry-run=client -o yaml | kubectl apply -f -
+    --from-file=secret="$fec_tmp_dir/secret" \
+    --from-file=secret-sha256="$fec_tmp_dir/secret-sha256" \
+    --dry-run=client -o yaml | kubectl apply -f - || fec_status=$?
+rm -rf "$fec_tmp_dir"
+if (( fec_status != 0 )); then exit "$fec_status"; fi
 
 
 
