@@ -36,3 +36,28 @@ patches:
       - op: add
         path: /metadata/annotations/cert-manager.io~1cluster-issuer
         value: granite-letsencrypt-prod
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /user-command-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /user-query-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /session-command-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /session-query-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /outbox-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
