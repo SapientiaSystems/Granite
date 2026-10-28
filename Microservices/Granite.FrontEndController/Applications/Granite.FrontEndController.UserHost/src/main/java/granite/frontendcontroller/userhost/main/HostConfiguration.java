@@ -9,13 +9,11 @@ import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckCon
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.ObjectMapperProvider;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
@@ -35,16 +33,6 @@ import strata.server.spring.service.ServiceConfiguration;
 public
 class HostConfiguration
 {
-    @Bean
-    public InitializingBean
-    initialize()
-    {
-        return
-            () ->
-                SecurityContextHolder
-                    .setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
-    }
-
     @Bean
     public BeanFactoryPostProcessor
     beanFactoryPostProcessor()
