@@ -171,14 +171,29 @@ class GatewayProductionRoutesTest
 
     @Test
     public void
-    sessionEntryPathsStayPublic()
+    serviceTokenIssuanceStaysPublic()
     {
-        for (String path :
-                List.of(
-                    "/session-command-service/login",
-                    "/session-command-service/refresh",
-                    "/session-command-service/issue-service-token"))
-            assertEquals(200,post(path,null),path);
+        assertEquals(200,post("/session-command-service/issue-service-token",null));
+    }
+
+    @Test
+    public void
+    loginAndRefreshRequireTheInternalScope()
+        throws Exception
+    {
+        String browser = backend.sign(List.of("ROLE_ADMIN","ROLE_USER"));
+        String service = backend.signClientServiceToken("granite-frontendcontroller");
+
+        for (String path : List.of("/session-command-service/login","/session-command-service/refresh"))
+        {
+            int before = backend.getReceivedAuthorizations().size();
+
+            assertEquals(401,post(path,null),path);
+            assertEquals(403,post(path,browser),path);
+            assertEquals(before,backend.getReceivedAuthorizations().size(),path);
+            assertEquals(200,post(path,service),path);
+            assertEquals(before + 1,backend.getReceivedAuthorizations().size(),path);
+        }
     }
 
     private int

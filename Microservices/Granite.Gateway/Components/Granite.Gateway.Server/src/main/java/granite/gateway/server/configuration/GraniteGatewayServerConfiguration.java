@@ -314,8 +314,6 @@ class GraniteGatewayServerConfiguration
             new ArrayList<>(
                 List.of(
                     environment.getProperty("strata.health.base-path","/health") + "/**",
-                    "/session-command-service/login",
-                    "/session-command-service/refresh",
                     ISSUE_SERVICE_TOKEN_PATH,
                     "/",
                     "/index.html",
@@ -326,6 +324,8 @@ class GraniteGatewayServerConfiguration
         if (!environment.acceptsProfiles(Profiles.of("production")))
             paths.addAll(
                 List.of(
+                    "/session-command-service/login",
+                    "/session-command-service/refresh",
                     "/*/swagger-ui/**",
                     "/*/swagger-ui.html",
                     "/*/v3/api-docs/**"));
