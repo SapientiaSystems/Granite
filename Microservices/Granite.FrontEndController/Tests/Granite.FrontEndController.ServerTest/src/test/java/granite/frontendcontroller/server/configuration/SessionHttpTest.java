@@ -180,11 +180,10 @@ class SessionHttpTest
     {
         backend.respond("logout",new LogoutReply().setSuccess(true));
 
-        SessionRequestContextTest.authenticate(SessionRequestContextTest.jwt(11L,7L));
-
         MvcResult result =
             send(
                 post("/frontendcontroller-user-service/handle-session-input")
+                    .principal(SessionRequestContextTest.principal(SessionRequestContextTest.jwt(11L,7L)))
                     .content(
                         "{\"input\":{\"source\":\"Session.Current\",\"command\":\"Logout\","
                             + "\"destination\":\"LoginView\"}}"));

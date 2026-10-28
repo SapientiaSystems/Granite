@@ -112,7 +112,7 @@ class GraniteFrontEndControllerConfigurationTest
 
         Jwt caller = SessionRequestContextTest.jwt(11L,1L);
 
-        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(caller,List.of(),caller.getSubject()));
+        inbound.setUserPrincipal(new JwtAuthenticationToken(caller,List.of(),caller.getSubject()));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         IGraniteFrontEndControllerService service =

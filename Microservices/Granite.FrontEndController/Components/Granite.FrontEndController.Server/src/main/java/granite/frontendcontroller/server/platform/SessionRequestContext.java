@@ -7,8 +7,8 @@ package granite.frontendcontroller.server.platform;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -74,20 +74,24 @@ class SessionRequestContext
                 cookies.putIfAbsent(cookie.getName(),cookie.getValue());
         }
 
-        SessionRequestContext context = new SessionRequestContext(cookies,verifiedToken());
+        SessionRequestContext context = new SessionRequestContext(cookies,verifiedToken(request));
 
         request.setAttribute(ATTRIBUTE,context);
         return context;
     }
 
     private static Jwt
-    verifiedToken()
+    verifiedToken(HttpServletRequest request)
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(request.getUserPrincipal() instanceof Authentication authentication)
+            || !authentication.isAuthenticated())
+            return null;
 
-        if (authentication != null
-            && authentication.isAuthenticated()
-            && authentication.getPrincipal() instanceof Jwt jwt)
+        if (authentication.getPrincipal() instanceof Jwt jwt)
+            return jwt;
+
+        if (authentication instanceof AbstractOAuth2TokenAuthenticationToken<?> token
+            && token.getToken() instanceof Jwt jwt)
             return jwt;
 
         return null;

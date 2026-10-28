@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -69,10 +70,10 @@ class SessionRequestContextTest
         return builder.claim("verified",true).build();
     }
 
-    public static void
-    authenticate(Jwt jwt)
+    public static JwtAuthenticationToken
+    principal(Jwt jwt)
     {
-        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt,List.of(),jwt.getSubject()));
+        return new JwtAuthenticationToken(jwt,List.of(),jwt.getSubject());
     }
 
     @Test
@@ -109,7 +110,7 @@ class SessionRequestContextTest
         MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-input");
 
         request.setCookies(new Cookie("GRANITE_DID","device-9"),new Cookie("XSRF-TOKEN","t"));
-        authenticate(jwt(5L,6L));
+        request.setUserPrincipal(principal(jwt(5L,6L)));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
@@ -142,9 +143,69 @@ class SessionRequestContextTest
     {
         MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-input");
 
-        SecurityContextHolder
-            .getContext()
-            .setAuthentication(new AnonymousAuthenticationToken("key","anonymousUser",List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+        request.setUserPrincipal(new AnonymousAuthenticationToken("key","anonymousUser",List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        assertTrue(SessionRequestContext.fromCurrentRequest().getCallerUserId().isEmpty());
+    }
+
+    @Test
+    public void
+    theCallerComesFromTheRequestPrincipal()
+    {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/get-users-output");
+
+        request.setUserPrincipal(principal(jwt(5L,6L)));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
+
+        assertEquals(5L,context.getSessionId().orElseThrow());
+        assertEquals(6L,context.getCallerUserId().orElseThrow());
+    }
+
+    @Test
+    public void
+    theStaticSecurityContextIsNotRead()
+    {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/get-users-output");
+
+        SecurityContextHolder.getContext().setAuthentication(principal(jwt(5L,6L)));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        assertTrue(SessionRequestContext.fromCurrentRequest().getCallerUserId().isEmpty());
+    }
+
+    @Test
+    public void
+    aTokenAuthenticationWhosePrincipalIsNotTheJwtUsesItsToken()
+    {
+        MockHttpServletRequest                      request   = new MockHttpServletRequest("POST","/frontendcontroller-user-service/get-users-output");
+        AbstractOAuth2TokenAuthenticationToken<Jwt> principal =
+            new AbstractOAuth2TokenAuthenticationToken<>(jwt(8L,9L),"user-9",null,List.of())
+            {
+                @Override
+                public Map<String,Object>
+                getTokenAttributes() { return getToken().getClaims(); }
+            };
+
+        principal.setAuthenticated(true);
+        request.setUserPrincipal(principal);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
+
+        assertEquals(8L,context.getSessionId().orElseThrow());
+        assertEquals(9L,context.getCallerUserId().orElseThrow());
+    }
+
+    @Test
+    public void
+    anUnauthenticatedTokenPrincipalGivesNoIdentity()
+    {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/get-users-output");
+
+        request.setUserPrincipal(new JwtAuthenticationToken(jwt(5L,6L)));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         assertTrue(SessionRequestContext.fromCurrentRequest().getCallerUserId().isEmpty());

@@ -112,7 +112,7 @@ class GraniteFrontEndControllerConfigurationClientsTest
                 "find-users-by-key",
                 new FindUsersByKeyReply().setFoundUsers(List.of(new UserData().setUserId(7L).setUserName("amy"))).setSuccess(true));
 
-        SessionRequestContextTest.authenticate(SessionRequestContextTest.jwt(11L,7L));
+        inbound.setUserPrincipal(SessionRequestContextTest.principal(SessionRequestContextTest.jwt(11L,7L)));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         IGraniteFrontEndControllerService service = subject.frontEndControllerService(Runnable::run,new ModelMapper(),subject.applicationRoles());
