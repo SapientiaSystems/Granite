@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.configuration;
 
 import com.sun.net.httpserver.HttpServer;
+import granite.frontendcontroller.server.platform.SessionRequestContextTest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
@@ -19,6 +20,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -94,6 +98,7 @@ class GraniteFrontEndControllerConfigurationTest
     tearDown()
     {
         RequestContextHolder.resetRequestAttributes();
+        SecurityContextHolder.clearContext();
         userService.stop(0);
     }
 
@@ -104,6 +109,10 @@ class GraniteFrontEndControllerConfigurationTest
         MockHttpServletRequest inbound = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-users-input");
 
         inbound.addHeader("Authorization","Bearer caller.jwt.token");
+
+        Jwt caller = SessionRequestContextTest.jwt(11L,1L);
+
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(caller,List.of(),caller.getSubject()));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
 
         IGraniteFrontEndControllerService service =

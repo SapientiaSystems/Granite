@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.control.user;
 
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -40,7 +41,7 @@ class DeleteUsersViewTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        view = new DeleteUsersView(queryClient,commandClient,new GraniteApplicationRolesManagerSupplier().get());
+        view = createView(7L);
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
@@ -56,10 +57,10 @@ class DeleteUsersViewTest
 
     @Test
     public void
-    refusesCallersOwnId()
+    refusesVerifiedCallersOwnIdNotThePayloadUserId()
         throws Exception
     {
-        UsersOutput output = run(new UsersInput().setUserId(7L).setUserIdsToDelete(List.of(7L,8L)));
+        UsersOutput output = run(new UsersInput().setUserId(8L).setUserIdsToDelete(List.of(7L,8L)));
 
         assertEquals(3,output.getRoles().size());
 
@@ -101,6 +102,32 @@ class DeleteUsersViewTest
 
         assertTrue(output.getUsers().isEmpty());
         assertEquals(List.of("Unable to refresh user list: db down"),output.getFailureMessages());
+    }
+
+    @Test
+    public void
+    anonymousCallerIsRefusedWithoutCallingUser()
+        throws Exception
+    {
+        view = createView(null);
+
+        UsersOutput output = run(new UsersInput().setUserId(1L).setUserIdsToDelete(List.of(9L)));
+
+        assertEquals(List.of("not authenticated"),output.getFailureMessages());
+        assertTrue(output.getUsers().isEmpty());
+        Mockito.verifyNoInteractions(commandClient);
+        Mockito.verifyNoInteractions(queryClient);
+    }
+
+    private DeleteUsersView
+    createView(Long caller)
+    {
+        return
+            new DeleteUsersView(
+                queryClient,
+                commandClient,
+                SessionTestSupport.context("d",caller == null ? null : 11L,caller),
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     private UsersOutput

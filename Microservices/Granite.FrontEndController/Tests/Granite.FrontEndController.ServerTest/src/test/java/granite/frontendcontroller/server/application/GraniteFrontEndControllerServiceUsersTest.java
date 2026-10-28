@@ -7,6 +7,7 @@ package granite.frontendcontroller.server.application;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionTestSupport;
+import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
@@ -52,19 +53,7 @@ class GraniteFrontEndControllerServiceUsersTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        service =
-            new GraniteFrontEndControllerService(
-                new GraniteFrontEndControllerContext(
-                    new ModelMapper(),
-                    Runnable::run,
-                    queryClient,
-                    commandClient,
-                    Mockito.mock(ISessionCommandServiceClient.class),
-                    Mockito.mock(ISessionQueryServiceClient.class),
-                    SessionTestSupport.context(null,null,null),
-                    new SessionLoginSettings(true,false),
-                    new GraniteApplicationRolesManagerSupplier().get(),
-                    List.of()));
+        service = createService(SessionTestSupport.context("d",11L,1L));
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
@@ -164,6 +153,63 @@ class GraniteFrontEndControllerServiceUsersTest
         assertEquals("java.lang.IllegalArgumentException",reply.getException().getCause().getExceptionType());
         assertEquals("No action found for key: User.All->Unknown->UsersEditableView",reply.getException().getCause().getExceptionMessage());
         Mockito.verifyNoInteractions(commandClient);
+    }
+
+    @Test
+    public void
+    anonymousCallersAreRefusedWithoutCallingUser()
+        throws Exception
+    {
+        service = createService(SessionTestSupport.context(null,null,null));
+
+        GetUsersOutputReply load =
+            service
+                .getUsersOutput(new GetUsersOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
+                .toCompletableFuture()
+                .get();
+
+        assertEquals(List.of("not authenticated"),load.getOutput().getFailureMessages());
+
+        for (String command : List.of("Save","Delete"))
+        {
+            HandleUsersInputReply reply =
+                service
+                    .handleUsersInput(
+                        new HandleUsersInputRequest()
+                            .setInput(
+                                new UsersInput()
+                                    .setUserId(1L)
+                                    .setUsersToUpdate(List.of(new UpdateUserData().setUserId(2L)))
+                                    .setUserIdsToDelete(List.of(2L))
+                                    .setSource("User.All")
+                                    .setCommand(command)
+                                    .setDestination("UsersEditableView")))
+                    .toCompletableFuture()
+                    .get();
+
+            assertEquals(List.of("not authenticated"),reply.getOutput().getFailureMessages(),command);
+        }
+
+        Mockito.verifyNoInteractions(queryClient);
+        Mockito.verifyNoInteractions(commandClient);
+    }
+
+    private GraniteFrontEndControllerService
+    createService(SessionRequestContext requestContext)
+    {
+        return
+            new GraniteFrontEndControllerService(
+                new GraniteFrontEndControllerContext(
+                    new ModelMapper(),
+                    Runnable::run,
+                    queryClient,
+                    commandClient,
+                    Mockito.mock(ISessionCommandServiceClient.class),
+                    Mockito.mock(ISessionQueryServiceClient.class),
+                    requestContext,
+                    new SessionLoginSettings(true,false),
+                    new GraniteApplicationRolesManagerSupplier().get(),
+                    List.of()));
     }
 }
 

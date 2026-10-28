@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.control.user;
 
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -40,7 +41,7 @@ class InitializeUsersViewTest
                         .setUsers(List.of(new UserData().setUserId(1L),new UserData().setUserId(2L)))));
 
         UsersOutput output =
-            new InitializeUsersView(queryClient,new GraniteApplicationRolesManagerSupplier().get())
+            new InitializeUsersView(queryClient,SessionTestSupport.context("d",11L,1L),new GraniteApplicationRolesManagerSupplier().get())
                 .apply(
                     new GetUsersOutputRequest()
                         .setSource("User.All")
@@ -69,13 +70,38 @@ class InitializeUsersViewTest
                 CompletableFuture.completedFuture(new FindAllUsersReply().setSuccess(false)));
 
         UsersOutput output =
-            new InitializeUsersView(queryClient,new GraniteApplicationRolesManagerSupplier().get())
+            new InitializeUsersView(queryClient,SessionTestSupport.context("d",11L,1L),new GraniteApplicationRolesManagerSupplier().get())
                 .apply(new GetUsersOutputRequest().setSource("User.All").setDestination("UsersEditableView"))
                 .toCompletableFuture()
                 .get();
 
         assertTrue(output.getUsers().isEmpty());
         assertEquals(List.of("Unable to refresh user list: unknown error"),output.getFailureMessages());
+    }
+
+    @Test
+    public void
+    anonymousCallerIsRefusedWithoutCallingUser()
+        throws Exception
+    {
+        IUserQueryServiceClient queryClient = Mockito.mock(IUserQueryServiceClient.class);
+
+        UsersOutput output =
+            new InitializeUsersView(
+                queryClient,
+                SessionTestSupport.context("d",null,null),
+                new GraniteApplicationRolesManagerSupplier().get())
+                .apply(
+                    new GetUsersOutputRequest()
+                        .setSource("User.All")
+                        .setDestination("UsersEditableView"))
+                .toCompletableFuture()
+                .get();
+
+        assertEquals(List.of("not authenticated"),output.getFailureMessages());
+        assertTrue(output.getUsers().isEmpty());
+        assertEquals("UsersEditableView",output.getDestination());
+        Mockito.verifyNoInteractions(queryClient);
     }
 }
 

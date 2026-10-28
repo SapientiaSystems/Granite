@@ -15,11 +15,13 @@ import granite.user.service.requestreply.FindAllUsersReply;
 import granite.user.service.requestreply.FindAllUsersRequest;
 import granite.user.service.requestreply.UserData;
 import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.server.platform.SessionRequestContext;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -32,16 +34,19 @@ class DeleteUsersView
 
     private final IUserQueryServiceClient   queryClient;
     private final IUserCommandServiceClient commandClient;
-    private final ApplicationRolesManager applicationRoles;
+    private final SessionRequestContext     context;
+    private final ApplicationRolesManager   applicationRoles;
 
     public
     DeleteUsersView(
         IUserQueryServiceClient   queryClient,
         IUserCommandServiceClient commandClient,
-        ApplicationRolesManager applicationRoles)
+        SessionRequestContext     context,
+        ApplicationRolesManager   applicationRoles)
     {
         this.queryClient      = queryClient;
         this.commandClient    = commandClient;
+        this.context          = context;
         this.applicationRoles = applicationRoles;
     }
 
@@ -49,12 +54,23 @@ class DeleteUsersView
     public CompletionStage<UsersOutput>
     apply(UsersInput input)
     {
+        Optional<Long> caller = context.getCallerUserId();
+
+        if (caller.isEmpty())
+            return
+                CompletableFuture.completedFuture(
+                    UnauthenticatedUsersOutput
+                        .create(applicationRoles)
+                        .setSource(input.getSource())
+                        .setCommand(input.getCommand())
+                        .setDestination(input.getDestination().orElse(null)));
+
         List<String> failures = new ArrayList<>();
         Set<Long>    ids = new LinkedHashSet<>();
 
         for (Long id : input.getUserIdsToDelete() == null ? List.<Long>of() : input.getUserIdsToDelete())
         {
-            if (Objects.equals(id,input.getUserId()))
+            if (Objects.equals(id,caller.get()))
                 failures.add(id + ": cannot delete your own user");
             else
                 ids.add(id);
@@ -107,7 +123,7 @@ class DeleteUsersView
                 .setUsers(users)
                 .setFailureMessages(failures)
                 .setRoles(RoleCatalogData.from(applicationRoles))
-                .setUserId(input.getUserId())
+                .setUserId(context.getCallerUserId().orElse(null))
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())
                 .setDestination(input.getDestination().orElse(null));

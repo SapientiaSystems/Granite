@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.control.user;
 
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -47,7 +48,12 @@ class UpdateUsersViewTest
     {
         queryClient = Mockito.mock(IUserQueryServiceClient.class);
         commandClient = Mockito.mock(IUserCommandServiceClient.class);
-        view = new UpdateUsersView(queryClient,commandClient,new GraniteApplicationRolesManagerSupplier().get());
+        view =
+            new UpdateUsersView(
+                queryClient,
+                commandClient,
+                SessionTestSupport.context("d",11L,1L),
+                new GraniteApplicationRolesManagerSupplier().get());
 
         Mockito
             .when(queryClient.findAllUsers(Mockito.any(FindAllUsersRequest.class)))
@@ -194,6 +200,31 @@ class UpdateUsersViewTest
 
         Mockito.verify(commandClient).createUsers(captor.capture());
         assertEquals(Map.of("note","new"),captor.getValue().getUsersToCreate().get(0).getValues());
+    }
+
+    @Test
+    public void
+    anonymousCallerIsRefusedWithoutCallingUser()
+        throws Exception
+    {
+        view =
+            new UpdateUsersView(
+                queryClient,
+                commandClient,
+                SessionTestSupport.context("d",null,null),
+                new GraniteApplicationRolesManagerSupplier().get());
+
+        UsersOutput output =
+            run(
+                new UsersInput()
+                    .setUserId(1L)
+                    .setUsersToCreate(List.of(new CreateUserData().setUserName("new")))
+                    .setUsersToUpdate(List.of(new UpdateUserData().setUserId(2L))));
+
+        assertEquals(List.of("not authenticated"),output.getFailureMessages());
+        assertTrue(output.getUsers().isEmpty());
+        Mockito.verifyNoInteractions(commandClient);
+        Mockito.verifyNoInteractions(queryClient);
     }
 
     private UsersOutput

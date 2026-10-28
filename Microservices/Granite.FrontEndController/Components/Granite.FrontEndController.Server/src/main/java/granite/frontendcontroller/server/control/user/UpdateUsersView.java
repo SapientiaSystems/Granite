@@ -19,11 +19,13 @@ import granite.user.service.requestreply.UpdateUsersReply;
 import granite.user.service.requestreply.UpdateUsersRequest;
 import granite.user.service.requestreply.UserData;
 import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.server.platform.SessionRequestContext;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -37,16 +39,19 @@ class UpdateUsersView
 
     private final IUserQueryServiceClient   queryClient;
     private final IUserCommandServiceClient commandClient;
-    private final ApplicationRolesManager applicationRoles;
+    private final SessionRequestContext     context;
+    private final ApplicationRolesManager   applicationRoles;
 
     public
     UpdateUsersView(
         IUserQueryServiceClient   queryClient,
         IUserCommandServiceClient commandClient,
-        ApplicationRolesManager applicationRoles)
+        SessionRequestContext     context,
+        ApplicationRolesManager   applicationRoles)
     {
         this.queryClient      = queryClient;
         this.commandClient    = commandClient;
+        this.context          = context;
         this.applicationRoles = applicationRoles;
     }
 
@@ -54,6 +59,17 @@ class UpdateUsersView
     public CompletionStage<UsersOutput>
     apply(UsersInput input)
     {
+        Optional<Long> caller = context.getCallerUserId();
+
+        if (caller.isEmpty())
+            return
+                CompletableFuture.completedFuture(
+                    UnauthenticatedUsersOutput
+                        .create(applicationRoles)
+                        .setSource(input.getSource())
+                        .setCommand(input.getCommand())
+                        .setDestination(input.getDestination().orElse(null)));
+
         List<String> failures = new ArrayList<>();
 
         return
@@ -162,7 +178,7 @@ class UpdateUsersView
                 .setUsers(users)
                 .setFailureMessages(failures)
                 .setRoles(RoleCatalogData.from(applicationRoles))
-                .setUserId(input.getUserId())
+                .setUserId(context.getCallerUserId().orElse(null))
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())
                 .setDestination(input.getDestination().orElse(null));
