@@ -13,6 +13,7 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import granite.foundation.core.security.GraniteAuthorities;
 import granite.session.server.domain.Session;
 
 import java.security.interfaces.RSAPrivateKey;
@@ -76,10 +77,9 @@ class JwtTokenService
         Objects.requireNonNull(session.getUserId(),"session.userId");
         Objects.requireNonNull(session.getSessionId(),"session.sessionId");
 
-        Instant      now         = Instant.now();
-        Instant      exp         = computeExpiration(session.getExpires(),now);
-        Set<String>  authorities = session.getAuthorities();
-        JWTClaimsSet claims      =
+        Instant      now    = Instant.now();
+        Instant      exp    = computeExpiration(session.getExpires(),now);
+        JWTClaimsSet claims =
             new JWTClaimsSet.Builder()
                 .issuer(issuer)
                 .subject(String.valueOf(session.getUserId()))
@@ -93,7 +93,7 @@ class JwtTokenService
                     session.getContinuityId() != null ? session.getContinuityId().toString() : null)
                 .claim(
                     AUTHORITIES_CLAIM,
-                    authorities != null ? new ArrayList<>(authorities) : List.of())
+                    sessionAuthorities(session.getAuthorities()))
                 .build();
         return sign(claims);
     }
@@ -233,6 +233,21 @@ class JwtTokenService
         }
 
         return signed.serialize();
+    }
+
+    private List<String>
+    sessionAuthorities(Set<String> authorities)
+    {
+        List<String> kept = new ArrayList<>();
+
+        if (authorities == null)
+            return kept;
+
+        for (String authority : authorities)
+            if (!GraniteAuthorities.isScope(authority))
+                kept.add(authority);
+
+        return kept;
     }
 
     private Instant

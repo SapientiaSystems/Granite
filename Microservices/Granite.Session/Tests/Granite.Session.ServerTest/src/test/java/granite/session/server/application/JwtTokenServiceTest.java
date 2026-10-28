@@ -98,6 +98,20 @@ class JwtTokenServiceTest
 
     @Test
     public void
+    mintedSessionJwtDropsScopeAuthorities()
+        throws ParseException
+    {
+        JwtTokenService target  = newService();
+        Session         session =
+            newSession(1001L,2002L,"device-A")
+                .setAuthorities(new LinkedHashSet<>(List.of("ROLE_ADMIN","SCOPE_internal","SCOPE_other","ROLE_USER")));
+        JWTClaimsSet    claims  = SignedJWT.parse(target.mint(session)).getJWTClaimsSet();
+
+        assertEquals(List.of("ROLE_ADMIN","ROLE_USER"),claims.getStringListClaim("authorities"));
+    }
+
+    @Test
+    public void
     mintedJwtOmitsCidWhenAbsent()
         throws ParseException
     {
