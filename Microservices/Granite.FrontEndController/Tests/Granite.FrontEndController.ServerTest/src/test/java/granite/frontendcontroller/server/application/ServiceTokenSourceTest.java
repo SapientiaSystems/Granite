@@ -21,12 +21,14 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
 class ServiceTokenSourceTest
 {
-    private static final Instant NOW = Instant.parse("2026-10-28T12:00:00Z");
+    private static final Instant  NOW     = Instant.parse("2026-10-28T12:00:00Z");
+    private static final Duration TIMEOUT = Duration.ofMillis(200);
 
     private ISessionCommandServiceClient client;
     private Clock                        clock;
@@ -38,7 +40,7 @@ class ServiceTokenSourceTest
     {
         client  = Mockito.mock(ISessionCommandServiceClient.class);
         clock   = Mockito.mock(Clock.class);
-        subject = new ServiceTokenSource(client,clock,"granite-frontendcontroller","fec-secret");
+        subject = new ServiceTokenSource(client,clock,"granite-frontendcontroller","fec-secret",TIMEOUT);
 
         Mockito
             .when(client.issueServiceToken(Mockito.any()))
@@ -95,6 +97,55 @@ class ServiceTokenSourceTest
         IllegalStateException e = assertThrows(IllegalStateException.class,() -> subject.getToken());
 
         assertFalse(e.getMessage().contains("fec-secret"));
+    }
+
+    @Test
+    public void
+    blankCredentialsAreNotSentToSession()
+    {
+        Mockito.when(clock.instant()).thenReturn(NOW);
+
+        for (ServiceTokenSource source : new ServiceTokenSource[] {
+                new ServiceTokenSource(client,clock,"granite-frontendcontroller","",TIMEOUT),
+                new ServiceTokenSource(client,clock,"granite-frontendcontroller",null,TIMEOUT),
+                new ServiceTokenSource(client,clock," ","fec-secret",TIMEOUT)})
+        {
+            IllegalStateException e = assertThrows(IllegalStateException.class,source::getToken);
+
+            assertTrue(e.getMessage().contains("not configured"));
+            assertFalse(e.getMessage().contains("fec-secret"));
+        }
+
+        Mockito.verify(client,Mockito.never()).issueServiceToken(Mockito.any());
+    }
+
+    @Test
+    public void
+    stalledIssueTimesOut()
+    {
+        Mockito.when(clock.instant()).thenReturn(NOW);
+        Mockito
+            .when(client.issueServiceToken(Mockito.any()))
+            .thenReturn(new CompletableFuture<>());
+
+        assertThrows(IllegalStateException.class,() -> subject.getToken());
+    }
+
+    @Test
+    public void
+    failedRenewalKeepsStillValidToken()
+    {
+        Mockito.when(clock.instant()).thenReturn(NOW,NOW.plus(Duration.ofMinutes(9)),NOW.plus(Duration.ofMinutes(10)));
+        Mockito
+            .when(client.issueServiceToken(Mockito.any()))
+            .thenReturn(
+                issued("token-1",NOW.plus(Duration.ofMinutes(10))),
+                new CompletableFuture<>(),
+                CompletableFuture.completedFuture(new IssueServiceTokenReply().setSuccess(false)));
+
+        assertEquals("token-1",subject.getToken());
+        assertEquals("token-1",subject.getToken());
+        assertThrows(IllegalStateException.class,() -> subject.getToken());
     }
 
     private static CompletableFuture<IssueServiceTokenReply>

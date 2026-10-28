@@ -115,44 +115,6 @@ class SessionCommandService
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
     private static final String   OKTA_PROVIDER       = "okta";
-    private static final String   INVALID_CLIENT      = "invalid client";
-
-    public
-    SessionCommandService(
-        ISessionRepository              repository,
-        IOktaLoginTransactionRepository transactionRepository,
-        IJwtTokenService                jwtTokenService,
-        IRefreshTokenService            refreshTokenService,
-        IUserCommandServiceClient       userCommandServiceClient,
-        IUserQueryServiceClient         userQueryServiceClient,
-        IOktaClient                     oktaClient,
-        OktaSettings                    oktaSettings,
-        ILoginGate                      loginGate,
-        ISessionEventSender             sender,
-        ModelMapper                     mapper,
-        Duration                        maxLifetime,
-        Duration                        renewalMargin,
-        Clock                           clock,
-        ApplicationRolesManager roles)
-    {
-        this(
-            repository,
-            transactionRepository,
-            jwtTokenService,
-            refreshTokenService,
-            userCommandServiceClient,
-            userQueryServiceClient,
-            oktaClient,
-            oktaSettings,
-            loginGate,
-            sender,
-            mapper,
-            maxLifetime,
-            renewalMargin,
-            clock,
-            roles,
-            null);
-    }
 
     @Inject
     public
@@ -1552,7 +1514,7 @@ class SessionCommandService
         return
             (request != null ? new IssueServiceTokenReply(request) : new IssueServiceTokenReply())
                 .setSuccess(false)
-                .setFailureMessage(INVALID_CLIENT);
+                .setFailureMessage(ServiceTokenIssuer.INVALID_CLIENT);
     }
 
     private boolean

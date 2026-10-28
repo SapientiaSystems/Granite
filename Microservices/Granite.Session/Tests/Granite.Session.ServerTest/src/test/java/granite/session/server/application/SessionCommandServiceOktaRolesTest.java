@@ -266,7 +266,8 @@ class SessionCommandServiceOktaRolesTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 Clock.fixed(NOW,ZoneOffset.UTC),
-                roles);
+                roles,
+                null);
 
         return
             subject

@@ -15,19 +15,24 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public
 class ServiceTokenSource
     implements IServiceTokenSource
 {
+    public static final Duration DEFAULT_ISSUE_TIMEOUT = Duration.ofSeconds(5);
+
     private static final Duration RENEWAL_MARGIN = Duration.ofSeconds(60);
 
     private final ISessionCommandServiceClient client;
     private final Clock                        clock;
     private final String                       clientId;
     private final String                       clientSecret;
+    private final Duration                     issueTimeout;
     private final Logger                       logger;
     private String                             token;
+    private Instant                            expiresAt;
     private Instant                            renewAt;
 
     public
@@ -35,14 +40,17 @@ class ServiceTokenSource
         ISessionCommandServiceClient client,
         Clock                        clock,
         String                       clientId,
-        String                       clientSecret)
+        String                       clientSecret,
+        Duration                     issueTimeout)
     {
         this.client       = Objects.requireNonNull(client,"client");
         this.clock        = Objects.requireNonNull(clock,"clock");
-        this.clientId     = Objects.requireNonNull(clientId,"clientId");
-        this.clientSecret = Objects.requireNonNull(clientSecret,"clientSecret");
+        this.clientId     = clientId != null ? clientId : "";
+        this.clientSecret = clientSecret != null ? clientSecret : "";
+        this.issueTimeout = Objects.requireNonNull(issueTimeout,"issueTimeout");
         this.logger       = LogManager.getLogger(ServiceTokenSource.class);
         this.token        = null;
+        this.expiresAt    = null;
         this.renewAt      = null;
     }
 
@@ -52,8 +60,26 @@ class ServiceTokenSource
     {
         Instant now = clock.instant();
 
-        if (token == null || !now.isBefore(renewAt))
+        if (token != null && now.isBefore(renewAt))
+            return token;
+
+        try
+        {
             issue(now);
+        }
+        catch (RuntimeException e)
+        {
+            if (token != null && expiresAt != null && now.isBefore(expiresAt))
+            {
+                logger.warn("service token renewal failed for client {}; using the cached token",clientId);
+                return token;
+            }
+
+            token     = null;
+            expiresAt = null;
+            renewAt   = null;
+            throw e;
+        }
 
         return token;
     }
@@ -61,29 +87,42 @@ class ServiceTokenSource
     private void
     issue(Instant now)
     {
-        IssueServiceTokenReply reply =
-            client
-                .issueServiceToken(
-                    new IssueServiceTokenRequest()
-                        .setRequestId(UUID.randomUUID())
-                        .setTimestamp(now)
-                        .setClientId(clientId)
-                        .setClientSecret(clientSecret))
-                .toCompletableFuture()
-                .join();
+        if (clientId.isBlank() || clientSecret.isBlank())
+            throw new IllegalStateException("service client id or secret is not configured" + (clientId.isBlank() ? "" : " for client " + clientId));
+
+        IssueServiceTokenReply reply;
+
+        try
+        {
+            reply =
+                client
+                    .issueServiceToken(
+                        new IssueServiceTokenRequest()
+                            .setRequestId(UUID.randomUUID())
+                            .setTimestamp(now)
+                            .setClientId(clientId)
+                            .setClientSecret(clientSecret))
+                    .toCompletableFuture()
+                    .orTimeout(issueTimeout.toMillis(),TimeUnit.MILLISECONDS)
+                    .join();
+        }
+        catch (RuntimeException e)
+        {
+            logger.warn("service token request failed for client {}: {}",clientId,e.getClass().getName());
+            throw new IllegalStateException("service token unavailable for client " + clientId);
+        }
 
         if (reply == null || !reply.isSuccess() || reply.getToken() == null)
         {
-            token   = null;
-            renewAt = null;
             logger.warn("service token for client {} was refused",clientId);
             throw new IllegalStateException("service token unavailable for client " + clientId);
         }
 
-        token   = reply.getToken();
-        renewAt =
-            reply.getExpiresAt() != null
-                ? reply.getExpiresAt().minus(RENEWAL_MARGIN)
+        token     = reply.getToken();
+        expiresAt = reply.getExpiresAt();
+        renewAt   =
+            expiresAt != null
+                ? expiresAt.minus(RENEWAL_MARGIN)
                 : now;
         logger.info("service token issued for client {}",clientId);
     }

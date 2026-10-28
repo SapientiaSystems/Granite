@@ -108,7 +108,8 @@ class SessionCommandServiceDefaultRoleTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 Clock.fixed(NOW,ZoneOffset.UTC),
-                POPLAR);
+                POPLAR,
+                null);
     }
 
     @Test

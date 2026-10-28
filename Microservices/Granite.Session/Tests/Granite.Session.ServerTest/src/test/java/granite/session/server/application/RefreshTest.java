@@ -92,7 +92,8 @@ class RefreshTest
                 MAX_LIFETIME,
                 Duration.ofMinutes(2),
                 clock,
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
 
         Mockito
             .when(repository.save(Mockito.any(Session.class)))

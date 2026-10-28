@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -98,6 +99,25 @@ class ServiceTokenIssuanceTest
         assertFalse(issue("granite-frontendcontroller","reporting-secret").isSuccess());
         assertFalse(issue("unconfigured","").isSuccess());
         assertFalse(issue("nobody","fec-secret").isSuccess());
+    }
+
+    @Test
+    public void
+    lifetimeAboveOneHourFailsStartup()
+    {
+        environment.setProperty("granite.session.service-clients.granite-frontendcontroller.lifetime","PT61M");
+
+        assertThrows(IllegalArgumentException.class,() -> subject.serviceTokenIssuer(jwtTokenService,environment));
+    }
+
+    @Test
+    public void
+    hashOfEmptySecretFailsStartup()
+        throws Exception
+    {
+        environment.setProperty("granite.session.service-clients.reporting.secret-sha256",hex(""));
+
+        assertThrows(IllegalArgumentException.class,() -> subject.serviceTokenIssuer(jwtTokenService,environment));
     }
 
     private IssueServiceTokenReply

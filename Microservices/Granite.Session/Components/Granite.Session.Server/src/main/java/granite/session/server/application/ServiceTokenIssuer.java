@@ -20,9 +20,9 @@ class ServiceTokenIssuer
     implements IServiceTokenIssuer
 {
     public static final String INTERNAL_SCOPE = "SCOPE_internal";
+    public static final String INVALID_CLIENT = "invalid client";
 
-    private static final String INVALID_CLIENT = "invalid client";
-    private static final byte[] UNKNOWN_HASH   = ServiceClientRegistration.hash("unknown-service-client");
+    private static final byte[] UNKNOWN_HASH = ServiceClientRegistration.hash("unknown-service-client");
 
     private final IJwtTokenService                       jwtTokenService;
     private final Map<String,ServiceClientRegistration> registrations;
@@ -43,19 +43,25 @@ class ServiceTokenIssuer
     public IssueServiceTokenReply
     issue(IssueServiceTokenRequest request)
     {
-        if (request == null || request.getClientId() == null || request.getClientSecret() == null)
-            return refuse(request);
-
-        ServiceClientRegistration registration = registrations.get(request.getClientId());
+        ServiceClientRegistration registration =
+            request != null && request.getClientId() != null
+                ? registrations.get(request.getClientId())
+                : null;
+        String                    secret       =
+            request != null && request.getClientSecret() != null
+                ? request.getClientSecret()
+                : "";
 
         if (registration == null)
         {
-            MessageDigest.isEqual(UNKNOWN_HASH,ServiceClientRegistration.hash(request.getClientSecret()));
+            MessageDigest.isEqual(UNKNOWN_HASH,ServiceClientRegistration.hash(secret));
             logger.warn("service token refused: unknown client");
             return refuse(request);
         }
 
-        if (!registration.matches(request.getClientSecret()))
+        boolean matches = registration.matches(secret);
+
+        if (secret.isBlank() || !matches)
         {
             logger.warn("service token refused for client {}",registration.getClientId());
             return refuse(request);

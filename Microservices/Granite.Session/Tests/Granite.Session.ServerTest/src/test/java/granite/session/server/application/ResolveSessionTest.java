@@ -98,7 +98,8 @@ class ResolveSessionTest
                 MAX_LIFETIME,
                 RENEWAL_MARGIN,
                 Clock.fixed(NOW,ZoneOffset.UTC),
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
 
         Mockito
             .when(repository.save(Mockito.any(Session.class)))

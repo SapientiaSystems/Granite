@@ -138,6 +138,7 @@ class ExtendedFrontEndControllerConfigurationTest
         IConfiguration                          configuration = Mockito.mock(IConfiguration.class);
 
         Mockito.when(configuration.getProperty(Mockito.anyString(),Mockito.anyString())).thenAnswer(i -> i.getArgument(1));
+        Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.secret","")).thenReturn("fec-secret");
         ReflectionTestUtils.setField(subject,"configuration",configuration);
 
         return subject;

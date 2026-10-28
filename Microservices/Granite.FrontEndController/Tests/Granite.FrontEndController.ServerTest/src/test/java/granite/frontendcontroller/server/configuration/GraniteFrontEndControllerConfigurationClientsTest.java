@@ -66,6 +66,7 @@ class GraniteFrontEndControllerConfigurationClientsTest
         SslBundle      bundle        = Mockito.mock(SslBundle.class);
 
         Mockito.when(configuration.getProperty(Mockito.anyString(),Mockito.anyString())).thenAnswer(i -> i.getArgument(1));
+        Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.secret","")).thenReturn("fec-secret");
         for (String key : new String[] {"user-query-service.base-url","user-command-service.base-url","session-command-service.base-url","session-query-service.base-url"})
             Mockito.when(configuration.getProperty(key)).thenReturn(backend.baseUrl());
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);

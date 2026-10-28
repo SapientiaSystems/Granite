@@ -80,7 +80,8 @@ class LogoutTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
     }
 
     @Test
@@ -258,7 +259,8 @@ class LogoutTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
         return okta;
     }
 

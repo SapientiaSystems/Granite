@@ -92,7 +92,8 @@ class LoginLifecycleTest
                 MAX_LIFETIME,
                 Duration.ofMinutes(2),
                 Clock.fixed(NOW,ZoneOffset.UTC),
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
 
         stubSaveAssignsSessionId(500L);
         stubAuthenticate();

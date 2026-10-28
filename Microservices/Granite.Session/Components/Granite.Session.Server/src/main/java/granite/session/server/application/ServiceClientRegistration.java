@@ -15,7 +15,10 @@ import java.util.Objects;
 public
 class ServiceClientRegistration
 {
-    private static final int SHA256_LENGTH = 32;
+    public static final Duration MAX_LIFETIME = Duration.ofHours(1);
+
+    private static final int    SHA256_LENGTH     = 32;
+    private static final byte[] EMPTY_SECRET_HASH = hash("");
 
     private final String   clientId;
     private final byte[]   secretHash;
@@ -28,8 +31,11 @@ class ServiceClientRegistration
         this.secretHash = decode(secretSha256);
         this.lifetime   = Objects.requireNonNull(lifetime,"lifetime");
 
-        if (lifetime.isZero() || lifetime.isNegative())
-            throw new IllegalArgumentException("lifetime must be positive");
+        if (MessageDigest.isEqual(secretHash,EMPTY_SECRET_HASH))
+            throw new IllegalArgumentException("service client " + clientId + " is registered with the hash of an empty secret");
+
+        if (lifetime.isZero() || lifetime.isNegative() || lifetime.compareTo(MAX_LIFETIME) > 0)
+            throw new IllegalArgumentException("service client " + clientId + " lifetime must be positive and at most " + MAX_LIFETIME);
     }
 
     public String

@@ -493,7 +493,8 @@ class CompleteOktaLoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 Clock.fixed(NOW,ZoneOffset.UTC),
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
     }
 
     private void

@@ -122,7 +122,8 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 createServiceTokenClient(),
                 Clock.systemUTC(),
                 configuration.getProperty(SERVICE_CLIENT_ID,"granite-frontendcontroller"),
-                configuration.getProperty(SERVICE_CLIENT_SECRET,""));
+                configuration.getProperty(SERVICE_CLIENT_SECRET,""),
+                ServiceTokenSource.DEFAULT_ISSUE_TIMEOUT);
     }
 
     @Bean

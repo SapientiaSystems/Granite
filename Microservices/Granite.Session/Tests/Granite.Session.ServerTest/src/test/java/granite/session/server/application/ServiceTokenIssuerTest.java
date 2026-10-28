@@ -113,6 +113,42 @@ class ServiceTokenIssuerTest
 
     @Test
     public void
+    emptyOrBlankSecretIsRefused()
+    {
+        assertRefused(subject.issue(request(CLIENT_ID,"")));
+        assertRefused(subject.issue(request(CLIENT_ID,"   ")));
+    }
+
+    @Test
+    public void
+    registrationWithHashOfEmptySecretFailsNamingOnlyTheClient()
+        throws Exception
+    {
+        IllegalArgumentException e =
+            assertThrows(
+                IllegalArgumentException.class,
+                () -> new ServiceClientRegistration(CLIENT_ID,hex(""),LIFETIME));
+
+        assertTrue(e.getMessage().contains(CLIENT_ID));
+        assertFalse(e.getMessage().contains(hex("")));
+    }
+
+    @Test
+    public void
+    lifetimeIsCappedAtOneHour()
+        throws Exception
+    {
+        new ServiceClientRegistration(CLIENT_ID,hex(SECRET),Duration.ofHours(1));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new ServiceClientRegistration(CLIENT_ID,hex(SECRET),Duration.ofMinutes(61)));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new ServiceClientRegistration(CLIENT_ID,hex(SECRET),Duration.ZERO));
+    }
+
+    @Test
+    public void
     blankSecretHashIsRejected()
     {
         assertThrows(IllegalArgumentException.class,() -> new ServiceClientRegistration(CLIENT_ID,"",LIFETIME));

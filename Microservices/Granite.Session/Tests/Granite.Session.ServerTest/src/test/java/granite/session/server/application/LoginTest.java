@@ -94,7 +94,8 @@ class LoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
 
         stubSaveAssignsSessionId(500L);
         Mockito.when(jwtTokenService.mint(Mockito.any(Session.class))).thenReturn(MINTED_JWT);
@@ -552,7 +553,8 @@ class LoginTest
                 Duration.ofHours(24),
                 Duration.ofMinutes(2),
                 clock,
-                new GraniteApplicationRolesManagerSupplier().get());
+                new GraniteApplicationRolesManagerSupplier().get(),
+                null);
     }
 
     private void
