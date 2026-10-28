@@ -11,7 +11,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 
 public
 class SessionQueryRevocationChecker
@@ -32,7 +35,8 @@ class SessionQueryRevocationChecker
     public static final String AUTHORITIES_CLAIM      = "authorities";
     public static final String DEVICE_ID_CLAIM        = "did";
 
-    private static final int MAX_CACHE_ENTRIES = 10_000;
+    private static final int      MAX_CACHE_ENTRIES = 10_000;
+    private static final Duration RETRY_BACKOFF     = Duration.ofMillis(100);
 
     private final WebClient            webClient;
     private final URI                  lookupUri;
@@ -90,6 +94,15 @@ class SessionQueryRevocationChecker
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .timeout(timeout)
+                .retryWhen(
+                    Retry
+                        .fixedDelay(1,RETRY_BACKOFF)
+                        .filter(SessionQueryRevocationChecker::isTransient)
+                        .doBeforeRetry(
+                            signal ->
+                                logger.warn(
+                                    "session revocation lookup failed; retrying once: {}",
+                                    signal.failure().getMessage())))
                 .map(reply -> isLive(reply,now))
                 .doOnNext(active -> remember(sessionId,active,jwt,now))
                 .onErrorResume(
@@ -98,6 +111,12 @@ class SessionQueryRevocationChecker
                         logger.warn("session revocation lookup failed; rejecting token: {}",e.getMessage());
                         return Mono.just(false);
                     });
+    }
+
+    private static boolean
+    isTransient(Throwable failure)
+    {
+        return failure instanceof TimeoutException || failure instanceof WebClientRequestException;
     }
 
     private static boolean
