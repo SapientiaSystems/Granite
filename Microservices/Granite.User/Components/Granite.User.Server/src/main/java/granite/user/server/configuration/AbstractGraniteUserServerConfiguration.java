@@ -4,8 +4,9 @@
 
 package granite.user.server.configuration;
 
-import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
+import granite.foundation.core.security.GraniteJwtCheckSecurity;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
+import granite.foundation.core.security.JwtCheckMode;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
@@ -27,11 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,10 +48,8 @@ import strata.server.spring.service.ServiceConfiguration;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 @EnableTransactionManagement
 @EnableWebSecurity
@@ -153,36 +149,18 @@ class AbstractGraniteUserServerConfiguration
     @Bean
     public SecurityFilterChain
     securityFilterChain(
-        HttpSecurity                      http,
-        JwtDecoder                        jwtDecoder,
-        GraniteJwtAuthenticationConverter jwtAuthenticationConverter,
-        Environment                       environment)
+        HttpSecurity http,
+        JwtDecoder   jwtDecoder,
+        Environment  environment)
         throws Exception
     {
-        List<String> publicPaths = getPublicPathPatterns(environment);
-
-        http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(
-                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(
-                requests ->
-                {
-                    requests.requestMatchers(antMatcher(HttpMethod.OPTIONS,"/**")).permitAll();
-
-                    for (String path : publicPaths)
-                        requests.requestMatchers(antMatcher(path)).permitAll();
-
-                    requests.anyRequest().authenticated();
-                })
-            .oauth2ResourceServer(
-                server ->
-                    server.jwt(
-                        jwt ->
-                            jwt
-                                .decoder(jwtDecoder)
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter)));
-        return http.build();
+        return
+            new GraniteJwtCheckSecurity()
+                .jwtCheckChain(
+                    http,
+                    jwtDecoder,
+                    JwtCheckMode.REQUIRED,
+                    getTokenlessPathPatterns(environment));
     }
 
     @Bean
@@ -195,14 +173,6 @@ class AbstractGraniteUserServerConfiguration
                 .create(
                     GraniteResourceServerSettings.from(environment),
                     createJwkSetRestOperations(sslBundles,environment));
-    }
-
-    @Bean
-    @Scope("singleton")
-    public GraniteJwtAuthenticationConverter
-    jwtAuthenticationConverter()
-    {
-        return new GraniteJwtAuthenticationConverter();
     }
 
     @Bean
@@ -260,24 +230,9 @@ class AbstractGraniteUserServerConfiguration
     }
 
     protected List<String>
-    getPublicPathPatterns(Environment environment)
+    getTokenlessPathPatterns(Environment environment)
     {
-        List<String> paths =
-            new ArrayList<>(
-                List.of(
-                    environment.getProperty("strata.health.base-path","/health") + "/**",
-                    "/error"));
-
-        if (!environment.acceptsProfiles(Profiles.of("production")))
-            paths.addAll(
-                List.of(
-                    environment.getProperty("springdoc.api-docs.path","/v3/api-docs") + "/**",
-                    environment.getProperty("springdoc.swagger-ui.path","/swagger-ui") + "/**",
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"));
-
-        return paths;
+        return new GraniteJwtCheckSecurity().defaultTokenlessPaths(environment);
     }
 
     protected abstract String

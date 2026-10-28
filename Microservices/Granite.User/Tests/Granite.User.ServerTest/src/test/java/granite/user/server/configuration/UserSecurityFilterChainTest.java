@@ -144,6 +144,22 @@ class UserSecurityFilterChainTest
 
     @Test
     public void
+    validTokenWithoutRoleAuthoritiesReachesServicePath()
+        throws Exception
+    {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain         chain    =
+            run(
+                request("POST",PROTECTED_PATH,sign(signingKeys,"granite-services",300,List.of())),
+                response,
+                new AtomicReference<>());
+
+        assertNotNull(chain.getRequest());
+        assertTrue(response.getStatus() != 401 && response.getStatus() != 403);
+    }
+
+    @Test
+    public void
     healthAndPreflightArePublic()
         throws Exception
     {
@@ -194,6 +210,13 @@ class UserSecurityFilterChainTest
     sign(KeyPair keys,String audience,long lifetimeSeconds)
         throws JOSEException
     {
+        return sign(keys,audience,lifetimeSeconds,List.of("ROLE_ADMIN","SCOPE_internal"));
+    }
+
+    private static String
+    sign(KeyPair keys,String audience,long lifetimeSeconds,List<String> authorities)
+        throws JOSEException
+    {
         Instant      now    = Instant.now();
         JWTClaimsSet claims =
             new JWTClaimsSet.Builder()
@@ -203,7 +226,7 @@ class UserSecurityFilterChainTest
                 .audience(audience)
                 .issueTime(Date.from(now.minusSeconds(600)))
                 .expirationTime(Date.from(now.plusSeconds(lifetimeSeconds)))
-                .claim("authorities",List.of("ROLE_ADMIN","SCOPE_internal"))
+                .claim("authorities",authorities)
                 .build();
         SignedJWT    jwt    = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256),claims);
 

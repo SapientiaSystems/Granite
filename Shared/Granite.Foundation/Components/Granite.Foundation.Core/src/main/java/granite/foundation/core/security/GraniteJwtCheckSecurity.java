@@ -58,22 +58,31 @@ class GraniteJwtCheckSecurity
     public List<String>
     defaultTokenlessPaths(Environment environment)
     {
-        List<String> paths =
-            new ArrayList<>(
-                List.of(
-                    environment.getProperty("strata.health.base-path","/health") + "/**",
-                    "/error"));
+        List<String> paths = new ArrayList<>();
+
+        addSubtree(paths,environment.getProperty("strata.health.base-path","/health"));
+        paths.add("/error");
 
         if (!environment.acceptsProfiles(Profiles.of("production")))
-            paths.addAll(
-                List.of(
-                    environment.getProperty("springdoc.api-docs.path","/v3/api-docs") + "/**",
-                    environment.getProperty("springdoc.swagger-ui.path","/swagger-ui") + "/**",
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"));
+        {
+            addSubtree(paths,environment.getProperty("springdoc.api-docs.path","/v3/api-docs"));
+            addSubtree(paths,environment.getProperty("springdoc.swagger-ui.path","/swagger-ui"));
+            paths.addAll(List.of("/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html"));
+        }
 
         return paths;
+    }
+
+    private void
+    addSubtree(List<String> paths,String basePath)
+    {
+        String trimmed = basePath == null ? "" : basePath.trim();
+
+        while (trimmed.endsWith("/"))
+            trimmed = trimmed.substring(0,trimmed.length() - 1);
+
+        if (!trimmed.isEmpty())
+            paths.add(trimmed + "/**");
     }
 }
 

@@ -142,7 +142,7 @@ class GraniteUserServerConfigurationTest
     {
         for (String profile : new String[] {"local","development","test"})
         {
-            List<String> paths = new GraniteUserQueryServerConfiguration().getPublicPathPatterns(environment(profile));
+            List<String> paths = new GraniteUserQueryServerConfiguration().getTokenlessPathPatterns(environment(profile));
 
             assertTrue(paths.containsAll(SWAGGER_PATHS),profile);
         }
@@ -152,7 +152,7 @@ class GraniteUserServerConfigurationTest
     public void
     testSwaggerPathsAreNotPublicInProduction()
     {
-        List<String> paths = new GraniteUserQueryServerConfiguration().getPublicPathPatterns(environment("production"));
+        List<String> paths = new GraniteUserQueryServerConfiguration().getTokenlessPathPatterns(environment("production"));
 
         for (String path : SWAGGER_PATHS)
             assertFalse(paths.contains(path),path);

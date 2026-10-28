@@ -45,7 +45,7 @@ class GraniteSessionServerConfigurationTest
     {
         for (String profile : new String[] {"local","development","test"})
         {
-            List<String> paths = new GraniteSessionQueryServerConfiguration().getPublicPathPatterns(environment(profile));
+            List<String> paths = new GraniteSessionQueryServerConfiguration().getTokenlessPathPatterns(environment(profile));
 
             assertTrue(paths.containsAll(SWAGGER_PATHS),profile);
         }
@@ -55,7 +55,7 @@ class GraniteSessionServerConfigurationTest
     public void
     testSwaggerPathsAreNotPublicInProduction()
     {
-        List<String> paths = new GraniteSessionQueryServerConfiguration().getPublicPathPatterns(environment("production"));
+        List<String> paths = new GraniteSessionQueryServerConfiguration().getTokenlessPathPatterns(environment("production"));
 
         for (String path : SWAGGER_PATHS)
             assertFalse(paths.contains(path),path);
@@ -63,9 +63,9 @@ class GraniteSessionServerConfigurationTest
 
     @Test
     public void
-    testCommandSidePublicPathsIncludeResolveSession()
+    testCommandSideTokenlessPathsIncludeResolveSession()
     {
-        List<String> paths = new GraniteSessionCommandServerConfiguration().getPublicPathPatterns(environment("production"));
+        List<String> paths = new GraniteSessionCommandServerConfiguration().getTokenlessPathPatterns(environment("production"));
 
         assertTrue(
             paths.containsAll(
@@ -74,7 +74,9 @@ class GraniteSessionServerConfigurationTest
                     "/session-command-service/start-okta-login",
                     "/session-command-service/complete-okta-login",
                     "/session-command-service/refresh",
-                    "/session-command-service/resolve-session")));
+                    "/session-command-service/resolve-session",
+                    "/session-command-service/issue-service-token",
+                    "/.well-known/jwks.json")));
         assertFalse(paths.contains("/session-command-service/login-with-oauth2"));
     }
 
@@ -84,7 +86,7 @@ class GraniteSessionServerConfigurationTest
     {
         assertFalse(
             new GraniteSessionQueryServerConfiguration()
-                .getPublicPathPatterns(environment("production"))
+                .getTokenlessPathPatterns(environment("production"))
                 .contains("/session-command-service/resolve-session"));
     }
 

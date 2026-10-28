@@ -159,6 +159,30 @@ class GraniteJwtCheckSecurityTest
 
     @Test
     public void
+    wrongIssuerRejected()
+        throws Exception
+    {
+        mvc(JwtCheckMode.REQUIRED,new MockEnvironment())
+            .perform(
+                get("/api/ping")
+                    .header("Authorization","Bearer " + sign(trusted,Duration.ofMinutes(5),List.of("ROLE_USER"),"other-issuer",AUDIENCE)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void
+    wrongAudienceRejected()
+        throws Exception
+    {
+        mvc(JwtCheckMode.REQUIRED,new MockEnvironment())
+            .perform(
+                get("/api/ping")
+                    .header("Authorization","Bearer " + sign(trusted,Duration.ofMinutes(5),List.of("ROLE_USER"),ISSUER,"other-audience")))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void
     optionalPermitsMissingToken()
         throws Exception
     {
@@ -217,6 +241,26 @@ class GraniteJwtCheckSecurityTest
         assertEquals(List.of("/health/**","/error"),prodPaths);
     }
 
+    @Test
+    public void
+    defaultTokenlessPathsNeverProduceCatchAll()
+    {
+        GraniteJwtCheckSecurity security = new GraniteJwtCheckSecurity();
+
+        for (String base : new String[] {"","/","  ","//"})
+        {
+            MockEnvironment environment =
+                new MockEnvironment()
+                    .withProperty("strata.health.base-path",base)
+                    .withProperty("springdoc.api-docs.path",base)
+                    .withProperty("springdoc.swagger-ui.path",base);
+
+            assertTrue(
+                security.defaultTokenlessPaths(environment).stream().noneMatch(path -> path.equals("/**") || path.equals("//**")),
+                "base path [" + base + "]");
+        }
+    }
+
     private MockMvc
     mvc(JwtCheckMode mode,MockEnvironment environment)
         throws Exception
@@ -252,13 +296,20 @@ class GraniteJwtCheckSecurityTest
     sign(KeyPair keys,Duration lifetime,List<String> authorities)
         throws JOSEException
     {
-        Instant      now    = Instant.now();
+        return sign(keys,lifetime,authorities,ISSUER,AUDIENCE);
+    }
+
+    private static String
+    sign(KeyPair keys,Duration lifetime,List<String> authorities,String issuer,String audience)
+        throws JOSEException
+    {
+        Instant     now    = Instant.now();
         JWTClaimsSet claims =
             new JWTClaimsSet.Builder()
-                .issuer(ISSUER)
+                .issuer(issuer)
                 .subject("1001")
                 .jwtID("2002")
-                .audience(AUDIENCE)
+                .audience(audience)
                 .issueTime(Date.from(now.minus(Duration.ofMinutes(10))))
                 .expirationTime(Date.from(now.plus(lifetime)))
                 .claim("authorities",authorities)

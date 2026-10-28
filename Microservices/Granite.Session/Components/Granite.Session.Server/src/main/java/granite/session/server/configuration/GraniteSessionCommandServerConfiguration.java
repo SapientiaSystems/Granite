@@ -271,9 +271,9 @@ class GraniteSessionCommandServerConfiguration
 
     @Override
     protected List<String>
-    getPublicPathPatterns(Environment environment)
+    getTokenlessPathPatterns(Environment environment)
     {
-        List<String> paths = super.getPublicPathPatterns(environment);
+        List<String> paths = super.getTokenlessPathPatterns(environment);
 
         paths.addAll(
             List.of(
@@ -282,6 +282,7 @@ class GraniteSessionCommandServerConfiguration
                 "/session-command-service/complete-okta-login",
                 "/session-command-service/refresh",
                 "/session-command-service/resolve-session",
+                "/session-command-service/issue-service-token",
                 "/.well-known/jwks.json"));
         return paths;
     }
