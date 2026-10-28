@@ -70,6 +70,28 @@ An application frame (providers, its own header, routes); `MantineProvider` sits
 - A test project is private and never published. It depends on the component's published package (`1.0.0-snapshot` from the local Verdaccio) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source. Test projects run vitest without type-checking (no `tsc`).
 - Root scripts: `yarn run test-granite-web` (web test projects) and `yarn run test-granite` (every TypeScript test project). Each publishes the component to the local Verdaccio first (the component's existing `publish-package`), then runs its test project.
 
+## Security split and call routing
+
+- The Gateway performs all authentication and every role/path authorization (`ROLE_*`, `SCOPE_internal`). Service hosts (User, Session, FrontEndController) have exactly one `SecurityFilterChain`, `GraniteJwtCheckSecurity.jwtCheckChain` from Granite.Foundation: signature (Session JWKS), expiry, issuer and audience only, stateless, no `hasAuthority`/`hasRole`/role path rules.
+- Modes: `REQUIRED` (User, Session): a request without a valid bearer is rejected except on the tokenless paths. `OPTIONAL` (FEC): a bearer, if present, must be valid; anonymous requests pass because the Gateway already authorized them, and the caller comes from the verified `Jwt`.
+- Tokenless paths per host (`getTokenlessPathPatterns(Environment)`, default `GraniteJwtCheckSecurity.defaultTokenlessPaths`: `OPTIONS`, health, `/error`, and outside `production` the springdoc paths): Session Command adds `login`, `refresh`, `resolve-session`, `issue-service-token` and `/.well-known/jwks.json`; User and Session Query add none; the FEC needs no list of its own beyond the default because it runs in `OPTIONAL` mode.
+- Breaking change for downstream applications: the `jwtAuthenticationConverter` bean seams on the User and Session hosts are removed. An application that overrode them no longer compiles (the `@Override` fails) and must delete the override; hosts do not authorize by role, so a role-mapping converter has no place there. Move any such rule to `configureApplicationAuthorization` in its Gateway.
+
+| Call | Route |
+|---|---|
+| Browser to services | Gateway |
+| FEC to User Query/Command and Session Command/Query | Gateway (`https://granite-gateway-servicehost:443`), FEC service token |
+| Session to User | Gateway, Session service token (`ServiceTokenProvider`) |
+| Gateway to Session `resolve-session` and revocation check (Session Query `find-sessions-by-key`) | direct (the Gateway's own calls) |
+| Gateway and hosts to Session JWKS | direct |
+| Session to Okta; services to Postgres and Kafka | direct (not Gateway traffic) |
+
+### Service tokens
+
+- Session's own calls to User use `ServiceTokenProvider` (`sub` starting with `service:`).
+- The FEC uses client credentials: Session Command `POST /session-command-service/issue-service-token` (tokenless at Session, public and rate limited at the Gateway) returns a token with `sub` = client id and `authorities` = `[SCOPE_internal]`, valid 1 hour at most. The FEC reads `FEC_SERVICE_CLIENT_SECRET`; Session registers the client with `FEC_SERVICE_CLIENT_SECRET_SHA256` (SHA-256 of the same secret, hex or base64). Both come from the Kubernetes Secret `granite-fec-service-client`, which the deploy scripts generate. The hash is unsalted, so the secret must be high-entropy random data (at least 32 random bytes, base64-encoded), never a password. An empty secret is refused. Secrets and tokens are never logged.
+- Rate limit: the Gateway limits `issue-service-token` per remote socket address (`granite.gateway.issue-service-token.rate-limit.requests`, `.window`, `.max-clients`). Deployment invariant: the Gateway must not be exposed directly to untrusted clients and must not trust forwarded headers. Behind a proxy every caller shares the proxy address, and when the tracked-address map is full a new address is refused, so a flood of distinct addresses can lock out the FEC's token issuance (the FEC then falls back to its cached token until it expires).
+
 ## Kubernetes network policies
 
 - `Shared/Granite.Kubernetes/base/granite-network-policies.yml` restricts ingress only. Egress is intentionally unrestricted.

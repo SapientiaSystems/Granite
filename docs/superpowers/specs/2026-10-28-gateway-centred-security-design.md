@@ -56,4 +56,4 @@ The single Gateway performs all authentication and all Spring Security role/path
 - Changing browser-facing behaviour.
 
 ## Status
-- Planned 2026-10-28.
+- Implemented 2026-10-28.
