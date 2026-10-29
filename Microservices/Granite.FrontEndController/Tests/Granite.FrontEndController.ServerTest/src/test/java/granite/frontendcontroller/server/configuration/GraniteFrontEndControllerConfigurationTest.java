@@ -44,6 +44,9 @@ class GraniteFrontEndControllerConfigurationTest
 {
     private HttpServer                             userService;
     private List<String>                           authorizations;
+    private IConfiguration                         configuration;
+    private SslBundles                             sslBundles;
+    private SslBundle                              bundle;
     private GraniteFrontEndControllerConfiguration subject;
 
     @BeforeEach
@@ -74,10 +77,11 @@ class GraniteFrontEndControllerConfigurationTest
             });
         userService.start();
 
-        IConfiguration configuration = Mockito.mock(IConfiguration.class);
-        SslBundles     sslBundles    = Mockito.mock(SslBundles.class);
-        SslBundle      bundle        = Mockito.mock(SslBundle.class);
-        String         baseUrl       = "http://127.0.0.1:" + userService.getAddress().getPort();
+        configuration = Mockito.mock(IConfiguration.class);
+        sslBundles    = Mockito.mock(SslBundles.class);
+        bundle        = Mockito.mock(SslBundle.class);
+
+        String baseUrl = "http://127.0.0.1:" + userService.getAddress().getPort();
 
         Mockito.when(configuration.getProperty("user-command-service.base-url")).thenReturn(baseUrl + "/user-command-service");
         Mockito.when(configuration.getProperty("user-query-service.base-url")).thenReturn(baseUrl + "/user-query-service");
@@ -85,6 +89,7 @@ class GraniteFrontEndControllerConfigurationTest
         Mockito.when(configuration.getProperty("session-query-service.base-url")).thenReturn(baseUrl + "/session-query-service");
         Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.id","granite-frontendcontroller")).thenReturn("granite-frontendcontroller");
         Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.secret","")).thenReturn("fec-secret");
+        Mockito.when(configuration.getProperty("granite.frontendcontroller.ssl-bundle","granite-services")).thenReturn("granite-services");
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
@@ -135,6 +140,63 @@ class GraniteFrontEndControllerConfigurationTest
 
         assertTrue(reply.isSuccess());
         assertTrue(authorizations.size() >= 3);
+        assertServiceTokenOnly();
+    }
+
+    @Test
+    public void
+    clientsUseConfiguredSslBundle()
+    {
+        Mockito.when(configuration.getProperty("granite.frontendcontroller.ssl-bundle","granite-services")).thenReturn("app-services");
+        Mockito.when(sslBundles.getBundle("app-services")).thenReturn(bundle);
+
+        MockHttpServletRequest inbound = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-users-input");
+        Jwt                    caller  = SessionRequestContextTest.jwt(11L,1L);
+
+        inbound.setUserPrincipal(new JwtAuthenticationToken(caller,List.of(),caller.getSubject()));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(inbound));
+
+        IGraniteFrontEndControllerService service =
+            subject.frontEndControllerService(Runnable::run,new ModelMapper(),subject.applicationRoles());
+
+        RequestContextHolder.resetRequestAttributes();
+
+        service
+            .handleUsersInput(
+                new HandleUsersInputRequest()
+                    .setInput(
+                        new UsersInput()
+                            .setUsersToUpdate(List.of(new UpdateUserData().setUserId(2L)))
+                            .setSource("User.All")
+                            .setCommand("Save")
+                            .setDestination("UsersEditableView")))
+            .toCompletableFuture()
+            .join();
+
+        assertTrue(authorizations.stream().anyMatch(a -> a.contains("/issue-service-token ")));
+        Mockito.verify(sslBundles,Mockito.atLeast(4)).getBundle("app-services");
+
+        Mockito.clearInvocations(sslBundles);
+        subject.createServiceTokenClient();
+
+        Mockito.verify(sslBundles).getBundle("app-services");
+        Mockito.verify(sslBundles,Mockito.never()).getBundle("granite-services");
+    }
+
+    @Test
+    public void
+    clientsUseGraniteSslBundleByDefault()
+    {
+        subject.createServiceTokenClient();
+        subject.createUserQueryClient();
+
+        Mockito.verify(sslBundles,Mockito.atLeast(2)).getBundle("granite-services");
+        Mockito.verify(sslBundles,Mockito.never()).getBundle(Mockito.argThat(name -> !"granite-services".equals(name)));
+    }
+
+    private void
+    assertServiceTokenOnly()
+    {
         assertEquals(
             List.of("/issue-service-token null"),
             authorizations

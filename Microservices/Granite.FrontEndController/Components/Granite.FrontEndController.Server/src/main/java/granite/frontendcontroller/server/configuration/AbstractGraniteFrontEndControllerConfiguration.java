@@ -65,6 +65,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
 {
     public static final String SERVICE_CLIENT_ID     = "granite.frontendcontroller.service-client.id";
     public static final String SERVICE_CLIENT_SECRET = "granite.frontendcontroller.service-client.secret";
+    public static final String SSL_BUNDLE            = "granite.frontendcontroller.ssl-bundle";
 
     @Autowired
     private IConfiguration configuration;
@@ -260,7 +261,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 .newBuilder()
                 .sslContext(
                     sslBundles
-                        .getBundle("granite-services")
+                        .getBundle(configuration.getProperty(SSL_BUNDLE,"granite-services"))
                         .createSslContext());
     }
 }

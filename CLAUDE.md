@@ -8,7 +8,7 @@ An application (for example Poplar) reuses Granite by extending the entry config
 
 - User: `AbstractGraniteUserServerConfiguration` and `GraniteUserCommandServerConfiguration` (`Microservices/Granite.User/Claude.md`)
 - Session: `applicationRoles` seam, login gate, Okta role assignment (`Microservices/Granite.Session/Claude.md`)
-- FrontEndController: `AbstractGraniteFrontEndControllerConfiguration`, `GraniteFrontEndControllerContext`, controller recipe (`Microservices/Granite.FrontEndController/CLAUDE.md`)
+- FrontEndController: `AbstractGraniteFrontEndControllerConfiguration`, `GraniteFrontEndControllerContext`, controller recipe (`Microservices/Granite.FrontEndController/CLAUDE.md`); set `granite.frontendcontroller.ssl-bundle` (default `granite-services`) to use the application's own SSL bundle for all downstream FEC clients
 - Gateway: `configureApplicationRoutes`, `configureApplicationAuthorization`, `getUsersReaderAuthorities(Environment)` (`Microservices/Granite.Gateway/CLAUDE.md`)
 
 ### Role catalog
