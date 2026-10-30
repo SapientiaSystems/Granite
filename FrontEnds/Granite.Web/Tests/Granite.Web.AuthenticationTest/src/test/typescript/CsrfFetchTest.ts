@@ -139,9 +139,13 @@ describe("configured CSRF cookie name",() =>
 
     it("invalidPrefixFallsBack",async () =>
     {
+        const warn   = vi.spyOn(console,"warn").mockImplementation(() => {});
         const header = await headerFor({ "__Host-GRANITE-XSRF-TOKEN": "granite","__Host-po-plar-XSRF-TOKEN": "bad" },"po-plar");
 
         expect(header).toBe("granite");
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(String(warn.mock.calls[0][0])).toContain("po-plar");
+        warn.mockRestore();
     });
 });
 

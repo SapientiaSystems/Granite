@@ -20,11 +20,22 @@ export const DEFAULT_COOKIE_PREFIX: string = "GRANITE";
 
 const COOKIE_PREFIX_PATTERN: RegExp = /^[A-Z0-9_]+$/;
 
+const warnedPrefixes: Set<string> = new Set<string>();
+
 export function normalizeCookiePrefix(prefix: string | undefined): string
 {
     const trimmed: string = (prefix ?? "").trim();
 
-    return COOKIE_PREFIX_PATTERN.test(trimmed) ? trimmed : DEFAULT_COOKIE_PREFIX;
+    if (COOKIE_PREFIX_PATTERN.test(trimmed))
+        return trimmed;
+
+    if (trimmed !== "" && !warnedPrefixes.has(trimmed))
+    {
+        warnedPrefixes.add(trimmed);
+        console.warn("cookiePrefix \"" + trimmed + "\" is not valid (A-Z, 0-9, _); using " + DEFAULT_COOKIE_PREFIX);
+    }
+
+    return DEFAULT_COOKIE_PREFIX;
 }
 
 export function getRuntimeConfig(): IRuntimeConfig
