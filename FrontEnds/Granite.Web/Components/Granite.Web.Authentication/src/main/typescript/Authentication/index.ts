@@ -2,7 +2,7 @@ export type {AuthenticationStatus,IAuthenticationState}                         
 export {ANONYMOUS,RESTORING}                                                         from "./IAuthenticationState";
 export {canEdit,hasAuthority}                                                        from "./Authorities";
 export type {IRuntimeConfig}                                                         from "./RuntimeConfig";
-export {getRuntimeConfig}                                                            from "./RuntimeConfig";
+export {DEFAULT_COOKIE_PREFIX,getRuntimeConfig,normalizeCookiePrefix}          from "./RuntimeConfig";
 export type {ILoginMethods,ILogoutResult,ISessionService,ISessionStatus}             from "./ISessionService";
 export {FrontEndSessionService}                                                      from "./FrontEndSessionService";
 export type {AuthenticationListener,INavigator}                                      from "./AuthenticationManager";

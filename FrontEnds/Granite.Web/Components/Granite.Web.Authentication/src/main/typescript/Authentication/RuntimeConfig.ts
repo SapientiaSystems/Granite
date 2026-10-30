@@ -4,7 +4,8 @@
 
 export interface IRuntimeConfig
 {
-    apiBaseUrl: string;
+    apiBaseUrl:   string;
+    cookiePrefix: string;
 }
 
 declare global
@@ -15,12 +16,24 @@ declare global
     }
 }
 
+export const DEFAULT_COOKIE_PREFIX: string = "GRANITE";
+
+const COOKIE_PREFIX_PATTERN: RegExp = /^[A-Z0-9_]+$/;
+
+export function normalizeCookiePrefix(prefix: string | undefined): string
+{
+    const trimmed: string = (prefix ?? "").trim();
+
+    return COOKIE_PREFIX_PATTERN.test(trimmed) ? trimmed : DEFAULT_COOKIE_PREFIX;
+}
+
 export function getRuntimeConfig(): IRuntimeConfig
 {
     const config: Partial<IRuntimeConfig> = window.__GRANITE_CONFIG__ ?? {};
 
     return {
-        apiBaseUrl: (config.apiBaseUrl ?? "").replace(/\/+$/,""),
+        apiBaseUrl:   (config.apiBaseUrl ?? "").replace(/\/+$/,""),
+        cookiePrefix: normalizeCookiePrefix(config.cookiePrefix),
     };
 }
 

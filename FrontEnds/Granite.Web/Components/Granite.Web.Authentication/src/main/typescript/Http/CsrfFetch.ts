@@ -3,10 +3,15 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { readCookie } from "./Cookies";
+import { DEFAULT_COOKIE_PREFIX } from "../Authentication/RuntimeConfig";
 
 export type FetchFunction = (input: RequestInfo | URL,init?: RequestInit) => Promise<Response>;
 
-export const CSRF_COOKIE: string = "XSRF-TOKEN";
+export function csrfCookieName(prefix: string): string
+{
+    return `__Host-${prefix}-XSRF-TOKEN`;
+}
+
 export const CSRF_HEADER: string = "X-XSRF-TOKEN";
 
 const UNSAFE_METHODS: ReadonlySet<string> = new Set(["POST","PUT","PATCH","DELETE"]);
@@ -20,10 +25,11 @@ export class CsrfFetch
 
     constructor(
         fetchFunction: FetchFunction                = (input,init) => window.fetch(input,init),
-        cookieReader:  (name: string) => string | undefined = (name: string) => readCookie(name))
+        cookieReader:  (name: string) => string | undefined = (name: string) => readCookie(name),
+        cookieName:    string                       = csrfCookieName(DEFAULT_COOKIE_PREFIX))
     {
         this.send      = fetchFunction;
-        this.readToken = () => cookieReader(CSRF_COOKIE);
+        this.readToken = () => cookieReader(cookieName);
         this.fetch     = (input,init) => this.execute(input,init);
     }
 

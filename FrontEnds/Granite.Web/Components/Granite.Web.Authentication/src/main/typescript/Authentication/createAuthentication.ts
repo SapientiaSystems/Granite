@@ -3,14 +3,14 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { GraniteFrontEndControllerServiceClient }       from "granite.frontendcontroller.client/RequestReply";
-import { CsrfFetch }                              from "../Http/CsrfFetch";
+import { CsrfFetch,csrfCookieName }                    from "../Http/CsrfFetch";
 import type { FetchFunction }                     from "../Http/CsrfFetch";
 import { SessionFetch }                           from "../Http/SessionFetch";
 import { AuthenticationManager }                  from "./AuthenticationManager";
 import type { INavigator }                        from "./AuthenticationManager";
 import { FrontEndSessionService }                 from "./FrontEndSessionService";
 import type { ISessionService }                   from "./ISessionService";
-import { getRuntimeConfig }                       from "./RuntimeConfig";
+import { getRuntimeConfig,normalizeCookiePrefix }  from "./RuntimeConfig";
 
 export const SESSION_SERVICE: string = "frontendcontroller-user-service";
 
@@ -23,6 +23,7 @@ export interface IAuthentication
 export interface IAuthenticationOptions
 {
     apiBaseUrl?:    string;
+    cookiePrefix?:  string;
     fetchFunction?: FetchFunction;
     cookieReader?:  (name: string) => string | undefined;
     navigator?:     INavigator;
@@ -32,7 +33,8 @@ export interface IAuthenticationOptions
 export function createAuthentication(options: IAuthenticationOptions = {}): IAuthentication
 {
     const baseUrl: string         = options.apiBaseUrl ?? getRuntimeConfig().apiBaseUrl;
-    const csrf: CsrfFetch         = new CsrfFetch(options.fetchFunction,options.cookieReader);
+    const prefix: string          = normalizeCookiePrefix(options.cookiePrefix ?? getRuntimeConfig().cookiePrefix);
+    const csrf: CsrfFetch         = new CsrfFetch(options.fetchFunction,options.cookieReader,csrfCookieName(prefix));
     const session: SessionFetch   = new SessionFetch(csrf.fetch);
 
     const clientOver = <C>(fetchFunction: FetchFunction,create: (serviceUrl: string,fetchFunction: FetchFunction) => C,service: string): C =>

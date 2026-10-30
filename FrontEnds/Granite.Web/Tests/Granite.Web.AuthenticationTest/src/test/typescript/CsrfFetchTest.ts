@@ -4,6 +4,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { CsrfFetch }                from "granite.web.authentication/Http";
+import { createAuthentication }     from "granite.web.authentication/Authentication";
 
 function response(status: number): Response
 {
@@ -97,6 +98,50 @@ describe("CsrfFetch",() =>
 
         expect(result.status).toBe(403);
         expect(send).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe("configured CSRF cookie name",() =>
+{
+    async function headerFor(cookies: Record<string,string>,cookiePrefix?: string): Promise<string | null>
+    {
+        const send           = vi.fn().mockResolvedValue(response(200));
+        const authentication = createAuthentication({
+            apiBaseUrl:    "",
+            cookiePrefix,
+            fetchFunction: send,
+            cookieReader:  (name: string) => cookies[name]});
+        const fetchFunction  = authentication.createFrontEndClient((_url: string,f: (input: RequestInfo | URL,init?: RequestInit) => Promise<Response>) => f,"svc");
+
+        await fetchFunction("/x",{ method: "POST" });
+
+        return headerOf(send.mock.calls[0]);
+    }
+
+    it("readsPrefixedCsrfCookie",async () =>
+    {
+        const header = await headerFor({ "__Host-POPLAR-XSRF-TOKEN": "poplar","XSRF-TOKEN": "plain" },"POPLAR");
+
+        expect(header).toBe("poplar");
+    });
+
+    it("ignores the plain cookie when the prefixed one is absent",async () =>
+    {
+        expect(await headerFor({ "XSRF-TOKEN": "plain" },"POPLAR")).toBeNull();
+    });
+
+    it("defaultsToGranitePrefix",async () =>
+    {
+        const header = await headerFor({ "__Host-GRANITE-XSRF-TOKEN": "granite" });
+
+        expect(header).toBe("granite");
+    });
+
+    it("invalidPrefixFallsBack",async () =>
+    {
+        const header = await headerFor({ "__Host-GRANITE-XSRF-TOKEN": "granite","__Host-po-plar-XSRF-TOKEN": "bad" },"po-plar");
+
+        expect(header).toBe("granite");
     });
 });
 
