@@ -20,14 +20,14 @@ public
 class DeviceCookieWebFilter
     implements WebFilter
 {
-    public static final String DEVICE_COOKIE = "GRANITE_DID";
-
+    private final String       cookieName;
     private final Duration     maxAge;
     private final SecureRandom random;
 
     public
-    DeviceCookieWebFilter(Duration maxAge)
+    DeviceCookieWebFilter(String cookieName,Duration maxAge)
     {
+        this.cookieName = Objects.requireNonNull(cookieName,"cookieName");
         this.maxAge = Objects.requireNonNull(maxAge,"maxAge");
         this.random = new SecureRandom();
     }
@@ -37,7 +37,7 @@ class DeviceCookieWebFilter
     filter(ServerWebExchange exchange,WebFilterChain chain)
     {
         if (exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
-            || exchange.getRequest().getCookies().getFirst(DEVICE_COOKIE) != null)
+            || exchange.getRequest().getCookies().getFirst(cookieName) != null)
             return chain.filter(exchange);
 
         String device = newDeviceId();
@@ -46,7 +46,7 @@ class DeviceCookieWebFilter
             .getResponse()
             .addCookie(
                 ResponseCookie
-                    .from(DEVICE_COOKIE,device)
+                    .from(cookieName,device)
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Lax")
@@ -60,7 +60,7 @@ class DeviceCookieWebFilter
                     .mutate()
                     .request(
                         request ->
-                            request.headers(headers -> CookieHeaders.append(headers,DEVICE_COOKIE,device)))
+                            request.headers(headers -> CookieHeaders.append(headers,cookieName,device)))
                     .build());
     }
 

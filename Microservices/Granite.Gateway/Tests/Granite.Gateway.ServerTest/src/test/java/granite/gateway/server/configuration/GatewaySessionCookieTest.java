@@ -8,6 +8,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import granite.foundation.core.security.GraniteCookieNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -39,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public
 class GatewaySessionCookieTest
 {
+    private static final GraniteCookieNames NAMES = new GraniteCookieNames("GRANITE");
+
     private static final String GET_USERS_OUTPUT     = "/frontendcontroller-user-service/get-users-output";
     private static final String HANDLE_SESSION_INPUT = "/frontendcontroller-user-service/handle-session-input";
     private static final String CSRF         = "csrf-token-value";
@@ -89,10 +92,10 @@ class GatewaySessionCookieTest
 
         String cookies = lastCookieHeaderWith(device);
 
-        assertTrue(cookies.contains("GRANITE_DID=" + device),cookies);
+        assertTrue(cookies.contains(NAMES.getDevice() + "=" + device),cookies);
         assertTrue(cookies.contains("other=kept"),cookies);
-        assertTrue(cookies.contains("XSRF-TOKEN=" + CSRF),cookies);
-        assertFalse(cookies.contains("GRANITE_SID"),cookies);
+        assertTrue(cookies.contains(NAMES.getCsrf() + "=" + CSRF),cookies);
+        assertFalse(cookies.contains(NAMES.getSession()),cookies);
         assertFalse(cookies.contains(handle),cookies);
         assertTrue(backend.getResolveAuthorizations().stream().allMatch("null"::equals));
     }
@@ -213,7 +216,7 @@ class GatewaySessionCookieTest
         assertEquals(200,post(GET_USERS_OUTPUT,users(),handle,device,bearer));
         assertTrue(backend.getReceivedAuthorizations().contains("Bearer " + bearer));
         assertFalse(backend.getResolveCalls().contains(handle));
-        assertFalse(lastCookieHeaderWith(device).contains("GRANITE_SID"));
+        assertFalse(lastCookieHeaderWith(device).contains(NAMES.getSession()));
     }
 
     @Test
@@ -228,7 +231,7 @@ class GatewaySessionCookieTest
         assertNotEquals(401,status);
         assertNotEquals(403,status);
         assertFalse(backend.getResolveCalls().contains(handle));
-        assertFalse(lastCookieHeaderWith(device).contains("GRANITE_SID"));
+        assertFalse(lastCookieHeaderWith(device).contains(NAMES.getSession()));
     }
 
     @Test
@@ -355,12 +358,12 @@ class GatewaySessionCookieTest
                 .cookies(
                     cookies ->
                     {
-                        cookies.add("GRANITE_SID",handle);
+                        cookies.add(NAMES.getSession(),handle);
                         cookies.add("other","kept");
-                        cookies.add("XSRF-TOKEN",CSRF);
+                        cookies.add(NAMES.getCsrf(),CSRF);
 
                         if (device != null)
-                            cookies.add("GRANITE_DID",device);
+                            cookies.add(NAMES.getDevice(),device);
                     })
                 .bodyValue(body)
                 .exchange()

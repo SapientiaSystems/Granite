@@ -4,6 +4,7 @@
 
 package granite.gateway.server.configuration;
 
+import granite.foundation.core.security.GraniteCookieNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -30,6 +31,8 @@ class GatewayPreferencesTest
 {
     private static final List<String> HOSTS = List.of("/frontendcontroller-user-service","/frontendcontroller-admin-service");
     private static final List<String> PATHS = List.of("/get-preferences-output","/handle-preferences-input");
+    private static final GraniteCookieNames NAMES = new GraniteCookieNames("GRANITE");
+
     private static final String       CSRF  = "csrf-token-value";
     private static final String       BODY  = "{\"requestId\":\"p\"}";
 
@@ -166,8 +169,8 @@ class GatewayPreferencesTest
                 .cookies(
                     cookies ->
                     {
-                        cookies.add("GRANITE_SID",handle);
-                        cookies.add("XSRF-TOKEN",CSRF);
+                        cookies.add(NAMES.getSession(),handle);
+                        cookies.add(NAMES.getCsrf(),CSRF);
                     })
                 .bodyValue(BODY)
                 .exchange()

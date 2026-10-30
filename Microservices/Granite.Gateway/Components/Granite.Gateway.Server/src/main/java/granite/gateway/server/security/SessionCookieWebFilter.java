@@ -20,14 +20,14 @@ public
 class SessionCookieWebFilter
     implements WebFilter
 {
-    public static final String SESSION_COOKIE = "GRANITE_SID";
-
+    private final String                   cookieName;
     private final ISessionResolver         resolver;
     private final ServerWebExchangeMatcher publicMatcher;
 
     public
-    SessionCookieWebFilter(ISessionResolver resolver,ServerWebExchangeMatcher publicMatcher)
+    SessionCookieWebFilter(String cookieName,ISessionResolver resolver,ServerWebExchangeMatcher publicMatcher)
     {
+        this.cookieName    = Objects.requireNonNull(cookieName,"cookieName");
         this.resolver      = Objects.requireNonNull(resolver,"resolver");
         this.publicMatcher = Objects.requireNonNull(publicMatcher,"publicMatcher");
     }
@@ -36,7 +36,7 @@ class SessionCookieWebFilter
     public Mono<Void>
     filter(ServerWebExchange exchange,WebFilterChain chain)
     {
-        HttpCookie session = exchange.getRequest().getCookies().getFirst(SESSION_COOKIE);
+        HttpCookie session = exchange.getRequest().getCookies().getFirst(cookieName);
 
         if (session == null)
             return chain.filter(exchange);
@@ -80,7 +80,7 @@ class SessionCookieWebFilter
                         request.headers(
                             headers ->
                             {
-                                CookieHeaders.strip(headers,SESSION_COOKIE);
+                                CookieHeaders.strip(headers,cookieName);
 
                                 if (accessToken != null)
                                     headers.setBearerAuth(accessToken);

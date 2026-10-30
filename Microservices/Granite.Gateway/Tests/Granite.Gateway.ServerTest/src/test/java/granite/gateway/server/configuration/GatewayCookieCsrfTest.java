@@ -4,6 +4,7 @@
 
 package granite.gateway.server.configuration;
 
+import granite.foundation.core.security.GraniteCookieNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -40,6 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public
 class GatewayCookieCsrfTest
 {
+    private static final GraniteCookieNames NAMES = new GraniteCookieNames("GRANITE");
+
     private static final String GET_USERS_OUTPUT     = "/frontendcontroller-user-service/get-users-output";
     private static final String GET_SESSION_OUTPUT   = "/frontendcontroller-user-service/get-session-output";
     private static final String HANDLE_SESSION_INPUT = "/frontendcontroller-user-service/handle-session-input";
@@ -78,7 +81,7 @@ class GatewayCookieCsrfTest
     public void
     deviceCookieIssuedWhenMissing()
     {
-        ResponseCookie device = cookies(get(Map.of())).getFirst("GRANITE_DID");
+        ResponseCookie device = cookies(get(Map.of())).getFirst(NAMES.getDevice());
 
         assertNotNull(device);
         assertTrue(device.getValue().matches("[A-Za-z0-9_-]{43}"),device.getValue());
@@ -93,7 +96,7 @@ class GatewayCookieCsrfTest
     public void
     deviceCookieNotReissuedWhenPresent()
     {
-        assertNull(cookies(get(Map.of("GRANITE_DID","existing-device"))).getFirst("GRANITE_DID"));
+        assertNull(cookies(get(Map.of(NAMES.getDevice(),"existing-device"))).getFirst(NAMES.getDevice()));
     }
 
     @Test
@@ -114,8 +117,8 @@ class GatewayCookieCsrfTest
                 .returnResult();
 
         assertEquals(200,result.getStatus().value());
-        assertNull(cookies(result).getFirst("GRANITE_DID"));
-        assertNull(cookies(result).getFirst("XSRF-TOKEN"));
+        assertNull(cookies(result).getFirst(NAMES.getDevice()));
+        assertNull(cookies(result).getFirst(NAMES.getCsrf()));
     }
 
     @Test
@@ -124,17 +127,17 @@ class GatewayCookieCsrfTest
     {
         EntityExchangeResult<byte[]> result =
             post(GET_SESSION_OUTPUT,GatewayPublicInputTest.output("Session.New",null,"LoginView"),Map.of(),null,null);
-        String                       device = cookies(result).getFirst("GRANITE_DID").getValue();
+        String                       device = cookies(result).getFirst(NAMES.getDevice()).getValue();
 
         assertEquals(200,result.getStatus().value());
-        assertTrue(backend.getReceivedCookies().stream().anyMatch(c -> c.contains("GRANITE_DID=" + device)));
+        assertTrue(backend.getReceivedCookies().stream().anyMatch(c -> c.contains(NAMES.getDevice() + "=" + device)));
     }
 
     @Test
     public void
     csrfCookieIssuedReadableByScript()
     {
-        ResponseCookie csrf = cookies(get(Map.of())).getFirst("XSRF-TOKEN");
+        ResponseCookie csrf = cookies(get(Map.of())).getFirst(NAMES.getCsrf());
 
         assertNotNull(csrf);
         assertFalse(csrf.getValue().isBlank());
@@ -145,12 +148,49 @@ class GatewayCookieCsrfTest
 
     @Test
     public void
+    deviceCookieIsHostPrefixed()
+    {
+        String header = setCookie(get(Map.of()),"__Host-GRANITE_DID=");
+
+        assertTrue(header.contains("Secure"),header);
+        assertTrue(header.contains("Path=/"),header);
+        assertFalse(header.contains("Domain"),header);
+    }
+
+    @Test
+    public void
+    csrfCookieIsHostPrefixed()
+    {
+        String header = setCookie(get(Map.of()),"__Host-GRANITE-XSRF-TOKEN=");
+
+        assertTrue(header.contains("Secure"),header);
+        assertTrue(header.contains("Path=/"),header);
+        assertFalse(header.contains("Domain"),header);
+    }
+
+    private static String
+    setCookie(EntityExchangeResult<byte[]> result,String prefix)
+    {
+        List<String> headers = result.getResponseHeaders().get("Set-Cookie");
+
+        assertNotNull(headers);
+
+        return
+            headers
+                .stream()
+                .filter(h -> h.startsWith(prefix))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("no Set-Cookie starting with " + prefix + ": " + headers));
+    }
+
+    @Test
+    public void
     cookiePostWithoutCsrfTokenIsForbidden()
         throws Exception
     {
         String handle = register("ROLE_ADMIN");
 
-        assertEquals(403,post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle),null,null).getStatus().value());
+        assertEquals(403,post(GET_USERS_OUTPUT,users(),Map.of(NAMES.getSession(),handle),null,null).getStatus().value());
         assertFalse(backend.getResolveCalls().contains(handle));
     }
 
@@ -163,7 +203,7 @@ class GatewayCookieCsrfTest
 
         assertEquals(
             403,
-            post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle,"XSRF-TOKEN","right"),"wrong",null)
+            post(GET_USERS_OUTPUT,users(),Map.of(NAMES.getSession(),handle,NAMES.getCsrf(),"right"),"wrong",null)
                 .getStatus()
                 .value());
         assertFalse(backend.getResolveCalls().contains(handle));
@@ -178,7 +218,7 @@ class GatewayCookieCsrfTest
 
         assertEquals(
             200,
-            post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_SID",handle,"XSRF-TOKEN","right"),"right",null)
+            post(GET_USERS_OUTPUT,users(),Map.of(NAMES.getSession(),handle,NAMES.getCsrf(),"right"),"right",null)
                 .getStatus()
                 .value());
     }
@@ -189,10 +229,10 @@ class GatewayCookieCsrfTest
     {
         String login = GatewayPublicInputTest.input("Session.New","Login","LoginView");
 
-        assertEquals(403,post(HANDLE_SESSION_INPUT,login,Map.of("GRANITE_DID","d"),null,null).getStatus().value());
+        assertEquals(403,post(HANDLE_SESSION_INPUT,login,Map.of(NAMES.getDevice(),"d"),null,null).getStatus().value());
         assertEquals(
             200,
-            post(HANDLE_SESSION_INPUT,login,Map.of("GRANITE_DID","d","XSRF-TOKEN","t"),"t",null).getStatus().value());
+            post(HANDLE_SESSION_INPUT,login,Map.of(NAMES.getDevice(),"d",NAMES.getCsrf(),"t"),"t",null).getStatus().value());
     }
 
     @Test
@@ -205,7 +245,7 @@ class GatewayCookieCsrfTest
             client
                 .method(HttpMethod.GET)
                 .uri("/user-query-service/find-users-by-key")
-                .cookie("GRANITE_SID",handle)
+                .cookie(NAMES.getSession(),handle)
                 .exchange()
                 .returnResult(String.class)
                 .getStatus()
@@ -241,10 +281,10 @@ class GatewayCookieCsrfTest
     public void
     forbiddenResponseCarriesFreshCsrfCookie()
     {
-        EntityExchangeResult<byte[]> result = post(GET_USERS_OUTPUT,users(),Map.of("GRANITE_DID","d"),null,null);
+        EntityExchangeResult<byte[]> result = post(GET_USERS_OUTPUT,users(),Map.of(NAMES.getDevice(),"d"),null,null);
 
         assertEquals(403,result.getStatus().value());
-        assertNotNull(cookies(result).getFirst("XSRF-TOKEN"));
+        assertNotNull(cookies(result).getFirst(NAMES.getCsrf()));
     }
 
     private EntityExchangeResult<byte[]>
