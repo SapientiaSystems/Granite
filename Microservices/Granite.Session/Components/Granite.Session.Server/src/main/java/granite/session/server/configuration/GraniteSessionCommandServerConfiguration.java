@@ -53,6 +53,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.context.annotation.RequestScope;
 import strata.outbox.core.repository.IOutboxEventRepository;
@@ -85,6 +86,8 @@ class GraniteSessionCommandServerConfiguration
     public IJwtTokenService
     jwtTokenService(Environment environment,ResourceLoader loader)
     {
+        requireExplicitJwtIdentity(environment);
+
         KeyPair keys =
             new JwtKeyLoader(environment,loader)
                 .load(
@@ -350,6 +353,17 @@ class GraniteSessionCommandServerConfiguration
                 sslBundles.getObject().getBundle(bundle).createSslContext());
 
         return builder;
+    }
+
+    private void
+    requireExplicitJwtIdentity(Environment environment)
+    {
+        if (environment.acceptsProfiles(Profiles.of("production"))
+            && !(environment.containsProperty("granite.session.jwt.issuer")
+                && environment.containsProperty("granite.session.jwt.audience")))
+            throw
+                new IllegalStateException(
+                    "granite.session.jwt.issuer and granite.session.jwt.audience must be set in production");
     }
 
     private String

@@ -4,6 +4,8 @@
 
 package granite.foundation.core.security;
 
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.env.PropertyResolver;
 
 import java.util.ArrayList;
@@ -53,6 +55,18 @@ class GraniteResourceServerSettings
                 properties.getProperty(JWK_SET_URI),
                 properties.getProperty(ISSUER,DEFAULT_ISSUER),
                 splitAudience(properties.getProperty(AUDIENCE,DEFAULT_AUDIENCE)));
+    }
+
+    public static GraniteResourceServerSettings
+    from(Environment environment)
+    {
+        if (environment.acceptsProfiles(Profiles.of("production"))
+            && !(environment.containsProperty(ISSUER) && environment.containsProperty(AUDIENCE)))
+            throw
+                new IllegalStateException(
+                    ISSUER + " and " + AUDIENCE + " must be set in production");
+
+        return from((PropertyResolver)environment);
     }
 
     private static List<String>

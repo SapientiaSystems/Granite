@@ -302,6 +302,68 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    productionRequiresExplicitSessionIssuerAndAudience()
+    {
+        for (String missing : new String[] {"granite.session.jwt.issuer","granite.session.jwt.audience"})
+        {
+            MockEnvironment env = new MockEnvironment();
+
+            env.setActiveProfiles("production");
+            env.setProperty("granite.session.jwt.private-key-location",PRIVATE_KEY);
+            env.setProperty("granite.session.jwt.public-key-location",PUBLIC_KEY);
+
+            if (!missing.endsWith("issuer"))
+                env.setProperty("granite.session.jwt.issuer","poplar-session");
+
+            if (!missing.endsWith("audience"))
+                env.setProperty("granite.session.jwt.audience","poplar-services");
+
+            IllegalStateException e =
+                assertThrows(
+                    IllegalStateException.class,
+                    () -> subject.jwtTokenService(env,new DefaultResourceLoader()));
+
+            assertEquals(
+                "granite.session.jwt.issuer and granite.session.jwt.audience must be set in production",
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void
+    productionAcceptsExplicitSessionIssuerAndAudience()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setActiveProfiles("production");
+        env.setProperty("granite.session.jwt.private-key-location",PRIVATE_KEY);
+        env.setProperty("granite.session.jwt.public-key-location",PUBLIC_KEY);
+        env.setProperty("granite.session.jwt.issuer","poplar-session");
+        env.setProperty("granite.session.jwt.audience","poplar-services");
+
+        IllegalStateException e =
+            assertThrows(
+                IllegalStateException.class,
+                () -> subject.jwtTokenService(env,new DefaultResourceLoader()));
+
+        assertTrue(e.getMessage().contains("local"));
+    }
+
+    @Test
+    public void
+    nonProductionKeepsSessionIssuerAndAudienceDefaults()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setActiveProfiles("local");
+        env.setProperty("granite.session.jwt.private-key-location",PRIVATE_KEY);
+        env.setProperty("granite.session.jwt.public-key-location",PUBLIC_KEY);
+
+        assertNotNull(subject.jwtTokenService(env,new DefaultResourceLoader()));
+    }
+
+    @Test
+    public void
     oktaSettingsBindFromTheEnvironment()
     {
         MockEnvironment env =

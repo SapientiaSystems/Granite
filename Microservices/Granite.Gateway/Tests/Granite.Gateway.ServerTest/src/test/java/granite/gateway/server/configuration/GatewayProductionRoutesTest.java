@@ -28,6 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag("CommitStage")
 @ActiveProfiles("production")
 @SpringBootTest(
+    properties = {
+        "granite.security.jwt.issuer=granite-session",
+        "granite.security.jwt.audience=granite-services"},
     classes = GatewayTestConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public
