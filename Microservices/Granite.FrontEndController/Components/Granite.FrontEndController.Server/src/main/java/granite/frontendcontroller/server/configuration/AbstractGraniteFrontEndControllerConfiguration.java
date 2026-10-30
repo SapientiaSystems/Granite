@@ -191,9 +191,17 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 createSessionQueryClient(),
                 SessionRequestContext.fromCurrentRequest(),
                 SessionLoginSettings.fromConfiguration(configuration),
-                new SessionCookies(cookieNames()),
+                sessionCookies(),
                 roles,
                 preferenceDefinitions());
+    }
+
+    @Bean
+    @Scope("singleton")
+    public SessionCookies
+    sessionCookies()
+    {
+        return new SessionCookies(cookieNames());
     }
 
     protected GraniteCookieNames
