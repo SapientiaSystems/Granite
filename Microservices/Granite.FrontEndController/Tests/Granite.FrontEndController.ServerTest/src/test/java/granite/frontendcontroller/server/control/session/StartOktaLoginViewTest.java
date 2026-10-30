@@ -71,7 +71,7 @@ class StartOktaLoginViewTest
 
         String cookie = context.getSetCookies().get(0);
 
-        assertTrue(cookie.startsWith("GRANITE_LOGIN=" + TRANSACTION_ID + ";"),cookie);
+        assertTrue(cookie.startsWith(SessionTestSupport.NAMES.getLogin() + "=" + TRANSACTION_ID + ";"),cookie);
         assertTrue(cookie.contains("HttpOnly"),cookie);
         assertTrue(cookie.contains("Secure"),cookie);
         assertTrue(cookie.contains("SameSite=Lax"),cookie);
@@ -127,7 +127,7 @@ class StartOktaLoginViewTest
         throws Exception
     {
         return
-            new StartOktaLoginView(commandClient,context,new SessionLoginSettings(true,oktaEnabled))
+            new StartOktaLoginView(commandClient,context,new SessionLoginSettings(true,oktaEnabled),SessionTestSupport.COOKIES)
                 .apply(
                     new SessionInput()
                         .setReturnTo("/users")

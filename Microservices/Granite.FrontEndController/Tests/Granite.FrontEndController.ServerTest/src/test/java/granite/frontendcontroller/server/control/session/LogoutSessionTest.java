@@ -39,7 +39,7 @@ class LogoutSessionTest
     run(SessionRequestContext context)
         throws Exception
     {
-        return new LogoutView(commandClient,context).apply(SessionTestSupport.logout()).toCompletableFuture().get();
+        return new LogoutView(commandClient,context,SessionTestSupport.COOKIES).apply(SessionTestSupport.logout()).toCompletableFuture().get();
     }
 
     @Test
@@ -65,7 +65,7 @@ class LogoutSessionTest
         Mockito.verify(commandClient).logout(captor.capture());
         assertEquals(11L,captor.getValue().getSessionId());
         assertEquals(1,context.getSetCookies().size());
-        assertTrue(context.getSetCookies().get(0).startsWith("GRANITE_SID=;"));
+        assertTrue(context.getSetCookies().get(0).startsWith(SessionTestSupport.NAMES.getSession() + "=;"));
         assertTrue(context.getSetCookies().get(0).contains("Max-Age=0"));
     }
 

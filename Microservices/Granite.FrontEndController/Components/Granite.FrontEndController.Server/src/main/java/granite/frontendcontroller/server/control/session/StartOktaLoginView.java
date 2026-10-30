@@ -24,23 +24,26 @@ class StartOktaLoginView
     private final ISessionCommandServiceClient commandClient;
     private final SessionRequestContext        context;
     private final SessionLoginSettings         settings;
+    private final SessionCookies               cookies;
 
     public
     StartOktaLoginView(
         ISessionCommandServiceClient commandClient,
         SessionRequestContext        context,
-        SessionLoginSettings         settings)
+        SessionLoginSettings         settings,
+        SessionCookies               cookies)
     {
         this.commandClient = commandClient;
         this.context = context;
         this.settings = settings;
+        this.cookies = cookies;
     }
 
     @Override
     public CompletionStage<SessionOutput>
     apply(SessionInput input)
     {
-        Optional<String> deviceId = context.getCookie(SessionCookies.DEVICE_COOKIE).filter(id -> !id.isBlank());
+        Optional<String> deviceId = context.getCookie(cookies.getDeviceName()).filter(id -> !id.isBlank());
 
         if (!settings.isOktaEnabled() || deviceId.isEmpty())
             return CompletableFuture.completedFuture(refused(input));
@@ -61,7 +64,7 @@ class StartOktaLoginView
         if (!reply.isSuccess() || isBlank(reply.getAuthorizeUrl()) || isBlank(reply.getTransactionId()))
             return refused(input);
 
-        context.addSetCookie(SessionCookies.issueLogin(reply.getTransactionId()));
+        context.addSetCookie(cookies.issueLogin(reply.getTransactionId()));
 
         return describe(input).setRedirectUrl(reply.getAuthorizeUrl());
     }

@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.platform;
 
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionInputRequest;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
@@ -82,7 +83,7 @@ class ResponseCookieAdviceTest
                         CompletableFuture.supplyAsync(
                             () ->
                             {
-                                context.addSetCookie(SessionCookies.issue("h",null,Instant.now()));
+                                context.addSetCookie(SessionTestSupport.COOKIES.issue("h",null,Instant.now()));
                                 return new HandleSessionInputReply().setSuccess(true);
                             });
                 });
@@ -90,9 +91,9 @@ class ResponseCookieAdviceTest
         MvcResult result = call();
 
         assertEquals(1,result.getResponse().getHeaders("Set-Cookie").size());
-        assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith("GRANITE_SID=h;"));
+        assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith(SessionTestSupport.NAMES.getSession() + "=h;"));
         assertEquals("no-store",result.getResponse().getHeader("Cache-Control"));
-        assertFalse(result.getResponse().getContentAsString().contains("GRANITE_SID"));
+        assertFalse(result.getResponse().getContentAsString().contains(SessionTestSupport.NAMES.getSession()));
     }
 
     @Test

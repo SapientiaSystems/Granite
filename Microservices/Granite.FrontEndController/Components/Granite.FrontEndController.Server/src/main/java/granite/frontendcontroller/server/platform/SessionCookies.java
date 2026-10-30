@@ -4,24 +4,27 @@
 
 package granite.frontendcontroller.server.platform;
 
+import granite.foundation.core.security.GraniteCookieNames;
 import org.springframework.http.ResponseCookie;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 public
 class SessionCookies
 {
-    public static final String SESSION_COOKIE = "GRANITE_SID";
-    public static final String DEVICE_COOKIE  = "GRANITE_DID";
-    public static final String LOGIN_COOKIE   = "GRANITE_LOGIN";
-
     private static final Duration LOGIN_LIFETIME = Duration.ofMinutes(5);
 
-    private
-    SessionCookies() {}
+    private final GraniteCookieNames names;
 
-    public static String
+    public
+    SessionCookies(GraniteCookieNames names)
+    {
+        this.names = Objects.requireNonNull(names,"names");
+    }
+
+    public String
     issue(String handle,Instant expires,Instant now)
     {
         ResponseCookie.ResponseCookieBuilder builder = builder(handle);
@@ -32,46 +35,43 @@ class SessionCookies
         return builder.build().toString();
     }
 
-    public static String
+    public String
     clear()
     {
         return builder("").maxAge(0).build().toString();
     }
 
-    public static String
+    public String
     issueLogin(String transactionId)
     {
         return loginBuilder(transactionId).maxAge(LOGIN_LIFETIME).build().toString();
     }
 
-    public static String
+    public String
     clearLogin()
     {
         return loginBuilder("").maxAge(0).build().toString();
     }
 
-    private static ResponseCookie.ResponseCookieBuilder
+    public String
+    getSessionName() { return names.getSession(); }
+
+    public String
+    getDeviceName() { return names.getDevice(); }
+
+    public String
+    getLoginName() { return names.getLogin(); }
+
+    private ResponseCookie.ResponseCookieBuilder
     builder(String value)
     {
-        return
-            ResponseCookie
-                .from(SESSION_COOKIE,value)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/");
+        return names.hostCookie(names.getSession(),value).httpOnly(true).sameSite("Strict");
     }
 
-    private static ResponseCookie.ResponseCookieBuilder
+    private ResponseCookie.ResponseCookieBuilder
     loginBuilder(String value)
     {
-        return
-            ResponseCookie
-                .from(LOGIN_COOKIE,value)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Lax")
-                .path("/");
+        return names.hostCookie(names.getLogin(),value).httpOnly(true).sameSite("Lax");
     }
 }
 

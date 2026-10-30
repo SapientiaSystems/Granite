@@ -23,12 +23,14 @@ class LogoutView
 {
     private final ISessionCommandServiceClient commandClient;
     private final SessionRequestContext        context;
+    private final SessionCookies               cookies;
 
     public
-    LogoutView(ISessionCommandServiceClient commandClient,SessionRequestContext context)
+    LogoutView(ISessionCommandServiceClient commandClient,SessionRequestContext context,SessionCookies cookies)
     {
         this.commandClient = commandClient;
         this.context = context;
+        this.cookies = cookies;
     }
 
     @Override
@@ -56,7 +58,7 @@ class LogoutView
     private SessionOutput
     clearAndDescribe(SessionInput input,String endSessionUrl)
     {
-        context.addSetCookie(SessionCookies.clear());
+        context.addSetCookie(cookies.clear());
         return describe(input,true,endSessionUrl);
     }
 

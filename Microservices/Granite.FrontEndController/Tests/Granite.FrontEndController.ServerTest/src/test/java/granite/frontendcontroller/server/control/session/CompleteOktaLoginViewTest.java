@@ -88,7 +88,7 @@ class CompleteOktaLoginViewTest
         List<String> cookies = context.getSetCookies();
 
         assertEquals(2,cookies.size());
-        assertTrue(cookies.stream().anyMatch(c -> c.startsWith("GRANITE_SID=" + HANDLE + ";") && c.contains("SameSite=Strict")));
+        assertTrue(cookies.stream().anyMatch(c -> c.startsWith(SessionTestSupport.NAMES.getSession() + "=" + HANDLE + ";") && c.contains("SameSite=Strict")));
         assertLoginCleared(cookies);
 
         String json = serialize(output);
@@ -173,7 +173,7 @@ class CompleteOktaLoginViewTest
         throws Exception
     {
         return
-            new CompleteOktaLoginView(commandClient,context,new SessionLoginSettings(true,oktaEnabled))
+            new CompleteOktaLoginView(commandClient,context,new SessionLoginSettings(true,oktaEnabled),SessionTestSupport.COOKIES)
                 .apply(
                     new SessionInput()
                         .setCode(CODE)
@@ -192,10 +192,10 @@ class CompleteOktaLoginViewTest
         Map<String,String> cookies = new HashMap<>();
 
         if (deviceId != null)
-            cookies.put("GRANITE_DID",deviceId);
+            cookies.put(SessionTestSupport.NAMES.getDevice(),deviceId);
 
         if (transactionId != null)
-            cookies.put("GRANITE_LOGIN",transactionId);
+            cookies.put(SessionTestSupport.NAMES.getLogin(),transactionId);
 
         return new SessionRequestContext(cookies,null);
     }
@@ -214,9 +214,9 @@ class CompleteOktaLoginViewTest
     assertLoginCleared(List<String> cookies)
     {
         assertTrue(
-            cookies.stream().anyMatch(c -> c.startsWith("GRANITE_LOGIN=;") && c.contains("Max-Age=0") && c.contains("SameSite=Lax")),
+            cookies.stream().anyMatch(c -> c.startsWith(SessionTestSupport.NAMES.getLogin() + "=;") && c.contains("Max-Age=0") && c.contains("SameSite=Lax")),
             String.valueOf(cookies));
-        assertTrue(cookies.stream().noneMatch(c -> c.startsWith("GRANITE_SID=;")),String.valueOf(cookies));
+        assertTrue(cookies.stream().noneMatch(c -> c.startsWith(SessionTestSupport.NAMES.getSession() + "=;")),String.valueOf(cookies));
     }
 
     private String

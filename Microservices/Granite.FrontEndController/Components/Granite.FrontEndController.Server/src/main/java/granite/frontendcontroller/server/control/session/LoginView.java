@@ -28,23 +28,26 @@ class LoginView
     private final ISessionCommandServiceClient commandClient;
     private final SessionRequestContext        context;
     private final SessionLoginSettings         settings;
+    private final SessionCookies               cookies;
 
     public
     LoginView(
         ISessionCommandServiceClient commandClient,
         SessionRequestContext        context,
-        SessionLoginSettings         settings)
+        SessionLoginSettings         settings,
+        SessionCookies               cookies)
     {
         this.commandClient = commandClient;
         this.context = context;
         this.settings = settings;
+        this.cookies = cookies;
     }
 
     @Override
     public CompletionStage<SessionOutput>
     apply(SessionInput input)
     {
-        Optional<String> deviceId = context.getCookie(SessionCookies.DEVICE_COOKIE).filter(id -> !id.isBlank());
+        Optional<String> deviceId = context.getCookie(cookies.getDeviceName()).filter(id -> !id.isBlank());
 
         if (!settings.isPasswordEnabled()
             || isBlank(input.getUserName())
@@ -73,7 +76,7 @@ class LoginView
         if (!reply.isSuccess() || data == null || handle == null || handle.isBlank())
             return refused(input);
 
-        context.addSetCookie(SessionCookies.issue(handle,data.getExpires(),Instant.now()));
+        context.addSetCookie(cookies.issue(handle,data.getExpires(),Instant.now()));
 
         return
             describe(input)

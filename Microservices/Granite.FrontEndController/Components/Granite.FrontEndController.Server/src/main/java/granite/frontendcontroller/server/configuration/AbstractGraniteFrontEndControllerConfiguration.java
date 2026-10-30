@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.configuration;
 
 import granite.foundation.core.security.ApplicationRolesManager;
+import granite.foundation.core.security.GraniteCookieNames;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.foundation.core.security.GraniteJwtCheckSecurity;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
@@ -18,6 +19,7 @@ import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.health.FrontEndControllerHealthCheckConfiguration;
 import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
 import granite.frontendcontroller.server.platform.ServiceTokenClientRequestFilter;
+import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.IGraniteFrontEndControllerService;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
@@ -189,8 +191,15 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 createSessionQueryClient(),
                 SessionRequestContext.fromCurrentRequest(),
                 SessionLoginSettings.fromConfiguration(configuration),
+                new SessionCookies(cookieNames()),
                 roles,
                 preferenceDefinitions());
+    }
+
+    protected GraniteCookieNames
+    cookieNames()
+    {
+        return new GraniteCookieNames(configuration.getProperty(GraniteCookieNames.PREFIX,GraniteCookieNames.DEFAULT_PREFIX));
     }
 
     protected List<PreferenceDefinition>

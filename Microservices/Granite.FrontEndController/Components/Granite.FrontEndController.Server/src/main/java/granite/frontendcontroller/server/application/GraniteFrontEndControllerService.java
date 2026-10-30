@@ -18,6 +18,7 @@ import granite.frontendcontroller.server.control.session.StartOktaLoginView;
 import granite.frontendcontroller.server.control.user.DeleteUsersView;
 import granite.frontendcontroller.server.control.user.InitializeUsersView;
 import granite.frontendcontroller.server.control.user.UpdateUsersView;
+import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
@@ -78,6 +79,7 @@ class GraniteFrontEndControllerService
         ISessionQueryServiceClient   sessionQueryClient   = context.getSessionQueryClient();
         SessionRequestContext        requestContext       = context.getSessionRequestContext();
         SessionLoginSettings         settings             = context.getSessionLoginSettings();
+        SessionCookies               cookies              = context.getSessionCookies();
 
         usersInputActions =
             Map.of(
@@ -88,10 +90,10 @@ class GraniteFrontEndControllerService
                 "User.All->UsersEditableView",new InitializeUsersView(userQueryClient,requestContext,context.getApplicationRoles()));
         sessionInputActions =
             Map.of(
-                "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings),
-                "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(sessionCommandClient,requestContext,settings),
-                "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(sessionCommandClient,requestContext,settings),
-                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext));
+                "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings,cookies),
+                "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(sessionCommandClient,requestContext,settings,cookies),
+                "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(sessionCommandClient,requestContext,settings,cookies),
+                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext,cookies));
         sessionOutputActions =
             Map.of(
                 "Session.New->LoginView",new LoginMethodsView(settings),

@@ -6,6 +6,7 @@ package granite.frontendcontroller.server.application;
 
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
+import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.session.client.requestreply.ISessionCommandServiceClient;
 import granite.session.client.requestreply.ISessionQueryServiceClient;
@@ -30,6 +31,7 @@ class GraniteFrontEndControllerContext
     private final ISessionQueryServiceClient   sessionQueryClient;
     private final SessionRequestContext        sessionRequestContext;
     private final SessionLoginSettings         sessionLoginSettings;
+    private final SessionCookies               sessionCookies;
     private final ApplicationRolesManager applicationRoles;
     private final List<PreferenceDefinition>   preferenceDefinitions;
 
@@ -43,6 +45,7 @@ class GraniteFrontEndControllerContext
         ISessionQueryServiceClient   sessionQueryClient,
         SessionRequestContext        sessionRequestContext,
         SessionLoginSettings         sessionLoginSettings,
+        SessionCookies               sessionCookies,
         ApplicationRolesManager applicationRoles,
         List<PreferenceDefinition>   preferenceDefinitions)
     {
@@ -54,6 +57,7 @@ class GraniteFrontEndControllerContext
         this.sessionQueryClient    = Objects.requireNonNull(sessionQueryClient,"sessionQueryClient");
         this.sessionRequestContext = Objects.requireNonNull(sessionRequestContext,"sessionRequestContext");
         this.sessionLoginSettings  = Objects.requireNonNull(sessionLoginSettings,"sessionLoginSettings");
+        this.sessionCookies        = Objects.requireNonNull(sessionCookies,"sessionCookies");
         this.applicationRoles      = Objects.requireNonNull(applicationRoles,"applicationRoles");
         this.preferenceDefinitions = List.copyOf(Objects.requireNonNull(preferenceDefinitions,"preferenceDefinitions"));
 
@@ -87,6 +91,9 @@ class GraniteFrontEndControllerContext
 
     public SessionLoginSettings
     getSessionLoginSettings() { return sessionLoginSettings; }
+
+    public SessionCookies
+    getSessionCookies() { return sessionCookies; }
 
     public ApplicationRolesManager
     getApplicationRoles() { return applicationRoles; }

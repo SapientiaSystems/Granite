@@ -208,6 +208,7 @@ class GraniteFrontEndControllerServiceUsersTest
                     Mockito.mock(ISessionQueryServiceClient.class),
                     requestContext,
                     new SessionLoginSettings(true,false),
+                    SessionTestSupport.COOKIES,
                     new GraniteApplicationRolesManagerSupplier().get(),
                     List.of()));
     }

@@ -18,7 +18,13 @@ class MvcTestSupport
 {
     @Bean
     public IConfiguration
-    configuration() { return Mockito.mock(IConfiguration.class); }
+    configuration()
+    {
+        IConfiguration configuration = Mockito.mock(IConfiguration.class);
+
+        Mockito.when(configuration.getProperty("granite.cookies.prefix","GRANITE")).thenReturn("GRANITE");
+        return configuration;
+    }
 
     @Bean
     public SslBundles

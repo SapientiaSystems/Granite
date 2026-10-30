@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.configuration;
 
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.server.platform.ResponseCookieAdvice;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
 import granite.frontendcontroller.server.platform.GraniteApplicationFrontEndControllerServiceController;
@@ -113,10 +114,56 @@ class SessionHttpTest
     send(MockHttpServletRequestBuilder builder)
         throws Exception
     {
-        MvcResult started = mvc.perform(builder.contentType(MediaType.APPLICATION_JSON).cookie(new Cookie("GRANITE_DID","device-1"))).andReturn();
+        MvcResult started = mvc.perform(builder.contentType(MediaType.APPLICATION_JSON).cookie(new Cookie(SessionTestSupport.NAMES.getDevice(),"device-1"))).andReturn();
 
         started.getAsyncResult();
         return mvc.perform(asyncDispatch(started)).andReturn();
+    }
+
+    private MvcResult
+    sendWithCookie(MockHttpServletRequestBuilder builder,Cookie cookie)
+        throws Exception
+    {
+        MvcResult started = mvc.perform(builder.contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andReturn();
+
+        started.getAsyncResult();
+        return mvc.perform(asyncDispatch(started)).andReturn();
+    }
+
+    @Test
+    public void
+    hostPrefixedDeviceCookieYieldsAHostPrefixedSessionCookie()
+        throws Exception
+    {
+        backend.respond(
+            "login",
+            new LoginReply()
+                .setSessionData(
+                    new SessionData().setSessionId(11L).setUserId(7L).setExpires(Instant.now().plusSeconds(1800)).setAuthorities(Set.of("ROLE_ADMIN")))
+                .setSessionHandle(HANDLE)
+                .setSuccess(true));
+
+        MvcResult result =
+            sendWithCookie(
+                post("/frontendcontroller-user-service/handle-session-input").content(loginBody()),
+                new Cookie("__Host-GRANITE_DID","device-1"));
+
+        assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith("__Host-GRANITE_SID=" + HANDLE + ";"));
+    }
+
+    @Test
+    public void
+    oldDeviceCookieNameIsNotAccepted()
+        throws Exception
+    {
+        MvcResult result =
+            sendWithCookie(
+                post("/frontendcontroller-user-service/handle-session-input").content(loginBody()),
+                new Cookie("GRANITE_DID","device-1"));
+
+        assertNull(result.getResponse().getHeader("Set-Cookie"));
+        assertTrue(result.getResponse().getContentAsString().contains("UNAUTHENTICATED"));
+        assertTrue(backend.paths().isEmpty());
     }
 
     private String
@@ -147,7 +194,7 @@ class SessionHttpTest
         String cookie = result.getResponse().getHeader("Set-Cookie");
         String body = result.getResponse().getContentAsString();
 
-        assertTrue(cookie.startsWith("GRANITE_SID=" + HANDLE + ";"));
+        assertTrue(cookie.startsWith(SessionTestSupport.NAMES.getSession() + "=" + HANDLE + ";"));
         assertTrue(cookie.contains("HttpOnly"));
         assertTrue(cookie.contains("Secure"));
         assertTrue(cookie.contains("SameSite=Strict"));
@@ -188,7 +235,7 @@ class SessionHttpTest
                         "{\"input\":{\"source\":\"Session.Current\",\"command\":\"Logout\","
                             + "\"destination\":\"LoginView\"}}"));
 
-        assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith("GRANITE_SID=;"));
+        assertTrue(result.getResponse().getHeader("Set-Cookie").startsWith(SessionTestSupport.NAMES.getSession() + "=;"));
         assertTrue(result.getResponse().getHeader("Set-Cookie").contains("Max-Age=0"));
         assertTrue(backend.paths().get(0).endsWith("/session-command-service/logout"));
         assertTrue(backend.bodies().get(0).contains("\"sessionId\":11"));
@@ -215,7 +262,7 @@ class SessionHttpTest
         String    cookie = result.getResponse().getHeader("Set-Cookie");
         String    body   = result.getResponse().getContentAsString();
 
-        assertTrue(cookie.startsWith("GRANITE_LOGIN=transaction-secret;"),cookie);
+        assertTrue(cookie.startsWith(SessionTestSupport.NAMES.getLogin() + "=transaction-secret;"),cookie);
         assertTrue(cookie.contains("HttpOnly") && cookie.contains("Secure") && cookie.contains("SameSite=Lax"),cookie);
         assertTrue(cookie.contains("Path=/") && cookie.contains("Max-Age=300"),cookie);
         assertTrue(body.contains("https://okta.example.com/authorize?state=s"),body);
@@ -242,15 +289,15 @@ class SessionHttpTest
         MvcResult    result  =
             send(
                 post("/frontendcontroller-user-service/handle-session-input")
-                    .cookie(new Cookie("GRANITE_LOGIN","transaction-secret"))
+                    .cookie(new Cookie(SessionTestSupport.NAMES.getLogin(),"transaction-secret"))
                     .content(
                         "{\"input\":{\"source\":\"Session.New\",\"command\":\"CompleteOktaLogin\","
                             + "\"destination\":\"LoginView\",\"code\":\"code-secret\",\"state\":\"state-1\"}}"));
         List<String> cookies = result.getResponse().getHeaders("Set-Cookie");
         String       body    = result.getResponse().getContentAsString();
 
-        assertTrue(cookies.stream().anyMatch(c -> c.startsWith("GRANITE_SID=" + HANDLE + ";")),String.valueOf(cookies));
-        assertTrue(cookies.stream().anyMatch(c -> c.startsWith("GRANITE_LOGIN=;") && c.contains("Max-Age=0")),String.valueOf(cookies));
+        assertTrue(cookies.stream().anyMatch(c -> c.startsWith(SessionTestSupport.NAMES.getSession() + "=" + HANDLE + ";")),String.valueOf(cookies));
+        assertTrue(cookies.stream().anyMatch(c -> c.startsWith(SessionTestSupport.NAMES.getLogin() + "=;") && c.contains("Max-Age=0")),String.valueOf(cookies));
         assertTrue(body.contains("\"returnTo\":\"/users\""),body);
         assertTrue(body.contains("AUTHENTICATED"),body);
         assertFalse(body.contains(HANDLE),body);

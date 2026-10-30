@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.configuration;
 
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -78,7 +79,7 @@ class GraniteFrontEndControllerConfigurationClientsTest
 
         bearer = SessionRequestContextTest.bearer("{\"jti\":\"11\",\"sub\":\"7\"}");
         inbound = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-session-input");
-        inbound.setCookies(new Cookie("GRANITE_DID","device-1"));
+        inbound.setCookies(new Cookie(SessionTestSupport.NAMES.getDevice(),"device-1"));
         inbound.addHeader("Authorization",bearer);
     }
 
@@ -155,7 +156,7 @@ class GraniteFrontEndControllerConfigurationClientsTest
 
         SessionRequestContext context = (SessionRequestContext)inbound.getAttribute(SessionRequestContext.ATTRIBUTE);
 
-        assertTrue(context.getSetCookies().get(0).startsWith("GRANITE_SID=the-handle;"));
+        assertTrue(context.getSetCookies().get(0).startsWith(SessionTestSupport.NAMES.getSession() + "=the-handle;"));
         assertTrue(backend.paths().get(0).endsWith("/session-command-service/login"));
         assertTrue(backend.bodies().get(0).contains("device-1"));
         assertTrue(backend.paths().get(1).endsWith("/session-query-service/find-sessions-by-key"));

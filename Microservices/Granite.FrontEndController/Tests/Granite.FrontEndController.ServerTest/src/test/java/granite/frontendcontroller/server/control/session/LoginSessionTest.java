@@ -64,7 +64,7 @@ class LoginSessionTest
         throws Exception
     {
         return
-            new LoginView(commandClient,context,settings).apply(request).toCompletableFuture().get();
+            new LoginView(commandClient,context,settings,SessionTestSupport.COOKIES).apply(request).toCompletableFuture().get();
     }
 
     private void
@@ -100,7 +100,7 @@ class LoginSessionTest
 
         String cookie = context.getSetCookies().get(0);
 
-        assertTrue(cookie.startsWith("GRANITE_SID=" + HANDLE + ";"));
+        assertTrue(cookie.startsWith(SessionTestSupport.NAMES.getSession() + "=" + HANDLE + ";"));
         assertTrue(cookie.contains("HttpOnly"));
         assertTrue(cookie.contains("Secure"));
         assertTrue(cookie.contains("SameSite=Strict"));

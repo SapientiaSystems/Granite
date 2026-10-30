@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.platform;
 
+import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
@@ -81,9 +82,9 @@ class SessionRequestContextTest
     readsCookiesAndVerifiedTokenClaims()
     {
         SessionRequestContext context =
-            new SessionRequestContext(Map.of("GRANITE_DID","device-1","other","x"),jwt(42L,7L));
+            new SessionRequestContext(Map.of(SessionTestSupport.NAMES.getDevice(),"device-1","other","x"),jwt(42L,7L));
 
-        assertEquals("device-1",context.getCookie("GRANITE_DID").orElseThrow());
+        assertEquals("device-1",context.getCookie(SessionTestSupport.NAMES.getDevice()).orElseThrow());
         assertTrue(context.getCookie("missing").isEmpty());
         assertEquals(42L,context.getSessionId().orElseThrow());
         assertEquals(7L,context.getCallerUserId().orElseThrow());
@@ -109,13 +110,13 @@ class SessionRequestContextTest
     {
         MockHttpServletRequest request = new MockHttpServletRequest("POST","/frontendcontroller-user-service/handle-input");
 
-        request.setCookies(new Cookie("GRANITE_DID","device-9"),new Cookie("XSRF-TOKEN","t"));
+        request.setCookies(new Cookie(SessionTestSupport.NAMES.getDevice(),"device-9"),new Cookie("XSRF-TOKEN","t"));
         request.setUserPrincipal(principal(jwt(5L,6L)));
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
 
-        assertEquals("device-9",context.getCookie("GRANITE_DID").orElseThrow());
+        assertEquals("device-9",context.getCookie(SessionTestSupport.NAMES.getDevice()).orElseThrow());
         assertEquals(5L,context.getSessionId().orElseThrow());
         assertEquals(6L,context.getCallerUserId().orElseThrow());
         assertSame(context,request.getAttribute(SessionRequestContext.ATTRIBUTE));
@@ -217,7 +218,7 @@ class SessionRequestContextTest
     {
         SessionRequestContext context = SessionRequestContext.fromCurrentRequest();
 
-        assertTrue(context.getCookie("GRANITE_DID").isEmpty());
+        assertTrue(context.getCookie(SessionTestSupport.NAMES.getDevice()).isEmpty());
         assertTrue(context.getSessionId().isEmpty());
         assertTrue(context.getSetCookies().isEmpty());
     }
@@ -226,9 +227,9 @@ class SessionRequestContextTest
     public void
     issuedSessionCookieHasAllAttributes()
     {
-        String header = SessionCookies.issue("the-handle",NOW.plusSeconds(3600),NOW);
+        String header = SessionTestSupport.COOKIES.issue("the-handle",NOW.plusSeconds(3600),NOW);
 
-        assertTrue(header.startsWith("GRANITE_SID=the-handle;"));
+        assertTrue(header.startsWith(SessionTestSupport.NAMES.getSession() + "=the-handle;"));
         assertTrue(header.contains("Max-Age=3600"));
         assertTrue(header.contains("Path=/"));
         assertTrue(header.contains("HttpOnly"));
@@ -240,17 +241,17 @@ class SessionRequestContextTest
     public void
     issuedCookieWithoutExpiryIsASessionCookieAndMaxAgeHasAMinimum()
     {
-        assertFalse(SessionCookies.issue("h",null,NOW).contains("Max-Age"));
-        assertTrue(SessionCookies.issue("h",NOW.minusSeconds(5),NOW).contains("Max-Age=1"));
+        assertFalse(SessionTestSupport.COOKIES.issue("h",null,NOW).contains("Max-Age"));
+        assertTrue(SessionTestSupport.COOKIES.issue("h",NOW.minusSeconds(5),NOW).contains("Max-Age=1"));
     }
 
     @Test
     public void
     clearedCookieExpiresImmediately()
     {
-        String header = SessionCookies.clear();
+        String header = SessionTestSupport.COOKIES.clear();
 
-        assertTrue(header.startsWith("GRANITE_SID=;"));
+        assertTrue(header.startsWith(SessionTestSupport.NAMES.getSession() + "=;"));
         assertTrue(header.contains("Max-Age=0"));
         assertTrue(header.contains("HttpOnly"));
         assertTrue(header.contains("Secure"));
