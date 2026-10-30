@@ -346,6 +346,7 @@ class GraniteSessionCommandServerConfigurationTest
                 IllegalStateException.class,
                 () -> subject.jwtTokenService(env,new DefaultResourceLoader()));
 
+        assertFalse(e.getMessage().contains("must be set in production"));
         assertTrue(e.getMessage().contains("local"));
     }
 
