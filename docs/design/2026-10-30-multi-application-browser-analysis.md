@@ -1,7 +1,7 @@
 # Multiple Granite Applications in One Browser — Analysis
 
 Date: 2026-10-30
-Status: analysis; all recommendations (R1–R6) selected for the design on 2026-10-30
+Status: analysis; R1, R2, R3, R5 and R6 selected on 2026-10-30; R4 replaced by application-only logout
 
 ## Question
 
@@ -87,7 +87,7 @@ A `__Host-` cookie is accepted only when it is `Secure`, has `Path=/` and has no
 | R1 | One hostname per application, including local dev; documented as a deployment rule. |
 | R2 | Cookies use the `__Host-` prefix. |
 | R3 | Cookie names are configurable per application. Combined with R2, the default names are `__Host-<PREFIX>_SID`, `__Host-<PREFIX>_DID`, `__Host-<PREFIX>_LOGIN` and `__Host-<PREFIX>-XSRF-TOKEN`, with prefix `GRANITE` by default. The same setting drives the FEC, the Gateway and the web app (through `__GRANITE_CONFIG__`). |
-| R4 | `granite.session.okta.logout=APPLICATION\|GLOBAL`, default `APPLICATION`. |
+| R4 | Replaced (user decision): logout is application-level only. There is no global Okta logout and no setting for one; the Okta end-session URL, the post-logout redirect property and the stored Okta ID token are removed. Logging out of one application never affects the others or the Okta session, so a following Okta login is silent. |
 | R5 | Each application sets its own JWT issuer and audience; required in production. |
 | R6 | Okta logout does not propagate to application sessions; documented and accepted, bounded by session lifetime. |
 
