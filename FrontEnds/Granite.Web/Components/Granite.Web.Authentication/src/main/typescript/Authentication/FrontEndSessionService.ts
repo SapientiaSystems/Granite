@@ -73,7 +73,7 @@ export class FrontEndSessionService
         {
             const output: SessionOutput = await this.send(CURRENT_SOURCE,"Logout",LOGIN_DESTINATION,{});
 
-            return { loggedOut: output.loggedOut === true, endSessionUrl: output.endSessionUrl ?? undefined };
+            return { loggedOut: output.loggedOut === true };
         }
         catch (error)
         {

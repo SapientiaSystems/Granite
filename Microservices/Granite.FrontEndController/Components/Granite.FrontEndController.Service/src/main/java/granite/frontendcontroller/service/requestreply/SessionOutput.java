@@ -21,7 +21,6 @@ class SessionOutput
     private boolean     oktaEnabled;
     private String      redirectUrl;
     private boolean     loggedOut;
-    private String      endSessionUrl;
 
     public
     SessionOutput()
@@ -35,7 +34,6 @@ class SessionOutput
         oktaEnabled     = false;
         redirectUrl     = null;
         loggedOut       = false;
-        endSessionUrl   = null;
     }
 
     @Override
@@ -122,13 +120,6 @@ class SessionOutput
         return this;
     }
 
-    public SessionOutput
-    setEndSessionUrl(String value)
-    {
-        endSessionUrl = value;
-        return this;
-    }
-
     public String
     getStatus() { return status; }
 
@@ -152,9 +143,6 @@ class SessionOutput
 
     public boolean
     isLoggedOut() { return loggedOut; }
-
-    public String
-    getEndSessionUrl() { return endSessionUrl; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -18,8 +18,7 @@ export interface ISessionStatus
 
 export interface ILogoutResult
 {
-    loggedOut:      boolean;
-    endSessionUrl?: string;
+    loggedOut: boolean;
 }
 
 export interface ISessionService

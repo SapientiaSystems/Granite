@@ -230,7 +230,7 @@ class FrontEndJsonSerializationTest
         assertFalse(actual.isOktaEnabled());
         assertEquals("https://okta/authorize",actual.getRedirectUrl());
         assertFalse(actual.isLoggedOut());
-        assertNull(actual.getEndSessionUrl());
+        assertFalse(mapper.writeValueAsString(reply).contains("endSessionUrl"));
     }
 }
 

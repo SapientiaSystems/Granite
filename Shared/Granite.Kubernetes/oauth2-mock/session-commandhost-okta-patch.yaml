@@ -12,8 +12,6 @@ spec:
               value: granite-session-local
             - name: GRANITE_SESSION_OKTA_REDIRECT_URI
               value: https://granite.localhost/login/callback
-            - name: GRANITE_SESSION_OKTA_POST_LOGOUT_REDIRECT_URI
-              value: https://granite.localhost/
             - name: GRANITE_SESSION_OKTA_ROLE_ASSIGNMENT
               value: ON_CREATE
             - name: GRANITE_SESSION_OKTA_KEYSTORE_LOCATION

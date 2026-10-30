@@ -805,7 +805,6 @@ class SessionCommandService
                         refreshToken,
                         sessionHandle,
                         LoginMethod.OKTA)
-                        .setOktaIdToken(context.getIdentity().getIdToken())
                         .setOktaGroups(context.getIdentity().getGroups()))
                 .setSessionHandle(sessionHandle);
     }
@@ -997,7 +996,6 @@ class SessionCommandService
         if (context.isNotFound() || context.getLoaded() == null || context.getLoaded().isClosed())
             return context;
 
-        context.setEndSessionUrl(endSessionUrlFor(context.getLoaded()));
         closeSession(context.getLoaded(),SessionClosedReason.LOGOUT,Instant.now(clock));
         return context;
     }
@@ -1347,8 +1345,7 @@ class SessionCommandService
         return
             new LogoutReply(context.getRequest())
                 .setSuccess(true)
-                .setSuccessMessage("Session: " + context.getSessionId() + " closed")
-                .setEndSessionUrl(context.getEndSessionUrl());
+                .setSuccessMessage("Session: " + context.getSessionId() + " closed");
     }
 
     private LogoutReply
@@ -1787,23 +1784,6 @@ class SessionCommandService
                 .setUserName(user.getUserName())
                 .setExternalIdentity(user.getExternalIdentity())
                 .setAuthorities(new LinkedHashSet<>(assigned));
-    }
-
-    private String
-    endSessionUrlFor(Session session)
-    {
-        if (session.isClosed() || session.getLoginMethod() != LoginMethod.OKTA || isBlank(session.getOktaIdToken()))
-            return null;
-
-        try
-        {
-            return oktaClient.buildEndSessionUrl(session.getOktaIdToken()).orElse(null);
-        }
-        catch (RuntimeException e)
-        {
-            logger.warn("<logout> Okta end-session URL unavailable: {}",e.getClass().getSimpleName());
-            return null;
-        }
     }
 
     private String

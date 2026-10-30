@@ -15,7 +15,6 @@ class OktaSettings
     private String                issuer;
     private String                clientId;
     private String                redirectUri;
-    private String                postLogoutRedirectUri;
     private String                scope;
     private OktaRoleAssignment    roleAssignment;
     private OktaUnmappedGroups    unmappedGroups;
@@ -32,7 +31,6 @@ class OktaSettings
         issuer                = null;
         clientId              = null;
         redirectUri           = null;
-        postLogoutRedirectUri = null;
         scope                 = "openid profile email groups";
         roleAssignment        = OktaRoleAssignment.ON_CREATE;
         unmappedGroups        = OktaUnmappedGroups.DEFAULT_ROLE;
@@ -68,13 +66,6 @@ class OktaSettings
     setRedirectUri(String value)
     {
         redirectUri = value;
-        return this;
-    }
-
-    public OktaSettings
-    setPostLogoutRedirectUri(String value)
-    {
-        postLogoutRedirectUri = value;
         return this;
     }
 
@@ -138,9 +129,6 @@ class OktaSettings
 
     public String
     getRedirectUri() { return redirectUri; }
-
-    public String
-    getPostLogoutRedirectUri() { return postLogoutRedirectUri; }
 
     public String
     getScope() { return scope; }

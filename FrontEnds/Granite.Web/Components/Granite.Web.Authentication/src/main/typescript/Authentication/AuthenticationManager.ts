@@ -149,9 +149,6 @@ export class AuthenticationManager
             this.settle(false);
             this.setState(ANONYMOUS);
 
-            if (result.endSessionUrl)
-                this.navigator.assign(result.endSessionUrl);
-
             return true;
         }
         catch (error)

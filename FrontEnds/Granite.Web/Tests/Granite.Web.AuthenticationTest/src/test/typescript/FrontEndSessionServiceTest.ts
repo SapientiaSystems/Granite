@@ -90,11 +90,11 @@ describe("FrontEndSessionService",() =>
         await expect(serviceOver(frontEnd).getCurrent()).rejects.toThrow();
     });
 
-    it("sends the logout input and returns the end-session URL",async () =>
+    it("sends the logout input and returns only the logged-out flag",async () =>
     {
-        const frontEnd = new FakeFrontEnd().respond(KEYS.logout,() => logoutOutput(true,"https://okta.example/end"));
+        const frontEnd = new FakeFrontEnd().respond(KEYS.logout,() => ({ ...logoutOutput(true),endSessionUrl: "https://okta.example/end" }));
 
-        expect(await serviceOver(frontEnd).logout()).toEqual({ loggedOut: true, endSessionUrl: "https://okta.example/end" });
+        expect(await serviceOver(frontEnd).logout()).toEqual({ loggedOut: true });
         expect(frontEnd.calls[0].payload).toEqual(
             { userId: null, source: "Session.Current", command: "Logout", destination: "LoginView" });
     });

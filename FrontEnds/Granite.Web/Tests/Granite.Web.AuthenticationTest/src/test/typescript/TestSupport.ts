@@ -119,9 +119,9 @@ export function methodsOutput(passwordEnabled: boolean,oktaEnabled: boolean): Fr
     return { userId: null, source: "Session.New", destination: "LoginView", command: null, status: "UNAUTHENTICATED", passwordEnabled, oktaEnabled } as FrontEndOutput;
 }
 
-export function logoutOutput(loggedOut: boolean,endSessionUrl: string | null = null): FrontEndOutput
+export function logoutOutput(loggedOut: boolean): FrontEndOutput
 {
-    return { userId: null, source: "Session.Current", destination: "LoginView", command: "Logout", status: "UNAUTHENTICATED", loggedOut, endSessionUrl } as FrontEndOutput;
+    return { userId: null, source: "Session.Current", destination: "LoginView", command: "Logout", status: "UNAUTHENTICATED", loggedOut } as FrontEndOutput;
 }
 
 export function redirectOutput(redirectUrl: string): FrontEndOutput

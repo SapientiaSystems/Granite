@@ -386,14 +386,12 @@ class SessionRepositoryTest
                     target.save(
                         newSession(9400L + unique(),"device-okta-" + unique())
                             .setLoginMethod(LoginMethod.OKTA)
-                            .setOktaIdToken("header.payload.signature")
                             .setOktaGroups(java.util.Set.of("Admins","Auditors")))));
 
         Session result =
             transaction.execute(status -> target.findById(saved.get().getPrimaryId()).orElseThrow());
 
         assertEquals(LoginMethod.OKTA,result.getLoginMethod());
-        assertEquals("header.payload.signature",result.getOktaIdToken());
         assertEquals(java.util.Set.of("Admins","Auditors"),result.getOktaGroups());
     }
 

@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import strata.foundation.core.mapper.ObjectMapperSupplier;
 
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -56,7 +56,6 @@ class LogoutSessionTest
         SessionOutput output = run(context);
 
         assertTrue(output.isLoggedOut());
-        assertNull(output.getEndSessionUrl());
         assertEquals("Session.Current",output.getSource());
         assertEquals("Logout",output.getCommand().orElseThrow());
 
@@ -71,20 +70,19 @@ class LogoutSessionTest
 
     @Test
     public void
-    oktaLogoutCarriesTheEndSessionUrl()
+    oktaLogoutOutputHasNoEndSessionUrl()
         throws Exception
     {
         SessionRequestContext context = SessionTestSupport.context("d",11L,7L);
-        String                url     = "https://okta.example.com/oauth2/default/v1/logout?id_token_hint=x";
 
         Mockito
             .when(commandClient.logout(Mockito.any(LogoutRequest.class)))
-            .thenReturn(CompletableFuture.completedFuture(new LogoutReply().setSuccess(true).setEndSessionUrl(url)));
+            .thenReturn(CompletableFuture.completedFuture(new LogoutReply().setSuccess(true)));
 
         SessionOutput output = run(context);
 
         assertTrue(output.isLoggedOut());
-        assertEquals(url,output.getEndSessionUrl());
+        assertFalse(new ObjectMapperSupplier().get().writeValueAsString(output).contains("endSessionUrl"));
         assertTrue(context.getSetCookies().get(0).contains("Max-Age=0"));
     }
 

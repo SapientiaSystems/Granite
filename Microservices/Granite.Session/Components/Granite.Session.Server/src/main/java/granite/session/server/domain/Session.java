@@ -43,7 +43,6 @@ class Session
     private Long                       replacedBy;
     private Long                       copiedFrom;
     private LoginMethod                loginMethod;
-    private String                     oktaIdToken;
     private Set<String>                oktaGroups;
 
     private static final StringMapperRegistry registry = StringMapperRegistry.of();
@@ -68,7 +67,6 @@ class Session
         replacedBy               = null;
         copiedFrom               = null;
         loginMethod              = null;
-        oktaIdToken              = null;
         oktaGroups               = new LinkedHashSet<>();
     }
 
@@ -207,13 +205,6 @@ class Session
     }
 
     public Session
-    setOktaIdToken(String token)
-    {
-        oktaIdToken = token;
-        return this;
-    }
-
-    public Session
     setOktaGroups(Set<String> groups)
     {
         oktaGroups = groups != null ? new LinkedHashSet<>(groups) : new LinkedHashSet<>();
@@ -232,7 +223,6 @@ class Session
     {
         closedReason = reason;
         activeMarker = null;
-        oktaIdToken  = null;
 
         if (expires == null || expires.isAfter(at))
             expires = at;
@@ -306,9 +296,6 @@ class Session
 
     public LoginMethod
     getLoginMethod() { return loginMethod; }
-
-    public String
-    getOktaIdToken() { return oktaIdToken; }
 
     public Set<String>
     getOktaGroups() { return oktaGroups; }

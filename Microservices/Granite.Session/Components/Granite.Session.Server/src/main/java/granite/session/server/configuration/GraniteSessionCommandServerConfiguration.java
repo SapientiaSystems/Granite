@@ -139,7 +139,6 @@ class GraniteSessionCommandServerConfiguration
                 .setIssuer(environment.getProperty("granite.session.okta.issuer"))
                 .setClientId(environment.getProperty("granite.session.okta.client-id"))
                 .setRedirectUri(environment.getProperty("granite.session.okta.redirect-uri"))
-                .setPostLogoutRedirectUri(environment.getProperty("granite.session.okta.post-logout-redirect-uri"))
                 .setRoleAssignment(
                     OktaRoleAssignment.valueOf(
                         environment.getProperty("granite.session.okta.role-assignment","ON_CREATE").trim().toUpperCase()))

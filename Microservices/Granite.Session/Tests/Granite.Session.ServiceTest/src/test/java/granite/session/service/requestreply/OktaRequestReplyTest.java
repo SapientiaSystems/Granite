@@ -23,7 +23,6 @@ class OktaRequestReplyTest
     private static final String TRANSACTION_ID = "transaction-id-0123456789";
     private static final String HANDLE         = "session-handle-0123456789";
     private static final String AUTHORIZE_URL  = "https://okta.example.com/authorize?state=" + STATE;
-    private static final String END_SESSION    = "https://okta.example.com/logout?id_token_hint=id.token.value";
 
     @Test
     void
@@ -91,9 +90,9 @@ class OktaRequestReplyTest
 
     @Test
     void
-    logoutReplyCarriesEndSessionUrl()
+    logoutReplyHasNoEndSessionField()
     {
-        assertEquals(END_SESSION,new LogoutReply().setEndSessionUrl(END_SESSION).getEndSessionUrl());
+        assertFalse(new LogoutReply().toString().contains("endSessionUrl"));
     }
 
     @Test
@@ -117,7 +116,7 @@ class OktaRequestReplyTest
                 .setSessionHandle(HANDLE)
                 .setSessionData(new SessionData().setSessionId(5L))
                 .toString();
-        String logout   = new LogoutReply().setEndSessionUrl(END_SESSION).toString();
+        String logout   = new LogoutReply().toString();
 
         for (String text : new String[] {start,complete,reply,logout})
         {

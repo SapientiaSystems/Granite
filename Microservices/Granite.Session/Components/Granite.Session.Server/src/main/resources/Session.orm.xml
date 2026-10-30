@@ -78,9 +78,6 @@
                 <column name="loginMethod" column-definition="VARCHAR(32)"/>
                 <enumerated>STRING</enumerated>
             </basic>
-            <basic name="oktaIdToken">
-                <column name="oktaIdToken" column-definition="TEXT"/>
-            </basic>
             <basic name="oktaGroups">
                 <column name="oktaGroups" column-definition="VARCHAR(4096)"/>
                 <convert converter="strata.server.spring.value.StringSetConverter"/>

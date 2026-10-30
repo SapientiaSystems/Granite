@@ -33,7 +33,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -158,28 +157,22 @@ class LogoutTest
 
     @Test
     public void
-    oktaLogoutReturnsEndSessionUrl()
+    oktaLogoutClosesOnlyApplicationSession()
     {
-        IOktaClient okta = oktaSubject();
-        Session     existing =
-            stubExisting()
-                .setLoginMethod(LoginMethod.OKTA)
-                .setOktaIdToken("okta.id.token");
-        String      url  = "https://okta.example.com/oauth2/default/v1/logout?id_token_hint=okta.id.token";
-
-        Mockito.when(okta.buildEndSessionUrl("okta.id.token")).thenReturn(Optional.of(url));
+        IOktaClient okta     = oktaSubject();
+        Session     existing = stubExisting().setLoginMethod(LoginMethod.OKTA);
 
         LogoutReply reply = logout(SESSION_ID);
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertEquals(url,reply.getEndSessionUrl());
+        assertFalse(reply.toString().contains("endSessionUrl"));
         assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
-        assertNull(existing.getOktaIdToken());
+        Mockito.verifyNoInteractions(okta);
     }
 
     @Test
     public void
-    passwordLogoutHasNoEndSessionUrl()
+    passwordLogoutNeverCallsOkta()
     {
         IOktaClient okta = oktaSubject();
 
@@ -188,7 +181,6 @@ class LogoutTest
         LogoutReply reply = logout(SESSION_ID);
 
         assertTrue(reply.isSuccess());
-        assertNull(reply.getEndSessionUrl());
         Mockito.verifyNoInteractions(okta);
     }
 
@@ -197,44 +189,12 @@ class LogoutTest
     logoutWithoutLoginMethodSucceeds()
     {
         IOktaClient okta     = oktaSubject();
-        Session     existing = stubExisting().setLoginMethod(null).setOktaIdToken("okta.id.token");
+        Session     existing = stubExisting().setLoginMethod(null);
 
         LogoutReply reply = logout(SESSION_ID);
 
         assertTrue(reply.isSuccess(),reply.getFailureMessage());
-        assertNull(reply.getEndSessionUrl());
         assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
-        Mockito.verifyNoInteractions(okta);
-    }
-
-    @Test
-    public void
-    unavailableEndSessionUrlStillLogsOut()
-    {
-        IOktaClient okta     = oktaSubject();
-        Session     existing = stubExisting().setLoginMethod(LoginMethod.OKTA).setOktaIdToken("okta.id.token");
-
-        Mockito.when(okta.buildEndSessionUrl(Mockito.anyString())).thenThrow(new OktaLoginException("down"));
-
-        LogoutReply reply = logout(SESSION_ID);
-
-        assertTrue(reply.isSuccess());
-        assertNull(reply.getEndSessionUrl());
-        assertEquals(SessionClosedReason.LOGOUT,existing.getClosedReason());
-    }
-
-    @Test
-    public void
-    logoutOfClosedOktaSessionHasNoEndSessionUrl()
-    {
-        IOktaClient okta = oktaSubject();
-
-        stubExisting()
-            .setLoginMethod(LoginMethod.OKTA)
-            .setOktaIdToken("okta.id.token")
-            .setClosedReason(SessionClosedReason.REPLACED);
-
-        assertNull(logout(SESSION_ID).getEndSessionUrl());
         Mockito.verifyNoInteractions(okta);
     }
 

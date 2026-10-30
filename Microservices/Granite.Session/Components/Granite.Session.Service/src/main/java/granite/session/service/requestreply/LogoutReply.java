@@ -14,20 +14,16 @@ public
 class LogoutReply
     extends AbstractServiceReply
 {
-    private String endSessionUrl;
-
     public
     LogoutReply()
     {
         super();
-        endSessionUrl = null;
     }
 
     public
     LogoutReply(LogoutRequest originatingRequest)
     {
         super(originatingRequest);
-        endSessionUrl = null;
     }
 
     @Override
@@ -79,16 +75,6 @@ class LogoutReply
         return (LogoutReply)super.setException(exception);
     }
 
-    public LogoutReply
-    setEndSessionUrl(String endSessionUrl)
-    {
-        this.endSessionUrl = endSessionUrl;
-        return this;
-    }
-
-    public String
-    getEndSessionUrl() { return endSessionUrl; }
-
     @Override
     public String
     toString()
@@ -96,7 +82,6 @@ class LogoutReply
         return
             "LogoutReply{replyId=" + getReplyId()
                 + ",success=" + isSuccess()
-                + ",endSessionUrl=" + (endSessionUrl != null ? "present" : "absent")
                 + "}";
     }
 }

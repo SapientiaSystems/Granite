@@ -124,14 +124,14 @@ describe("AuthenticationManager",() =>
         expect(frontEnd.callsFor(KEYS.logout)[0].payload).toMatchObject({ source: "Session.Current", command: "Logout" });
     });
 
-    it("navigates to the Okta end-session URL after logout",async () =>
+    it("logoutNavigatesToLoginPage: never assigns an external URL even when the reply carries one",async () =>
     {
-        const frontEnd  = scriptedFrontEnd().respond(KEYS.logout,() => logoutOutput(true,"https://okta.example/logout?id_token_hint=x"));
+        const frontEnd  = scriptedFrontEnd().respond(KEYS.logout,() => ({ ...logoutOutput(true),endSessionUrl: "https://okta.example/logout?id_token_hint=x" }));
         const navigator = new FakeNavigator();
 
         await managerFor(frontEnd,navigator).logout();
 
-        expect(navigator.assigned).toEqual(["https://okta.example/logout?id_token_hint=x"]);
+        expect(navigator.assigned).toEqual([]);
     });
 
     it("keeps the session when logout fails",async () =>

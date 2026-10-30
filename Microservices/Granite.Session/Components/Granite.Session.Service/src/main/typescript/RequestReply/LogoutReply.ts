@@ -4,5 +4,4 @@ export
 interface LogoutReply
     extends AbstractServiceReply
 {
-    endSessionUrl?: string;
 }

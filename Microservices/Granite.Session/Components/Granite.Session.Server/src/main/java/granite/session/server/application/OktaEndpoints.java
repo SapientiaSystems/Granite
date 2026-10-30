@@ -11,21 +11,18 @@ class OktaEndpoints
     private final String authorizationEndpoint;
     private final String tokenEndpoint;
     private final String jwksUri;
-    private final String endSessionEndpoint;
 
     public
     OktaEndpoints(
         String issuer,
         String authorizationEndpoint,
         String tokenEndpoint,
-        String jwksUri,
-        String endSessionEndpoint)
+        String jwksUri)
     {
         this.issuer                = issuer;
         this.authorizationEndpoint = authorizationEndpoint;
         this.tokenEndpoint         = tokenEndpoint;
         this.jwksUri               = jwksUri;
-        this.endSessionEndpoint    = endSessionEndpoint;
     }
 
     public String
@@ -39,9 +36,6 @@ class OktaEndpoints
 
     public String
     getJwksUri() { return jwksUri; }
-
-    public String
-    getEndSessionEndpoint() { return endSessionEndpoint; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -310,7 +310,6 @@ class GraniteSessionCommandServerConfigurationTest
                 .withProperty("granite.session.okta.issuer","https://example.okta.com/oauth2/default")
                 .withProperty("granite.session.okta.client-id","client-1")
                 .withProperty("granite.session.okta.redirect-uri","https://app.example.com/login/callback")
-                .withProperty("granite.session.okta.post-logout-redirect-uri","https://app.example.com/")
                 .withProperty("granite.session.okta.role-assignment","every_login")
                 .withProperty("granite.session.okta.unmapped-groups","refuse")
                 .withProperty("granite.session.okta.group-mapping[Granite Admins]","ROLE_ADMIN")
@@ -321,7 +320,6 @@ class GraniteSessionCommandServerConfigurationTest
         assertEquals("https://example.okta.com/oauth2/default",settings.getIssuer());
         assertEquals("client-1",settings.getClientId());
         assertEquals("https://app.example.com/login/callback",settings.getRedirectUri());
-        assertEquals("https://app.example.com/",settings.getPostLogoutRedirectUri());
         assertEquals(OktaRoleAssignment.EVERY_LOGIN,settings.getRoleAssignment());
         assertEquals(OktaUnmappedGroups.REFUSE,settings.getUnmappedGroups());
         assertEquals(Map.of("Granite Admins","ROLE_ADMIN","auditors","ROLE_AUDITOR"),settings.getGroupMapping());

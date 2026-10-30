@@ -28,7 +28,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,7 +62,6 @@ class OktaClientTest
     {
         subject.buildAuthorizeUrl("s1","n1","c1",false);
         subject.buildAuthorizeUrl("s2","n2","c2",false);
-        subject.buildEndSessionUrl("x.y.z");
 
         assertEquals(1,okta.discoveryRequests());
     }
@@ -154,7 +152,6 @@ class OktaClientTest
         assertEquals(SUB,identity.getSubject());
         assertEquals(SUB + "@example.com",identity.getUserName());
         assertEquals(Set.of("Granite Admins","Everyone"),identity.getGroups());
-        assertEquals(idToken,identity.getIdToken());
         assertFalse(identity.toString().contains(idToken));
     }
 
@@ -282,33 +279,6 @@ class OktaClientTest
 
         assertFalse(String.valueOf(e.getMessage()).contains("secret-code"));
         assertFalse(String.valueOf(e.getMessage()).contains("secret-verifier"));
-    }
-
-    @Test
-    public void
-    endSessionUrlCarriesTheHintAndPostLogoutRedirect()
-    {
-        Map<String,String> q =
-            parse(subject.buildEndSessionUrl("id.token.value").orElseThrow())
-                .getQueryParams()
-                .toSingleValueMap();
-
-        assertEquals("id.token.value",q.get("id_token_hint"));
-        assertEquals(FakeOkta.POST_LOGOUT_REDIRECT_URI,decode(q.get("post_logout_redirect_uri")));
-        assertTrue(subject.buildEndSessionUrl("id.token.value").orElseThrow().startsWith(okta.url(FakeOkta.LOGOUT_PATH)));
-    }
-
-    @Test
-    public void
-    endSessionUrlOmitsPostLogoutRedirectWhenUnset()
-    {
-        OktaClient client = okta.client(okta.settings().setPostLogoutRedirectUri(null),Clock.systemUTC());
-
-        Map<String,String> q =
-            parse(client.buildEndSessionUrl("id.token.value").orElseThrow()).getQueryParams().toSingleValueMap();
-
-        assertNull(q.get("post_logout_redirect_uri"));
-        assertTrue(subject.buildEndSessionUrl(null).isEmpty());
     }
 
     private UriComponents

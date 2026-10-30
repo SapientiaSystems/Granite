@@ -133,9 +133,6 @@ class SessionCommandServiceServerTest
                 .join();
 
         assertTrue(logout.isSuccess(),logout.getFailureMessage());
-        assertTrue(logout.getEndSessionUrl().startsWith(okta.url(FakeOkta.LOGOUT_PATH)));
-        assertTrue(logout.getEndSessionUrl().contains("id_token_hint="));
-        assertNull(find(reply.getSessionData().getSessionId()).getOktaIdToken());
     }
 
     @Test

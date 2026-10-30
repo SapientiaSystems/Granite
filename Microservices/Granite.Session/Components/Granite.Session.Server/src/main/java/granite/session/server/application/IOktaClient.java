@@ -4,8 +4,6 @@
 
 package granite.session.server.application;
 
-import java.util.Optional;
-
 public
 interface IOktaClient
 {
@@ -17,9 +15,6 @@ interface IOktaClient
 
     OktaIdentity
     exchange(String code,String codeVerifier,String nonce);
-
-    Optional<String>
-    buildEndSessionUrl(String idToken);
 }
 
 //////////////////////////////////////////////////////////////////////////////

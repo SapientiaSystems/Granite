@@ -42,13 +42,11 @@ class FakeOkta
 {
     public static final String CLIENT_ID                = "granite-test-client";
     public static final String REDIRECT_URI             = "https://app.example.com/login/callback";
-    public static final String POST_LOGOUT_REDIRECT_URI = "https://app.example.com/";
     public static final String AUTH_SERVER_PATH         = "/oauth2/default";
     public static final String DISCOVERY_PATH           = AUTH_SERVER_PATH + "/.well-known/openid-configuration";
     public static final String TOKEN_PATH               = AUTH_SERVER_PATH + "/v1/token";
     public static final String JWKS_PATH                = AUTH_SERVER_PATH + "/v1/keys";
     public static final String AUTHORIZE_PATH           = AUTH_SERVER_PATH + "/v1/authorize";
-    public static final String LOGOUT_PATH              = AUTH_SERVER_PATH + "/v1/logout";
 
     private final WireMockServer server;
     private final RSAKey         signingKey;
@@ -94,8 +92,7 @@ class FakeOkta
                 .setEnabled(true)
                 .setIssuer(getIssuer())
                 .setClientId(CLIENT_ID)
-                .setRedirectUri(REDIRECT_URI)
-                .setPostLogoutRedirectUri(POST_LOGOUT_REDIRECT_URI);
+                .setRedirectUri(REDIRECT_URI);
     }
 
     public OktaClient
@@ -124,7 +121,6 @@ class FakeOkta
         document.put("authorization_endpoint",url(AUTHORIZE_PATH));
         document.put("token_endpoint",url(TOKEN_PATH));
         document.put("jwks_uri",url(JWKS_PATH));
-        document.put("end_session_endpoint",url(LOGOUT_PATH));
         server.stubFor(get(urlEqualTo(DISCOVERY_PATH)).willReturn(okJson(toJson(document))));
     }
 

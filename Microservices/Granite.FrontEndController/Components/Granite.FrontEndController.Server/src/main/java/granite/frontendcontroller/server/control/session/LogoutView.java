@@ -40,35 +40,34 @@ class LogoutView
         Optional<Long> sessionId = context.getSessionId();
 
         if (sessionId.isEmpty())
-            return CompletableFuture.completedFuture(clearAndDescribe(input,null));
+            return CompletableFuture.completedFuture(clearAndDescribe(input));
 
         return
             commandClient
                 .logout(new LogoutRequest().setSessionId(sessionId.get()))
                 .thenApply(reply -> toOutput(input,reply))
-                .exceptionally(e -> describe(input,false,null));
+                .exceptionally(e -> describe(input,false));
     }
 
     protected SessionOutput
     toOutput(SessionInput input,LogoutReply reply)
     {
-        return reply.isSuccess() ? clearAndDescribe(input,reply.getEndSessionUrl()) : describe(input,false,null);
+        return reply.isSuccess() ? clearAndDescribe(input) : describe(input,false);
     }
 
     private SessionOutput
-    clearAndDescribe(SessionInput input,String endSessionUrl)
+    clearAndDescribe(SessionInput input)
     {
         context.addSetCookie(cookies.clear());
-        return describe(input,true,endSessionUrl);
+        return describe(input,true);
     }
 
     private SessionOutput
-    describe(SessionInput input,boolean loggedOut,String endSessionUrl)
+    describe(SessionInput input,boolean loggedOut)
     {
         return
             new SessionOutput()
                 .setLoggedOut(loggedOut)
-                .setEndSessionUrl(endSessionUrl)
                 .setUserId(input.getUserId())
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())

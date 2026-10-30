@@ -30,7 +30,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -127,32 +126,7 @@ class OktaClient
             new OktaIdentity(
                 jwt.getSubject(),
                 userNameOf(jwt),
-                groupsOf(jwt),
-                idToken);
-    }
-
-    @Override
-    public Optional<String>
-    buildEndSessionUrl(String idToken)
-    {
-        if (idToken == null || idToken.isBlank())
-            return Optional.empty();
-
-        String endSession = getEndpoints().getEndSessionEndpoint();
-
-        if (endSession == null || endSession.isBlank())
-            return Optional.empty();
-
-        UriComponentsBuilder builder =
-            UriComponentsBuilder
-                .fromUriString(endSession)
-                .queryParam("id_token_hint",idToken);
-        String               redirect = settings.getPostLogoutRedirectUri();
-
-        if (redirect != null && !redirect.isBlank())
-            builder.queryParam("post_logout_redirect_uri",redirect);
-
-        return Optional.of(builder.encode().build().toUriString());
+                groupsOf(jwt));
     }
 
     private OktaEndpoints
@@ -188,8 +162,7 @@ class OktaClient
                 issuer,
                 stringOf(document,"authorization_endpoint"),
                 stringOf(document,"token_endpoint"),
-                stringOf(document,"jwks_uri"),
-                stringOf(document,"end_session_endpoint"));
+                stringOf(document,"jwks_uri"));
 
         if (discovered.getAuthorizationEndpoint() == null
             || discovered.getTokenEndpoint() == null

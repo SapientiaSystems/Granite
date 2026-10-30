@@ -13,15 +13,13 @@ class OktaIdentity
     private final String      subject;
     private final String      userName;
     private final Set<String> groups;
-    private final String      idToken;
 
     public
-    OktaIdentity(String subject,String userName,Set<String> groups,String idToken)
+    OktaIdentity(String subject,String userName,Set<String> groups)
     {
         this.subject  = subject;
         this.userName = userName;
         this.groups   = groups != null ? new LinkedHashSet<>(groups) : new LinkedHashSet<>();
-        this.idToken  = idToken;
     }
 
     public String
@@ -32,9 +30,6 @@ class OktaIdentity
 
     public Set<String>
     getGroups() { return groups; }
-
-    public String
-    getIdToken() { return idToken; }
 
     @Override
     public String

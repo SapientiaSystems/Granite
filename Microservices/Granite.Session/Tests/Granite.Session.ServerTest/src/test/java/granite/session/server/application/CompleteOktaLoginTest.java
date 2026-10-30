@@ -139,7 +139,6 @@ class CompleteOktaLoginTest
         assertEquals(USER_ID,reply.getSessionData().getUserId());
         assertEquals(DEVICE_ID,reply.getSessionData().getDeviceId());
         assertEquals(LoginMethod.OKTA,created.getLoginMethod());
-        assertNotNull(created.getOktaIdToken());
         assertEquals(Set.of("Granite Admins","Everyone"),created.getOktaGroups());
         assertEquals("minted.jwt",created.getAccessToken());
         Mockito.verify(transactions).delete(transaction);

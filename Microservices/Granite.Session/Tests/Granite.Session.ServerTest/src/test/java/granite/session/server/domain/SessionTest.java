@@ -102,29 +102,24 @@ class SessionTest
         Session target = new Session();
 
         assertNull(target.getLoginMethod());
-        assertNull(target.getOktaIdToken());
         assertTrue(target.getOktaGroups().isEmpty());
         assertSame(target,target.setLoginMethod(LoginMethod.OKTA));
-        assertSame(target,target.setOktaIdToken("id.token.value"));
         assertSame(target,target.setOktaGroups(Set.of("Admins")));
         assertEquals(LoginMethod.OKTA,target.getLoginMethod());
-        assertEquals("id.token.value",target.getOktaIdToken());
         assertEquals(Set.of("Admins"),target.getOktaGroups());
     }
 
     @Test
     public void
-    testCloseClearsOktaIdToken()
+    testCloseKeepsOktaFields()
     {
         Session target =
             new Session()
                 .setLoginMethod(LoginMethod.OKTA)
-                .setOktaIdToken("id.token.value")
                 .setOktaGroups(Set.of("Admins"));
 
         target.close(SessionClosedReason.LOGOUT,Instant.parse("2026-10-24T12:00:00Z"));
 
-        assertNull(target.getOktaIdToken());
         assertEquals(LoginMethod.OKTA,target.getLoginMethod());
         assertEquals(Set.of("Admins"),target.getOktaGroups());
     }
