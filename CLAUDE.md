@@ -98,6 +98,4 @@ Production Ingress: the `production` overlay removes `/user-command-service`, `/
 
 ## Kubernetes network policies
 
-- `Shared/Granite.Kubernetes/base/granite-network-policies.yml` restricts ingress only. Egress is intentionally unrestricted.
-- Services accept ingress only from the Gateway pods. The JWKS rule opens Session Command's whole port to the FEC, User, Session Query and Outbox pods (a layer 4 limitation): the tokenless resolve-session, login, refresh and issue-service-token endpoints are reachable from those pods.
-- The policies require a CNI that enforces NetworkPolicy. Kubelet probes are exempt.
+- No overlay deploys a NetworkPolicy; they were removed because kindnet enforced them unreliably. Every pod in the namespace can reach every service port, so routing through the Gateway is a convention backed only by the hosts' JWT check, not by the network. The tokenless Session Command endpoints (resolve-session, login, refresh, issue-service-token) are reachable from any pod in the cluster.
