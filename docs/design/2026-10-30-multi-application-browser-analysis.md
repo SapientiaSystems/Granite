@@ -1,7 +1,7 @@
 # Multiple Granite Applications in One Browser — Analysis
 
 Date: 2026-10-30
-Status: analysis; R1, R2, R3, R5 and R6 selected on 2026-10-30; R4 replaced by application-only logout
+Status: implemented on branch feature/multi-application-browser; R1, R2, R3, R5 and R6 selected on 2026-10-30; R4 replaced by application-only logout
 
 ## Question
 
