@@ -5,6 +5,7 @@
 package granite.frontendcontroller.server.configuration;
 
 import com.sun.net.httpserver.HttpServer;
+import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContextTest;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputReply;
 import granite.frontendcontroller.service.requestreply.HandleUsersInputRequest;
@@ -106,6 +107,29 @@ class GraniteFrontEndControllerConfigurationTest
         RequestContextHolder.resetRequestAttributes();
         SecurityContextHolder.clearContext();
         userService.stop(0);
+    }
+
+    @Test
+    public void
+    configuredCookiePrefixReachesTheContextCookies()
+    {
+        Mockito.when(configuration.getProperty("granite.cookies.prefix","GRANITE")).thenReturn("POPLAR");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest("POST","/x")));
+
+        SessionCookies cookies = subject.createContext(new ModelMapper(),Runnable::run,subject.applicationRoles()).getSessionCookies();
+
+        assertEquals("__Host-POPLAR_SID",cookies.getSessionName());
+        assertEquals("__Host-POPLAR_DID",cookies.getDeviceName());
+        assertEquals("__Host-POPLAR_LOGIN",cookies.getLoginName());
+    }
+
+    @Test
+    public void
+    cookiePrefixDefaultsToGranite()
+    {
+        Mockito.when(configuration.getProperty("granite.cookies.prefix","GRANITE")).thenAnswer(i -> i.getArgument(1));
+
+        assertEquals("__Host-GRANITE_SID",subject.cookieNames().getSession());
     }
 
     @Test
