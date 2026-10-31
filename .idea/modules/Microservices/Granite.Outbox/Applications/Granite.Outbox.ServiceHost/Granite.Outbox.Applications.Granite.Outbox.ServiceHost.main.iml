@@ -23,18 +23,19 @@
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-spring:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-actuator:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter:3.4.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Service.main" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-kafka:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-resource-server:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-jose:6.2.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.server:strata-server-spring:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.1.5" level="project" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-service:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: io.debezium:debezium-embedded:3.1.1.Final" level="project" />
     <orderEntry type="library" name="Gradle: io.debezium:debezium-connector-postgres:3.1.1.Final" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-core:6.2.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-core:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: org.postgresql:postgresql:42.6.1" level="project" />
     <orderEntry type="library" name="Gradle: com.h2database:h2:2.1.214" level="project" />
     <orderEntry type="library" name="Gradle: org.modelmapper:modelmapper:3.2.6" level="project" />
@@ -49,6 +50,8 @@
     <orderEntry type="library" name="Gradle: jakarta.annotation:jakarta.annotation-api:3.0.0" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-core:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: org.yaml:snakeyaml:2.5" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-web:6.4.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-aop:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-web:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: io.confluent:kafka-avro-serializer:8.2.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.kafka:kafka_2.13:3.4.0" level="project" />
@@ -62,8 +65,9 @@
     <orderEntry type="library" name="Gradle: javax.money:money-api:1.1" level="project" />
     <orderEntry type="library" name="Gradle: org.junit.platform:junit-platform-launcher:1.13.3" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-core:6.2.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-web:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: com.nimbusds:nimbus-jose-jwt:9.24.4" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-context:6.2.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-beans:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: strata.server:strata-server-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-webflux:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-data-jpa:3.4.1" level="project" />
@@ -73,8 +77,6 @@
     <orderEntry type="library" name="Gradle: io.smallrye:jandex:3.3.0" level="project" />
     <orderEntry type="library" name="Gradle: com.mchange:c3p0:0.12.0" level="project" />
     <orderEntry type="library" name="Gradle: org.hibernate.orm:hibernate-c3p0:6.6.4.Final" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.1.5" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-aop:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.kafka:connect-runtime:3.9.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.kafka:connect-json:3.9.0" level="project" />
     <orderEntry type="library" name="Gradle: io.debezium:debezium-core:3.1.1.Final" level="project" />
@@ -82,10 +84,8 @@
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:2.0.17" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.kafka:connect-file:3.9.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.protobuf:protobuf-java:3.25.5" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-context:6.2.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-beans:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-expression:6.2.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-crypto:6.2.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-crypto:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: io.swagger.core.v3:swagger-core-jakarta:2.2.28" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-messaging:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-tx:6.2.1" level="project" />
@@ -98,10 +98,10 @@
     <orderEntry type="library" name="Gradle: ch.qos.logback:logback-classic:1.5.12" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:jul-to-slf4j:2.0.16" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-jcl:6.2.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-web:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-json:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-webmvc:6.2.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-web:6.2.2" level="project" />
     <orderEntry type="library" name="Gradle: io.confluent:kafka-schema-serializer:8.2.0" level="project" />
     <orderEntry type="library" name="Gradle: io.confluent:kafka-schema-registry-client:8.2.0" level="project" />
     <orderEntry type="library" name="Gradle: io.confluent:logredactor:1.0.17" level="project" />

@@ -1,3 +1,4 @@
 window.__GRANITE_CONFIG__ = {
-    apiBaseUrl: ""
+    apiBaseUrl: "",
+    cookiePrefix: "GRANITE"
 };

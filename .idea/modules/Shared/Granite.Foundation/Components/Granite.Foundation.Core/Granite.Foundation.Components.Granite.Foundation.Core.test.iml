@@ -10,6 +10,7 @@
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-resource-server:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-jose:6.2.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.jasypt:jasypt:1.9.3" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.avro:avro:1.12.1" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.1" level="project" />
@@ -24,6 +25,9 @@
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-core:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-core:6.1.2" level="project" />
     <orderEntry type="library" name="Gradle: com.nimbusds:nimbus-jose-jwt:9.24.4" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-context:6.1.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-aop:6.1.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework:spring-beans:6.1.2" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.21.1" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.21.1" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-compress:1.28.0" level="project" />
@@ -37,9 +41,6 @@
     <orderEntry type="library" name="Gradle: org.junit.platform:junit-platform-engine:1.13.3" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apiguardian:apiguardian-api:1.1.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-web:6.1.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-context:6.1.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-aop:6.1.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework:spring-beans:6.1.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-expression:6.1.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-crypto:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: io.micrometer:micrometer-observation:1.12.1" level="project" />

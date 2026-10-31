@@ -34,6 +34,7 @@
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-web:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-resource-server:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-jose:6.2.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: strata.client:strata-client-resteasy:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.client:strata-client-spring:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-kafka:1.0-SNAPSHOT" level="project" />
@@ -49,7 +50,6 @@
     <orderEntry type="library" name="Gradle: io.smallrye:jandex:3.4.0" level="project" />
     <orderEntry type="library" name="Gradle: com.mchange:c3p0:0.12.0" level="project" />
     <orderEntry type="library" name="Gradle: org.hibernate.orm:hibernate-c3p0:6.6.4.Final" level="project" />
-    <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-web:6.4.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-aop:6.2.2" level="project" />
