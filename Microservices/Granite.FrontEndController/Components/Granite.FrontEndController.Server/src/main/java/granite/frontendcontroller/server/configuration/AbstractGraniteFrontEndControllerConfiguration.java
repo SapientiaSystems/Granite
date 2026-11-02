@@ -5,9 +5,13 @@
 package granite.frontendcontroller.server.configuration;
 
 import granite.feedback.client.requestreply.FeedbackCommandServiceClient;
+import granite.survey.client.requestreply.SurveyCommandServiceClient;
 import granite.feedback.client.requestreply.FeedbackQueryServiceClient;
+import granite.survey.client.requestreply.SurveyQueryServiceClient;
 import granite.feedback.client.requestreply.IFeedbackCommandServiceClient;
+import granite.survey.client.requestreply.ISurveyCommandServiceClient;
 import granite.feedback.client.requestreply.IFeedbackQueryServiceClient;
+import granite.survey.client.requestreply.ISurveyQueryServiceClient;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteCookieNames;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
@@ -208,7 +212,9 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
         return
             new GraniteHelpServiceClients()
                 .setFeedbackCommandClient(this::createFeedbackCommandClient)
-                .setFeedbackQueryClient(this::createFeedbackQueryClient);
+                .setFeedbackQueryClient(this::createFeedbackQueryClient)
+                .setSurveyCommandClient(this::createSurveyCommandClient)
+                .setSurveyQueryClient(this::createSurveyQueryClient);
     }
 
     protected IFeedbackCommandServiceClient
@@ -225,6 +231,22 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
         GraniteClientSettings client = createClientConfiguration("feedback-query-service.base-url");
 
         return new FeedbackQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    }
+
+    protected ISurveyCommandServiceClient
+    createSurveyCommandClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("survey-command-service.base-url");
+
+        return new SurveyCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    }
+
+    protected ISurveyQueryServiceClient
+    createSurveyQueryClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("survey-query-service.base-url");
+
+        return new SurveyQueryServiceClient(client.getBuilder(),client.getBaseUrl());
     }
 
     @Bean

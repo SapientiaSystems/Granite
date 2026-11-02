@@ -138,6 +138,36 @@ class GatewayRoleRulesTest
 
     @Test
     public void
+    surveyMatrix()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String user    = backend.sign(List.of("ROLE_USER"));
+
+        for (String token : List.of(admin,auditor,user))
+        {
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-survey-output",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-survey-input",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-survey-input",token);
+        }
+
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-survey-review-output",admin);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-survey-review-output",auditor);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-survey-review-output",user);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-survey-review-input",admin);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-survey-review-input",auditor);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-survey-review-input",user);
+        assertAllowed(HttpMethod.POST,"/survey-query-service/find-all-survey-responses",auditor);
+        assertForbidden(HttpMethod.POST,"/survey-query-service/find-all-survey-responses",user);
+        assertAllowed(HttpMethod.POST,"/survey-command-service/submit-survey-response",admin);
+        assertForbidden(HttpMethod.POST,"/survey-command-service/submit-survey-response",auditor);
+        assertAllowed(HttpMethod.POST,"/survey-command-service/submit-survey-response",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-survey-input",null));
+    }
+
+    @Test
+    public void
     retiredSharedPathsFallToCatchAll()
         throws Exception
     {

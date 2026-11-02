@@ -6,9 +6,13 @@ import type { ICompletionStage }                          from "strata.foundatio
 import type { HandleUsersInputRequest, HandleUsersInputReply,
               GetUsersOutputRequest, GetUsersOutputReply,
               HandleFeedbackInputRequest, HandleFeedbackInputReply,
+              HandleSurveyInputRequest, HandleSurveyInputReply,
               GetFeedbackOutputRequest, GetFeedbackOutputReply,
+              GetSurveyOutputRequest, GetSurveyOutputReply,
               HandleFeedbackReviewInputRequest, HandleFeedbackReviewInputReply,
+              HandleSurveyReviewInputRequest, HandleSurveyReviewInputReply,
               GetFeedbackReviewOutputRequest, GetFeedbackReviewOutputReply,
+              GetSurveyReviewOutputRequest, GetSurveyReviewOutputReply,
               HandleSessionsInputRequest, HandleSessionsInputReply,
               GetSessionsOutputRequest, GetSessionsOutputReply,
               HandleSessionInputRequest, HandleSessionInputReply,
@@ -68,6 +72,34 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetFeedbackReviewOutputReply,GetFeedbackReviewOutputRequest>(
             "get-feedback-review-output",
+            this.initializeRequest(request));
+    }
+
+    handleSurveyInput(request: HandleSurveyInputRequest): ICompletionStage<HandleSurveyInputReply>
+    {
+        return this.doPost<HandleSurveyInputReply,HandleSurveyInputRequest>(
+            "handle-survey-input",
+            this.initializeRequest(request));
+    }
+
+    getSurveyOutput(request: GetSurveyOutputRequest): ICompletionStage<GetSurveyOutputReply>
+    {
+        return this.doPost<GetSurveyOutputReply,GetSurveyOutputRequest>(
+            "get-survey-output",
+            this.initializeRequest(request));
+    }
+
+    handleSurveyReviewInput(request: HandleSurveyReviewInputRequest): ICompletionStage<HandleSurveyReviewInputReply>
+    {
+        return this.doPost<HandleSurveyReviewInputReply,HandleSurveyReviewInputRequest>(
+            "handle-survey-review-input",
+            this.initializeRequest(request));
+    }
+
+    getSurveyReviewOutput(request: GetSurveyReviewOutputRequest): ICompletionStage<GetSurveyReviewOutputReply>
+    {
+        return this.doPost<GetSurveyReviewOutputReply,GetSurveyReviewOutputRequest>(
+            "get-survey-review-output",
             this.initializeRequest(request));
     }
 

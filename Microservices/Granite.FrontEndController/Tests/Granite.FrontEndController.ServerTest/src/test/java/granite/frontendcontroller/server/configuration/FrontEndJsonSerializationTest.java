@@ -23,6 +23,8 @@ import granite.frontendcontroller.service.requestreply.RoleData;
 import granite.feedback.service.requestreply.FeedbackType;
 import granite.frontendcontroller.service.requestreply.FeedbackInput;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSurveyInputRequest;
+import granite.frontendcontroller.service.requestreply.SurveyInput;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionsInputRequest;
 import granite.frontendcontroller.service.requestreply.SessionRowData;
@@ -159,6 +161,22 @@ class FrontEndJsonSerializationTest
         assertEquals("Feedback.New->Submit->FeedbackView",input.getKey());
         assertEquals(FeedbackType.PROBLEM,input.getType());
         assertEquals(Map.of("impact","Waiting"),input.getDetails());
+    }
+
+    @Test
+    public void
+    surveyRequestBindsSurveyInputWithoutTypeProperty()
+        throws Exception
+    {
+        String json =
+            "{\"input\":{\"source\":\"Survey.New\",\"command\":\"Submit\",\"destination\":\"SurveyView\"," +
+            "\"answers\":{\"satisfied\":4,\"needs\":3,\"recommend\":5},\"comment\":\"Nice\"}}";
+
+        SurveyInput input = mapper.readValue(json,HandleSurveyInputRequest.class).getInput();
+
+        assertEquals("Survey.New->Submit->SurveyView",input.getKey());
+        assertEquals(Map.of("satisfied",4,"needs",3,"recommend",5),input.getAnswers());
+        assertEquals("Nice",input.getComment());
     }
 
     @Test

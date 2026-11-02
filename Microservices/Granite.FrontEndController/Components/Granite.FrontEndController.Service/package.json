@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "granite.feedback.service": "1.0.0-snapshot",
+    "granite.survey.service": "1.0.0-snapshot",
     "granite.user.service": "1.0.0-snapshot",
     "strata.foundation.core": "0.0.0-snapshot",
     "strata.frontendcontroller.service": "0.0.0-snapshot"

@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// Granite.FrontEndController.Service
+//////////////////////////////////////////////////////////////////////////////
+
+import type { HandleInputReply } from "strata.frontendcontroller.service/RequestReply";
+import type { SurveyInput } from "./SurveyInput";
+import type { SurveyOutput } from "./SurveyOutput";
+
+export
+interface HandleSurveyInputReply
+    extends HandleInputReply<SurveyInput,SurveyOutput>
+{
+}
+
+//////////////////////////////////////////////////////////////////////////////

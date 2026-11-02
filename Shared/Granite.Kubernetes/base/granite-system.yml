@@ -610,6 +610,205 @@ spec:
           type: Utilization
           averageUtilization: 80
 ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-survey-commandhost
+  namespace: granite
+  labels:
+    app: granite-survey-commandhost
+    system: granite
+    microservice: survey
+    role: command
+spec:
+  selector:
+    matchLabels:
+      app: granite-survey-commandhost
+  template:
+    metadata:
+      labels:
+        app: granite-survey-commandhost
+        system: granite
+        microservice: survey
+        role: command
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: commandhost
+          image: ghcr.io/johnliebenau/granite/granite-survey-commandhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8091
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /survey-command-service/health/startup
+              port: 8091
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /survey-command-service/health/readiness
+              port: 8091
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /survey-command-service/health/liveness
+              port: 8091
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-survey-commandhost
+  namespace: granite
+  labels:
+    app: granite-survey-commandhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-survey-commandhost
+  ports:
+    - port: 443
+      targetPort: 8091
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-survey-commandhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-survey-commandhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-survey-queryhost
+  namespace: granite
+  labels:
+    app: granite-survey-queryhost
+    system: granite
+    microservice: survey
+    role: query
+spec:
+  selector:
+    matchLabels:
+      app: granite-survey-queryhost
+  template:
+    metadata:
+      labels:
+        app: granite-survey-queryhost
+        system: granite
+        microservice: survey
+        role: query
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: queryhost
+          image: ghcr.io/johnliebenau/granite/granite-survey-queryhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8092
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /survey-query-service/health/startup
+              port: 8092
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /survey-query-service/health/readiness
+              port: 8092
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /survey-query-service/health/liveness
+              port: 8092
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-survey-queryhost
+  namespace: granite
+  labels:
+    app: granite-survey-queryhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-survey-queryhost
+  ports:
+    - port: 443
+      targetPort: 8092
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-survey-queryhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-survey-queryhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1190,6 +1389,20 @@ spec:
                 port:
                   number: 443
           - path: /feedback-query-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /survey-command-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /survey-query-service
             pathType: Prefix
             backend:
               service:

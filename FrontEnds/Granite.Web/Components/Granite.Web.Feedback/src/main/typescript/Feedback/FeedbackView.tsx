@@ -133,7 +133,7 @@ export function FeedbackView(props: IFeedbackViewProps): ReactElement
     return (
         <Stack gap="md" p="md" className={props.className} style={containerStyle}>
             <Title order={3} style={{ flexShrink: 0 }}>Provide Feedback</Title>
-            {!signedIn && <Alert color="yellow">Log in to send feedback.</Alert>}
+            {!signedIn && <Alert color="yellow">Login to send feedback.</Alert>}
             {messages.length > 0 &&
             <Alert color="red" withCloseButton onClose={() => setMessages([])}>
                 {messages.map((m, i) => <div key={i}>{m}</div>)}

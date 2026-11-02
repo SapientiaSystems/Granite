@@ -46,6 +46,10 @@ class FrontEndControllerMvcContextTest
             "/handle-feedback-input",
             "/get-feedback-review-output",
             "/handle-feedback-review-input",
+            "/get-survey-output",
+            "/handle-survey-input",
+            "/get-survey-review-output",
+            "/handle-survey-review-input",
             "/get-preferences-output",
             "/handle-preferences-input");
 

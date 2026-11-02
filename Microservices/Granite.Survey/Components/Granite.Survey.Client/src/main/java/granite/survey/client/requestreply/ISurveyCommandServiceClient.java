@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// ISurveyCommandServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.survey.client.requestreply;
+
+import granite.survey.service.requestreply.ISurveyCommandService;
+
+public
+interface ISurveyCommandServiceClient
+    extends ISurveyCommandService
+{
+    ISurveyCommandServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

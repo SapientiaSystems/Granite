@@ -30,6 +30,18 @@ interface IGraniteFrontEndControllerService
     CompletionStage<GetFeedbackReviewOutputReply>
     getFeedbackReviewOutput(GetFeedbackReviewOutputRequest request);
 
+    CompletionStage<HandleSurveyInputReply>
+    handleSurveyInput(HandleSurveyInputRequest request);
+
+    CompletionStage<GetSurveyOutputReply>
+    getSurveyOutput(GetSurveyOutputRequest request);
+
+    CompletionStage<HandleSurveyReviewInputReply>
+    handleSurveyReviewInput(HandleSurveyReviewInputRequest request);
+
+    CompletionStage<GetSurveyReviewOutputReply>
+    getSurveyReviewOutput(GetSurveyReviewOutputRequest request);
+
     CompletionStage<HandleSessionsInputReply>
     handleSessionsInput(HandleSessionsInputRequest request);
 

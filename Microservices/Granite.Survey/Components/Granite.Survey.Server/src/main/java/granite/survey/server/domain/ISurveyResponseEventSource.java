@@ -1,0 +1,17 @@
+//////////////////////////////////////////////////////////////////////////////
+// ISurveyResponseEventSource.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.survey.server.domain;
+
+import strata.server.core.domainevent.IDomainEventSource;
+
+public
+interface ISurveyResponseEventSource
+    extends
+        IDomainEventSource<
+            SurveyResponse,
+            ISurveyResponseEvent,
+            ISurveyResponseEventObserver> {}
+
+//////////////////////////////////////////////////////////////////////////////

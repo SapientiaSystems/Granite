@@ -7,6 +7,9 @@ package granite.outbox.servicehost.main;
 import granite.feedback.service.event.FeedbackEvent;
 import granite.outbox.server.feedback.FeedbackEventOutboxEventReceiver;
 import granite.outbox.server.feedback.KafkaAvroFeedbackEventSender;
+import granite.outbox.server.survey.KafkaAvroSurveyEventSender;
+import granite.outbox.server.survey.SurveyEventOutboxEventReceiver;
+import granite.survey.service.event.SurveyEvent;
 import granite.user.service.event.UserEvent;
 import granite.outbox.server.configuration.GraniteOutboxSecurityConfiguration;
 import granite.outbox.server.user.KafkaAvroUserEventSender;
@@ -61,7 +64,14 @@ class HostConfiguration
                     new FeedbackEventOutboxEventReceiver(
                         new KafkaAvroFeedbackEventSender(
                             provider,
-                            "granite.feedbackevent.avro")));
+                            "granite.feedbackevent.avro")),
+                    SurveyEvent
+                        .class
+                        .getSimpleName(),
+                    new SurveyEventOutboxEventReceiver(
+                        new KafkaAvroSurveyEventSender(
+                            provider,
+                            "granite.surveyevent.avro")));
     }
 
     @Bean

@@ -40,6 +40,7 @@ dependencies {
     api "strata.foundation:strata-foundation-kafka:$strata_foundation_version"
     api "granite.user:granite-user-service:$version"
     api "granite.feedback:granite-feedback-service:$version"
+    api "granite.survey:granite-survey-service:$version"
     api "granite.foundation:granite-foundation-core:$system_version"
     api "org.springframework.boot:spring-boot-starter-security:$springboot_version"
 }

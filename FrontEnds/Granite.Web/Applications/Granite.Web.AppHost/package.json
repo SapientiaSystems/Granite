@@ -19,6 +19,7 @@
         "granite.web.feedback": "1.0.0-snapshot",
         "granite.web.navigator": "1.0.0-snapshot",
         "granite.web.session": "1.0.0-snapshot",
+        "granite.web.survey": "1.0.0-snapshot",
         "granite.web.user": "1.0.0-snapshot",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",

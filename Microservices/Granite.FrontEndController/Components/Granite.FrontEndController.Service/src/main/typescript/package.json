@@ -1,6 +1,6 @@
 {
   "name": "granite.frontendcontroller.service",
-  "version": "1.0.0-snapshot.1793596146771",
+  "version": "1.0.0-snapshot.1793598180221",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "granite.feedback.service": "1.0.0-snapshot",
+    "granite.survey.service": "1.0.0-snapshot",
     "granite.user.service": "1.0.0-snapshot",
     "strata.frontendcontroller.service": "0.0.0-snapshot",
     "strata.foundation.core": "0.0.0-snapshot"

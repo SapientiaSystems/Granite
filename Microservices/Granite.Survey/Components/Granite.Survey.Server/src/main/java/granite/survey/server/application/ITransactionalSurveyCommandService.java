@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// ITransactionalSurveyCommandService.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.survey.server.application;
+
+import granite.survey.service.requestreply.ISurveyCommandService;
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public
+interface ITransactionalSurveyCommandService
+    extends ISurveyCommandService {}
+
+//////////////////////////////////////////////////////////////////////////////

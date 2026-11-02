@@ -12,6 +12,7 @@ import { HomeView }                                      from "granite.web.navig
 import { UsersView }                                     from "granite.web.user/Users";
 import { SessionsView }                                  from "granite.web.session/Sessions";
 import { FeedbackReviewView }                            from "granite.web.feedback/Review";
+import { SurveyReviewView }                              from "granite.web.survey/Review";
 import { HelpView }                                      from "granite.web.navigator/Help";
 import { AccountView }                                   from "granite.web.navigator/Account";
 
@@ -29,6 +30,7 @@ export function App(): ReactElement
                             <Route path="users" element={<RequireAuthentication><UsersView /></RequireAuthentication>} />
                             <Route path="sessions" element={<RequireAuthentication><SessionsView /></RequireAuthentication>} />
                             <Route path="feedback" element={<RequireAuthentication><FeedbackReviewView /></RequireAuthentication>} />
+                            <Route path="surveys" element={<RequireAuthentication><SurveyReviewView /></RequireAuthentication>} />
                             <Route path="help"  element={<HelpView />} />
                             <Route path="user"  element={<RequireAuthentication><AccountView /></RequireAuthentication>} />
                         </Route>

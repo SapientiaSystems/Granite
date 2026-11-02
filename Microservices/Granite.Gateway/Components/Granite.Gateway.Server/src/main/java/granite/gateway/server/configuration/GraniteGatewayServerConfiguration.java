@@ -399,7 +399,9 @@ class GraniteGatewayServerConfiguration
                     "/session-query-service/**",
                     "/session-command-service/**",
                     "/feedback-query-service/**",
+                    "/survey-query-service/**",
                     "/feedback-command-service/**",
+                    "/survey-command-service/**",
                     "/outbox-service/**")
                     .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
 
@@ -411,9 +413,13 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/handle-preferences-input",
                 "/frontendcontroller-admin-service/handle-preferences-input",
                 "/frontendcontroller-user-service/get-feedback-output",
+                "/frontendcontroller-user-service/get-survey-output",
                 "/frontendcontroller-admin-service/get-feedback-output",
+                "/frontendcontroller-admin-service/get-survey-output",
                 "/frontendcontroller-user-service/handle-feedback-input",
-                "/frontendcontroller-admin-service/handle-feedback-input")
+                "/frontendcontroller-user-service/handle-survey-input",
+                "/frontendcontroller-admin-service/handle-feedback-input",
+                "/frontendcontroller-admin-service/handle-survey-input")
                 .authenticated()
             .pathMatchers(
                 HttpMethod.POST,
@@ -422,7 +428,9 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/get-sessions-output",
                 "/frontendcontroller-admin-service/get-sessions-output",
                 "/frontendcontroller-user-service/get-feedback-review-output",
-                "/frontendcontroller-admin-service/get-feedback-review-output")
+                "/frontendcontroller-user-service/get-survey-review-output",
+                "/frontendcontroller-admin-service/get-feedback-review-output",
+                "/frontendcontroller-admin-service/get-survey-review-output")
                 .hasAnyAuthority(readers)
             .pathMatchers("/user-query-service/**")
                 .hasAnyAuthority(readers)
@@ -430,7 +438,7 @@ class GraniteGatewayServerConfiguration
                 .hasAnyAuthority(readers)
             .pathMatchers("/session-query-service/**")
                 .hasAnyAuthority(readers)
-            .pathMatchers("/feedback-query-service/**")
+            .pathMatchers("/feedback-query-service/**","/survey-query-service/**")
                 .hasAnyAuthority(readers)
             .pathMatchers(
                 HttpMethod.POST,
@@ -439,7 +447,9 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/handle-sessions-input",
                 "/frontendcontroller-admin-service/handle-sessions-input",
                 "/frontendcontroller-user-service/handle-feedback-review-input",
-                "/frontendcontroller-admin-service/handle-feedback-review-input")
+                "/frontendcontroller-user-service/handle-survey-review-input",
+                "/frontendcontroller-admin-service/handle-feedback-review-input",
+                "/frontendcontroller-admin-service/handle-survey-review-input")
                 .hasAnyAuthority(admins)
             .pathMatchers(
                 "/frontendcontroller-user-service/handle-input",
@@ -449,6 +459,7 @@ class GraniteGatewayServerConfiguration
                 "/user-command-service/**",
                 "/session-command-service/**",
                 "/feedback-command-service/**",
+                "/survey-command-service/**",
                 "/outbox-service/**")
                 .hasAnyAuthority(admins);
 
@@ -523,6 +534,18 @@ class GraniteGatewayServerConfiguration
             "feedback-query-route",
             "/feedback-query-service/**",
             "granite.feedback-query-service.host",
+            environment);
+        addRoute(
+            routes,
+            "survey-command-route",
+            "/survey-command-service/**",
+            "granite.survey-command-service.host",
+            environment);
+        addRoute(
+            routes,
+            "survey-query-route",
+            "/survey-query-service/**",
+            "granite.survey-query-service.host",
             environment);
         addRoute(
             routes,

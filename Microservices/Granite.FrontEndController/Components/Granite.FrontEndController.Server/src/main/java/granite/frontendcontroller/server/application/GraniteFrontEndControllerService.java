@@ -16,10 +16,15 @@ import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionStatusView;
 import granite.frontendcontroller.server.control.session.StartOktaLoginView;
 import granite.frontendcontroller.server.control.feedback.FeedbackReviewLoader;
+import granite.frontendcontroller.server.control.survey.SurveyReviewLoader;
 import granite.frontendcontroller.server.control.feedback.InitializeFeedbackReviewView;
+import granite.frontendcontroller.server.control.survey.InitializeSurveyReviewView;
 import granite.frontendcontroller.server.control.feedback.InitializeFeedbackView;
+import granite.frontendcontroller.server.control.survey.InitializeSurveyView;
 import granite.frontendcontroller.server.control.feedback.SaveFeedbackReviewView;
+import granite.frontendcontroller.server.control.survey.SaveSurveyReviewView;
 import granite.frontendcontroller.server.control.feedback.SubmitFeedbackView;
+import granite.frontendcontroller.server.control.survey.SubmitSurveyView;
 import granite.frontendcontroller.server.control.sessions.CloseSessionsView;
 import granite.frontendcontroller.server.control.sessions.InitializeSessionsView;
 import granite.frontendcontroller.server.control.sessions.SessionsLoader;
@@ -29,17 +34,29 @@ import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.GetSurveyOutputReply;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetSurveyOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputReply;
+import granite.frontendcontroller.service.requestreply.GetSurveyReviewOutputReply;
 import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetSurveyReviewOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSurveyInputReply;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSurveyInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSurveyReviewInputReply;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSurveyReviewInputRequest;
 import granite.frontendcontroller.service.requestreply.FeedbackInput;
+import granite.frontendcontroller.service.requestreply.SurveyInput;
 import granite.frontendcontroller.service.requestreply.FeedbackOutput;
+import granite.frontendcontroller.service.requestreply.SurveyOutput;
 import granite.frontendcontroller.service.requestreply.FeedbackReviewInput;
+import granite.frontendcontroller.service.requestreply.SurveyReviewInput;
 import granite.frontendcontroller.service.requestreply.FeedbackReviewOutput;
+import granite.frontendcontroller.service.requestreply.SurveyReviewOutput;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -89,9 +106,13 @@ class GraniteFrontEndControllerService
     private final Map<String,IInputAction<UsersInput,UsersOutput>>                 usersInputActions;
     private final Map<String,IOutputAction<GetUsersOutputRequest,UsersOutput>>     usersOutputActions;
     private final Map<String,IInputAction<FeedbackInput,FeedbackOutput>>           feedbackInputActions;
+    private final Map<String,IInputAction<SurveyInput,SurveyOutput>>           surveyInputActions;
     private final Map<String,IOutputAction<GetFeedbackOutputRequest,FeedbackOutput>> feedbackOutputActions;
+    private final Map<String,IOutputAction<GetSurveyOutputRequest,SurveyOutput>> surveyOutputActions;
     private final Map<String,IInputAction<FeedbackReviewInput,FeedbackReviewOutput>> feedbackReviewInputActions;
+    private final Map<String,IInputAction<SurveyReviewInput,SurveyReviewOutput>> surveyReviewInputActions;
     private final Map<String,IOutputAction<GetFeedbackReviewOutputRequest,FeedbackReviewOutput>> feedbackReviewOutputActions;
+    private final Map<String,IOutputAction<GetSurveyReviewOutputRequest,SurveyReviewOutput>> surveyReviewOutputActions;
     private final Map<String,IInputAction<SessionsInput,SessionsOutput>>           sessionsInputActions;
     private final Map<String,IOutputAction<GetSessionsOutputRequest,SessionsOutput>> sessionsOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
@@ -135,6 +156,21 @@ class GraniteFrontEndControllerService
         feedbackReviewOutputActions =
             Map.of(
                 "Feedback.All->FeedbackReviewView",new InitializeFeedbackReviewView(feedbackReviewLoader,requestContext));
+
+        SurveyReviewLoader surveyReviewLoader = new SurveyReviewLoader(context.getHelpServiceClients(),userQueryClient);
+
+        surveyInputActions =
+            Map.of(
+                "Survey.New->Submit->SurveyView",new SubmitSurveyView(context.getHelpServiceClients(),requestContext));
+        surveyOutputActions =
+            Map.of(
+                "Survey.New->SurveyView",new InitializeSurveyView(requestContext));
+        surveyReviewInputActions =
+            Map.of(
+                "Survey.All->Save->SurveyReviewView",new SaveSurveyReviewView(context.getHelpServiceClients(),surveyReviewLoader,requestContext));
+        surveyReviewOutputActions =
+            Map.of(
+                "Survey.All->SurveyReviewView",new InitializeSurveyReviewView(surveyReviewLoader,requestContext));
 
         SessionsLoader sessionsLoader = new SessionsLoader(sessionQueryClient,userQueryClient);
 
@@ -204,6 +240,34 @@ class GraniteFrontEndControllerService
     getFeedbackReviewOutput(GetFeedbackReviewOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(feedbackReviewOutputActions,context),GetFeedbackReviewOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleSurveyInputReply>
+    handleSurveyInput(HandleSurveyInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(surveyInputActions,context),HandleSurveyInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetSurveyOutputReply>
+    getSurveyOutput(GetSurveyOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(surveyOutputActions,context),GetSurveyOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleSurveyReviewInputReply>
+    handleSurveyReviewInput(HandleSurveyReviewInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(surveyReviewInputActions,context),HandleSurveyReviewInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetSurveyReviewOutputReply>
+    getSurveyReviewOutput(GetSurveyReviewOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(surveyReviewOutputActions,context),GetSurveyReviewOutputReply::new);
     }
 
     @Override

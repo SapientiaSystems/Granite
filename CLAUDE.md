@@ -1,6 +1,6 @@
 # Granite
 
-Multi-service Spring Boot system (User, Session, Feedback, FrontEndController, Gateway, Outbox) with a React web front end. Each service has its own `CLAUDE.md` (`Claude.md` for User, Session and Feedback); read it before changing that service.
+Multi-service Spring Boot system (User, Session, Feedback, Survey, FrontEndController, Gateway, Outbox) with a React web front end. Each service has its own `CLAUDE.md` (`Claude.md` for User, Session, Feedback and Survey); read it before changing that service.
 
 ## Extending Granite
 
@@ -10,6 +10,7 @@ An application (for example Poplar) reuses Granite by extending the entry config
 - Session: `applicationRoles` seam, login gate, Okta role assignment (`Microservices/Granite.Session/Claude.md`)
 - FrontEndController: `AbstractGraniteFrontEndControllerConfiguration`, `GraniteFrontEndControllerContext`, the protected `cookieNames()` seam (cookie prefix) and the singleton `sessionCookies()` bean built from it at startup, controller recipe (`Microservices/Granite.FrontEndController/CLAUDE.md`); set `granite.frontendcontroller.ssl-bundle` (default `granite-services`) to use the application's own SSL bundle for all downstream FEC clients
 - Feedback: `AbstractGraniteFeedbackServerConfiguration`, `GraniteFeedbackCommandServerConfiguration`, `GraniteFeedbackQueryServerConfiguration` (`Microservices/Granite.Feedback/Claude.md`); the FEC reaches it through `GraniteHelpServiceClients` (`createHelpServiceClients()`, `createFeedbackCommandClient()`, `createFeedbackQueryClient()`)
+- Survey: `AbstractGraniteSurveyServerConfiguration`, `GraniteSurveyCommandServerConfiguration`, `GraniteSurveyQueryServerConfiguration` (`Microservices/Granite.Survey/Claude.md`); questions are fixed in `GraniteSurveyQuestions` (Java and TS); the FEC reaches it through `GraniteHelpServiceClients` (`createSurveyCommandClient()`, `createSurveyQueryClient()`)
 - Gateway: `configureApplicationRoutes`, `configureApplicationAuthorization`, `getUsersReaderAuthorities(Environment)`, the overridable `cookieNames(Environment)` `@Bean` (`granite.cookies.prefix`) (`Microservices/Granite.Gateway/CLAUDE.md`)
 
 ### Role catalog
@@ -36,6 +37,7 @@ Import from the published subpaths:
 - `granite.web.authentication/Login`: `LoginView`, `LoginCallbackView`, `LoginForm`, `ReauthenticationDialog` (rendered by `AuthenticationProvider`), `UserMenu({ preferencesPath?, loginPath = "/login", items?, className?, style? })`
 - `granite.web.user/Users`: `UsersView({ service?, height = "100%", className?, style? })`, default service `frontendcontroller-user-service`; authorities are edited as a pick list of the role catalog with hierarchy cascade
 - `granite.web.feedback/Feedback`: `FeedbackView({ service?, className?, style? })`, the Help view's Provide Feedback form (any signed-in user; per-type fields; thank-you screen). `granite.web.feedback/Review`: `FeedbackReviewView({ service?, height?, className?, style? })`, the admin grid (readers view; `ROLE_ADMIN` edits status `NEW`/`SENT`/`RECEIVED` and notes, then Save)
+- `granite.web.survey/Survey`: `SurveyView({ service?, onDismiss?, className?, style? })`, the Help view's Take Survey form (any signed-in user; questions from the FEC output, falling back to `GRANITE_SURVEY_QUESTIONS`; thank-you screen whose Dismiss calls `onDismiss`). `granite.web.survey/Review`: `SurveyReviewView({ service?, height?, className?, style? })`, the admin grid (one column per question, per-question averages in the toolbar; readers view; `ROLE_ADMIN` edits status and notes, then Save)
 - `granite.web.session/Sessions`: `SessionsView({ service?, height = "100%", className?, style? })`, default service `frontendcontroller-user-service`; read-only grid of open sessions (switch to include closed ones) with user names and a values detail row; `ROLE_ADMIN` can end selected sessions (closed as `ADMIN`), never the caller's own. Readers are the Gateway's `getUsersReaderAuthorities` on `get-sessions-output`; `handle-sessions-input` is admin-only
 - `granite.web.account/Preference`: `PreferencesProvider`, `PreferencesView({ userName, userRole, children })`, `usePreference`
 
@@ -60,7 +62,7 @@ An application frame (providers, its own header, routes); `MantineProvider` sits
 
 `UsersView` and `UserMenu` are self-contained (inline layout and colours from the Mantine theme, no AppHost CSS needed); they keep the `view-container`, `view-toolbar` and `app-bar-user-menu` class names as hooks and accept `className` and `style` to adapt them. Runtime configuration is `window.__GRANITE_CONFIG__.apiBaseUrl` (served as `config.js`). In a route component derive the Preferences props with `const { state } = useAuthentication();`, `userName={state.userName ?? ""}` and a role label from `state.authorities` (for example the first entry or a join).
 
-`Granite.Web.Navigator` (`MenuBar`, Home, Help, Account) is Granite's own frame; an application builds its own instead of reusing it. Yarn build order: authentication, user, session, feedback, account, navigator.
+`Granite.Web.Navigator` (`MenuBar`, Home, Help, Account) is Granite's own frame; an application builds its own instead of reusing it. Yarn build order: authentication, user, session, feedback, survey, account, navigator.
 
 ### Okta properties (Session)
 
@@ -94,7 +96,7 @@ An application frame (providers, its own header, routes); `MantineProvider` sits
 
 Public Gateway paths in `production`: health, `issue-service-token` (rate limited), the static app and the public FEC `LoginView` inputs. Session `login` and `refresh` are public only outside `production`; in `production` they require `SCOPE_internal` like every other User, Session and Outbox path, so only the FEC (which sends its service token on every Session call) reaches them, and browser login keeps going through the FEC.
 
-Production Ingress: the `production` overlay removes `/user-command-service`, `/user-query-service`, `/session-command-service`, `/session-query-service`, `/feedback-command-service`, `/feedback-query-service` and `/outbox-service` from `granite-ingress` (JSON-patch `test` + `remove`), so only the FEC paths, `/gateway-service` and the web app are published; `development`, `local` and `test` keep them. The FEC reaches those services through the in-cluster Gateway service.
+Production Ingress: the `production` overlay removes `/user-command-service`, `/user-query-service`, `/session-command-service`, `/session-query-service`, `/feedback-command-service`, `/feedback-query-service`, `/survey-command-service`, `/survey-query-service` and `/outbox-service` from `granite-ingress` (JSON-patch `test` + `remove`), so only the FEC paths, `/gateway-service` and the web app are published; `development`, `local` and `test` keep them. The FEC reaches those services through the in-cluster Gateway service.
 
 ### Service tokens
 

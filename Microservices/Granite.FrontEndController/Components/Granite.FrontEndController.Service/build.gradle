@@ -83,6 +83,7 @@ dependencies {
     api "strata.foundation:strata-foundation-core:$strata_foundation_version"
     api "granite.user:granite-user-service:$version"
     api "granite.feedback:granite-feedback-service:$version"
+    api "granite.survey:granite-survey-service:$version"
     api 'org.springframework.security:spring-security-core:6.2.1'
     api "org.springframework.boot:spring-boot-starter-web:$springboot_version"
 }

@@ -15,6 +15,7 @@ const menuTabs: Array<IMenuTab> =
     { label: "Users",  path: "/users" },
     { label: "Sessions",     path: "/sessions" },
     { label: "Feedback",     path: "/feedback" },
+    { label: "Surveys",      path: "/surveys" },
     { label: "Help",         path: "/help" },
 ];
 

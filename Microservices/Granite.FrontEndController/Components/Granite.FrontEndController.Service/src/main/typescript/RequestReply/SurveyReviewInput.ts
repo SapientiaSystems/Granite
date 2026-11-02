@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// Granite.FrontEndController.Service
+//////////////////////////////////////////////////////////////////////////////
+
+import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
+import type { UpdateSurveyResponseData } from "granite.survey.service/RequestReply";
+
+export
+interface SurveyReviewInput
+    extends FrontEndInput
+{
+    changes: Array<UpdateSurveyResponseData>;
+}
+
+//////////////////////////////////////////////////////////////////////////////

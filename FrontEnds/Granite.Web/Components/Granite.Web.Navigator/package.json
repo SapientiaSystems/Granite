@@ -25,6 +25,7 @@
         "granite.web.account": "1.0.0-snapshot",
         "granite.web.authentication": "1.0.0-snapshot",
         "granite.web.feedback": "1.0.0-snapshot",
+        "granite.web.survey": "1.0.0-snapshot",
         "react": "^19.0.0",
         "react-router-dom": "^7.0.0",
         "strata.client.core": "0.0.0-snapshot",

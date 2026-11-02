@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings>
+    xmlns="http://java.sun.com/xml/ns/persistence/orm"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="1.0"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd">
+    <description>Survey object relational entity mappings</description>
+
+    <entity class="granite.survey.server.domain.SurveyResponse" access="PROPERTY">
+        <table name="SurveyResponse"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <attributes>
+            <id name="primaryId">
+                <column name="responseId"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="created">
+                <column name="created"/>
+            </basic>
+            <basic name="lastModified">
+                <column name="lastModified"/>
+            </basic>
+            <basic name="userId" optional="false">
+                <column name="userId" nullable="false"/>
+            </basic>
+            <basic name="answers" access="FIELD">
+                <column name="answers" column-definition="TEXT"/>
+                <convert converter="granite.survey.server.domain.IntegerMapConverter"/>
+            </basic>
+            <basic name="comment">
+                <column name="comment" column-definition="TEXT"/>
+            </basic>
+            <basic name="status" optional="false">
+                <column name="status" nullable="false" column-definition="VARCHAR(32)"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="notes">
+                <column name="notes" column-definition="TEXT"/>
+            </basic>
+            <basic name="sent">
+                <column name="sent"/>
+            </basic>
+            <basic name="received">
+                <column name="received"/>
+            </basic>
+            <basic name="submitted">
+                <column name="submitted"/>
+            </basic>
+            <basic name="changed">
+                <column name="changed"/>
+            </basic>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <transient name="self"/>
+            <transient name="observers"/>
+            <transient name="responseId"/>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -2,14 +2,14 @@
 // Granite.Web.Navigator
 //////////////////////////////////////////////////////////////////////////////
 
-import React, { useEffect, useRef, useState }  from "react";
+import { useEffect, useRef, useState }         from "react";
 import type { ReactElement }                   from "react";
 import { ActionIcon, Button, Group, Paper,
-         Slider, Stack, Tabs, Text,
-         Textarea, TextInput, Title,
+         Stack, Tabs, Text, TextInput, Title,
          useComputedColorScheme }              from "@mantine/core";
 import { useDisclosure }                       from "@mantine/hooks";
 import { FeedbackView }                        from "granite.web.feedback/Feedback";
+import { SurveyView }                          from "granite.web.survey/Survey";
 import { AgGridReact }                         from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry,
          themeQuartz }                         from "ag-grid-community";
@@ -47,13 +47,6 @@ interface IDiagnosticCheck
     readonly details:     string;
 }
 
-interface ISurveyQuestion
-{
-    readonly key:    "satisfied" | "needs" | "recommend";
-    readonly label:  string;
-    readonly labels: Record<number, string>;
-}
-
 const helpSections: Array<IHelpSection> =
 [
     { name: "Search Help",                 description: "Search documentation and guides" },
@@ -62,55 +55,6 @@ const helpSections: Array<IHelpSection> =
     { name: "Take Survey",                 description: "Share your experience with Granite" },
     { name: "View Diagnostics",            description: "System health and connectivity" },
     { name: "About Granite",            description: "Version and application information" },
-];
-
-const surveyMarks: Array<{ value: number; label: string }> =
-[
-    { value: 1, label: "1" },
-    { value: 2, label: "2" },
-    { value: 3, label: "3" },
-    { value: 4, label: "4" },
-    { value: 5, label: "5" },
-];
-
-const surveyQuestions: Array<ISurveyQuestion> =
-[
-    {
-        key:   "satisfied",
-        label: "Overall, how satisfied are you with Granite?",
-        labels:
-        {
-            1: "Very dissatisfied",
-            2: "Dissatisfied",
-            3: "Neutral",
-            4: "Satisfied",
-            5: "Very satisfied",
-        },
-    },
-    {
-        key:   "needs",
-        label: "How well does Granite meet your day-to-day needs?",
-        labels:
-        {
-            1: "Not at all",
-            2: "Slightly",
-            3: "Moderately",
-            4: "Very well",
-            5: "Extremely well",
-        },
-    },
-    {
-        key:   "recommend",
-        label: "How likely are you to recommend Granite to a colleague?",
-        labels:
-        {
-            1: "Not at all likely",
-            2: "Unlikely",
-            3: "Neutral",
-            4: "Likely",
-            5: "Extremely likely",
-        },
-    },
 ];
 
 const helpArticles: Array<IHelpArticle> =
@@ -280,9 +224,6 @@ export function HelpView(): ReactElement
     const [chatInput, setChatInput]           = useState("");
     const chatContainerRef                    = useRef<HTMLDivElement>(null);
 
-    const [surveyValues, setSurveyValues]       = useState<{ satisfied: number | null; needs: number | null; recommend: number | null }>({ satisfied: null, needs: null, recommend: null });
-    const [surveyComment, setSurveyComment]     = useState("");
-    const [surveySubmitted, setSurveySubmitted] = useState(false);
 
     const colorScheme = useComputedColorScheme("light");
     const isDark      = colorScheme === "dark";
@@ -303,7 +244,6 @@ export function HelpView(): ReactElement
     function handleTabChange(v: string | null): void
     {
         setSelectedIndex(Number(v));
-        setSurveySubmitted(false);
     }
 
     function handleNavigate(articleId: string): void
@@ -429,93 +369,6 @@ export function HelpView(): ReactElement
                         size="sm"
                     />
                     <Button variant="filled" size="sm" color="blue" onClick={handleSendMessage}>Send</Button>
-                </Group>
-            </Stack>
-        );
-    }
-
-    function renderSurvey(): ReactElement
-    {
-        if (surveySubmitted)
-        {
-            return (
-                <Stack gap="md" p="md" align="center" justify="center"
-                       style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg }}>
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2b8a3e"
-                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="9 12 12 15 16 9" />
-                    </svg>
-                    <Title order={3}>Thank You</Title>
-                    <Text size="sm" c="dimmed">Your survey has been submitted successfully.</Text>
-                    <Button variant="light" size="sm" color="blue" onClick={() =>
-                    {
-                        setSurveySubmitted(false);
-                        setSurveyValues({ satisfied: null, needs: null, recommend: null });
-                        setSurveyComment("");
-                        setSelectedIndex(0);
-                    }}>
-                        Dismiss
-                    </Button>
-                </Stack>
-            );
-        }
-
-        const canSubmit: boolean = surveyValues.satisfied !== null
-                                && surveyValues.needs     !== null
-                                && surveyValues.recommend !== null;
-
-        return (
-            <Stack gap="lg" p="md" style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg, overflowY: "auto" }}>
-                <Title order={3} style={{ flexShrink: 0 }}>Take Survey</Title>
-
-                <div style={{ display: "grid", gridTemplateColumns: "auto 240px", gap: "24px 16px", alignItems: "center", justifyContent: "start" }}>
-                    {surveyQuestions.map(q =>
-                    {
-                        const value: number | null = surveyValues[q.key];
-
-                        return (
-                            <React.Fragment key={q.key}>
-                                <Text size="md" fw={600} style={{ textAlign: "right", paddingRight: 24 }}>
-                                    {q.label}
-                                </Text>
-                                <div style={{ paddingBottom: 24 }}>
-                                    <Slider
-                                        min={1}
-                                        max={5}
-                                        step={1}
-                                        marks={surveyMarks}
-                                        value={value ?? 1}
-                                        onChange={(v) => setSurveyValues(prev => ({ ...prev, [q.key]: v }))}
-                                        label={(v) => value !== null ? q.labels[v] : null}
-                                        labelAlwaysOn={value !== null}
-                                        color="teal.8"
-                                        styles={{
-                                            thumb: { opacity: value === null ? 0 : 1, transition: "opacity 150ms ease" },
-                                            track: { opacity: value === null ? 0.4 : 1, transition: "opacity 150ms ease" },
-                                            label: { top: "unset", bottom: -30, fontSize: 11, whiteSpace: "nowrap" },
-                                        }}
-                                    />
-                                </div>
-                            </React.Fragment>
-                        );
-                    })}
-                </div>
-
-                <Textarea
-                    label="What's one thing we could improve about Granite?"
-                    placeholder="Share your thoughts..."
-                    value={surveyComment}
-                    onChange={(e) => setSurveyComment(e.currentTarget.value)}
-                    minRows={3}
-                    size="sm"
-                />
-
-                <Group>
-                    <Button variant="filled" size="sm" color="blue" disabled={!canSubmit}
-                            onClick={() => setSurveySubmitted(true)}>
-                        Submit Survey
-                    </Button>
                 </Group>
             </Stack>
         );
@@ -670,7 +523,7 @@ export function HelpView(): ReactElement
                 {selectedIndex === 0 && renderSearchHelp()}
                 {selectedIndex === 1 && renderChat()}
                 {selectedIndex === 2 && <FeedbackView style={{ background: viewBg }} />}
-                {selectedIndex === 3 && renderSurvey()}
+                {selectedIndex === 3 && <SurveyView style={{ background: viewBg }} onDismiss={() => setSelectedIndex(0)} />}
                 {selectedIndex === 4 && renderDiagnostics()}
                 {selectedIndex === 5 && renderAbout()}
             </Group>

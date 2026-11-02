@@ -13,6 +13,7 @@ dependencies {
     testImplementation "granite.user:granite-user-service:$version"
     testImplementation "granite.user:granite-user-client:$version"
     testImplementation "granite.feedback:granite-feedback-service:$version"
+    testImplementation "granite.survey:granite-survey-service:$version"
     testImplementation "strata.foundation:strata-foundation-kafka:$strata_foundation_version"
     testImplementation "org.springframework.boot:spring-boot-starter:$springboot_version"
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springboot_version"

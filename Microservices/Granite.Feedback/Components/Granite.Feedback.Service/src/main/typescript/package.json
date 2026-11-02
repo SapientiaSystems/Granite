@@ -1,6 +1,6 @@
 {
   "name": "granite.feedback.service",
-  "version": "1.0.0-snapshot.1793596071327",
+  "version": "1.0.0-snapshot.1793598032324",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",

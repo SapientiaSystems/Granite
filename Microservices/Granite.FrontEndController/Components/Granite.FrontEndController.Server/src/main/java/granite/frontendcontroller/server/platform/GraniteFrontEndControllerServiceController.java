@@ -5,13 +5,21 @@
 package granite.frontendcontroller.server.platform;
 
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSurveyInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSurveyInputReply;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetSurveyOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.GetSurveyOutputReply;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSurveyReviewInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSurveyReviewInputReply;
 import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetSurveyReviewOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputReply;
+import granite.frontendcontroller.service.requestreply.GetSurveyReviewOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -105,6 +113,46 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating getFeedbackReviewOutput to implementation service");
         return getService().getFeedbackReviewOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-survey-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleSurveyInputReply>
+    handleSurveyInput(@RequestBody HandleSurveyInputRequest request)
+    {
+        getLogger().info("delegating handleSurveyInput to implementation service");
+        return getService().handleSurveyInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-survey-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetSurveyOutputReply>
+    getSurveyOutput(@RequestBody GetSurveyOutputRequest request)
+    {
+        getLogger().info("delegating getSurveyOutput to implementation service");
+        return getService().getSurveyOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-survey-review-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleSurveyReviewInputReply>
+    handleSurveyReviewInput(@RequestBody HandleSurveyReviewInputRequest request)
+    {
+        getLogger().info("delegating handleSurveyReviewInput to implementation service");
+        return getService().handleSurveyReviewInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-survey-review-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetSurveyReviewOutputReply>
+    getSurveyReviewOutput(@RequestBody GetSurveyReviewOutputRequest request)
+    {
+        getLogger().info("delegating getSurveyReviewOutput to implementation service");
+        return getService().getSurveyReviewOutput(request);
     }
 
     @PostMapping(
