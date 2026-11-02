@@ -450,8 +450,12 @@ if (-not [string]::IsNullOrWhiteSpace($env:ANTHROPIC_API_KEY)) {
     Write-Host "  Deployed granite-agent-claude-api from ANTHROPIC_API_KEY." -ForegroundColor Green
 }
 else {
-    kubectl get secret granite-agent-claude-api --namespace=$Namespace *> $null
-    if ($LASTEXITCODE -eq 0) {
+    $previousPreference    = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    kubectl get secret granite-agent-claude-api --namespace=$Namespace 2>&1 | Out-Null
+    $claudeSecretExit      = $LASTEXITCODE
+    $ErrorActionPreference = $previousPreference
+    if ($claudeSecretExit -eq 0) {
         Write-Host "  Keeping the existing granite-agent-claude-api secret." -ForegroundColor Green
     }
     else {
