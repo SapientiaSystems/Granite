@@ -22,6 +22,8 @@ import {
     ResolveSessionReply,
     ResolveSessionRequest,
     IssueServiceTokenReply,
+    IssueDelegatedTokenReply,
+    IssueDelegatedTokenRequest,
     IssueServiceTokenRequest
 } from "granite.session.service/RequestReply";
 
@@ -120,6 +122,13 @@ class SessionCommandServiceClient
         console.log("SessionCommandServiceClient.issueServiceToken");
         return this.doPost<IssueServiceTokenReply,IssueServiceTokenRequest>(
             "issue-service-token",
+            this.initializeRequest(request));
+    }
+
+    issueDelegatedToken(request: IssueDelegatedTokenRequest): ICompletionStage<IssueDelegatedTokenReply>
+    {
+        return this.doPost<IssueDelegatedTokenReply,IssueDelegatedTokenRequest>(
+            "issue-delegated-token",
             this.initializeRequest(request));
     }
 

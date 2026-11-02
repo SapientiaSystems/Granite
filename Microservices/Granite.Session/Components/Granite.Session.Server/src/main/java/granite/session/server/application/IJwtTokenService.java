@@ -19,6 +19,9 @@ interface IJwtTokenService
     String
     mintServiceToken(String subject,Collection<String> authorities,Duration lifetime);
 
+    String
+    mintDelegated(Session session,String actor,Duration lifetime);
+
     JwtVerificationResult
     verifySignatureAndExp(String jwt) throws JwtVerificationException;
 

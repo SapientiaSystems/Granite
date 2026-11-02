@@ -4,6 +4,9 @@
 
 package granite.frontendcontroller.server.application;
 
+import granite.agent.client.requestreply.IAgentCommandServiceClient;
+import granite.agent.client.requestreply.IAgentQueryServiceClient;
+import granite.content.client.requestreply.IContentQueryServiceClient;
 import granite.feedback.client.requestreply.IFeedbackCommandServiceClient;
 import granite.feedback.client.requestreply.IFeedbackQueryServiceClient;
 import granite.survey.client.requestreply.ISurveyCommandServiceClient;
@@ -19,6 +22,9 @@ class GraniteHelpServiceClients
     private Supplier<IFeedbackQueryServiceClient>   feedbackQueryClient;
     private Supplier<ISurveyCommandServiceClient>   surveyCommandClient;
     private Supplier<ISurveyQueryServiceClient>     surveyQueryClient;
+    private Supplier<IContentQueryServiceClient>    contentQueryClient;
+    private Supplier<IAgentCommandServiceClient>    agentCommandClient;
+    private Supplier<IAgentQueryServiceClient>      agentQueryClient;
 
     public
     GraniteHelpServiceClients()
@@ -27,6 +33,9 @@ class GraniteHelpServiceClients
         feedbackQueryClient   = unavailable("feedback query");
         surveyCommandClient   = unavailable("survey command");
         surveyQueryClient     = unavailable("survey query");
+        contentQueryClient    = unavailable("content query");
+        agentCommandClient    = unavailable("agent command");
+        agentQueryClient      = unavailable("agent query");
     }
 
     public GraniteHelpServiceClients
@@ -57,6 +66,27 @@ class GraniteHelpServiceClients
         return this;
     }
 
+    public GraniteHelpServiceClients
+    setContentQueryClient(Supplier<IContentQueryServiceClient> supplier)
+    {
+        contentQueryClient = memoize(Objects.requireNonNull(supplier,"supplier"));
+        return this;
+    }
+
+    public GraniteHelpServiceClients
+    setAgentCommandClient(Supplier<IAgentCommandServiceClient> supplier)
+    {
+        agentCommandClient = memoize(Objects.requireNonNull(supplier,"supplier"));
+        return this;
+    }
+
+    public GraniteHelpServiceClients
+    setAgentQueryClient(Supplier<IAgentQueryServiceClient> supplier)
+    {
+        agentQueryClient = memoize(Objects.requireNonNull(supplier,"supplier"));
+        return this;
+    }
+
     public IFeedbackCommandServiceClient
     getFeedbackCommandClient() { return feedbackCommandClient.get(); }
 
@@ -68,6 +98,15 @@ class GraniteHelpServiceClients
 
     public ISurveyQueryServiceClient
     getSurveyQueryClient() { return surveyQueryClient.get(); }
+
+    public IContentQueryServiceClient
+    getContentQueryClient() { return contentQueryClient.get(); }
+
+    public IAgentCommandServiceClient
+    getAgentCommandClient() { return agentCommandClient.get(); }
+
+    public IAgentQueryServiceClient
+    getAgentQueryClient() { return agentQueryClient.get(); }
 
     private static <T> Supplier<T>
     unavailable(String name)

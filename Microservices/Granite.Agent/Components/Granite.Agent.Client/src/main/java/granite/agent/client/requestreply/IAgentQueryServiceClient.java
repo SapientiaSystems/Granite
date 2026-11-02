@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IAgentQueryServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.agent.client.requestreply;
+
+import granite.agent.service.requestreply.IAgentQueryService;
+
+public
+interface IAgentQueryServiceClient
+    extends IAgentQueryService
+{
+    IAgentQueryServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

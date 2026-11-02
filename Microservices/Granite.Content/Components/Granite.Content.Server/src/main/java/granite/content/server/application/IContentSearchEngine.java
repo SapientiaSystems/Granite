@@ -1,0 +1,19 @@
+//////////////////////////////////////////////////////////////////////////////
+// IContentSearchEngine.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.content.server.application;
+
+import granite.content.server.domain.ContentDocument;
+import granite.content.service.requestreply.ContentHitData;
+
+import java.util.List;
+
+public
+interface IContentSearchEngine
+{
+    List<ContentHitData>
+    search(List<ContentDocument> candidates,String query,int limit);
+}
+
+//////////////////////////////////////////////////////////////////////////////

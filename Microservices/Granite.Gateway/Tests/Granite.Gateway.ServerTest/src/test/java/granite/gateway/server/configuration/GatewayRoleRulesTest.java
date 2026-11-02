@@ -138,6 +138,64 @@ class GatewayRoleRulesTest
 
     @Test
     public void
+    delegatedTokensAreIssuedOnlyToServiceTokens()
+        throws Exception
+    {
+        assertForbidden(HttpMethod.POST,"/session-command-service/issue-delegated-token",backend.sign(List.of("ROLE_ADMIN")));
+        assertAllowed(HttpMethod.POST,"/session-command-service/issue-delegated-token",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/session-command-service/issue-delegated-token",null));
+    }
+
+    @Test
+    public void
+    agentMatrix()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String user    = backend.sign(List.of("ROLE_USER"));
+
+        for (String token : List.of(admin,auditor,user))
+        {
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-agent-output",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-agent-input",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-agent-input",token);
+        }
+
+        assertAllowed(HttpMethod.POST,"/agent-query-service/find-agent-conversations",auditor);
+        assertForbidden(HttpMethod.POST,"/agent-query-service/find-agent-conversations",user);
+        assertForbidden(HttpMethod.POST,"/agent-command-service/send-agent-message",auditor);
+        assertAllowed(HttpMethod.POST,"/agent-command-service/send-agent-message",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-agent-input",null));
+    }
+
+    @Test
+    public void
+    contentMatrix()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String user    = backend.sign(List.of("ROLE_USER"));
+
+        for (String token : List.of(admin,auditor,user))
+        {
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-content-output",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-content-output",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-content-input",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-content-input",token);
+        }
+
+        assertAllowed(HttpMethod.POST,"/content-query-service/search-content",auditor);
+        assertForbidden(HttpMethod.POST,"/content-query-service/search-content",user);
+        assertAllowed(HttpMethod.POST,"/content-command-service/upsert-content-documents",admin);
+        assertForbidden(HttpMethod.POST,"/content-command-service/upsert-content-documents",auditor);
+        assertAllowed(HttpMethod.POST,"/content-command-service/upsert-content-documents",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/get-content-output",null));
+    }
+
+    @Test
+    public void
     surveyMatrix()
         throws Exception
     {

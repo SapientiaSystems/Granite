@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+    id "com.google.cloud.tools.jib" version "3.4.2"
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/java','.build/generated-java']
+    main.resources.srcDirs = ['src/main/resources','src/main/schema']
+    test.java.srcDirs = ['src/unused']
+    test.resources.srcDirs = ['src/unused']
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+dependencies {
+    implementation project(":Components:Granite.Content.Server")
+}
+
+jib {
+    from {
+        image = "amazoncorretto:23-alpine"
+        auth {
+            username = "$System.env.DOCKER_USER"
+            password = "$System.env.DOCKER_PASSWORD"
+        }
+    }
+    to {
+        image = "ghcr.io/johnliebenau/granite/granite-content-commandhost"
+        tags = ["${version}","latest"]
+        auth {
+            username = "$System.env.REPOSITORY_USER"
+            password = "$System.env.REPOSITORY_PASSWORD"
+        }
+    }
+    container {
+        environment = [PROPERTIES_ENCRYPTION_KEY:""+"$System.env.PROPERTIES_ENCRYPTION_KEY"]
+        jvmFlags = ["-Xmx1024m"]
+        extraClasspath = [".build/libs/Granite.Content.CommandHost-${version}.jar"]
+        mainClass = "granite.content.commandhost.main.ContentCommandHost"
+        ports = ['8093']
+        format = 'OCI'
+    }
+}

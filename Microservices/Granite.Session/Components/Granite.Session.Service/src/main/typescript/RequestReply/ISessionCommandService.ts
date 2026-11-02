@@ -17,6 +17,8 @@ import {ResolveSessionRequest} from "./ResolveSessionRequest";
 import {ResolveSessionReply} from "./ResolveSessionReply";
 import {IssueServiceTokenRequest} from "./IssueServiceTokenRequest";
 import {IssueServiceTokenReply} from "./IssueServiceTokenReply";
+import {IssueDelegatedTokenRequest} from "./IssueDelegatedTokenRequest";
+import {IssueDelegatedTokenReply} from "./IssueDelegatedTokenReply";
 
 export
 interface ISessionCommandService
@@ -47,4 +49,7 @@ interface ISessionCommandService
 
     issueServiceToken(request: IssueServiceTokenRequest):
         ICompletionStage<IssueServiceTokenReply>;
+
+    issueDelegatedToken(request: IssueDelegatedTokenRequest):
+        ICompletionStage<IssueDelegatedTokenReply>;
 }

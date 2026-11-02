@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings>
+    xmlns="http://java.sun.com/xml/ns/persistence/orm"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="1.0"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd">
+    <description>Content object relational entity mappings</description>
+
+    <entity class="granite.content.server.domain.ContentDocument" access="PROPERTY">
+        <table name="ContentDocument"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <attributes>
+            <id name="primaryId">
+                <column name="documentId"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="created">
+                <column name="created"/>
+            </basic>
+            <basic name="lastModified">
+                <column name="lastModified"/>
+            </basic>
+            <basic name="documentKey" optional="false">
+                <column name="documentKey" nullable="false" unique="true" column-definition="VARCHAR(255)"/>
+            </basic>
+            <basic name="title" optional="false">
+                <column name="title" nullable="false" column-definition="VARCHAR(512)"/>
+            </basic>
+            <basic name="kind" optional="false">
+                <column name="kind" nullable="false" column-definition="VARCHAR(32)"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="format" optional="false">
+                <column name="format" nullable="false" column-definition="VARCHAR(32)"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="body">
+                <column name="body" column-definition="TEXT"/>
+            </basic>
+            <basic name="keywords" access="FIELD">
+                <column name="keywords" column-definition="TEXT"/>
+                <convert converter="granite.content.server.domain.StringListConverter"/>
+            </basic>
+            <basic name="requiredAuthorities" access="FIELD">
+                <column name="requiredAuthorities" column-definition="TEXT"/>
+                <convert converter="granite.content.server.domain.StringSetConverter"/>
+            </basic>
+            <basic name="source">
+                <column name="source" column-definition="VARCHAR(255)"/>
+            </basic>
+            <basic name="contentVersion">
+                <column name="contentVersion" column-definition="VARCHAR(64)"/>
+            </basic>
+            <basic name="changed">
+                <column name="changed"/>
+            </basic>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <transient name="self"/>
+            <transient name="observers"/>
+            <transient name="documentId"/>
+        </attributes>
+    </entity>
+</entity-mappings>

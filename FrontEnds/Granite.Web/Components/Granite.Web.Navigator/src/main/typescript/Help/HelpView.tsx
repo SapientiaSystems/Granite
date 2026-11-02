@@ -2,14 +2,15 @@
 // Granite.Web.Navigator
 //////////////////////////////////////////////////////////////////////////////
 
-import { useEffect, useRef, useState }         from "react";
+import { useState }                            from "react";
 import type { ReactElement }                   from "react";
-import { ActionIcon, Button, Group, Paper,
-         Stack, Tabs, Text, TextInput, Title,
-         useComputedColorScheme }              from "@mantine/core";
+import { ActionIcon, Group, Stack, Tabs, Text,
+         Title, useComputedColorScheme }       from "@mantine/core";
 import { useDisclosure }                       from "@mantine/hooks";
 import { FeedbackView }                        from "granite.web.feedback/Feedback";
 import { SurveyView }                          from "granite.web.survey/Survey";
+import { ContentSearchView }                   from "granite.web.content/Search";
+import { AgentChatView }                       from "granite.web.agent/Chat";
 import { AgGridReact }                         from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry,
          themeQuartz }                         from "ag-grid-community";
@@ -23,20 +24,6 @@ interface IHelpSection
 {
     readonly name:        string;
     readonly description: string;
-}
-
-interface IHelpArticle
-{
-    readonly id:         string;
-    readonly title:      string;
-    readonly keywords:   Array<string>;
-    readonly paragraphs: Array<string>;
-}
-
-interface IChatMessage
-{
-    readonly role: "user" | "assistant";
-    readonly text: string;
 }
 
 interface IDiagnosticCheck
@@ -55,65 +42,6 @@ const helpSections: Array<IHelpSection> =
     { name: "Take Survey",                 description: "Share your experience with Granite" },
     { name: "View Diagnostics",            description: "System health and connectivity" },
     { name: "About Granite",            description: "Version and application information" },
-];
-
-const helpArticles: Array<IHelpArticle> =
-[
-    {
-        id:       "getting-started",
-        title:    "Getting Started with Granite",
-        keywords: ["getting started", "introduction", "overview", "begin", "new user"],
-        paragraphs:
-        [
-            "Granite is a template application. Replace this content with your own getting-started material.",
-            "Navigate to {Users|users-help} from the main menu to view and manage records in the system.",
-            "The {Help|help-overview} section provides search, chat, feedback, survey, diagnostics, and application information.",
-        ],
-    },
-    {
-        id:       "users-help",
-        title:    "Working with Users",
-        keywords: ["entity", "manage", "list", "view"],
-        paragraphs:
-        [
-            "The Users view displays the records managed by the system in a sortable, filterable grid.",
-            "Click any row to inspect it. Use the toolbar to create, edit, and save records.",
-            "Each user has a unique id and user-defined fields. Replace this section with field-level documentation specific to your domain.",
-        ],
-    },
-    {
-        id:       "sessions-help",
-        title:    "Working with Sessions",
-        keywords: ["session", "sessions", "logged in", "sign out", "end session", "device"],
-        paragraphs:
-        [
-            "The Sessions view lists who is signed in: one row per open session, with the user, device, login method and activity times.",
-            "Turn on Include closed to also see recently closed sessions and why they closed. Expand a row to see the session values.",
-            "Administrators can select sessions and choose End to sign those users out. Your own current session cannot be ended from this view.",
-        ],
-    },
-    {
-        id:       "help-overview",
-        title:    "Help Center Overview",
-        keywords: ["help", "support", "overview"],
-        paragraphs:
-        [
-            "The Help center has six sections: Search Help, Chat With Virtual Assistant, Provide Feedback, Take Survey, View Diagnostics, and About Granite.",
-            "Use Search Help to find articles like this one. Use Chat for interactive Q&A. Use Provide Feedback to send a defect or suggestion.",
-            "View Diagnostics shows the current health of the system's integrations and services.",
-        ],
-    },
-    {
-        id:       "diagnostics-help",
-        title:    "Understanding Diagnostics",
-        keywords: ["diagnostic", "health", "status", "connectivity"],
-        paragraphs:
-        [
-            "The Diagnostics view shows the current health status of each system integration. Each check reports a status: passed, recovered, or failed.",
-            "Checks typically include database connectivity, event streaming (Kafka), authentication, and the health of individual microservices.",
-            "If a check fails, the Details column provides specific error information. Contact your platform team for persistent failures.",
-        ],
-    },
 ];
 
 const diagnosticChecks: Array<IDiagnosticCheck> =
@@ -169,209 +97,27 @@ const diagnosticColumnDefs: Array<ColDef> =
     { field: "details",     headerName: "Details",     flex: 1, wrapText: true, autoHeight: true          },
 ];
 
-function renderParagraph(
-    text:       string,
-    onNavigate: (id: string) => void,
-    key:        number,
-): ReactElement
-{
-    const parts: Array<ReactElement | string> = [];
-    const regex   = /\{([^|]+)\|([^}]+)\}/g;
-    let lastIndex = 0;
-    let match;
-    let partKey   = 0;
 
-    while ((match = regex.exec(text)) !== null)
-    {
-        if (match.index > lastIndex)
-        {
-            parts.push(text.slice(lastIndex, match.index));
-        }
-
-        const linkText  = match[1];
-        const articleId = match[2];
-
-        parts.push(
-            <span key={partKey++} style={{ color: "#339af0", cursor: "pointer", textDecoration: "underline" }}
-                  onClick={() => onNavigate(articleId)}>
-                {linkText}
-            </span>
-        );
-
-        lastIndex = regex.lastIndex;
-    }
-
-    if (lastIndex < text.length)
-    {
-        parts.push(text.slice(lastIndex));
-    }
-
-    return <Text key={key} size="sm" mb="xs">{parts}</Text>;
-}
 
 export function HelpView(): ReactElement
 {
     const [selectedIndex, setSelectedIndex]   = useState(0);
     const [opened, { toggle }]                = useDisclosure(true);
 
-    const [history, setHistory]               = useState<Array<string>>(["search"]);
-    const [historyIndex, setHistoryIndex]     = useState(0);
-    const [searchQuery, setSearchQuery]       = useState("");
 
-    const [chatMessages, setChatMessages]     = useState<Array<IChatMessage>>([
-        { role: "assistant", text: "Welcome to Granite Help. I am the Granite Virtual Assistant. How can I help you today?" },
-    ]);
-    const [chatInput, setChatInput]           = useState("");
-    const chatContainerRef                    = useRef<HTMLDivElement>(null);
 
 
     const colorScheme = useComputedColorScheme("light");
     const isDark      = colorScheme === "dark";
 
-    const topbarBg  = isDark ? "#353535" : "#d6d6d6";
     const sidebarBg = isDark ? "#3a3a3a" : "#e8e8e8";
     const viewBg    = isDark ? "#3e3e3e" : "#ffffff";
     const iconColor = isDark ? "#c1c2c5" : "#495057";
 
-    useEffect(() =>
-    {
-        if (chatContainerRef.current != null)
-        {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
-    }, [chatMessages]);
 
     function handleTabChange(v: string | null): void
     {
         setSelectedIndex(Number(v));
-    }
-
-    function handleNavigate(articleId: string): void
-    {
-        const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push(articleId);
-        setHistory(newHistory);
-        setHistoryIndex(newHistory.length - 1);
-    }
-
-    function handleBack(): void
-    {
-        if (historyIndex > 0)
-        {
-            setHistoryIndex(historyIndex - 1);
-        }
-    }
-
-    function handleForward(): void
-    {
-        if (historyIndex < history.length - 1)
-        {
-            setHistoryIndex(historyIndex + 1);
-        }
-    }
-
-    function handleSendMessage(): void
-    {
-        const text = chatInput.trim();
-
-        if (text.length === 0)
-        {
-            return;
-        }
-
-        const userMsg: IChatMessage = { role: "user",      text: text };
-        const botMsg:  IChatMessage = { role: "assistant", text: "This is a placeholder response. Wire in your actual assistant backend to replace it." };
-
-        setChatMessages(prev => [...prev, userMsg, botMsg]);
-        setChatInput("");
-    }
-
-    const currentView  = history[historyIndex];
-    const query        = searchQuery.trim().toLowerCase();
-    const searchResults = query.length > 0
-        ? helpArticles.filter(a =>
-            a.title.toLowerCase().includes(query) ||
-            a.keywords.some(k => k.includes(query)))
-        : helpArticles;
-
-    const currentArticle = currentView !== "search"
-        ? helpArticles.find(a => a.id === currentView) ?? null
-        : null;
-
-    function renderSearchHelp(): ReactElement
-    {
-        if (currentArticle != null)
-        {
-            return (
-                <Stack gap="md" p="md" style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg, overflowY: "auto" }}>
-                    <Title order={3} style={{ flexShrink: 0 }}>{currentArticle.title}</Title>
-                    {currentArticle.paragraphs.map((p, i) => renderParagraph(p, handleNavigate, i))}
-                </Stack>
-            );
-        }
-
-        return (
-            <Stack gap="md" p="md" style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg, overflowY: "auto" }}>
-                <Title order={3} style={{ flexShrink: 0 }}>
-                    {query.length > 0 ? `Search Results for "${searchQuery.trim()}"` : "Help Topics"}
-                </Title>
-                {searchResults.length === 0 && (
-                    <Text size="sm" c="dimmed">No articles found matching your search.</Text>
-                )}
-                {searchResults.map(article => (
-                    <Paper key={article.id} p="sm" withBorder style={{ cursor: "pointer" }}
-                           onClick={() => handleNavigate(article.id)}>
-                        <Text size="sm" c="#339af0" fw={500} style={{ textDecoration: "underline" }}>
-                            {article.title}
-                        </Text>
-                        <Text size="xs" c="dimmed" mt={4}>
-                            {article.paragraphs[0].replace(/\{([^|]+)\|[^}]+\}/g, "$1").slice(0, 150)}...
-                        </Text>
-                    </Paper>
-                ))}
-            </Stack>
-        );
-    }
-
-    function renderChat(): ReactElement
-    {
-        return (
-            <Stack gap={0} style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg }}>
-                <div ref={chatContainerRef} style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-                    <Stack gap="sm">
-                        {chatMessages.map((msg, i) => (
-                            <Group key={i} justify={msg.role === "user" ? "flex-end" : "flex-start"}>
-                                <Paper
-                                    p="sm"
-                                    radius="md"
-                                    style={{
-                                        maxWidth:   "70%",
-                                        background: msg.role === "user"
-                                            ? (isDark ? "#1971c2" : "#339af0")
-                                            : (isDark ? "#4a4a4a" : "#f1f3f5"),
-                                    }}
-                                >
-                                    <Text size="sm" c={msg.role === "user" ? "white" : undefined}>
-                                        {msg.text}
-                                    </Text>
-                                </Paper>
-                            </Group>
-                        ))}
-                    </Stack>
-                </div>
-                <Group gap="sm" p="md" style={{ flexShrink: 0, borderTop: "1px solid " + (isDark ? "#4a4a4a" : "#dee2e6") }}>
-                    <TextInput
-                        placeholder="Type a message..."
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.currentTarget.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") { handleSendMessage(); } }}
-                        style={{ flex: 1 }}
-                        size="sm"
-                    />
-                    <Button variant="filled" size="sm" color="blue" onClick={handleSendMessage}>Send</Button>
-                </Group>
-            </Stack>
-        );
     }
 
     function renderDiagnostics(): ReactElement
@@ -438,41 +184,6 @@ export function HelpView(): ReactElement
                         <line x1="3" y1="18" x2="21" y2="18" />
                     </svg>
                 </ActionIcon>
-                {selectedIndex === 0 && (
-                    <>
-                        <div style={{ width: opened ? 220 : 0, transition: "width 200ms ease", flexShrink: 0 }} />
-                        <ActionIcon variant="default" size="lg" style={{ background: topbarBg }}
-                                    disabled={historyIndex <= 0} onClick={handleBack}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                 fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12" />
-                                <polyline points="12 19 5 12 12 5" />
-                            </svg>
-                        </ActionIcon>
-                        <ActionIcon variant="default" size="lg" style={{ background: topbarBg }}
-                                    disabled={historyIndex >= history.length - 1} onClick={handleForward}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                 fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                                <polyline points="12 5 19 12 12 19" />
-                            </svg>
-                        </ActionIcon>
-                        <TextInput
-                            leftSection={
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={iconColor}
-                                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                </svg>
-                            }
-                            placeholder="Search help..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-                            size="sm"
-                            style={{ flex: 1, maxWidth: 400 }}
-                        />
-                    </>
-                )}
             </Group>
 
             <Group align="stretch" gap={0} wrap="nowrap" style={{ flex: 1, minHeight: 0 }}>
@@ -520,8 +231,8 @@ export function HelpView(): ReactElement
                     </div>
                 </nav>
 
-                {selectedIndex === 0 && renderSearchHelp()}
-                {selectedIndex === 1 && renderChat()}
+                {selectedIndex === 0 && <ContentSearchView style={{ background: viewBg }} />}
+                {selectedIndex === 1 && <AgentChatView style={{ background: viewBg }} />}
                 {selectedIndex === 2 && <FeedbackView style={{ background: viewBg }} />}
                 {selectedIndex === 3 && <SurveyView style={{ background: viewBg }} onDismiss={() => setSelectedIndex(0)} />}
                 {selectedIndex === 4 && renderDiagnostics()}

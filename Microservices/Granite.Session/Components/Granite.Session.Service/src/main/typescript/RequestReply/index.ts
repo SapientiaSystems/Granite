@@ -21,6 +21,8 @@ export {ResolveSessionRequest} from "./ResolveSessionRequest";
 export {ResolveSessionReply} from "./ResolveSessionReply";
 export {IssueServiceTokenRequest} from "./IssueServiceTokenRequest";
 export {IssueServiceTokenReply} from "./IssueServiceTokenReply";
+export {IssueDelegatedTokenRequest} from "./IssueDelegatedTokenRequest";
+export {IssueDelegatedTokenReply} from "./IssueDelegatedTokenReply";
 export {FindSessionsByKeyRequest} from "./FindSessionsByKeyRequest";
 export {FindSessionsByKeyReply} from "./FindSessionsByKeyReply";
 export {FindSessionsByKeySetRequest} from "./FindSessionsByKeySetRequest";

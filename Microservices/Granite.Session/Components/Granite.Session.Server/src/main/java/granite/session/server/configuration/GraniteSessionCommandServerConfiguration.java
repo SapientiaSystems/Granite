@@ -241,7 +241,8 @@ class GraniteSessionCommandServerConfiguration
                 new ServiceClientRegistration(
                     client.getKey(),
                     hash,
-                    Duration.parse(client.getValue().getOrDefault("lifetime","PT10M"))));
+                    Duration.parse(client.getValue().getOrDefault("lifetime","PT10M")),
+                    Boolean.parseBoolean(client.getValue().getOrDefault("delegation","false"))));
         }
 
         return new ServiceTokenIssuer(jwtTokenService,registrations);

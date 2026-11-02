@@ -323,6 +323,63 @@ kubectl create secret generic granite-fec-service-client \
 rm -rf "$fec_tmp_dir"
 if (( fec_status != 0 )); then exit "$fec_status"; fi
 
+# =============================================================================
+# Deploy Agent service client credential
+# =============================================================================
+AGENT_SECRET_FILE="$JWT_KEY_DIR/agent-service-client-secret"
+
+say "Checking Agent service client secret..." "$CYAN"
+agent_env_secret="${AGENT_SERVICE_CLIENT_SECRET:-}"
+if [[ -n "${agent_env_secret//[[:space:]]/}" ]]; then
+    agent_secret="$agent_env_secret"
+    say "  Using AGENT_SERVICE_CLIENT_SECRET from the environment." "$GREEN"
+elif [[ -s "$AGENT_SECRET_FILE" ]]; then
+    agent_secret="$(tr -d '\r\n' < "$AGENT_SECRET_FILE")"
+    say "  Using existing secret: $AGENT_SECRET_FILE" "$GREEN"
+else
+    say "  Generating Agent service client secret..." "$YELLOW"
+    mkdir -p "$(dirname "$AGENT_SECRET_FILE")"
+    agent_secret="$(openssl rand -base64 32 | tr -d '\r\n')"
+    printf '%s' "$agent_secret" > "$AGENT_SECRET_FILE"
+    chmod 600 "$AGENT_SECRET_FILE"
+    say "  Generated: $AGENT_SECRET_FILE" "$GREEN"
+fi
+agent_secret_sha256="$(printf '%s' "$agent_secret" | openssl dgst -sha256 -hex | sed 's/^.*= *//')"
+
+say "Deploying granite-agent-service-client..." "$CYAN"
+agent_tmp_dir="$(umask 077 && mktemp -d)"
+printf '%s' "$agent_secret" > "$agent_tmp_dir/secret"
+printf '%s' "$agent_secret_sha256" > "$agent_tmp_dir/secret-sha256"
+agent_status=0
+kubectl create secret generic granite-agent-service-client \
+    --namespace="$NAMESPACE" \
+    --from-file=secret="$agent_tmp_dir/secret" \
+    --from-file=secret-sha256="$agent_tmp_dir/secret-sha256" \
+    --dry-run=client -o yaml | kubectl apply -f - || agent_status=$?
+rm -rf "$agent_tmp_dir"
+if (( agent_status != 0 )); then exit "$agent_status"; fi
+
+# =============================================================================
+# Deploy Claude API key for the virtual assistant (never generated or logged)
+# =============================================================================
+say "Checking Claude API key..." "$CYAN"
+if [[ -n "${ANTHROPIC_API_KEY//[[:space:]]/}" ]]; then
+    claude_tmp_dir="$(umask 077 && mktemp -d)"
+    printf '%s' "$ANTHROPIC_API_KEY" > "$claude_tmp_dir/ANTHROPIC_API_KEY"
+    claude_status=0
+    kubectl create secret generic granite-agent-claude-api \
+        --namespace="$NAMESPACE" \
+        --from-file=ANTHROPIC_API_KEY="$claude_tmp_dir/ANTHROPIC_API_KEY" \
+        --dry-run=client -o yaml | kubectl apply -f - || claude_status=$?
+    rm -rf "$claude_tmp_dir"
+    if (( claude_status != 0 )); then exit "$claude_status"; fi
+    say "  Deployed granite-agent-claude-api from ANTHROPIC_API_KEY." "$GREEN"
+elif kubectl get secret granite-agent-claude-api --namespace="$NAMESPACE" >/dev/null 2>&1; then
+    say "  Keeping the existing granite-agent-claude-api secret." "$GREEN"
+else
+    say "  ANTHROPIC_API_KEY is not set: the virtual assistant replies that it is not configured until granite-agent-claude-api exists." "$YELLOW"
+fi
+
 
 
 # =============================================================================

@@ -809,6 +809,416 @@ spec:
           type: Utilization
           averageUtilization: 80
 ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-agent-commandhost
+  namespace: granite
+  labels:
+    app: granite-agent-commandhost
+    system: granite
+    microservice: agent
+    role: command
+spec:
+  selector:
+    matchLabels:
+      app: granite-agent-commandhost
+  template:
+    metadata:
+      labels:
+        app: granite-agent-commandhost
+        system: granite
+        microservice: agent
+        role: command
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: commandhost
+          image: ghcr.io/johnliebenau/granite/granite-agent-commandhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8095
+          env:
+            - name: AGENT_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: granite-agent-service-client
+                  key: secret
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: granite-agent-claude-api
+                  key: ANTHROPIC_API_KEY
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /agent-command-service/health/startup
+              port: 8095
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /agent-command-service/health/readiness
+              port: 8095
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /agent-command-service/health/liveness
+              port: 8095
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-agent-commandhost
+  namespace: granite
+  labels:
+    app: granite-agent-commandhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-agent-commandhost
+  ports:
+    - port: 443
+      targetPort: 8095
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-agent-commandhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-agent-commandhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-agent-queryhost
+  namespace: granite
+  labels:
+    app: granite-agent-queryhost
+    system: granite
+    microservice: agent
+    role: query
+spec:
+  selector:
+    matchLabels:
+      app: granite-agent-queryhost
+  template:
+    metadata:
+      labels:
+        app: granite-agent-queryhost
+        system: granite
+        microservice: agent
+        role: query
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: queryhost
+          image: ghcr.io/johnliebenau/granite/granite-agent-queryhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8096
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /agent-query-service/health/startup
+              port: 8096
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /agent-query-service/health/readiness
+              port: 8096
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /agent-query-service/health/liveness
+              port: 8096
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-agent-queryhost
+  namespace: granite
+  labels:
+    app: granite-agent-queryhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-agent-queryhost
+  ports:
+    - port: 443
+      targetPort: 8096
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-agent-queryhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-agent-queryhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-content-commandhost
+  namespace: granite
+  labels:
+    app: granite-content-commandhost
+    system: granite
+    microservice: content
+    role: command
+spec:
+  selector:
+    matchLabels:
+      app: granite-content-commandhost
+  template:
+    metadata:
+      labels:
+        app: granite-content-commandhost
+        system: granite
+        microservice: content
+        role: command
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: commandhost
+          image: ghcr.io/johnliebenau/granite/granite-content-commandhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8093
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /content-command-service/health/startup
+              port: 8093
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /content-command-service/health/readiness
+              port: 8093
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /content-command-service/health/liveness
+              port: 8093
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-content-commandhost
+  namespace: granite
+  labels:
+    app: granite-content-commandhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-content-commandhost
+  ports:
+    - port: 443
+      targetPort: 8093
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-content-commandhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-content-commandhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-content-queryhost
+  namespace: granite
+  labels:
+    app: granite-content-queryhost
+    system: granite
+    microservice: content
+    role: query
+spec:
+  selector:
+    matchLabels:
+      app: granite-content-queryhost
+  template:
+    metadata:
+      labels:
+        app: granite-content-queryhost
+        system: granite
+        microservice: content
+        role: query
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: queryhost
+          image: ghcr.io/johnliebenau/granite/granite-content-queryhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8094
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /content-query-service/health/startup
+              port: 8094
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /content-query-service/health/readiness
+              port: 8094
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /content-query-service/health/liveness
+              port: 8094
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-content-queryhost
+  namespace: granite
+  labels:
+    app: granite-content-queryhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-content-queryhost
+  ports:
+    - port: 443
+      targetPort: 8094
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-content-queryhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-content-queryhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -846,6 +1256,11 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: granite-fec-service-client
+                  key: secret-sha256
+            - name: AGENT_SERVICE_CLIENT_SECRET_SHA256
+              valueFrom:
+                secretKeyRef:
+                  name: granite-agent-service-client
                   key: secret-sha256
           volumeMounts:
             - name: session-jwt
@@ -1403,6 +1818,34 @@ spec:
                 port:
                   number: 443
           - path: /survey-query-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /agent-command-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /agent-query-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /content-command-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /content-query-service
             pathType: Prefix
             backend:
               service:

@@ -141,7 +141,8 @@ class GraniteGatewayServerConfiguration
                         exchanges
                             .pathMatchers(
                                 "/session-command-service/start-okta-login",
-                                "/session-command-service/complete-okta-login")
+                                "/session-command-service/complete-okta-login",
+                                "/session-command-service/issue-delegated-token")
                             .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
@@ -402,6 +403,10 @@ class GraniteGatewayServerConfiguration
                     "/survey-query-service/**",
                     "/feedback-command-service/**",
                     "/survey-command-service/**",
+                    "/agent-query-service/**",
+                    "/agent-command-service/**",
+                    "/content-query-service/**",
+                    "/content-command-service/**",
                     "/outbox-service/**")
                     .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
 
@@ -419,7 +424,15 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/handle-feedback-input",
                 "/frontendcontroller-user-service/handle-survey-input",
                 "/frontendcontroller-admin-service/handle-feedback-input",
-                "/frontendcontroller-admin-service/handle-survey-input")
+                "/frontendcontroller-admin-service/handle-survey-input",
+                "/frontendcontroller-user-service/get-content-output",
+                "/frontendcontroller-admin-service/get-content-output",
+                "/frontendcontroller-user-service/handle-content-input",
+                "/frontendcontroller-admin-service/handle-content-input",
+                "/frontendcontroller-user-service/get-agent-output",
+                "/frontendcontroller-admin-service/get-agent-output",
+                "/frontendcontroller-user-service/handle-agent-input",
+                "/frontendcontroller-admin-service/handle-agent-input")
                 .authenticated()
             .pathMatchers(
                 HttpMethod.POST,
@@ -438,7 +451,7 @@ class GraniteGatewayServerConfiguration
                 .hasAnyAuthority(readers)
             .pathMatchers("/session-query-service/**")
                 .hasAnyAuthority(readers)
-            .pathMatchers("/feedback-query-service/**","/survey-query-service/**")
+            .pathMatchers("/feedback-query-service/**","/survey-query-service/**","/content-query-service/**","/agent-query-service/**")
                 .hasAnyAuthority(readers)
             .pathMatchers(
                 HttpMethod.POST,
@@ -460,6 +473,8 @@ class GraniteGatewayServerConfiguration
                 "/session-command-service/**",
                 "/feedback-command-service/**",
                 "/survey-command-service/**",
+                "/content-command-service/**",
+                "/agent-command-service/**",
                 "/outbox-service/**")
                 .hasAnyAuthority(admins);
 
@@ -546,6 +561,30 @@ class GraniteGatewayServerConfiguration
             "survey-query-route",
             "/survey-query-service/**",
             "granite.survey-query-service.host",
+            environment);
+        addRoute(
+            routes,
+            "agent-command-route",
+            "/agent-command-service/**",
+            "granite.agent-command-service.host",
+            environment);
+        addRoute(
+            routes,
+            "agent-query-route",
+            "/agent-query-service/**",
+            "granite.agent-query-service.host",
+            environment);
+        addRoute(
+            routes,
+            "content-command-route",
+            "/content-command-service/**",
+            "granite.content-command-service.host",
+            environment);
+        addRoute(
+            routes,
+            "content-query-route",
+            "/content-query-service/**",
+            "granite.content-query-service.host",
             environment);
         addRoute(
             routes,

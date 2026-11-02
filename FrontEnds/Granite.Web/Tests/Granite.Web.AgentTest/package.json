@@ -1,0 +1,27 @@
+{
+    "name": "granite.web.agenttest",
+    "version": "0.0.0",
+    "private": true,
+    "description": "",
+    "scripts": {
+        "clean": "del-cli -f .build",
+        "build-init": "yarn install && yarn upgrade --pattern \"granite|strata\"",
+        "test": "yarn run build-init && vitest run"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "granite.agent.service": "1.0.0-snapshot",
+        "granite.frontendcontroller.service": "1.0.0-snapshot",
+        "granite.web.agent": "1.0.0-snapshot",
+        "jsdom": "^25.0.1",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "typescript": "~6.0.2",
+        "vitest": "^3.2.4"
+    },
+    "devDependencies": {
+        "del-cli": "^5.1.0"
+    }
+}

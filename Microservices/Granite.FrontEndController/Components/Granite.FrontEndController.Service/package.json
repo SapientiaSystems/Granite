@@ -18,6 +18,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "granite.agent.service": "1.0.0-snapshot",
+    "granite.content.service": "1.0.0-snapshot",
     "granite.feedback.service": "1.0.0-snapshot",
     "granite.survey.service": "1.0.0-snapshot",
     "granite.user.service": "1.0.0-snapshot",

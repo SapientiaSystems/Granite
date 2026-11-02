@@ -45,8 +45,12 @@ class GatewayProductionRoutesTest
             "/session-command-service/close-session",
             "/feedback-query-service/find-all-feedback",
             "/survey-query-service/find-all-survey-responses",
+            "/agent-query-service/find-agent-conversations",
+            "/content-query-service/search-content",
             "/feedback-command-service/create-feedback",
             "/survey-command-service/submit-survey-response",
+            "/agent-command-service/send-agent-message",
+            "/content-command-service/upsert-content-documents",
             "/outbox-service/get-entries");
 
     private static GatewayTestBackend backend;
@@ -98,8 +102,12 @@ class GatewayProductionRoutesTest
                 "session-query-route",
                 "feedback-command-route",
                 "survey-command-route",
+                "agent-command-route",
+                "content-command-route",
                 "feedback-query-route",
                 "survey-query-route",
+                "agent-query-route",
+                "content-query-route",
                 "outbox-route"),
             routes.stream().map(Route::getId).collect(Collectors.toSet()));
     }

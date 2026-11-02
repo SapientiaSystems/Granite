@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// ITransactionalContentQueryService.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.content.server.application;
+
+import granite.content.service.requestreply.IContentQueryService;
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public
+interface ITransactionalContentQueryService
+    extends IContentQueryService {}
+
+//////////////////////////////////////////////////////////////////////////////

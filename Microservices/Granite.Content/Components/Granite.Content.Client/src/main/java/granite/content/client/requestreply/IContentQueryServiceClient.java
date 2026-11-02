@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IContentQueryServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.content.client.requestreply;
+
+import granite.content.service.requestreply.IContentQueryService;
+
+public
+interface IContentQueryServiceClient
+    extends IContentQueryService
+{
+    IContentQueryServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

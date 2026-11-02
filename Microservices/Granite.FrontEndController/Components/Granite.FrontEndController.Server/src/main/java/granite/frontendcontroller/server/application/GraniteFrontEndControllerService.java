@@ -16,6 +16,12 @@ import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionStatusView;
 import granite.frontendcontroller.server.control.session.StartOktaLoginView;
 import granite.frontendcontroller.server.control.feedback.FeedbackReviewLoader;
+import granite.frontendcontroller.server.control.agent.InitializeAgentView;
+import granite.frontendcontroller.server.control.agent.ResolveAgentActionView;
+import granite.frontendcontroller.server.control.agent.SendAgentMessageView;
+import granite.frontendcontroller.server.control.content.InitializeContentView;
+import granite.frontendcontroller.server.control.content.OpenContentView;
+import granite.frontendcontroller.server.control.content.SearchContentView;
 import granite.frontendcontroller.server.control.survey.SurveyReviewLoader;
 import granite.frontendcontroller.server.control.feedback.InitializeFeedbackReviewView;
 import granite.frontendcontroller.server.control.survey.InitializeSurveyReviewView;
@@ -34,6 +40,18 @@ import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.AgentInput;
+import granite.frontendcontroller.service.requestreply.AgentOutput;
+import granite.frontendcontroller.service.requestreply.GetAgentOutputReply;
+import granite.frontendcontroller.service.requestreply.GetAgentOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleAgentInputReply;
+import granite.frontendcontroller.service.requestreply.HandleAgentInputRequest;
+import granite.frontendcontroller.service.requestreply.ContentInput;
+import granite.frontendcontroller.service.requestreply.ContentOutput;
+import granite.frontendcontroller.service.requestreply.GetContentOutputReply;
+import granite.frontendcontroller.service.requestreply.GetContentOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleContentInputReply;
+import granite.frontendcontroller.service.requestreply.HandleContentInputRequest;
 import granite.frontendcontroller.service.requestreply.GetSurveyOutputReply;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSurveyOutputRequest;
@@ -106,6 +124,10 @@ class GraniteFrontEndControllerService
     private final Map<String,IInputAction<UsersInput,UsersOutput>>                 usersInputActions;
     private final Map<String,IOutputAction<GetUsersOutputRequest,UsersOutput>>     usersOutputActions;
     private final Map<String,IInputAction<FeedbackInput,FeedbackOutput>>           feedbackInputActions;
+    private final Map<String,IInputAction<AgentInput,AgentOutput>>               agentInputActions;
+    private final Map<String,IOutputAction<GetAgentOutputRequest,AgentOutput>>   agentOutputActions;
+    private final Map<String,IInputAction<ContentInput,ContentOutput>>           contentInputActions;
+    private final Map<String,IOutputAction<GetContentOutputRequest,ContentOutput>> contentOutputActions;
     private final Map<String,IInputAction<SurveyInput,SurveyOutput>>           surveyInputActions;
     private final Map<String,IOutputAction<GetFeedbackOutputRequest,FeedbackOutput>> feedbackOutputActions;
     private final Map<String,IOutputAction<GetSurveyOutputRequest,SurveyOutput>> surveyOutputActions;
@@ -156,6 +178,23 @@ class GraniteFrontEndControllerService
         feedbackReviewOutputActions =
             Map.of(
                 "Feedback.All->FeedbackReviewView",new InitializeFeedbackReviewView(feedbackReviewLoader,requestContext));
+
+        agentInputActions =
+            Map.of(
+                "Agent.Current->Send->AgentView",new SendAgentMessageView(context.getHelpServiceClients(),requestContext),
+                "Agent.Current->Approve->AgentView",new ResolveAgentActionView(context.getHelpServiceClients(),requestContext,true),
+                "Agent.Current->Decline->AgentView",new ResolveAgentActionView(context.getHelpServiceClients(),requestContext,false));
+        agentOutputActions =
+            Map.of(
+                "Agent.Current->AgentView",new InitializeAgentView(context.getHelpServiceClients(),requestContext));
+
+        contentInputActions =
+            Map.of(
+                "Content.All->Search->ContentView",new SearchContentView(context.getHelpServiceClients(),requestContext),
+                "Content.All->Open->ContentView",new OpenContentView(context.getHelpServiceClients(),requestContext));
+        contentOutputActions =
+            Map.of(
+                "Content.All->ContentView",new InitializeContentView(context.getHelpServiceClients(),requestContext));
 
         SurveyReviewLoader surveyReviewLoader = new SurveyReviewLoader(context.getHelpServiceClients(),userQueryClient);
 
@@ -240,6 +279,34 @@ class GraniteFrontEndControllerService
     getFeedbackReviewOutput(GetFeedbackReviewOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(feedbackReviewOutputActions,context),GetFeedbackReviewOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleAgentInputReply>
+    handleAgentInput(HandleAgentInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(agentInputActions,context),HandleAgentInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetAgentOutputReply>
+    getAgentOutput(GetAgentOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(agentOutputActions,context),GetAgentOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleContentInputReply>
+    handleContentInput(HandleContentInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(contentInputActions,context),HandleContentInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetContentOutputReply>
+    getContentOutput(GetContentOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(contentOutputActions,context),GetContentOutputReply::new);
     }
 
     @Override

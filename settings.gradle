@@ -52,6 +52,22 @@ includeBuild('Microservices/Granite.Survey') {
     }
 }
 
+includeBuild('Microservices/Granite.Agent') {
+    dependencySubstitution {
+        substitute module('granite.agent:granite-agent-service') using project(':Components:Granite.Agent.Service')
+        substitute module('granite.agent:granite-agent-client') using project(':Components:Granite.Agent.Client')
+        substitute module('granite.agent:granite-agent-server') using project(':Components:Granite.Agent.Server')
+    }
+}
+
+includeBuild('Microservices/Granite.Content') {
+    dependencySubstitution {
+        substitute module('granite.content:granite-content-service') using project(':Components:Granite.Content.Service')
+        substitute module('granite.content:granite-content-client') using project(':Components:Granite.Content.Client')
+        substitute module('granite.content:granite-content-server') using project(':Components:Granite.Content.Server')
+    }
+}
+
 includeBuild('Shared/Granite.Foundation') {
     dependencySubstitution {
         substitute module('granite.foundation:granite-foundation-core') using project(':Components:Granite.Foundation.Core')

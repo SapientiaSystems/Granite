@@ -81,6 +81,31 @@ class ServiceTokenIssuer
                 .setExpiresAt(jwtTokenService.getExpiration(token));
     }
 
+    @Override
+    public boolean
+    mayDelegate(String clientId,String clientSecret)
+    {
+        ServiceClientRegistration registration = clientId != null ? registrations.get(clientId) : null;
+        String                    secret       = clientSecret != null ? clientSecret : "";
+
+        if (registration == null)
+        {
+            MessageDigest.isEqual(UNKNOWN_HASH,ServiceClientRegistration.hash(secret));
+            logger.warn("delegated token refused: unknown client");
+            return false;
+        }
+
+        boolean matches = registration.matches(secret);
+
+        if (secret.isBlank() || !matches || !registration.isDelegation())
+        {
+            logger.warn("delegated token refused for client {}",registration.getClientId());
+            return false;
+        }
+
+        return true;
+    }
+
     private IssueServiceTokenReply
     refuse(IssueServiceTokenRequest request)
     {

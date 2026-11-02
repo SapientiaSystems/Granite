@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IAgentCommandServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.agent.client.requestreply;
+
+import granite.agent.service.requestreply.IAgentCommandService;
+
+public
+interface IAgentCommandServiceClient
+    extends IAgentCommandService
+{
+    IAgentCommandServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

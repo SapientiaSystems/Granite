@@ -44,7 +44,7 @@ class ExtendedGatewayServerConfigurationTest
     {
         Map<String,URI> routes = getRoutes();
 
-        assertEquals(12,routes.size());
+        assertEquals(16,routes.size());
         assertTrue(routes.containsKey("user-command-route"));
         assertTrue(routes.containsKey("session-query-route"));
         assertTrue(routes.containsKey("outbox-route"));

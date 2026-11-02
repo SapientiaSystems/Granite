@@ -378,6 +378,87 @@ finally {
 }
 if ($fecExit -ne 0) { exit $fecExit }
 
+# =============================================================================
+# Deploy Agent service client credential
+# =============================================================================
+$agentSecretFile = Join-Path $jwtKeyDir "agent-service-client-secret"
+
+Write-Host "Checking Agent service client secret..." -ForegroundColor Cyan
+if (-not [string]::IsNullOrWhiteSpace($env:AGENT_SERVICE_CLIENT_SECRET)) {
+    $agentSecret = $env:AGENT_SERVICE_CLIENT_SECRET
+    Write-Host "  Using AGENT_SERVICE_CLIENT_SECRET from the environment." -ForegroundColor Green
+}
+elseif ((Test-Path $agentSecretFile) -and (Get-Item $agentSecretFile).Length -gt 0) {
+    $agentSecret = (Get-Content -Raw $agentSecretFile).TrimEnd("`r","`n")
+    Write-Host "  Using existing secret: $agentSecretFile" -ForegroundColor Green
+}
+else {
+    Write-Host "  Generating Agent service client secret..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Force -Path (Split-Path $agentSecretFile -Parent) | Out-Null
+    $agentSecretBytes = New-Object byte[] 32
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $rng.GetBytes($agentSecretBytes)
+    $rng.Dispose()
+    $agentSecret = [Convert]::ToBase64String($agentSecretBytes)
+    [System.IO.File]::WriteAllText($agentSecretFile, $agentSecret)
+    & icacls $agentSecretFile /inheritance:r /grant:r "$($env:USERNAME):F" | Out-Null
+    Write-Host "  Generated: $agentSecretFile" -ForegroundColor Green
+}
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+$agentSecretSha256 = ([BitConverter]::ToString($sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($agentSecret))) -replace '-', '').ToLowerInvariant()
+$sha256.Dispose()
+
+Write-Host "Deploying granite-agent-service-client..." -ForegroundColor Cyan
+$agentTempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("granite-agent-" + [Guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $agentTempDir | Out-Null
+& icacls $agentTempDir /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F" | Out-Null
+try {
+    [System.IO.File]::WriteAllText((Join-Path $agentTempDir "secret"), $agentSecret)
+    [System.IO.File]::WriteAllText((Join-Path $agentTempDir "secret-sha256"), $agentSecretSha256)
+    kubectl create secret generic granite-agent-service-client `
+        --namespace=$Namespace `
+        "--from-file=secret=$(Join-Path $agentTempDir 'secret')" `
+        "--from-file=secret-sha256=$(Join-Path $agentTempDir 'secret-sha256')" `
+        --dry-run=client -o yaml | kubectl apply -f -
+    $agentExit = $LASTEXITCODE
+}
+finally {
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $agentTempDir
+}
+if ($agentExit -ne 0) { exit $agentExit }
+
+# =============================================================================
+# Deploy Claude API key for the virtual assistant (never generated or logged)
+# =============================================================================
+Write-Host "Checking Claude API key..." -ForegroundColor Cyan
+if (-not [string]::IsNullOrWhiteSpace($env:ANTHROPIC_API_KEY)) {
+    $claudeTempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("granite-claude-" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Force -Path $claudeTempDir | Out-Null
+    & icacls $claudeTempDir /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F" | Out-Null
+    try {
+        [System.IO.File]::WriteAllText((Join-Path $claudeTempDir "ANTHROPIC_API_KEY"), $env:ANTHROPIC_API_KEY)
+        kubectl create secret generic granite-agent-claude-api `
+            --namespace=$Namespace `
+            "--from-file=ANTHROPIC_API_KEY=$(Join-Path $claudeTempDir 'ANTHROPIC_API_KEY')" `
+            --dry-run=client -o yaml | kubectl apply -f -
+        $claudeExit = $LASTEXITCODE
+    }
+    finally {
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $claudeTempDir
+    }
+    if ($claudeExit -ne 0) { exit $claudeExit }
+    Write-Host "  Deployed granite-agent-claude-api from ANTHROPIC_API_KEY." -ForegroundColor Green
+}
+else {
+    kubectl get secret granite-agent-claude-api --namespace=$Namespace *> $null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "  Keeping the existing granite-agent-claude-api secret." -ForegroundColor Green
+    }
+    else {
+        Write-Host "  ANTHROPIC_API_KEY is not set: the virtual assistant replies that it is not configured until granite-agent-claude-api exists." -ForegroundColor Yellow
+    }
+}
+
 
 
 # =============================================================================

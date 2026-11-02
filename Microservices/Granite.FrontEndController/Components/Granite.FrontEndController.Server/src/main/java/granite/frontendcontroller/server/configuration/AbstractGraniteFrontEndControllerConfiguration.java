@@ -5,6 +5,12 @@
 package granite.frontendcontroller.server.configuration;
 
 import granite.feedback.client.requestreply.FeedbackCommandServiceClient;
+import granite.agent.client.requestreply.AgentCommandServiceClient;
+import granite.agent.client.requestreply.AgentQueryServiceClient;
+import granite.agent.client.requestreply.IAgentCommandServiceClient;
+import granite.agent.client.requestreply.IAgentQueryServiceClient;
+import granite.content.client.requestreply.ContentQueryServiceClient;
+import granite.content.client.requestreply.IContentQueryServiceClient;
 import granite.survey.client.requestreply.SurveyCommandServiceClient;
 import granite.feedback.client.requestreply.FeedbackQueryServiceClient;
 import granite.survey.client.requestreply.SurveyQueryServiceClient;
@@ -214,7 +220,10 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 .setFeedbackCommandClient(this::createFeedbackCommandClient)
                 .setFeedbackQueryClient(this::createFeedbackQueryClient)
                 .setSurveyCommandClient(this::createSurveyCommandClient)
-                .setSurveyQueryClient(this::createSurveyQueryClient);
+                .setSurveyQueryClient(this::createSurveyQueryClient)
+                .setContentQueryClient(this::createContentQueryClient)
+                .setAgentCommandClient(this::createAgentCommandClient)
+                .setAgentQueryClient(this::createAgentQueryClient);
     }
 
     protected IFeedbackCommandServiceClient
@@ -247,6 +256,30 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
         GraniteClientSettings client = createClientConfiguration("survey-query-service.base-url");
 
         return new SurveyQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    }
+
+    protected IContentQueryServiceClient
+    createContentQueryClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("content-query-service.base-url");
+
+        return new ContentQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    }
+
+    protected IAgentCommandServiceClient
+    createAgentCommandClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("agent-command-service.base-url");
+
+        return new AgentCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    }
+
+    protected IAgentQueryServiceClient
+    createAgentQueryClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("agent-query-service.base-url");
+
+        return new AgentQueryServiceClient(client.getBuilder(),client.getBaseUrl());
     }
 
     @Bean

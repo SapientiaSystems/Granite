@@ -5,6 +5,14 @@
 package granite.frontendcontroller.server.platform;
 
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleAgentInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleAgentInputReply;
+import granite.frontendcontroller.service.requestreply.GetAgentOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetAgentOutputReply;
+import granite.frontendcontroller.service.requestreply.HandleContentInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleContentInputReply;
+import granite.frontendcontroller.service.requestreply.GetContentOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetContentOutputReply;
 import granite.frontendcontroller.service.requestreply.HandleSurveyInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputReply;
 import granite.frontendcontroller.service.requestreply.HandleSurveyInputReply;
@@ -113,6 +121,46 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating getFeedbackReviewOutput to implementation service");
         return getService().getFeedbackReviewOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-agent-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleAgentInputReply>
+    handleAgentInput(@RequestBody HandleAgentInputRequest request)
+    {
+        getLogger().info("delegating handleAgentInput to implementation service");
+        return getService().handleAgentInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-agent-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetAgentOutputReply>
+    getAgentOutput(@RequestBody GetAgentOutputRequest request)
+    {
+        getLogger().info("delegating getAgentOutput to implementation service");
+        return getService().getAgentOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-content-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleContentInputReply>
+    handleContentInput(@RequestBody HandleContentInputRequest request)
+    {
+        getLogger().info("delegating handleContentInput to implementation service");
+        return getService().handleContentInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-content-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetContentOutputReply>
+    getContentOutput(@RequestBody GetContentOutputRequest request)
+    {
+        getLogger().info("delegating getContentOutput to implementation service");
+        return getService().getContentOutput(request);
     }
 
     @PostMapping(

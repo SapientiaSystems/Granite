@@ -1,0 +1,17 @@
+//////////////////////////////////////////////////////////////////////////////
+// Granite.FrontEndController.Service
+//////////////////////////////////////////////////////////////////////////////
+
+import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
+import type { ContentKind } from "granite.content.service/RequestReply";
+
+export
+interface ContentInput
+    extends FrontEndInput
+{
+    query: string | null;
+    articleKey: string | null;
+    kinds: Array<ContentKind>;
+}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -67,6 +67,10 @@ Routes are defined in `GraniteGatewayServerConfiguration.configureRoutes(...)` a
 | `feedback-query-route` | `/feedback-query-service/**` | Feedback QueryHost |
 | `survey-command-route` | `/survey-command-service/**` | Survey CommandHost |
 | `survey-query-route` | `/survey-query-service/**` | Survey QueryHost |
+| `content-command-route` | `/content-command-service/**` | Content CommandHost |
+| `content-query-route` | `/content-query-service/**` | Content QueryHost |
+| `agent-command-route` | `/agent-command-service/**` | Agent CommandHost |
+| `agent-query-route` | `/agent-query-service/**` | Agent QueryHost |
 | `outbox-route` | `/outbox-service/**` | Outbox ServiceHost |
 
 No path stripping is applied — backend controllers are mounted at these exact path prefixes.
@@ -138,13 +142,13 @@ Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthori
 
 | Matcher | Authorities |
 |---|---|
-| `production` only: `/user-query-service/**`, `/user-command-service/**`, `/session-query-service/**`, `/session-command-service/**`, `/feedback-query-service/**`, `/feedback-command-service/**`, `/survey-query-service/**`, `/survey-command-service/**`, `/outbox-service/**` (after the earlier `resolve-session` denyAll, Okta-step rule and public `issue-service-token`; this covers `login` and `refresh` too) | `SCOPE_internal` only (`ROLE_ADMIN`, `ROLE_AUDITOR` and every other browser role get 403) |
-| `POST /frontendcontroller-{user,admin}-service/get-preferences-output` and `handle-preferences-input`, `get-feedback-output` and `handle-feedback-input`, and `get-survey-output` and `handle-survey-input` (both hosts) | any authenticated caller (the operations act on the caller's own user; feedback and survey responses are stamped with the caller) |
+| `production` only: `/user-query-service/**`, `/user-command-service/**`, `/session-query-service/**`, `/session-command-service/**`, `/feedback-query-service/**`, `/feedback-command-service/**`, `/survey-query-service/**`, `/survey-command-service/**`, `/content-query-service/**`, `/content-command-service/**`, `/agent-query-service/**`, `/agent-command-service/**`, `/outbox-service/**` (after the earlier `resolve-session` denyAll, Okta-step rule and public `issue-service-token`; this covers `login` and `refresh` too) | `SCOPE_internal` only (`ROLE_ADMIN`, `ROLE_AUDITOR` and every other browser role get 403) |
+| `POST /frontendcontroller-{user,admin}-service/get-preferences-output` and `handle-preferences-input`, `get-feedback-output` and `handle-feedback-input`, `get-survey-output` and `handle-survey-input`, `get-content-output` and `handle-content-input`, and `get-agent-output` and `handle-agent-input` (both hosts) | any authenticated caller (the operations act on the caller's own user; feedback and survey responses are stamped with the caller) |
 | `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output`, and the same two hosts' `get-sessions-output` (the admin Sessions view) `get-feedback-review-output` (the Feedback review grid) and `get-survey-review-output` (the Surveys grid) | `getUsersReaderAuthorities()` |
 | `/user-query-service/**` (outside `production`) | `getUsersReaderAuthorities()` |
 | `POST /session-command-service/logout` (outside `production`) | `getUsersReaderAuthorities()` |
-| `/session-query-service/**`, `/feedback-query-service/**`, `/survey-query-service/**` (outside `production`) | `getUsersReaderAuthorities()` |
-| `POST ./handle-users-input`, `POST ./handle-sessions-input`, `POST ./handle-feedback-review-input` and `POST ./handle-survey-review-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/feedback-command-service/**`, `/survey-command-service/**`, `/outbox-service/**` (the last five outside `production`) | `ROLE_ADMIN` |
+| `/session-query-service/**`, `/feedback-query-service/**`, `/survey-query-service/**`, `/content-query-service/**`, `/agent-query-service/**` (outside `production`) | `getUsersReaderAuthorities()` |
+| `POST ./handle-users-input`, `POST ./handle-sessions-input`, `POST ./handle-feedback-review-input` and `POST ./handle-survey-review-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/feedback-command-service/**`, `/survey-command-service/**`, `/content-command-service/**`, `/agent-command-service/**`, `/outbox-service/**` (the last seven outside `production`). `POST /session-command-service/issue-delegated-token` is `SCOPE_internal` only in every environment (with `start-okta-login` and `complete-okta-login`) | `ROLE_ADMIN` |
 | application rules from `configureApplicationAuthorization` | as declared |
 | `/**` (catch-all, so everything else) | `ROLE_ADMIN` |
 

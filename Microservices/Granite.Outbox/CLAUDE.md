@@ -41,7 +41,9 @@ Contains Kafka event sender implementations for each entity type in the Granite 
   - `KafkaAvroUserEventSender` — Extends `AbstractKafkaAvroEventSender<UserEvent>` and implements `IUserEventSender`. Serializes `UserEvent` instances to Avro format and publishes them to a configured Kafka topic. Uses the event's `sourceId` as the Kafka partition key to ensure ordering per entity.
 - **`server.feedback`**: `KafkaAvroFeedbackEventSender` and `FeedbackEventOutboxEventReceiver`, the same pattern for `FeedbackEvent` (Granite.Feedback), topic `granite.feedbackevent.avro`.
 - **`server.survey`**: `KafkaAvroSurveyEventSender` and `SurveyEventOutboxEventReceiver` for `SurveyEvent` (Granite.Survey), topic `granite.surveyevent.avro`.
-- `HostConfiguration.receiverMapProvider` maps each event's simple name (`UserEvent`, `FeedbackEvent`, `SurveyEvent`) to its receiver; topics `granite.userevent.avro`, `granite.feedbackevent.avro` and `granite.surveyevent.avro`. Because every service shares one database per environment, this single host relays all of their outbox rows.
+- **`server.content`**: `KafkaAvroContentEventSender` and `ContentEventOutboxEventReceiver` for `ContentEvent` (Granite.Content), topic `granite.contentevent.avro`.
+- **`server.agent`**: `KafkaAvroAgentEventSender` and `AgentEventOutboxEventReceiver` for `AgentEvent` (Granite.Agent), topic `granite.agentevent.avro`.
+- `HostConfiguration.receiverMapProvider` maps each event's simple name (`UserEvent`, `FeedbackEvent`, `SurveyEvent`, `ContentEvent`, `AgentEvent`) to its receiver; topics `granite.userevent.avro`, `granite.feedbackevent.avro`, `granite.surveyevent.avro`, `granite.contentevent.avro` and `granite.agentevent.avro`. Because every service shares one database per environment, this single host relays all of their outbox rows.
 
 #### Granite.Outbox.Server security (`server.configuration`)
 
@@ -60,6 +62,8 @@ The Server component depends on:
 - `granite.user:granite-user-service` — User event interfaces (`IUserEventSender`, `UserEvent`)
 - `granite.feedback:granite-feedback-service` — Feedback event interfaces (`IFeedbackEventSender`, `FeedbackEvent`)
 - `granite.survey:granite-survey-service` — Survey event interfaces (`ISurveyEventSender`, `SurveyEvent`)
+- `granite.content:granite-content-service` — Content event interfaces (`IContentEventSender`, `ContentEvent`)
+- `granite.agent:granite-agent-service` — Agent event interfaces (`IAgentEventSender`, `AgentEvent`)
 - `granite.foundation:granite-foundation-core` and `spring-boot-starter-security` — the shared JWT check chain
 
 As additional Granite microservices are added, corresponding event sender implementations will be added to the Server component (e.g., `KafkaAvroFrontEndControllerEventSender`).

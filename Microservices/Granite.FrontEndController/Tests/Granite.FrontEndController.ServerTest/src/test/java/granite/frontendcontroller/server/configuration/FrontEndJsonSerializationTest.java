@@ -24,6 +24,11 @@ import granite.feedback.service.requestreply.FeedbackType;
 import granite.frontendcontroller.service.requestreply.FeedbackInput;
 import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
 import granite.frontendcontroller.service.requestreply.HandleSurveyInputRequest;
+import granite.frontendcontroller.service.requestreply.ContentInput;
+import granite.frontendcontroller.service.requestreply.AgentInput;
+import granite.frontendcontroller.service.requestreply.HandleAgentInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleContentInputRequest;
+import granite.content.service.requestreply.ContentKind;
 import granite.frontendcontroller.service.requestreply.SurveyInput;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionsInputRequest;
@@ -161,6 +166,38 @@ class FrontEndJsonSerializationTest
         assertEquals("Feedback.New->Submit->FeedbackView",input.getKey());
         assertEquals(FeedbackType.PROBLEM,input.getType());
         assertEquals(Map.of("impact","Waiting"),input.getDetails());
+    }
+
+    @Test
+    public void
+    agentRequestBindsAgentInputWithoutTypeProperty()
+        throws Exception
+    {
+        String json =
+            "{\"input\":{\"source\":\"Agent.Current\",\"command\":\"Approve\",\"destination\":\"AgentView\"," +
+            "\"conversationId\":3,\"toolUseId\":\"toolu_1\"}}";
+
+        AgentInput input = mapper.readValue(json,HandleAgentInputRequest.class).getInput();
+
+        assertEquals("Agent.Current->Approve->AgentView",input.getKey());
+        assertEquals(3L,input.getConversationId());
+        assertEquals("toolu_1",input.getToolUseId());
+    }
+
+    @Test
+    public void
+    contentRequestBindsContentInputWithoutTypeProperty()
+        throws Exception
+    {
+        String json =
+            "{\"input\":{\"source\":\"Content.All\",\"command\":\"Search\",\"destination\":\"ContentView\"," +
+            "\"query\":\"users\",\"kinds\":[\"HELP\",\"GUIDE\"]}}";
+
+        ContentInput input = mapper.readValue(json,HandleContentInputRequest.class).getInput();
+
+        assertEquals("Content.All->Search->ContentView",input.getKey());
+        assertEquals("users",input.getQuery());
+        assertEquals(List.of(ContentKind.HELP,ContentKind.GUIDE),input.getKinds());
     }
 
     @Test

@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IContentCommandServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.content.client.requestreply;
+
+import granite.content.service.requestreply.IContentCommandService;
+
+public
+interface IContentCommandServiceClient
+    extends IContentCommandService
+{
+    IContentCommandServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

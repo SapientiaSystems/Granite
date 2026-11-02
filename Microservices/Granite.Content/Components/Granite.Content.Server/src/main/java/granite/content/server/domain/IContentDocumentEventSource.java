@@ -1,0 +1,17 @@
+//////////////////////////////////////////////////////////////////////////////
+// IContentDocumentEventSource.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.content.server.domain;
+
+import strata.server.core.domainevent.IDomainEventSource;
+
+public
+interface IContentDocumentEventSource
+    extends
+        IDomainEventSource<
+            ContentDocument,
+            IContentDocumentEvent,
+            IContentDocumentEventObserver> {}
+
+//////////////////////////////////////////////////////////////////////////////

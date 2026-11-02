@@ -1,0 +1,49 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name "GitHub-StrataFrameworkSet-Packages"
+            url "https://maven.pkg.github.com/StrataFrameworkSet/repository"
+            credentials {
+                username = "$System.env.REPOSITORY_USER"
+                password = "$System.env.REPOSITORY_PASSWORD"
+            }
+        }
+        maven {
+            name "Confluent"
+            url "https://packages.confluent.io/maven"
+        }
+        maven {
+            name "Jabylon"
+            url "https://www.jabylon.org/maven/"
+        }
+    }
+}
+
+rootProject.name = 'Granite.Agent'
+
+// Applications
+include 'Applications:Granite.Agent.CommandHost'
+include 'Applications:Granite.Agent.QueryHost'
+
+// Components
+include 'Components:Granite.Agent.Service'
+include 'Components:Granite.Agent.Client'
+include 'Components:Granite.Agent.Server'
+
+// Tests
+include 'Tests:Granite.Agent.ServiceTest'
+include 'Tests:Granite.Agent.ClientTest'
+include 'Tests:Granite.Agent.ServerTest'
+include 'Tests:Granite.Agent.TestSuite'
+
+

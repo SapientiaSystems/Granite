@@ -6,6 +6,10 @@ import type { ICompletionStage }                          from "strata.foundatio
 import type { HandleUsersInputRequest, HandleUsersInputReply,
               GetUsersOutputRequest, GetUsersOutputReply,
               HandleFeedbackInputRequest, HandleFeedbackInputReply,
+              HandleAgentInputRequest, HandleAgentInputReply,
+              GetAgentOutputRequest, GetAgentOutputReply,
+              HandleContentInputRequest, HandleContentInputReply,
+              GetContentOutputRequest, GetContentOutputReply,
               HandleSurveyInputRequest, HandleSurveyInputReply,
               GetFeedbackOutputRequest, GetFeedbackOutputReply,
               GetSurveyOutputRequest, GetSurveyOutputReply,
@@ -72,6 +76,34 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetFeedbackReviewOutputReply,GetFeedbackReviewOutputRequest>(
             "get-feedback-review-output",
+            this.initializeRequest(request));
+    }
+
+    handleAgentInput(request: HandleAgentInputRequest): ICompletionStage<HandleAgentInputReply>
+    {
+        return this.doPost<HandleAgentInputReply,HandleAgentInputRequest>(
+            "handle-agent-input",
+            this.initializeRequest(request));
+    }
+
+    getAgentOutput(request: GetAgentOutputRequest): ICompletionStage<GetAgentOutputReply>
+    {
+        return this.doPost<GetAgentOutputReply,GetAgentOutputRequest>(
+            "get-agent-output",
+            this.initializeRequest(request));
+    }
+
+    handleContentInput(request: HandleContentInputRequest): ICompletionStage<HandleContentInputReply>
+    {
+        return this.doPost<HandleContentInputReply,HandleContentInputRequest>(
+            "handle-content-input",
+            this.initializeRequest(request));
+    }
+
+    getContentOutput(request: GetContentOutputRequest): ICompletionStage<GetContentOutputReply>
+    {
+        return this.doPost<GetContentOutputReply,GetContentOutputRequest>(
+            "get-content-output",
             this.initializeRequest(request));
     }
 

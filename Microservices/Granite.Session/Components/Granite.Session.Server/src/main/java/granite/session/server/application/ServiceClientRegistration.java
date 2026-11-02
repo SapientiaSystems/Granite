@@ -23,13 +23,21 @@ class ServiceClientRegistration
     private final String   clientId;
     private final byte[]   secretHash;
     private final Duration lifetime;
+    private final boolean  delegation;
 
     public
     ServiceClientRegistration(String clientId,String secretSha256,Duration lifetime)
     {
+        this(clientId,secretSha256,lifetime,false);
+    }
+
+    public
+    ServiceClientRegistration(String clientId,String secretSha256,Duration lifetime,boolean delegation)
+    {
         this.clientId   = Objects.requireNonNull(clientId,"clientId");
         this.secretHash = decode(secretSha256);
         this.lifetime   = Objects.requireNonNull(lifetime,"lifetime");
+        this.delegation = delegation;
 
         if (MessageDigest.isEqual(secretHash,EMPTY_SECRET_HASH))
             throw new IllegalArgumentException("service client " + clientId + " is registered with the hash of an empty secret");
@@ -43,6 +51,9 @@ class ServiceClientRegistration
 
     public Duration
     getLifetime() { return lifetime; }
+
+    public boolean
+    isDelegation() { return delegation; }
 
     public boolean
     matches(String secret)

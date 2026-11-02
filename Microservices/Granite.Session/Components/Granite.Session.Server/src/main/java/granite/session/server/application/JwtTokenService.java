@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -37,6 +38,7 @@ class JwtTokenService
     private static final String DEVICE_ID_CLAIM   = "did";
     private static final String AUTHORITIES_CLAIM = "authorities";
     private static final String CONTINUITY_CLAIM  = "cid";
+    private static final String ACTOR_CLAIM       = "act";
 
     private final RSASSASigner    signer;
     private final RSASSAVerifier  verifier;
@@ -95,6 +97,38 @@ class JwtTokenService
                     AUTHORITIES_CLAIM,
                     sessionAuthorities(session.getAuthorities()))
                 .build();
+        return sign(claims);
+    }
+
+    @Override
+    public String
+    mintDelegated(Session session,String actor,Duration lifetime)
+    {
+        Objects.requireNonNull(session,"session");
+        Objects.requireNonNull(session.getUserId(),"session.userId");
+        Objects.requireNonNull(session.getSessionId(),"session.sessionId");
+        Objects.requireNonNull(actor,"actor");
+        Objects.requireNonNull(lifetime,"lifetime");
+
+        Instant      now    = Instant.now();
+        Instant      exp    = now.plus(lifetime);
+
+        if (session.getExpires() != null && session.getExpires().isBefore(exp))
+            exp = session.getExpires();
+
+        JWTClaimsSet claims =
+            new JWTClaimsSet.Builder()
+                .issuer(issuer)
+                .subject(String.valueOf(session.getUserId()))
+                .jwtID(String.valueOf(session.getSessionId()))
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(exp))
+                .audience(audience)
+                .claim(DEVICE_ID_CLAIM,session.getDeviceId())
+                .claim(AUTHORITIES_CLAIM,sessionAuthorities(session.getAuthorities()))
+                .claim(ACTOR_CLAIM,Map.of("sub",actor))
+                .build();
+
         return sign(claims);
     }
 

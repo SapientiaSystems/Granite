@@ -85,8 +85,12 @@ class GatewayProductionApplicationRoutesTest
                 "session-query-route",
                 "feedback-command-route",
                 "survey-command-route",
+                "agent-command-route",
+                "content-command-route",
                 "feedback-query-route",
                 "survey-query-route",
+                "agent-query-route",
+                "content-query-route",
                 "outbox-route",
                 "promotion-query-route"),
             ids);

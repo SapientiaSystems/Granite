@@ -17,6 +17,8 @@ import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
 import granite.session.service.requestreply.CloseSessionsReply;
 import granite.session.service.requestreply.CloseSessionsRequest;
+import granite.session.service.requestreply.IssueDelegatedTokenReply;
+import granite.session.service.requestreply.IssueDelegatedTokenRequest;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.CompleteOktaLoginRequest;
 import granite.session.service.requestreply.IssueServiceTokenReply;
@@ -117,6 +119,8 @@ class SessionCommandService
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
     private static final String   OKTA_PROVIDER       = "okta";
+
+    public static final Duration  DELEGATED_TOKEN_LIFETIME = Duration.ofMinutes(5);
 
     @Inject
     public
@@ -332,6 +336,16 @@ class SessionCommandService
                             : buildIssueReply(new IllegalStateException("no service clients"),request),
                     new CurrentThreadExecutor())
                 .exceptionally(e -> buildIssueReply(e,request));
+    }
+
+    @Override
+    public CompletionStage<IssueDelegatedTokenReply>
+    issueDelegatedToken(IssueDelegatedTokenRequest request)
+    {
+        return
+            CompletableFuture
+                .supplyAsync(() -> delegate(request),new CurrentThreadExecutor())
+                .exceptionally(e -> buildDelegatedReply(e,request));
     }
 
     @Override
@@ -1638,6 +1652,50 @@ class SessionCommandService
             (request != null ? new IssueServiceTokenReply(request) : new IssueServiceTokenReply())
                 .setSuccess(false)
                 .setFailureMessage(ServiceTokenIssuer.INVALID_CLIENT);
+    }
+
+    protected IssueDelegatedTokenReply
+    delegate(IssueDelegatedTokenRequest request)
+    {
+        if (request == null || serviceTokenIssuer == null || !serviceTokenIssuer.mayDelegate(request.getClientId(),request.getClientSecret()))
+            return refuseDelegation(request,ServiceTokenIssuer.INVALID_CLIENT);
+
+        if (request.getSessionId() == null || request.getUserId() == null)
+            return refuseDelegation(request,INVALID_SESSION);
+
+        Instant           now   = Instant.now(clock);
+        Optional<Session> found = repository.findById(request.getSessionId());
+
+        if (found.isEmpty() || found.get().isClosed() || !isLive(found.get(),now) || !request.getUserId().equals(found.get().getUserId()))
+        {
+            logger.warn("<issueDelegatedToken> refused for client {}",request.getClientId());
+            return refuseDelegation(request,INVALID_SESSION);
+        }
+
+        String token = jwtTokenService.mintDelegated(found.get(),request.getClientId(),DELEGATED_TOKEN_LIFETIME);
+
+        logger.info("<issueDelegatedToken> issued to client {}",request.getClientId());
+        return
+            new IssueDelegatedTokenReply(request)
+                .setSuccess(true)
+                .setToken(token)
+                .setExpiresAt(jwtTokenService.getExpiration(token));
+    }
+
+    private IssueDelegatedTokenReply
+    refuseDelegation(IssueDelegatedTokenRequest request,String message)
+    {
+        return
+            (request != null ? new IssueDelegatedTokenReply(request) : new IssueDelegatedTokenReply())
+                .setSuccess(false)
+                .setFailureMessage(message);
+    }
+
+    private IssueDelegatedTokenReply
+    buildDelegatedReply(Throwable e,IssueDelegatedTokenRequest request)
+    {
+        logger.warn("<issueDelegatedToken> exception reply: {}",e.getClass().getName());
+        return refuseDelegation(request,INVALID_SESSION);
     }
 
     private boolean

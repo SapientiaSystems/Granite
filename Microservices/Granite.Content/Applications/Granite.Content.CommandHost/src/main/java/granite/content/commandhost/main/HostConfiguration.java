@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// HostConfiguration.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.content.commandhost.main;
+
+import granite.content.server.configuration.GraniteContentCommandServerConfiguration;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public
+class HostConfiguration
+    extends GraniteContentCommandServerConfiguration {}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public
@@ -27,6 +29,7 @@ class SessionRequestContext
     private final Map<String,String> cookies;
     private final Optional<Long>     sessionId;
     private final Optional<Long>     callerUserId;
+    private final Set<String>        callerAuthorities;
     private final List<String>       setCookies;
 
     public
@@ -35,6 +38,7 @@ class SessionRequestContext
         this.cookies = Map.copyOf(cookies);
         this.sessionId = number(verifiedToken == null ? null : verifiedToken.getId());
         this.callerUserId = number(verifiedToken == null ? null : verifiedToken.getSubject());
+        this.callerAuthorities = authorities(verifiedToken);
         this.setCookies = new CopyOnWriteArrayList<>();
     }
 
@@ -46,6 +50,9 @@ class SessionRequestContext
 
     public Optional<Long>
     getCallerUserId() { return callerUserId; }
+
+    public Set<String>
+    getCallerAuthorities() { return callerAuthorities; }
 
     public void
     addSetCookie(String headerValue) { setCookies.add(headerValue); }
@@ -95,6 +102,21 @@ class SessionRequestContext
             return jwt;
 
         return null;
+    }
+
+    private static Set<String>
+    authorities(Jwt verifiedToken)
+    {
+        Set<String> result = new TreeSet<>();
+
+        if (verifiedToken == null || !(verifiedToken.getClaims().get("authorities") instanceof List<?> values))
+            return Set.copyOf(result);
+
+        for (Object value : values)
+            if (value instanceof String authority && !authority.startsWith("SCOPE_"))
+                result.add(authority);
+
+        return Set.copyOf(result);
     }
 
     private static Optional<Long>

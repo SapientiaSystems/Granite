@@ -124,8 +124,12 @@ class GatewayTestBackend
         registry.add("granite.session-query-service.host",() -> base);
         registry.add("granite.feedback-command-service.host",() -> base);
         registry.add("granite.survey-command-service.host",() -> base);
+        registry.add("granite.agent-command-service.host",() -> base);
+        registry.add("granite.content-command-service.host",() -> base);
         registry.add("granite.feedback-query-service.host",() -> base);
         registry.add("granite.survey-query-service.host",() -> base);
+        registry.add("granite.agent-query-service.host",() -> base);
+        registry.add("granite.content-query-service.host",() -> base);
         registry.add("granite.frontendcontroller-user-service.host",() -> base);
         registry.add("granite.frontendcontroller-admin-service.host",() -> base);
         registry.add("granite.outbox-service.host",() -> base);

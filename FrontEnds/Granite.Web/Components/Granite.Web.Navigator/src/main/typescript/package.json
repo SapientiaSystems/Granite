@@ -1,6 +1,6 @@
 {
   "name": "granite.web.navigator",
-  "version": "1.0.0-snapshot.1793598569044",
+  "version": "1.0.0-snapshot.1793604615577",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
@@ -9,6 +9,8 @@
     "granite.web.authentication": "1.0.0-snapshot",
     "granite.web.feedback": "1.0.0-snapshot",
     "granite.web.survey": "1.0.0-snapshot",
+    "granite.web.agent": "1.0.0-snapshot",
+    "granite.web.content": "1.0.0-snapshot",
     "@mantine/core": "^7.17.0",
     "@mantine/hooks": "^7.17.0",
     "ag-grid-community": "^33.0.0",

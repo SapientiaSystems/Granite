@@ -9,6 +9,14 @@ import type { HandleUsersInputReply }      from "./HandleUsersInputReply";
 import type { GetUsersOutputRequest }      from "./GetUsersOutputRequest";
 import type { GetUsersOutputReply }        from "./GetUsersOutputReply";
 import type { HandleFeedbackInputRequest }         from "./HandleFeedbackInputRequest";
+import type { HandleAgentInputRequest }          from "./HandleAgentInputRequest";
+import type { HandleAgentInputReply }            from "./HandleAgentInputReply";
+import type { GetAgentOutputRequest }            from "./GetAgentOutputRequest";
+import type { GetAgentOutputReply }              from "./GetAgentOutputReply";
+import type { HandleContentInputRequest }        from "./HandleContentInputRequest";
+import type { HandleContentInputReply }          from "./HandleContentInputReply";
+import type { GetContentOutputRequest }          from "./GetContentOutputRequest";
+import type { GetContentOutputReply }            from "./GetContentOutputReply";
 import type { HandleSurveyInputRequest }         from "./HandleSurveyInputRequest";
 import type { HandleFeedbackInputReply }           from "./HandleFeedbackInputReply";
 import type { HandleSurveyInputReply }           from "./HandleSurveyInputReply";
@@ -46,6 +54,14 @@ interface IGraniteFrontEndControllerService
     getUsersOutput(request: GetUsersOutputRequest): ICompletionStage<GetUsersOutputReply>;
 
     handleFeedbackInput(request: HandleFeedbackInputRequest): ICompletionStage<HandleFeedbackInputReply>;
+    handleAgentInput(request: HandleAgentInputRequest): ICompletionStage<HandleAgentInputReply>;
+
+    getAgentOutput(request: GetAgentOutputRequest): ICompletionStage<GetAgentOutputReply>;
+
+    handleContentInput(request: HandleContentInputRequest): ICompletionStage<HandleContentInputReply>;
+
+    getContentOutput(request: GetContentOutputRequest): ICompletionStage<GetContentOutputReply>;
+
     handleSurveyInput(request: HandleSurveyInputRequest): ICompletionStage<HandleSurveyInputReply>;
 
     getFeedbackOutput(request: GetFeedbackOutputRequest): ICompletionStage<GetFeedbackOutputReply>;

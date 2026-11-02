@@ -12,6 +12,9 @@ interface IServiceTokenIssuer
 {
     IssueServiceTokenReply
     issue(IssueServiceTokenRequest request);
+
+    boolean
+    mayDelegate(String clientId,String clientSecret);
 }
 
 //////////////////////////////////////////////////////////////////////////////

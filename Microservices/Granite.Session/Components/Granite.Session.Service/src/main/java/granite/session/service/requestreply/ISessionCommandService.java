@@ -35,6 +35,9 @@ interface ISessionCommandService
 
     CompletionStage<IssueServiceTokenReply>
     issueServiceToken(IssueServiceTokenRequest request);
+
+    CompletionStage<IssueDelegatedTokenReply>
+    issueDelegatedToken(IssueDelegatedTokenRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////
