@@ -18,6 +18,8 @@ interface ISessionQueryService
     CompletionStage<FindSessionByUserIdAndDeviceIdReply>
     findSessionByUserIdAndDeviceId(FindSessionByUserIdAndDeviceIdRequest request);
 
+    CompletionStage<FindSessionsReply>
+    findSessions(FindSessionsRequest request);
 }
 
 //////////////////////////////////////////////////////////////////////////////

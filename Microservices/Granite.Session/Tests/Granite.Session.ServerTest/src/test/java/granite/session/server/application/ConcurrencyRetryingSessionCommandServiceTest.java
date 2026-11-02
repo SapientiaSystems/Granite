@@ -4,6 +4,8 @@
 
 package granite.session.server.application;
 
+import granite.session.service.requestreply.CloseSessionsReply;
+import granite.session.service.requestreply.CloseSessionsRequest;
 import granite.session.service.requestreply.ISessionCommandService;
 import granite.session.service.requestreply.LoginReply;
 import granite.session.service.requestreply.LoginRequest;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -187,6 +190,21 @@ class ConcurrencyRetryingSessionCommandServiceTest
 
         assertSame(reply,subject.refresh(refresh).toCompletableFuture().join());
         Mockito.verify(delegate,Mockito.times(1)).refresh(refresh);
+    }
+
+    @Test
+    public void
+    closeSessionsPassesThrough()
+    {
+        CloseSessionsRequest close = new CloseSessionsRequest().setSessionIds(Set.of(7L));
+        CloseSessionsReply   reply = new CloseSessionsReply(close).setSuccess(true);
+
+        Mockito
+            .when(delegate.closeSessions(close))
+            .thenReturn(CompletableFuture.completedFuture(reply));
+
+        assertSame(reply,subject.closeSessions(close).toCompletableFuture().join());
+        Mockito.verify(delegate,Mockito.times(1)).closeSessions(close);
     }
 
     private LoginReply

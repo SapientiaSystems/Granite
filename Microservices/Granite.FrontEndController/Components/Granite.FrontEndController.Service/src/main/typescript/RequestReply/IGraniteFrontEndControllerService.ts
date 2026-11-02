@@ -8,6 +8,10 @@ import type { HandleUsersInputRequest }    from "./HandleUsersInputRequest";
 import type { HandleUsersInputReply }      from "./HandleUsersInputReply";
 import type { GetUsersOutputRequest }      from "./GetUsersOutputRequest";
 import type { GetUsersOutputReply }        from "./GetUsersOutputReply";
+import type { HandleSessionsInputRequest } from "./HandleSessionsInputRequest";
+import type { HandleSessionsInputReply }   from "./HandleSessionsInputReply";
+import type { GetSessionsOutputRequest }   from "./GetSessionsOutputRequest";
+import type { GetSessionsOutputReply }     from "./GetSessionsOutputReply";
 import type { HandleSessionInputRequest }  from "./HandleSessionInputRequest";
 import type { HandleSessionInputReply }    from "./HandleSessionInputReply";
 import type { GetSessionOutputRequest }    from "./GetSessionOutputRequest";
@@ -24,6 +28,10 @@ interface IGraniteFrontEndControllerService
     handleUsersInput(request: HandleUsersInputRequest): ICompletionStage<HandleUsersInputReply>;
 
     getUsersOutput(request: GetUsersOutputRequest): ICompletionStage<GetUsersOutputReply>;
+
+    handleSessionsInput(request: HandleSessionsInputRequest): ICompletionStage<HandleSessionsInputReply>;
+
+    getSessionsOutput(request: GetSessionsOutputRequest): ICompletionStage<GetSessionsOutputReply>;
 
     handleSessionInput(request: HandleSessionInputRequest): ICompletionStage<HandleSessionInputReply>;
 

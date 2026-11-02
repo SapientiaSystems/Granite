@@ -64,6 +64,30 @@ class SessionQueryServiceClientTest
     }
 
     @Override
+    @Test
+    public void
+    testFindSessionsOpenOnly()
+    {
+        super.testFindSessionsOpenOnly();
+    }
+
+    @Override
+    @Test
+    public void
+    testFindSessionsIncludeClosed()
+    {
+        super.testFindSessionsIncludeClosed();
+    }
+
+    @Override
+    @Test
+    public void
+    testFindSessionsCarriesLastActivityAndLoginMethod()
+    {
+        super.testFindSessionsCarriesLastActivityAndLoginMethod();
+    }
+
+    @Override
     protected ISessionQueryService
     getSubject()
     {

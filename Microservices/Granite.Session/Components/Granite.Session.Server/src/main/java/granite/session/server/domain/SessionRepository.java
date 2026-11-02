@@ -58,7 +58,13 @@ class SessionRepository
                 "select e from Session e where e.deviceId = :deviceId and e.closedReason is null")
             .registerQuery(
                 "findOpenByUserId",
-                "select e from Session e where e.userId = :userId and e.closedReason is null");
+                "select e from Session e where e.userId = :userId and e.closedReason is null")
+            .registerQuery(
+                "findAllSessions",
+                "select e from Session e order by e.lastActivity desc nulls last, e.primaryId desc")
+            .registerQuery(
+                "findOpenSessions",
+                "select e from Session e where e.closedReason is null order by e.lastActivity desc nulls last, e.primaryId desc");
     }
 
     @Override
@@ -219,6 +225,34 @@ class SessionRepository
                     Session.class,
                     "findOpenByUserId",
                     Map.of("userId",userId))
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Session>
+    findAllSessions()
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findAllSessions",
+                    Map.of())
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Session>
+    findOpenSessions()
+    {
+        return
+            getUnitOfWork()
+                .findManyByQuery(
+                    Session.class,
+                    "findOpenSessions",
+                    Map.of())
                 .stream()
                 .collect(Collectors.toList());
     }

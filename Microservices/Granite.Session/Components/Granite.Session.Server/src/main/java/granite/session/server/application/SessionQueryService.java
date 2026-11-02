@@ -79,6 +79,20 @@ class SessionQueryService
                 .exceptionally(exception -> buildReply(exception,request));
     }
 
+    @Override
+    public CompletionStage<FindSessionsReply>
+    findSessions(FindSessionsRequest request)
+    {
+        logger.debug("findSessions({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(findRequest -> mapToContext(findRequest))
+                .thenApply(context -> findSessions(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
     protected FindSessionsByKeyRequest
     validate(FindSessionsByKeyRequest request)
     {
@@ -127,6 +141,13 @@ class SessionQueryService
         return request;
     }
 
+    protected FindSessionsRequest
+    validate(FindSessionsRequest request)
+    {
+        logger.debug("validate((FindSessions){})",request.getRequestId());
+        return request;
+    }
+
     protected FindSessionsByKeyContext
     mapToContext(FindSessionsByKeyRequest request)
     {
@@ -155,6 +176,16 @@ class SessionQueryService
             request.getRequestId());
 
         return new FindSessionByUserIdAndDeviceIdContext(request);
+    }
+
+    protected FindSessionsContext
+    mapToContext(FindSessionsRequest request)
+    {
+        logger.debug(
+            "mapToContext((FindSessionsRequest){})",
+            request.getRequestId());
+
+        return new FindSessionsContext(request);
     }
 
     protected FindSessionsByKeyContext
@@ -229,6 +260,17 @@ class SessionQueryService
                         context.getUserId(),
                         context.getDeviceId())
                     .orElse(null));
+    }
+
+    protected FindSessionsContext
+    findSessions(FindSessionsContext context)
+    {
+        logger.debug("find Sessions((FindSessionsContext)context)");
+        return
+            context.setFound(
+                context.isIncludeClosed()
+                    ? repository.findAllSessions()
+                    : repository.findOpenSessions());
     }
 
     private FindSessionsByKeyReply
@@ -319,6 +361,34 @@ class SessionQueryService
                 .setFailureMessage(
                     "Unable to find session for user " + request.getUserId() +
                     " and device " + request.getDeviceId() + ": " + e.getMessage())
+                .setException(ExceptionData.of(e));
+    }
+
+    private FindSessionsReply
+    buildReply(FindSessionsContext context)
+    {
+        List<Session> found = context.getFound();
+
+        logger.info("building successful reply");
+
+        return
+            new FindSessionsReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Found " + found.size() + " session(s)")
+                .setSessions(
+                    mapper.map(
+                        found,
+                        new TypeToken<List<SessionData>>() {}.getType()));
+    }
+
+    private FindSessionsReply
+    buildReply(Throwable e,FindSessionsRequest request)
+    {
+        logger.info("building exception reply: {}",e.getMessage());
+        return
+            new FindSessionsReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to find sessions: " + e.getMessage())
                 .setException(ExceptionData.of(e));
     }
 }

@@ -18,6 +18,12 @@ interface IGraniteFrontEndControllerService
     CompletionStage<GetUsersOutputReply>
     getUsersOutput(GetUsersOutputRequest request);
 
+    CompletionStage<HandleSessionsInputReply>
+    handleSessionsInput(HandleSessionsInputRequest request);
+
+    CompletionStage<GetSessionsOutputReply>
+    getSessionsOutput(GetSessionsOutputRequest request);
+
     CompletionStage<HandleSessionInputReply>
     handleSessionInput(HandleSessionInputRequest request);
 

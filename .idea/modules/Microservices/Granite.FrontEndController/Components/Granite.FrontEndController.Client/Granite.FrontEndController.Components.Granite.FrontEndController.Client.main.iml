@@ -11,9 +11,7 @@
     <output url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client/.build/classes/java/main" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client/.build/generated-java" />
-    <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client/src/main">
-      <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client/src/main/java" isTestSource="false" />
-    </content>
+    <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Components/Granite.FrontEndController.Client/src/main" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Granite.FrontEndController.Components.Granite.FrontEndController.Service.main" />

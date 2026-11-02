@@ -20,6 +20,13 @@ export {HandlePreferencesInputRequest}      from "./HandlePreferencesInputReques
 export {HandlePreferencesInputReply}        from "./HandlePreferencesInputReply";
 export {GetPreferencesOutputRequest}        from "./GetPreferencesOutputRequest";
 export {GetPreferencesOutputReply}          from "./GetPreferencesOutputReply";
+export {SessionsInput}                     from "./SessionsInput";
+export {SessionsOutput}                    from "./SessionsOutput";
+export {SessionRowData}                    from "./SessionRowData";
+export {HandleSessionsInputRequest}        from "./HandleSessionsInputRequest";
+export {HandleSessionsInputReply}          from "./HandleSessionsInputReply";
+export {GetSessionsOutputRequest}          from "./GetSessionsOutputRequest";
+export {GetSessionsOutputReply}            from "./GetSessionsOutputReply";
 export {SessionInput}                      from "./SessionInput";
 export {SessionOutput}                     from "./SessionOutput";
 export {HandleSessionInputRequest}         from "./HandleSessionInputRequest";

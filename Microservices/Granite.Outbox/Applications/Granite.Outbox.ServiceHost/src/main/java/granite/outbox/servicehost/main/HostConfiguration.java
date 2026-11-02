@@ -12,13 +12,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
-import strata.foundation.core.inject.ApplicationConfigurationProvider;
 import strata.foundation.kafka.event.IKafkaConfigurationProvider;
 import strata.foundation.kafka.event.KafkaConfigurationProvider;
+import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.outbox.core.receiver.IOutboxEventReceiverMapProvider;
 import strata.outbox.server.configuration.StrataPollingOutboxServerConfiguration;
 import strata.server.spring.health.HealthCheckConfiguration;
@@ -56,10 +57,10 @@ class HostConfiguration
     @Bean
     @Scope("singleton")
     public IConfiguration
-    configuration()
+    configuration(Environment environment)
     {
         return
-            new ApplicationConfigurationProvider("development").get();
+            new SpringConfigurationProvider(environment).get();
     }
 
     @Bean

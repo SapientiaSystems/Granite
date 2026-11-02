@@ -92,8 +92,8 @@ Closing (`Session.close(reason,at)`) sets `closedReason`, clears `activeMarker`,
 The shared contract component. Contains no implementation logic. Defines:
 
 - **Service interfaces**: `ISessionCommandService`, `ISessionQueryService`
-- **Request/Reply DTOs**: `LoginRequest`/`Reply`, `StartOktaLoginRequest`/`Reply`, `CompleteOktaLoginRequest`/`Reply`, `LogoutRequest`/`Reply`, `LogoutAllForUserRequest`/`Reply`, `RefreshRequest`/`Reply`, `ResolveSessionRequest`/`Reply`, `IssueServiceTokenRequest`/`Reply` (`{clientId, clientSecret}` → `{token, expiresAt}`; `toString` never prints the secret or the token), `FindSessionsByKeyRequest`/`Reply`, `FindSessionsByKeySetRequest`/`Reply`, `FindSessionByUserIdAndDeviceIdRequest`/`Reply`
-- **Data transfer objects**: `SessionData`
+- **Request/Reply DTOs**: `LoginRequest`/`Reply`, `StartOktaLoginRequest`/`Reply`, `CompleteOktaLoginRequest`/`Reply`, `LogoutRequest`/`Reply`, `LogoutAllForUserRequest`/`Reply`, `CloseSessionsRequest`/`Reply` (`{sessionIds}` → `{requestedSessionIds, failedSessionIds, closedSessions}`), `RefreshRequest`/`Reply`, `ResolveSessionRequest`/`Reply`, `IssueServiceTokenRequest`/`Reply` (`{clientId, clientSecret}` → `{token, expiresAt}`; `toString` never prints the secret or the token), `FindSessionsByKeyRequest`/`Reply`, `FindSessionsByKeySetRequest`/`Reply`, `FindSessionByUserIdAndDeviceIdRequest`/`Reply`, `FindSessionsRequest`/`Reply` (`{includeClosed}` → `{sessions}`)
+- **Data transfer objects**: `SessionData` (`sessionId`, `userId`, `created`, `expires`, `lastActivity`, `deviceId`, `loginMethod`, `values`, `authorities`, `continuityId`, `closedReason`, `replacedBy`, `copiedFrom`; never the access token, refresh token hash or handle hash). `loginMethod` is the service-level enum `SessionLoginMethod` (same constants as the domain `LoginMethod`, mapped by name in `MappingModule`)
 - **Key types**: `SessionKey` (names `SESSION_ID`, `USER_ID`), `SessionKeySet` (names `SESSION_IDS`, `USER_IDS`). Lookup by access token is deliberately not offered, so tokens never appear in query requests.
 - **Credentials**: carried as sibling scalar fields `credential: String` and `credentialKind: CredentialKind`. `CredentialKind` (`PASSWORD`, `ACCESS_TOKEN`, `SECURITY_CODE`) lives in Granite.User.Service.
 - **Event interfaces**: `ISessionEventSender`, `ISessionEventReceiver`, `ISessionEventListener`
@@ -108,8 +108,8 @@ The shared contract component. Contains no implementation logic. Defines:
   - Observer pattern: `ISessionEventObserver`, `ISessionEventSource`
 
 - **Application layer** (`server.application`):
-  - `SessionCommandService` — Implements `ISessionCommandService` and `ISessionEventObserver`. Provides login, startOktaLogin, completeOktaLogin, logout, logoutAllForUser, refresh, resolveSession and issueServiceToken (delegated to `IServiceTokenIssuer`). Translates domain events into service-level session events via `ISessionEventSender`.
-  - `SessionQueryService` — Implements `ISessionQueryService`. Provides find-by-key, find-by-key-set, and find-by-user-id-and-device-id (open session only) operations.
+  - `SessionCommandService` — Implements `ISessionCommandService` and `ISessionEventObserver`. Provides login, startOktaLogin, completeOktaLogin, logout, logoutAllForUser, closeSessions, refresh, resolveSession and issueServiceToken (delegated to `IServiceTokenIssuer`). Translates domain events into service-level session events via `ISessionEventSender`.
+  - `SessionQueryService` — Implements `ISessionQueryService`. Provides find-by-key, find-by-key-set, find-by-user-id-and-device-id (open session only) and `findSessions` (every open session, or every row still stored when `includeClosed`, newest `lastActivity` first; no paging) operations.
   - Context objects for each operation
   - `MappingModule` — ModelMapper type mappings between Session domain objects and Session DTOs
   - `ApplicationConfiguration` — Spring `@Configuration` that wires session services with request scope
@@ -199,7 +199,7 @@ Plain (non-Boot) Spring contexts, such as the ServerTest configurations, must su
 - `resolveSession` takes `{handle}` and returns `{session, accessToken}`. It hashes the handle and looks up `hashedHandle`; a blank, unknown or closed handle fails, and a session past `expires` or `created + max-lifetime` is closed as `EXPIRED` (fires `SessionUpdated`) and fails. Every failure replies `success=false` with exactly `invalid session`. When the stored JWT expires within `granite.session.token.renewal-margin` (default `PT2M`), or its expiry cannot be read, the user is re-read through `IUserQueryServiceClient.findUsersByKey` (authorities recalculated; for an `OKTA` session the User's stored authorities, for every login method; a missing user fails), a new JWT is minted (never past `expires`) and `SessionUpdated` fires. `lastActivity` is written at most once a minute (no event). `ResolveSessionRequest.toString()` and `ResolveSessionReply.toString()` never print the handle or the token, and the pipeline logs only session IDs. `/resolve-session` is a public path (the handle is the credential, like the refresh token for `refresh`); the Gateway calls it without an `Authorization` header and denies external requests to it.
 - `refresh` takes `{refreshToken}` (not a sessionId). It looks the session up by the token's hash, rejects a closed session (`session closed`) or one past `expires` or `created + granite.session.max-lifetime` (default `PT24H`, `session expired`), re-reads the user through `IUserQueryServiceClient.findUsersByKey` (a missing user is rejected with `user unavailable`) and sets the session authorities to the User's stored roles, rotates the refresh token (the current hash becomes `previousRefreshTokenHash`), mints a new JWT, and fires `SessionUpdated`. `expires` does not change. The reply carries the new `accessToken` and `refreshToken`.
 - Presenting a refresh token that matches a session's `previousRefreshTokenHash` is treated as theft: the session is closed as `REVOKED_SECURITY` (an already-closed session keeps its reason) and the refresh fails. Each refresh token is therefore single-use.
-- `logout` closes the session as `LOGOUT` (already closed: success, no change); it never calls Okta (logout is application-level only: the Okta session is not ended and there is no end-session URL or setting); `logoutAllForUser` closes every open session of the user as `ADMIN`. Neither deletes rows.
+- `logout` closes the session as `LOGOUT` (already closed: success, no change); it never calls Okta (logout is application-level only: the Okta session is not ended and there is no end-session URL or setting); `logoutAllForUser` closes every open session of the user as `ADMIN`; `closeSessions({sessionIds})` closes each listed open session as `ADMIN` (one `SessionUpdated` each), reports unknown and already-closed ids in `failedSessionIds` (an already-closed session keeps its reason), replies `success` only when nothing failed, and rejects a null or empty set. None of them deletes rows.
 - Close and revocation events are `UPDATED` service events whose Avro field `closedReason` names the reason (`null` on other events).
 - Lifetime is `granite.session.max-lifetime` only; there is no idle timeout and `granite.session.session-ttl` is no longer read.
 - Access tokens are RS256 JWTs (private key at `granite.session.jwt.private-key-location`). The header carries `typ=JWT` and `kid` (the RFC 7638 thumbprint of the public key). Claims: `iss=granite-session`, `sub=userId`, `jti=sessionId`, `iat`, `exp`, `aud`, `did=deviceId`, `cid=continuityId` (when set), `authorities`. `JwtTokenService.mint(Session)` drops every authority starting with `SCOPE_` (`GraniteAuthorities.isScope`) from the session's authorities, so a session token never carries `SCOPE_internal` even if a user record holds it; only service tokens (`mintServiceToken`) carry scopes.
@@ -222,7 +222,7 @@ Server-side authorization-code flow with PKCE `S256`; Session is a confidential 
 
 ### CQRS (Command Query Responsibility Segregation)
 
-Commands (login, startOktaLogin, completeOktaLogin, logout, logoutAllForUser, refresh, resolveSession, issueServiceToken) and queries (find) are separated into distinct service interfaces (`ISessionCommandService`, `ISessionQueryService`), distinct controllers (`SessionCommandServiceController`, `SessionQueryServiceController`), and distinct host applications (`SessionCommandHost`, `SessionQueryHost`).
+Commands (login, startOktaLogin, completeOktaLogin, logout, logoutAllForUser, closeSessions, refresh, resolveSession, issueServiceToken) and queries (find) are separated into distinct service interfaces (`ISessionCommandService`, `ISessionQueryService`), distinct controllers (`SessionCommandServiceController`, `SessionQueryServiceController`), and distinct host applications (`SessionCommandHost`, `SessionQueryHost`).
 
 ### Request-Reply
 
@@ -250,7 +250,7 @@ The `Session` domain object extends `AbstractEntityAndDomainEventSource` and fir
 
 ### Repository
 
-`ISessionRepository` extends the Strata `IRepository<Long,Session>` interface. The concrete `SessionRepository` extends `AbstractRepository` and registers named JPA queries (by id set, access token, access token set, user id, user id set, user id and device id).
+`ISessionRepository` extends the Strata `IRepository<Long,Session>` interface. The concrete `SessionRepository` extends `AbstractRepository` and registers named JPA queries (by id set, access token, access token set, user id, user id set, user id and device id, and `findAllSessions` / `findOpenSessions` ordered by `lastActivity desc nulls last`).
 
 ### Context Object
 
@@ -275,6 +275,7 @@ Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConf
 | `POST /complete-okta-login` | `CompleteOktaLoginRequest` | `CompleteOktaLoginReply` |
 | `POST /logout` | `LogoutRequest` | `LogoutReply` |
 | `POST /logout-all-for-user` | `LogoutAllForUserRequest` | `LogoutAllForUserReply` |
+| `POST /close-sessions` | `CloseSessionsRequest` | `CloseSessionsReply` |
 | `POST /refresh` | `RefreshRequest` | `RefreshReply` |
 | `POST /resolve-session` | `ResolveSessionRequest` | `ResolveSessionReply` |
 | `POST /issue-service-token` | `IssueServiceTokenRequest` | `IssueServiceTokenReply` |
@@ -292,6 +293,7 @@ Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConf
 | `POST /find-sessions-by-key` | `FindSessionsByKeyRequest` | `FindSessionsByKeyReply` |
 | `POST /find-sessions-by-keyset` | `FindSessionsByKeySetRequest` | `FindSessionsByKeySetReply` |
 | `POST /find-session-by-user-id-and-device-id` | `FindSessionByUserIdAndDeviceIdRequest` | `FindSessionByUserIdAndDeviceIdReply` |
+| `POST /find-sessions` | `FindSessionsRequest` | `FindSessionsReply` |
 
 ## Preferred Coding Style and Idioms
 

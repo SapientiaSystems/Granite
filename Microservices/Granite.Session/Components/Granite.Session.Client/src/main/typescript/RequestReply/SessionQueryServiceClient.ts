@@ -10,7 +10,9 @@ import {
     FindSessionsByKeySetReply,
     FindSessionsByKeySetRequest,
     FindSessionByUserIdAndDeviceIdReply,
-    FindSessionByUserIdAndDeviceIdRequest
+    FindSessionByUserIdAndDeviceIdRequest,
+    FindSessionsReply,
+    FindSessionsRequest
 } from "granite.session.service/RequestReply";
 
 export
@@ -60,6 +62,14 @@ class SessionQueryServiceClient
         console.log("SessionQueryServiceClient.findSessionByUserIdAndDeviceId");
         return this.doPost<FindSessionByUserIdAndDeviceIdReply,FindSessionByUserIdAndDeviceIdRequest>(
             "find-session-by-user-id-and-device-id",
+            this.initializeRequest(request));
+    }
+
+    findSessions(request: FindSessionsRequest): ICompletionStage<FindSessionsReply>
+    {
+        console.log("SessionQueryServiceClient.findSessions");
+        return this.doPost<FindSessionsReply,FindSessionsRequest>(
+            "find-sessions",
             this.initializeRequest(request));
     }
 

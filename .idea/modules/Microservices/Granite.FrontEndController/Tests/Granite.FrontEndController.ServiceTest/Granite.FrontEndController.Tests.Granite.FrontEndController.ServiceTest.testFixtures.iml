@@ -10,9 +10,7 @@
   <component name="NewModuleRootManager">
     <output-test url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServiceTest/.build/classes/java/testFixtures" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServiceTest/src/testFixtures">
-      <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServiceTest/src/testFixtures/java" isTestSource="true" />
-    </content>
+    <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.FrontEndController/Tests/Granite.FrontEndController.ServiceTest/src/testFixtures" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Granite.FrontEndController.Tests.Granite.FrontEndController.ServiceTest.main" />

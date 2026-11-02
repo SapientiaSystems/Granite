@@ -412,7 +412,9 @@ class GraniteGatewayServerConfiguration
             .pathMatchers(
                 HttpMethod.POST,
                 "/frontendcontroller-user-service/get-users-output",
-                "/frontendcontroller-admin-service/get-users-output")
+                "/frontendcontroller-admin-service/get-users-output",
+                "/frontendcontroller-user-service/get-sessions-output",
+                "/frontendcontroller-admin-service/get-sessions-output")
                 .hasAnyAuthority(readers)
             .pathMatchers("/user-query-service/**")
                 .hasAnyAuthority(readers)
@@ -423,7 +425,9 @@ class GraniteGatewayServerConfiguration
             .pathMatchers(
                 HttpMethod.POST,
                 "/frontendcontroller-user-service/handle-users-input",
-                "/frontendcontroller-admin-service/handle-users-input")
+                "/frontendcontroller-admin-service/handle-users-input",
+                "/frontendcontroller-user-service/handle-sessions-input",
+                "/frontendcontroller-admin-service/handle-sessions-input")
                 .hasAnyAuthority(admins)
             .pathMatchers(
                 "/frontendcontroller-user-service/handle-input",

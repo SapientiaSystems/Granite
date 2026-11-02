@@ -136,11 +136,11 @@ Granite core's rules live in `GraniteGatewayServerConfiguration.configureAuthori
 |---|---|
 | `production` only: `/user-query-service/**`, `/user-command-service/**`, `/session-query-service/**`, `/session-command-service/**`, `/outbox-service/**` (after the earlier `resolve-session` denyAll, Okta-step rule and public `issue-service-token`; this covers `login` and `refresh` too) | `SCOPE_internal` only (`ROLE_ADMIN`, `ROLE_AUDITOR` and every other browser role get 403) |
 | `POST /frontendcontroller-{user,admin}-service/get-preferences-output` and `handle-preferences-input` (both hosts) | any authenticated caller (the operations act on the caller's own user) |
-| `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output` | `getUsersReaderAuthorities()` |
+| `POST /frontendcontroller-user-service/get-users-output`, `POST /frontendcontroller-admin-service/get-users-output`, and the same two hosts' `get-sessions-output` (the admin Sessions view) | `getUsersReaderAuthorities()` |
 | `/user-query-service/**` (outside `production`) | `getUsersReaderAuthorities()` |
 | `POST /session-command-service/logout` (outside `production`) | `getUsersReaderAuthorities()` |
 | `/session-query-service/**` (outside `production`) | `getUsersReaderAuthorities()` |
-| `POST ./handle-users-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/outbox-service/**` (the last three outside `production`) | `ROLE_ADMIN` |
+| `POST ./handle-users-input` and `POST ./handle-sessions-input` (both hosts), retired `handle-input` and `get-output` (both hosts), `/user-command-service/**`, `/session-command-service/**` (after the logout rule), `/outbox-service/**` (the last three outside `production`) | `ROLE_ADMIN` |
 | application rules from `configureApplicationAuthorization` | as declared |
 | `/**` (catch-all, so everything else) | `ROLE_ADMIN` |
 

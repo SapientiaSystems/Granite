@@ -80,6 +80,17 @@ class SessionCommandServiceClient
     }
 
     @Override
+    public CompletionStage<CloseSessionsReply>
+    closeSessions(CloseSessionsRequest request)
+    {
+        return
+            doPostAsync(
+                "close-sessions",
+                CloseSessionsReply.class,
+                request);
+    }
+
+    @Override
     public CompletionStage<RefreshReply>
     refresh(RefreshRequest request)
     {

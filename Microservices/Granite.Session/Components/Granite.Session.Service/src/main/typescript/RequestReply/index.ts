@@ -1,5 +1,6 @@
 export {SessionData} from "./SessionData";
 export {SessionClosedReason} from "./SessionClosedReason";
+export {SessionLoginMethod} from "./SessionLoginMethod";
 export {SessionKey} from "./SessionKey";
 export {SessionKeySet} from "./SessionKeySet";
 export {LoginRequest} from "./LoginRequest";
@@ -12,6 +13,8 @@ export {LogoutRequest} from "./LogoutRequest";
 export {LogoutReply} from "./LogoutReply";
 export {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
 export {LogoutAllForUserReply} from "./LogoutAllForUserReply";
+export {CloseSessionsRequest} from "./CloseSessionsRequest";
+export {CloseSessionsReply} from "./CloseSessionsReply";
 export {RefreshRequest} from "./RefreshRequest";
 export {RefreshReply} from "./RefreshReply";
 export {ResolveSessionRequest} from "./ResolveSessionRequest";
@@ -24,6 +27,8 @@ export {FindSessionsByKeySetRequest} from "./FindSessionsByKeySetRequest";
 export {FindSessionsByKeySetReply} from "./FindSessionsByKeySetReply";
 export {FindSessionByUserIdAndDeviceIdRequest} from "./FindSessionByUserIdAndDeviceIdRequest";
 export {FindSessionByUserIdAndDeviceIdReply} from "./FindSessionByUserIdAndDeviceIdReply";
+export {FindSessionsRequest} from "./FindSessionsRequest";
+export {FindSessionsReply} from "./FindSessionsReply";
 
 export {ISessionCommandService} from "./ISessionCommandService";
 export {ISessionQueryService} from "./ISessionQueryService";

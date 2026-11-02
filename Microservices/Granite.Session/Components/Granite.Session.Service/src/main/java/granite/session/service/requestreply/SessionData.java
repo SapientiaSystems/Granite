@@ -27,6 +27,8 @@ class SessionData
     private SessionClosedReason closedReason;
     private Long                replacedBy;
     private Long                copiedFrom;
+    private Instant             lastActivity;
+    private SessionLoginMethod  loginMethod;
 
     public
     SessionData()
@@ -42,6 +44,8 @@ class SessionData
         closedReason = null;
         replacedBy   = null;
         copiedFrom   = null;
+        lastActivity = null;
+        loginMethod  = null;
     }
 
     public SessionData
@@ -121,6 +125,20 @@ class SessionData
         return this;
     }
 
+    public SessionData
+    setLastActivity(Instant time)
+    {
+        lastActivity = time;
+        return this;
+    }
+
+    public SessionData
+    setLoginMethod(SessionLoginMethod method)
+    {
+        loginMethod = method;
+        return this;
+    }
+
     public Long
     getSessionId() { return sessionId; }
 
@@ -153,6 +171,12 @@ class SessionData
 
     public Long
     getCopiedFrom() { return copiedFrom; }
+
+    public Instant
+    getLastActivity() { return lastActivity; }
+
+    public SessionLoginMethod
+    getLoginMethod() { return loginMethod; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

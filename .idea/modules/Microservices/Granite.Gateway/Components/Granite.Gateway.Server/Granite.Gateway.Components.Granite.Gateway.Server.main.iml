@@ -6,7 +6,6 @@
     <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Gateway/Components/Granite.Gateway.Server/.build/generated-java" />
     <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Gateway/Components/Granite.Gateway.Server/src/main">
       <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Gateway/Components/Granite.Gateway.Server/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Gateway/Components/Granite.Gateway.Server/src/main/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

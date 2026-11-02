@@ -70,6 +70,10 @@ class GatewayRoleRulesTest
         assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-users-output",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
         assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-users-input",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-sessions-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-sessions-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-sessions-input",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-sessions-input",token);
         assertAllowed(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
         assertAllowed(HttpMethod.POST,"/user-command-service/create-user",token);
         assertAllowed(HttpMethod.POST,"/session-command-service/logout",token);
@@ -92,8 +96,13 @@ class GatewayRoleRulesTest
         assertAllowed(HttpMethod.POST,"/session-query-service/find-sessions-by-key",token);
         assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-users-input",token);
         assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-users-input",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-sessions-output",token);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/get-sessions-output",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-sessions-input",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-sessions-input",token);
         assertForbidden(HttpMethod.POST,"/user-command-service/create-user",token);
         assertForbidden(HttpMethod.POST,"/session-command-service/logout-all-for-user",token);
+        assertForbidden(HttpMethod.POST,"/session-command-service/close-sessions",token);
         assertForbidden(HttpMethod.POST,"/outbox-service/anything",token);
     }
 
@@ -118,6 +127,8 @@ class GatewayRoleRulesTest
         String token = backend.sign(List.of("ROLE_USER"));
 
         assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-sessions-output",token);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/handle-sessions-input",token);
         assertForbidden(HttpMethod.POST,"/user-query-service/find-users-by-key",token);
     }
 
@@ -130,6 +141,8 @@ class GatewayRoleRulesTest
 
         assertAllowed(HttpMethod.POST,"/user-command-service/create-user",token);
         assertAllowed(HttpMethod.POST,"/session-query-service/find-sessions-by-key",token);
+        assertAllowed(HttpMethod.POST,"/session-query-service/find-sessions",token);
+        assertAllowed(HttpMethod.POST,"/session-command-service/close-sessions",token);
     }
 
     @Test
@@ -154,6 +167,7 @@ class GatewayRoleRulesTest
     missingTokenIsUnauthorized()
     {
         assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/get-users-output",null));
+        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/get-sessions-output",null));
     }
 
     private void

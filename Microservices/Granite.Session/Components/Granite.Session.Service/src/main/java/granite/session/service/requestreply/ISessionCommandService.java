@@ -24,6 +24,9 @@ interface ISessionCommandService
     CompletionStage<LogoutAllForUserReply>
     logoutAllForUser(LogoutAllForUserRequest request);
 
+    CompletionStage<CloseSessionsReply>
+    closeSessions(CloseSessionsRequest request);
+
     CompletionStage<RefreshReply>
     refresh(RefreshRequest request);
 

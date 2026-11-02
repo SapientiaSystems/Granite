@@ -58,6 +58,17 @@ class SessionQueryServiceClient
     }
 
     @Override
+    public CompletionStage<FindSessionsReply>
+    findSessions(FindSessionsRequest request)
+    {
+        return
+            doPostAsync(
+                "find-sessions",
+                FindSessionsReply.class,
+                request);
+    }
+
+    @Override
     public SessionQueryServiceClient
     setAuthorizationHeader(String accessToken)
     {

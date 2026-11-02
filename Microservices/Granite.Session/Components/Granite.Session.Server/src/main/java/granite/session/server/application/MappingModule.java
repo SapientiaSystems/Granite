@@ -29,7 +29,9 @@ class MappingModule
             .addMapping(Session::getContinuityId,SessionData::setContinuityId)
             .addMapping(Session::getClosedReason,SessionData::setClosedReason)
             .addMapping(Session::getReplacedBy,SessionData::setReplacedBy)
-            .addMapping(Session::getCopiedFrom,SessionData::setCopiedFrom);
+            .addMapping(Session::getCopiedFrom,SessionData::setCopiedFrom)
+            .addMapping(Session::getLastActivity,SessionData::setLastActivity)
+            .addMapping(Session::getLoginMethod,SessionData::setLoginMethod);
     }
 }
 

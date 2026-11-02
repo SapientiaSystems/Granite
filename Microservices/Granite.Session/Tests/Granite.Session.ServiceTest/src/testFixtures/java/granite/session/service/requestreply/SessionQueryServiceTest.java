@@ -86,6 +86,55 @@ class SessionQueryServiceTest
         Assertions.assertEquals(deviceId,reply.getSession().getDeviceId());
     }
 
+    @Test
+    public void
+    testFindSessionsOpenOnly()
+    {
+        SessionData open   = login(uniqueUserName(),uniqueDeviceId()).getSessionData();
+        SessionData closed = login(uniqueUserName(),uniqueDeviceId()).getSessionData();
+
+        logout(closed.getSessionId());
+
+        FindSessionsReply reply = findSessions(false);
+
+        Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        Assertions.assertTrue(containsSession(reply.getSessions(),open.getSessionId()));
+        Assertions.assertFalse(containsSession(reply.getSessions(),closed.getSessionId()));
+
+        for (SessionData session : reply.getSessions())
+            Assertions.assertNull(session.getClosedReason());
+    }
+
+    @Test
+    public void
+    testFindSessionsIncludeClosed()
+    {
+        SessionData open   = login(uniqueUserName(),uniqueDeviceId()).getSessionData();
+        SessionData closed = login(uniqueUserName(),uniqueDeviceId()).getSessionData();
+
+        logout(closed.getSessionId());
+
+        FindSessionsReply reply = findSessions(true);
+
+        Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
+        Assertions.assertTrue(containsSession(reply.getSessions(),open.getSessionId()));
+        Assertions.assertTrue(containsSession(reply.getSessions(),closed.getSessionId()));
+        Assertions.assertEquals(
+            SessionClosedReason.LOGOUT,
+            findSession(reply.getSessions(),closed.getSessionId()).getClosedReason());
+    }
+
+    @Test
+    public void
+    testFindSessionsCarriesLastActivityAndLoginMethod()
+    {
+        SessionData created = login(uniqueUserName(),uniqueDeviceId()).getSessionData();
+        SessionData found   = findSession(findSessions(false).getSessions(),created.getSessionId());
+
+        Assertions.assertNotNull(found.getLastActivity());
+        Assertions.assertEquals(SessionLoginMethod.PASSWORD,found.getLoginMethod());
+    }
+
     protected abstract ISessionQueryService
     getSubject();
 
@@ -118,17 +167,48 @@ class SessionQueryServiceTest
     protected String
     uniqueDeviceId() { return "device-" + UUID.randomUUID(); }
 
+    protected void
+    logout(Long sessionId)
+    {
+        LogoutReply reply =
+            getCommandSubject()
+                .logout(new LogoutRequest().setSessionId(sessionId))
+                .toCompletableFuture()
+                .join();
+
+        Assertions.assertTrue(reply.isSuccess(),reply.getFailureMessage());
+    }
+
+    protected FindSessionsReply
+    findSessions(boolean includeClosed)
+    {
+        FindSessionsReply reply =
+            getSubject()
+                .findSessions(new FindSessionsRequest().setIncludeClosed(includeClosed))
+                .toCompletableFuture()
+                .join();
+
+        Assertions.assertNotNull(reply.getSessions());
+        return reply;
+    }
+
     private boolean
     containsSession(List<SessionData> sessions,Long sessionId)
+    {
+        return findSession(sessions,sessionId) != null;
+    }
+
+    private SessionData
+    findSession(List<SessionData> sessions,Long sessionId)
     {
         for (SessionData session : sessions)
         {
             if (sessionId.equals(session.getSessionId()))
             {
-                return true;
+                return session;
             }
         }
-        return false;
+        return null;
     }
 }
 

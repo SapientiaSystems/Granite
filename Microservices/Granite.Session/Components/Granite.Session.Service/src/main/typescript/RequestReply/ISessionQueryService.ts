@@ -5,6 +5,8 @@ import {FindSessionsByKeySetRequest} from "./FindSessionsByKeySetRequest";
 import {FindSessionsByKeySetReply} from "./FindSessionsByKeySetReply";
 import {FindSessionByUserIdAndDeviceIdRequest} from "./FindSessionByUserIdAndDeviceIdRequest";
 import {FindSessionByUserIdAndDeviceIdReply} from "./FindSessionByUserIdAndDeviceIdReply";
+import {FindSessionsRequest} from "./FindSessionsRequest";
+import {FindSessionsReply} from "./FindSessionsReply";
 
 export
 interface ISessionQueryService
@@ -17,4 +19,7 @@ interface ISessionQueryService
 
     findSessionByUserIdAndDeviceId(request: FindSessionByUserIdAndDeviceIdRequest):
         ICompletionStage<FindSessionByUserIdAndDeviceIdReply>;
+
+    findSessions(request: FindSessionsRequest):
+        ICompletionStage<FindSessionsReply>;
 }

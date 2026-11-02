@@ -53,6 +53,16 @@ class SessionQueryServiceController
     }
 
     @PostMapping(
+        value = "/find-sessions",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<FindSessionsReply>
+    findSessions(@RequestBody FindSessionsRequest request)
+    {
+        logger.info("delegating findSessions to implementation service");
+        return implementation.findSessions(request);
+    }
+
+    @PostMapping(
         value = "/find-session-by-user-id-and-device-id",
         produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody CompletionStage<FindSessionByUserIdAndDeviceIdReply>

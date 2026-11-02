@@ -15,6 +15,8 @@ import {
     LogoutRequest,
     LogoutAllForUserReply,
     LogoutAllForUserRequest,
+    CloseSessionsReply,
+    CloseSessionsRequest,
     RefreshReply,
     RefreshRequest,
     ResolveSessionReply,
@@ -86,6 +88,14 @@ class SessionCommandServiceClient
         console.log("SessionCommandServiceClient.logoutAllForUser");
         return this.doPost<LogoutAllForUserReply,LogoutAllForUserRequest>(
             "logout-all-for-user",
+            this.initializeRequest(request));
+    }
+
+    closeSessions(request: CloseSessionsRequest): ICompletionStage<CloseSessionsReply>
+    {
+        console.log("SessionCommandServiceClient.closeSessions");
+        return this.doPost<CloseSessionsReply,CloseSessionsRequest>(
+            "close-sessions",
             this.initializeRequest(request));
     }
 

@@ -83,6 +83,16 @@ class SessionCommandServiceController
     }
 
     @PostMapping(
+        value = "/close-sessions",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<CloseSessionsReply>
+    closeSessions(@RequestBody CloseSessionsRequest request)
+    {
+        logger.info("delegating closeSessions to implementation service");
+        return implementation.closeSessions(request);
+    }
+
+    @PostMapping(
         value = "/refresh",
         produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody CompletionStage<RefreshReply>

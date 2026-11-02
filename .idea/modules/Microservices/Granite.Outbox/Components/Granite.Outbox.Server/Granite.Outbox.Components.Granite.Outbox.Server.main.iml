@@ -12,7 +12,6 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Outbox/Components/Granite.Outbox.Server/src/main">
       <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Outbox/Components/Granite.Outbox.Server/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Outbox/Components/Granite.Outbox.Server/src/main/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

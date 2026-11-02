@@ -40,6 +40,8 @@ class FrontEndControllerMvcContextTest
             "/handle-session-input",
             "/get-users-output",
             "/handle-users-input",
+            "/get-sessions-output",
+            "/handle-sessions-input",
             "/get-preferences-output",
             "/handle-preferences-input");
 

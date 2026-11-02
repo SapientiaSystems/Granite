@@ -34,6 +34,7 @@ Import from the published subpaths:
 - `granite.web.authentication/Authentication`: `AuthenticationProvider`, `RequireAuthentication`, `useAuthentication` (including `createFrontEndClient`), `AuthenticationContext`, `hasAuthority`, `canEdit`
 - `granite.web.authentication/Login`: `LoginView`, `LoginCallbackView`, `LoginForm`, `ReauthenticationDialog` (rendered by `AuthenticationProvider`), `UserMenu({ preferencesPath?, loginPath = "/login", items?, className?, style? })`
 - `granite.web.user/Users`: `UsersView({ service?, height = "100%", className?, style? })`, default service `frontendcontroller-user-service`; authorities are edited as a pick list of the role catalog with hierarchy cascade
+- `granite.web.session/Sessions`: `SessionsView({ service?, height = "100%", className?, style? })`, default service `frontendcontroller-user-service`; read-only grid of open sessions (switch to include closed ones) with user names and a values detail row; `ROLE_ADMIN` can end selected sessions (closed as `ADMIN`), never the caller's own. Readers are the Gateway's `getUsersReaderAuthorities` on `get-sessions-output`; `handle-sessions-input` is admin-only
 - `granite.web.account/Preference`: `PreferencesProvider`, `PreferencesView({ userName, userRole, children })`, `usePreference`
 
 An application frame (providers, its own header, routes); `MantineProvider` sits above everything:
@@ -47,6 +48,7 @@ An application frame (providers, its own header, routes); `MantineProvider` sits
                 <Route path="login"          element={<LoginView />} />
                 <Route path="login/callback" element={<LoginCallbackView />} />
                 <Route path="users"          element={<RequireAuthentication><UsersView /></RequireAuthentication>} />
+                <Route path="sessions"       element={<RequireAuthentication><SessionsView /></RequireAuthentication>} />
                 <Route path="preferences"    element={<RequireAuthentication><PreferencesView userName={state.userName ?? ""} userRole={state.authorities[0] ?? ""}><PoplarSection /></PreferencesView></RequireAuthentication>} />
             </Routes>
         </BrowserRouter>
@@ -56,7 +58,7 @@ An application frame (providers, its own header, routes); `MantineProvider` sits
 
 `UsersView` and `UserMenu` are self-contained (inline layout and colours from the Mantine theme, no AppHost CSS needed); they keep the `view-container`, `view-toolbar` and `app-bar-user-menu` class names as hooks and accept `className` and `style` to adapt them. Runtime configuration is `window.__GRANITE_CONFIG__.apiBaseUrl` (served as `config.js`). In a route component derive the Preferences props with `const { state } = useAuthentication();`, `userName={state.userName ?? ""}` and a role label from `state.authorities` (for example the first entry or a join).
 
-`Granite.Web.Navigator` (`MenuBar`, Home, Help, Account) is Granite's own frame; an application builds its own instead of reusing it. Yarn build order: authentication, user, account, navigator.
+`Granite.Web.Navigator` (`MenuBar`, Home, Help, Account) is Granite's own frame; an application builds its own instead of reusing it. Yarn build order: authentication, user, session, account, navigator.
 
 ### Okta properties (Session)
 

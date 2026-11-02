@@ -10,6 +10,7 @@ import { PreferencesProvider }                           from "granite.web.accou
 import { MenuBar }                                       from "granite.web.navigator/Navigation";
 import { HomeView }                                      from "granite.web.navigator/Home";
 import { UsersView }                                     from "granite.web.user/Users";
+import { SessionsView }                                  from "granite.web.session/Sessions";
 import { HelpView }                                      from "granite.web.navigator/Help";
 import { AccountView }                                   from "granite.web.navigator/Account";
 
@@ -25,6 +26,7 @@ export function App(): ReactElement
                             <Route path="login" element={<LoginView />} />
                             <Route path="login/callback" element={<LoginCallbackView />} />
                             <Route path="users" element={<RequireAuthentication><UsersView /></RequireAuthentication>} />
+                            <Route path="sessions" element={<RequireAuthentication><SessionsView /></RequireAuthentication>} />
                             <Route path="help"  element={<HelpView />} />
                             <Route path="user"  element={<RequireAuthentication><AccountView /></RequireAuthentication>} />
                         </Route>

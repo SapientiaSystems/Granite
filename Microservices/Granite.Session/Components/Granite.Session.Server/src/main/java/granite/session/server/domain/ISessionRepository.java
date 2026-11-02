@@ -49,6 +49,12 @@ interface ISessionRepository
 
     List<Session>
     findOpenByUserId(Long userId);
+
+    List<Session>
+    findAllSessions();
+
+    List<Session>
+    findOpenSessions();
 }
 
 //////////////////////////////////////////////////////////////////////////////

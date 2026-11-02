@@ -9,6 +9,8 @@ import {LogoutRequest} from "./LogoutRequest";
 import {LogoutReply} from "./LogoutReply";
 import {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
 import {LogoutAllForUserReply} from "./LogoutAllForUserReply";
+import {CloseSessionsRequest} from "./CloseSessionsRequest";
+import {CloseSessionsReply} from "./CloseSessionsReply";
 import {RefreshRequest} from "./RefreshRequest";
 import {RefreshReply} from "./RefreshReply";
 import {ResolveSessionRequest} from "./ResolveSessionRequest";
@@ -33,6 +35,9 @@ interface ISessionCommandService
 
     logoutAllForUser(request: LogoutAllForUserRequest):
         ICompletionStage<LogoutAllForUserReply>;
+
+    closeSessions(request: CloseSessionsRequest):
+        ICompletionStage<CloseSessionsReply>;
 
     refresh(request: RefreshRequest):
         ICompletionStage<RefreshReply>;

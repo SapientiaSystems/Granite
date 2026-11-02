@@ -4,9 +4,11 @@
 
 package granite.session.server.application;
 
+import granite.session.server.domain.LoginMethod;
 import granite.session.server.domain.Session;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.service.requestreply.SessionData;
+import granite.session.service.requestreply.SessionLoginMethod;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -61,6 +63,28 @@ class MappingModuleTest
 
         assertNull(data.getClosedReason());
         assertNull(data.getContinuityId());
+        assertNull(data.getLastActivity());
+        assertNull(data.getLoginMethod());
+    }
+
+    @Test
+    public void
+    mapsLastActivityAndLoginMethod()
+    {
+        Instant     at   = Instant.parse("2026-10-06T12:00:00Z");
+        SessionData data =
+            newMapper()
+                .map(
+                    new Session()
+                        .setSessionId(8L)
+                        .setUserId(1L)
+                        .setDeviceId("device-A")
+                        .setLastActivity(at)
+                        .setLoginMethod(LoginMethod.OKTA),
+                    SessionData.class);
+
+        assertEquals(at,data.getLastActivity());
+        assertEquals(SessionLoginMethod.OKTA,data.getLoginMethod());
     }
 
     private ModelMapper

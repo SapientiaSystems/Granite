@@ -15,6 +15,8 @@ import granite.session.server.domain.LoginMethod;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
+import granite.session.service.requestreply.CloseSessionsReply;
+import granite.session.service.requestreply.CloseSessionsRequest;
 import granite.session.service.requestreply.CompleteOktaLoginReply;
 import granite.session.service.requestreply.CompleteOktaLoginRequest;
 import granite.session.service.requestreply.IssueServiceTokenReply;
@@ -255,6 +257,23 @@ class SessionCommandService
                 .thenApply(this::closeAll)
                 .thenApply(this::buildLogoutAllForUserReply)
                 .exceptionally(e -> buildLogoutAllForUserReply(e,request));
+    }
+
+    @Override
+    public CompletionStage<CloseSessionsReply>
+    closeSessions(CloseSessionsRequest request)
+    {
+        logger.debug(
+            "closeSessions({})",
+            request != null ? request.getRequestId() : null);
+        return
+            CompletableFuture
+                .supplyAsync(() -> validateCloseSessions(request),new CurrentThreadExecutor())
+                .thenApply(this::mapToCloseSessionsContext)
+                .thenApply(this::loadForClose)
+                .thenApply(this::closeSelected)
+                .thenApply(this::buildCloseSessionsReply)
+                .exceptionally(e -> buildCloseSessionsReply(e,request));
     }
 
     @Override
@@ -1046,6 +1065,57 @@ class SessionCommandService
         return context.setDestroyed(closed);
     }
 
+    protected CloseSessionsRequest
+    validateCloseSessions(CloseSessionsRequest request)
+    {
+        logger.debug("<closeSessions> validate");
+
+        Objects.requireNonNull(request,"request");
+        Objects.requireNonNull(
+            request.getSessionIds(),
+            "validation failed: sessionIds were not provided");
+
+        if (request.getSessionIds().isEmpty())
+            throw new IllegalArgumentException(
+                "validation failed: sessionIds were empty");
+
+        return request;
+    }
+
+    protected CloseSessionsContext
+    mapToCloseSessionsContext(CloseSessionsRequest request)
+    {
+        logger.debug("<closeSessions> mapToContext({})",request.getRequestId());
+        return new CloseSessionsContext(request);
+    }
+
+    protected CloseSessionsContext
+    loadForClose(CloseSessionsContext context)
+    {
+        logger.debug("<closeSessions> load(count={})",context.getSessionIds().size());
+        return context.setLoaded(repository.findAllByIdIn(context.getSessionIds()));
+    }
+
+    protected CloseSessionsContext
+    closeSelected(CloseSessionsContext context)
+    {
+        logger.debug("<closeSessions> close(count={})",context.getLoaded().size());
+
+        List<Session> closed = new ArrayList<>();
+        Instant       now    = Instant.now(clock);
+
+        for (Optional<Session> loaded : context.getLoaded().values())
+        {
+            if (loaded.isEmpty() || loaded.get().isClosed())
+                continue;
+
+            closeSession(loaded.get(),SessionClosedReason.ADMIN,now);
+            closed.add(loaded.get());
+        }
+
+        return context.setClosed(closed);
+    }
+
     protected RefreshRequest
     validateRefresh(RefreshRequest request)
     {
@@ -1387,6 +1457,62 @@ class SessionCommandService
                 .setSuccess(false)
                 .setFailureMessage("Unable to log out all for user")
                 .setException(ExceptionData.of(e));
+    }
+
+    private CloseSessionsReply
+    buildCloseSessionsReply(CloseSessionsContext context)
+    {
+        Set<Long> requested = new TreeSet<>(context.getSessionIds());
+        Set<Long> succeeded =
+            context
+                .getClosed()
+                .stream()
+                .map(Session::getSessionId)
+                .collect(Collectors.toCollection(TreeSet::new));
+        Set<Long> failed =
+            requested
+                .stream()
+                .filter(id -> !succeeded.contains(id))
+                .collect(Collectors.toCollection(TreeSet::new));
+        List<SessionData> closed =
+            context
+                .getClosed()
+                .stream()
+                .map(session -> mapper.map(session,SessionData.class))
+                .collect(Collectors.toList());
+
+        logger.info(
+            "<closeSessions> closed {} of {} session(s)",
+            succeeded.size(),
+            requested.size());
+
+        return
+            new CloseSessionsReply(context.getRequest())
+                .setSuccess(failed.isEmpty())
+                .setSuccessMessage(failed.isEmpty() ? "Closed " + succeeded.size() + " session(s)" : null)
+                .setFailureMessage(failed.isEmpty() ? null : "Unable to close " + failed.size() + " session(s)")
+                .setRequestedSessionIds(requested)
+                .setFailedSessionIds(failed)
+                .setClosedSessions(closed);
+    }
+
+    private CloseSessionsReply
+    buildCloseSessionsReply(Throwable e,CloseSessionsRequest request)
+    {
+        logger.info("<closeSessions> exception reply: {}",e.getMessage());
+
+        CloseSessionsReply reply =
+            new CloseSessionsReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to close sessions")
+                .setException(ExceptionData.of(e));
+
+        if (request != null && request.getSessionIds() != null)
+            reply
+                .setRequestedSessionIds(new TreeSet<>(request.getSessionIds()))
+                .setFailedSessionIds(new TreeSet<>(request.getSessionIds()));
+
+        return reply;
     }
 
     private RefreshReply

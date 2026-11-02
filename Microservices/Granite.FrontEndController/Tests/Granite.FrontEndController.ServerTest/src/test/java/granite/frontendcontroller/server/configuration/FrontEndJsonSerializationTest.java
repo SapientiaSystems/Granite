@@ -20,6 +20,11 @@ import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.frontendcontroller.service.requestreply.RoleData;
+import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
+import granite.frontendcontroller.service.requestreply.HandleSessionsInputRequest;
+import granite.frontendcontroller.service.requestreply.SessionRowData;
+import granite.frontendcontroller.service.requestreply.SessionsInput;
+import granite.frontendcontroller.service.requestreply.SessionsOutput;
 import granite.user.service.requestreply.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -121,6 +126,55 @@ class FrontEndJsonSerializationTest
         assertTrue(json.contains("\"roles\":[{\"name\":\"ROLE_MANAGER\",\"label\":\"Manager\",\"impliedRoles\":[\"ROLE_CLERK\"]}]"),json);
         assertEquals("ROLE_MANAGER",actual.getOutput().getRoles().get(0).getName());
         assertEquals(List.of("ROLE_CLERK"),actual.getOutput().getRoles().get(0).getImpliedRoles());
+    }
+
+    @Test
+    public void
+    sessionsRequestBindsSessionsInputWithoutTypeProperty()
+        throws Exception
+    {
+        String json =
+            "{\"input\":{\"source\":\"Session.Open\",\"command\":\"Close\",\"destination\":\"SessionsView\",\"sessionIdsToClose\":[12,13]}}";
+
+        SessionsInput input = mapper.readValue(json,HandleSessionsInputRequest.class).getInput();
+
+        assertEquals("Session.Open->Close->SessionsView",input.getKey());
+        assertEquals(List.of(12L,13L),input.getSessionIdsToClose());
+    }
+
+    @Test
+    public void
+    sessionsReplyRoundTrips()
+        throws Exception
+    {
+        GetSessionsOutputReply reply =
+            new GetSessionsOutputReply()
+                .setSuccess(true)
+                .setOutput(
+                    new SessionsOutput()
+                        .setSessions(
+                            List.of(
+                                new SessionRowData()
+                                    .setSessionId(12L)
+                                    .setUserId(7L)
+                                    .setUserName("amy")
+                                    .setLoginMethod("OKTA")
+                                    .setLastActivity("2026-11-01T12:00:00Z")
+                                    .setValues(Map.of("cart",3))))
+                        .setCurrentSessionId(11L)
+                        .setFailureMessages(List.of("13: not ended")));
+
+        String                 json   = mapper.writeValueAsString(reply);
+        GetSessionsOutputReply actual = mapper.readValue(json,GetSessionsOutputReply.class);
+
+        assertEquals("amy",actual.getOutput().getSessions().get(0).getUserName());
+        assertEquals("OKTA",actual.getOutput().getSessions().get(0).getLoginMethod());
+        assertEquals("2026-11-01T12:00:00Z",actual.getOutput().getSessions().get(0).getLastActivity());
+        assertEquals(3,actual.getOutput().getSessions().get(0).getValues().get("cart"));
+        assertEquals(11L,actual.getOutput().getCurrentSessionId());
+        assertEquals(List.of("13: not ended"),actual.getOutput().getFailureMessages());
+        assertFalse(json.contains("@class"));
+        assertFalse(json.contains("@type"));
     }
 
     @Test

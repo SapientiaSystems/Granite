@@ -8,6 +8,10 @@ import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetSessionsOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSessionsInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSessionsInputRequest;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandlePreferencesInputReply;
@@ -53,6 +57,26 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating getUsersOutput to implementation service");
         return getService().getUsersOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-sessions-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleSessionsInputReply>
+    handleSessionsInput(@RequestBody HandleSessionsInputRequest request)
+    {
+        getLogger().info("delegating handleSessionsInput to implementation service");
+        return getService().handleSessionsInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-sessions-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetSessionsOutputReply>
+    getSessionsOutput(@RequestBody GetSessionsOutputRequest request)
+    {
+        getLogger().info("delegating getSessionsOutput to implementation service");
+        return getService().getSessionsOutput(request);
     }
 
     @PostMapping(

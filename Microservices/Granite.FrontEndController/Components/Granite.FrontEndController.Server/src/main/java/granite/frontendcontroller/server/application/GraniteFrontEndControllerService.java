@@ -15,6 +15,9 @@ import granite.frontendcontroller.server.control.session.LogoutView;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionStatusView;
 import granite.frontendcontroller.server.control.session.StartOktaLoginView;
+import granite.frontendcontroller.server.control.sessions.CloseSessionsView;
+import granite.frontendcontroller.server.control.sessions.InitializeSessionsView;
+import granite.frontendcontroller.server.control.sessions.SessionsLoader;
 import granite.frontendcontroller.server.control.user.DeleteUsersView;
 import granite.frontendcontroller.server.control.user.InitializeUsersView;
 import granite.frontendcontroller.server.control.user.UpdateUsersView;
@@ -24,6 +27,12 @@ import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetSessionsOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleSessionsInputReply;
+import granite.frontendcontroller.service.requestreply.HandleSessionsInputRequest;
+import granite.frontendcontroller.service.requestreply.SessionsInput;
+import granite.frontendcontroller.service.requestreply.SessionsOutput;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandlePreferencesInputReply;
@@ -62,6 +71,8 @@ class GraniteFrontEndControllerService
     private final GraniteFrontEndControllerContext                                 context;
     private final Map<String,IInputAction<UsersInput,UsersOutput>>                 usersInputActions;
     private final Map<String,IOutputAction<GetUsersOutputRequest,UsersOutput>>     usersOutputActions;
+    private final Map<String,IInputAction<SessionsInput,SessionsOutput>>           sessionsInputActions;
+    private final Map<String,IOutputAction<GetSessionsOutputRequest,SessionsOutput>> sessionsOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
     private final Map<String,IOutputAction<GetSessionOutputRequest,SessionOutput>> sessionOutputActions;
     private final Map<String,IInputAction<PreferencesInput,PreferencesOutput>>             preferencesInputActions;
@@ -88,6 +99,17 @@ class GraniteFrontEndControllerService
         usersOutputActions =
             Map.of(
                 "User.All->UsersEditableView",new InitializeUsersView(userQueryClient,requestContext,context.getApplicationRoles()));
+
+        SessionsLoader sessionsLoader = new SessionsLoader(sessionQueryClient,userQueryClient);
+
+        sessionsInputActions =
+            Map.of(
+                "Session.Open->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext),
+                "Session.All->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext));
+        sessionsOutputActions =
+            Map.of(
+                "Session.Open->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext),
+                "Session.All->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext));
         sessionInputActions =
             Map.of(
                 "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings,cookies),
@@ -118,6 +140,20 @@ class GraniteFrontEndControllerService
     getUsersOutput(GetUsersOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(usersOutputActions,context),GetUsersOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleSessionsInputReply>
+    handleSessionsInput(HandleSessionsInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(sessionsInputActions,context),HandleSessionsInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetSessionsOutputReply>
+    getSessionsOutput(GetSessionsOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(sessionsOutputActions,context),GetSessionsOutputReply::new);
     }
 
     @Override

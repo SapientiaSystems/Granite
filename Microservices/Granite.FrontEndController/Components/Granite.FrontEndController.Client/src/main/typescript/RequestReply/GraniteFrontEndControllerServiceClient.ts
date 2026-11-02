@@ -5,6 +5,8 @@
 import type { ICompletionStage }                          from "strata.foundation.core/Concurrent";
 import type { HandleUsersInputRequest, HandleUsersInputReply,
               GetUsersOutputRequest, GetUsersOutputReply,
+              HandleSessionsInputRequest, HandleSessionsInputReply,
+              GetSessionsOutputRequest, GetSessionsOutputReply,
               HandleSessionInputRequest, HandleSessionInputReply,
               GetSessionOutputRequest, GetSessionOutputReply,
               HandlePreferencesInputRequest, HandlePreferencesInputReply,
@@ -34,6 +36,20 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetUsersOutputReply,GetUsersOutputRequest>(
             "get-users-output",
+            this.initializeRequest(request));
+    }
+
+    handleSessionsInput(request: HandleSessionsInputRequest): ICompletionStage<HandleSessionsInputReply>
+    {
+        return this.doPost<HandleSessionsInputReply,HandleSessionsInputRequest>(
+            "handle-sessions-input",
+            this.initializeRequest(request));
+    }
+
+    getSessionsOutput(request: GetSessionsOutputRequest): ICompletionStage<GetSessionsOutputReply>
+    {
+        return this.doPost<GetSessionsOutputReply,GetSessionsOutputRequest>(
+            "get-sessions-output",
             this.initializeRequest(request));
     }
 

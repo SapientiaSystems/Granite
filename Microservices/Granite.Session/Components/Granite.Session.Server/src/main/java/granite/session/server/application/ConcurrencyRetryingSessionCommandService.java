@@ -4,6 +4,8 @@
 
 package granite.session.server.application;
 
+import granite.session.service.requestreply.CloseSessionsReply;
+import granite.session.service.requestreply.CloseSessionsRequest;
 import granite.session.service.requestreply.ISessionCommandService;
 import granite.session.service.requestreply.IssueServiceTokenReply;
 import granite.session.service.requestreply.IssueServiceTokenRequest;
@@ -94,6 +96,13 @@ class ConcurrencyRetryingSessionCommandService
     logoutAllForUser(LogoutAllForUserRequest request)
     {
         return delegate.logoutAllForUser(request);
+    }
+
+    @Override
+    public CompletionStage<CloseSessionsReply>
+    closeSessions(CloseSessionsRequest request)
+    {
+        return delegate.closeSessions(request);
     }
 
     @Override

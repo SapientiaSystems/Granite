@@ -1,4 +1,5 @@
 import {SessionClosedReason} from "./SessionClosedReason";
+import {SessionLoginMethod} from "./SessionLoginMethod";
 
 export
 interface SessionData
@@ -14,4 +15,6 @@ interface SessionData
     closedReason?: SessionClosedReason;
     replacedBy?: number;
     copiedFrom?: number;
+    lastActivity?: string;
+    loginMethod?: SessionLoginMethod;
 }
