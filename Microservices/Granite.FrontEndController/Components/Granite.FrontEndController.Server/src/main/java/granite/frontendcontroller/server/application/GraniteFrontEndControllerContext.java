@@ -34,6 +34,7 @@ class GraniteFrontEndControllerContext
     private final SessionCookies               sessionCookies;
     private final ApplicationRolesManager applicationRoles;
     private final List<PreferenceDefinition>   preferenceDefinitions;
+    private final GraniteHelpServiceClients    helpServiceClients;
 
     public
     GraniteFrontEndControllerContext(
@@ -49,6 +50,36 @@ class GraniteFrontEndControllerContext
         ApplicationRolesManager applicationRoles,
         List<PreferenceDefinition>   preferenceDefinitions)
     {
+        this(
+            mapper,
+            executor,
+            userQueryClient,
+            userCommandClient,
+            sessionCommandClient,
+            sessionQueryClient,
+            sessionRequestContext,
+            sessionLoginSettings,
+            sessionCookies,
+            applicationRoles,
+            preferenceDefinitions,
+            new GraniteHelpServiceClients());
+    }
+
+    public
+    GraniteFrontEndControllerContext(
+        ModelMapper                  mapper,
+        Executor                     executor,
+        IUserQueryServiceClient      userQueryClient,
+        IUserCommandServiceClient    userCommandClient,
+        ISessionCommandServiceClient sessionCommandClient,
+        ISessionQueryServiceClient   sessionQueryClient,
+        SessionRequestContext        sessionRequestContext,
+        SessionLoginSettings         sessionLoginSettings,
+        SessionCookies               sessionCookies,
+        ApplicationRolesManager      applicationRoles,
+        List<PreferenceDefinition>   preferenceDefinitions,
+        GraniteHelpServiceClients    helpServiceClients)
+    {
         this.mapper                = Objects.requireNonNull(mapper,"mapper");
         this.executor              = Objects.requireNonNull(executor,"executor");
         this.userQueryClient       = Objects.requireNonNull(userQueryClient,"userQueryClient");
@@ -60,6 +91,7 @@ class GraniteFrontEndControllerContext
         this.sessionCookies        = Objects.requireNonNull(sessionCookies,"sessionCookies");
         this.applicationRoles      = Objects.requireNonNull(applicationRoles,"applicationRoles");
         this.preferenceDefinitions = List.copyOf(Objects.requireNonNull(preferenceDefinitions,"preferenceDefinitions"));
+        this.helpServiceClients    = Objects.requireNonNull(helpServiceClients,"helpServiceClients");
 
         Set<String> keys = new HashSet<>();
 
@@ -100,6 +132,9 @@ class GraniteFrontEndControllerContext
 
     public List<PreferenceDefinition>
     getPreferenceDefinitions() { return preferenceDefinitions; }
+
+    public GraniteHelpServiceClients
+    getHelpServiceClients() { return helpServiceClients; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

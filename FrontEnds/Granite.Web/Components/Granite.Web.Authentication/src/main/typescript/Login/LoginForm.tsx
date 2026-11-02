@@ -92,14 +92,14 @@ export function LoginForm({ returnTo, onLoggedIn }: ILoginFormProps): ReactEleme
                             onChange={(event) => setPassword(event.currentTarget.value)}
                         />
                         <Button type="submit" loading={busy} disabled={!userName || !password}>
-                            Log in
+                            Login
                         </Button>
                     </Stack>
                 </form>}
             {methods.passwordEnabled && methods.oktaEnabled && <Divider label="or" labelPosition="center" />}
             {methods.oktaEnabled &&
                 <Button variant="default" loading={busy} onClick={() => { void attempt(() => startOktaLogin(returnTo)); }}>
-                    Log in with Okta
+                    Login with Okta
                 </Button>}
         </Stack>
     );

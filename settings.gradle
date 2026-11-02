@@ -36,6 +36,14 @@ includeBuild('Microservices/Granite.Session') {
     }
 }
 
+includeBuild('Microservices/Granite.Feedback') {
+    dependencySubstitution {
+        substitute module('granite.feedback:granite-feedback-service') using project(':Components:Granite.Feedback.Service')
+        substitute module('granite.feedback:granite-feedback-client') using project(':Components:Granite.Feedback.Client')
+        substitute module('granite.feedback:granite-feedback-server') using project(':Components:Granite.Feedback.Server')
+    }
+}
+
 includeBuild('Shared/Granite.Foundation') {
     dependencySubstitution {
         substitute module('granite.foundation:granite-foundation-core') using project(':Components:Granite.Foundation.Core')

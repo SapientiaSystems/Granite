@@ -38,14 +38,14 @@ function renderMenu(status: AuthenticationStatus,props: IUserMenuProps,logout: (
 
 describe("UserMenu",() =>
 {
-    it("anonymousShowsLogIn",async () =>
+    it("anonymousShowsLogin",async () =>
     {
         renderMenu("anonymous",{});
 
-        expect(screen.getByText("Log in")).toBeTruthy();
+        expect(screen.getByText("Login")).toBeTruthy();
         await userEvent.click(screen.getByLabelText("User menu"));
-        expect(await screen.findByRole("menuitem",{ name: "Log in" })).toBeTruthy();
-        expect(screen.queryByRole("menuitem",{ name: "Log out" })).toBeNull();
+        expect(await screen.findByRole("menuitem",{ name: "Login" })).toBeTruthy();
+        expect(screen.queryByRole("menuitem",{ name: "Logout" })).toBeNull();
     });
 
     it("authenticatedShowsNameAndLogout",async () =>
@@ -54,7 +54,7 @@ describe("UserMenu",() =>
 
         expect(screen.getByText("alice")).toBeTruthy();
         await userEvent.click(screen.getByLabelText("User menu"));
-        expect(await screen.findByRole("menuitem",{ name: "Log out" })).toBeTruthy();
+        expect(await screen.findByRole("menuitem",{ name: "Logout" })).toBeTruthy();
     });
 
     it("reauthenticatingStillShowsName",() =>
@@ -69,7 +69,7 @@ describe("UserMenu",() =>
         renderMenu("authenticated",{});
 
         await userEvent.click(screen.getByLabelText("User menu"));
-        await screen.findByRole("menuitem",{ name: "Log out" });
+        await screen.findByRole("menuitem",{ name: "Logout" });
         expect(screen.queryByRole("menuitem",{ name: "Preferences" })).toBeNull();
     });
 
@@ -95,6 +95,26 @@ describe("UserMenu",() =>
         expect(onClick).toHaveBeenCalledTimes(1);
     });
 
+    it("logoutFirstThenPreferencesThenItems",async () =>
+    {
+        renderMenu("authenticated",{ preferencesPath: "/prefs",items: [{ label: "About",onClick: vi.fn() }] });
+
+        await userEvent.click(screen.getByLabelText("User menu"));
+        await screen.findByRole("menuitem",{ name: "Logout" });
+
+        expect(screen.getAllByRole("menuitem").map((item: HTMLElement) => item.textContent)).toEqual(["Logout","Preferences","About"]);
+    });
+
+    it("loginFirstWhenAnonymous",async () =>
+    {
+        renderMenu("anonymous",{ preferencesPath: "/prefs" });
+
+        await userEvent.click(screen.getByLabelText("User menu"));
+        await screen.findByRole("menuitem",{ name: "Login" });
+
+        expect(screen.getAllByRole("menuitem").map((item: HTMLElement) => item.textContent)).toEqual(["Login","Preferences"]);
+    });
+
     it("logoutNavigatesToLogin",async () =>
     {
         const logout = vi.fn().mockResolvedValue(true);
@@ -102,20 +122,20 @@ describe("UserMenu",() =>
         renderMenu("authenticated",{},logout);
 
         await userEvent.click(screen.getByLabelText("User menu"));
-        await userEvent.click(await screen.findByRole("menuitem",{ name: "Log out" }));
+        await userEvent.click(await screen.findByRole("menuitem",{ name: "Logout" }));
 
         expect(await screen.findByText("login page")).toBeTruthy();
         expect(logout).toHaveBeenCalledTimes(1);
     });
 
-    it("restoringShowsNoLogIn",async () =>
+    it("restoringShowsNoLogin",async () =>
     {
         renderMenu("restoring",{});
 
-        expect(screen.queryByText("Log in")).toBeNull();
+        expect(screen.queryByText("Login")).toBeNull();
         await userEvent.click(screen.getByLabelText("User menu"));
-        expect(screen.queryByRole("menuitem",{ name: "Log in" })).toBeNull();
-        expect(screen.queryByRole("menuitem",{ name: "Log out" })).toBeNull();
+        expect(screen.queryByRole("menuitem",{ name: "Login" })).toBeNull();
+        expect(screen.queryByRole("menuitem",{ name: "Logout" })).toBeNull();
     });
 
     it("logoutFailureDoesNotNavigate",async () =>
@@ -125,7 +145,7 @@ describe("UserMenu",() =>
         renderMenu("authenticated",{},logout,"/home");
 
         await userEvent.click(screen.getByLabelText("User menu"));
-        await userEvent.click(await screen.findByRole("menuitem",{ name: "Log out" }));
+        await userEvent.click(await screen.findByRole("menuitem",{ name: "Logout" }));
 
         expect(logout).toHaveBeenCalledTimes(1);
         expect(screen.queryByText("login page")).toBeNull();

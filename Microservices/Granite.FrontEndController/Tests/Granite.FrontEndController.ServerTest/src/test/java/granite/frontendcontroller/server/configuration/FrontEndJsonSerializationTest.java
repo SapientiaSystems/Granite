@@ -20,6 +20,9 @@ import granite.frontendcontroller.service.requestreply.SessionOutput;
 import granite.frontendcontroller.service.requestreply.UsersInput;
 import granite.frontendcontroller.service.requestreply.UsersOutput;
 import granite.frontendcontroller.service.requestreply.RoleData;
+import granite.feedback.service.requestreply.FeedbackType;
+import granite.frontendcontroller.service.requestreply.FeedbackInput;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
 import granite.frontendcontroller.service.requestreply.HandleSessionsInputRequest;
 import granite.frontendcontroller.service.requestreply.SessionRowData;
@@ -140,6 +143,22 @@ class FrontEndJsonSerializationTest
 
         assertEquals("Session.Open->Close->SessionsView",input.getKey());
         assertEquals(List.of(12L,13L),input.getSessionIdsToClose());
+    }
+
+    @Test
+    public void
+    feedbackRequestBindsFeedbackInputWithoutTypeProperty()
+        throws Exception
+    {
+        String json =
+            "{\"input\":{\"source\":\"Feedback.New\",\"command\":\"Submit\",\"destination\":\"FeedbackView\"," +
+            "\"type\":\"PROBLEM\",\"summary\":\"Slow\",\"details\":{\"impact\":\"Waiting\"}}}";
+
+        FeedbackInput input = mapper.readValue(json,HandleFeedbackInputRequest.class).getInput();
+
+        assertEquals("Feedback.New->Submit->FeedbackView",input.getKey());
+        assertEquals(FeedbackType.PROBLEM,input.getType());
+        assertEquals(Map.of("impact","Waiting"),input.getDetails());
     }
 
     @Test

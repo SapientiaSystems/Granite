@@ -4,6 +4,10 @@
 
 package granite.frontendcontroller.server.configuration;
 
+import granite.feedback.client.requestreply.FeedbackCommandServiceClient;
+import granite.feedback.client.requestreply.FeedbackQueryServiceClient;
+import granite.feedback.client.requestreply.IFeedbackCommandServiceClient;
+import granite.feedback.client.requestreply.IFeedbackQueryServiceClient;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteCookieNames;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
@@ -12,6 +16,7 @@ import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.foundation.core.security.JwtCheckMode;
 import granite.frontendcontroller.server.application.GraniteFrontEndControllerContext;
+import granite.frontendcontroller.server.application.GraniteHelpServiceClients;
 import granite.frontendcontroller.server.application.IServiceTokenSource;
 import granite.frontendcontroller.server.application.PreferenceDefinition;
 import granite.frontendcontroller.server.application.ServiceTokenSource;
@@ -193,7 +198,33 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 SessionLoginSettings.fromConfiguration(configuration),
                 sessionCookies(),
                 roles,
-                preferenceDefinitions());
+                preferenceDefinitions(),
+                createHelpServiceClients());
+    }
+
+    protected GraniteHelpServiceClients
+    createHelpServiceClients()
+    {
+        return
+            new GraniteHelpServiceClients()
+                .setFeedbackCommandClient(this::createFeedbackCommandClient)
+                .setFeedbackQueryClient(this::createFeedbackQueryClient);
+    }
+
+    protected IFeedbackCommandServiceClient
+    createFeedbackCommandClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("feedback-command-service.base-url");
+
+        return new FeedbackCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    }
+
+    protected IFeedbackQueryServiceClient
+    createFeedbackQueryClient()
+    {
+        GraniteClientSettings client = createClientConfiguration("feedback-query-service.base-url");
+
+        return new FeedbackQueryServiceClient(client.getBuilder(),client.getBaseUrl());
     }
 
     @Bean

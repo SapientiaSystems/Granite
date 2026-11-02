@@ -31,7 +31,7 @@ describe("RequireAuthentication and LoginView",() =>
     {
         renderWithAuthentication(authenticationFor(scriptedFrontEnd()),"/users",routes);
 
-        expect(await screen.findByRole("heading",{ name: "Log in" })).toBeTruthy();
+        expect(await screen.findByRole("heading",{ name: "Login" })).toBeTruthy();
     });
 
     it("logs in and returns to the protected route",async () =>
@@ -42,7 +42,7 @@ describe("RequireAuthentication and LoginView",() =>
 
         await userEvent.type(await screen.findByLabelText(/User name/),"alice");
         await userEvent.type(screen.getByLabelText(/Password/),"secret");
-        await userEvent.click(screen.getByRole("button",{ name: "Log in" }));
+        await userEvent.click(screen.getByRole("button",{ name: "Login" }));
 
         expect(await screen.findByText("logged in as alice")).toBeTruthy();
         expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userName: "alice", password: "secret" });
@@ -54,10 +54,10 @@ describe("RequireAuthentication and LoginView",() =>
 
         await userEvent.type(await screen.findByLabelText(/User name/),"alice");
         await userEvent.type(screen.getByLabelText(/Password/),"wrong");
-        await userEvent.click(screen.getByRole("button",{ name: "Log in" }));
+        await userEvent.click(screen.getByRole("button",{ name: "Login" }));
 
         expect((await screen.findByRole("alert")).textContent).toContain("Login failed");
-        expect(screen.getByRole("heading",{ name: "Log in" })).toBeTruthy();
+        expect(screen.getByRole("heading",{ name: "Login" })).toBeTruthy();
     });
 
     it("restores an existing session before rendering the protected route",async () =>

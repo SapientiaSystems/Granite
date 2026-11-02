@@ -66,21 +66,21 @@ export function UserMenu(props: IUserMenuProps): ReactElement
                             </svg>
                         </ActionIcon>
                         <Text size="sm" fw={500}>
-                            {restoring ? "" : loggedIn ? state.userName : "Log in"}
+                            {restoring ? "" : loggedIn ? state.userName : "Login"}
                         </Text>
                     </Group>
                 </UnstyledButton>
             </Menu.Target>
             <Menu.Dropdown>
+                {restoring
+                    ? null
+                    : loggedIn
+                    ? <Menu.Item onClick={() => { void logout().then((done: boolean) => { if (done) navigate(loginPath); }); }}>Logout</Menu.Item>
+                    : <Menu.Item onClick={() => navigate(loginPath)}>Login</Menu.Item>}
                 {preferencesPath !== undefined &&
                     <Menu.Item onClick={() => navigate(preferencesPath)}>Preferences</Menu.Item>}
                 {(items ?? []).map((item: IUserMenuItem, index: number) =>
                     <Menu.Item key={`${index}-${item.label}`} onClick={item.onClick}>{item.label}</Menu.Item>)}
-                {restoring
-                    ? null
-                    : loggedIn
-                    ? <Menu.Item onClick={() => { void logout().then((done: boolean) => { if (done) navigate(loginPath); }); }}>Log out</Menu.Item>
-                    : <Menu.Item onClick={() => navigate(loginPath)}>Log in</Menu.Item>}
             </Menu.Dropdown>
         </Menu>
     );

@@ -5,10 +5,11 @@
 import React, { useEffect, useRef, useState }  from "react";
 import type { ReactElement }                   from "react";
 import { ActionIcon, Button, Group, Paper,
-         Radio, Slider, Stack, Tabs, Text,
+         Slider, Stack, Tabs, Text,
          Textarea, TextInput, Title,
          useComputedColorScheme }              from "@mantine/core";
 import { useDisclosure }                       from "@mantine/hooks";
+import { FeedbackView }                        from "granite.web.feedback/Feedback";
 import { AgGridReact }                         from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry,
          themeQuartz }                         from "ag-grid-community";
@@ -279,9 +280,6 @@ export function HelpView(): ReactElement
     const [chatInput, setChatInput]           = useState("");
     const chatContainerRef                    = useRef<HTMLDivElement>(null);
 
-    const [feedbackType, setFeedbackType]           = useState("Defect");
-    const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-
     const [surveyValues, setSurveyValues]       = useState<{ satisfied: number | null; needs: number | null; recommend: number | null }>({ satisfied: null, needs: null, recommend: null });
     const [surveyComment, setSurveyComment]     = useState("");
     const [surveySubmitted, setSurveySubmitted] = useState(false);
@@ -305,7 +303,6 @@ export function HelpView(): ReactElement
     function handleTabChange(v: string | null): void
     {
         setSelectedIndex(Number(v));
-        setFeedbackSubmitted(false);
         setSurveySubmitted(false);
     }
 
@@ -433,80 +430,6 @@ export function HelpView(): ReactElement
                     />
                     <Button variant="filled" size="sm" color="blue" onClick={handleSendMessage}>Send</Button>
                 </Group>
-            </Stack>
-        );
-    }
-
-    function renderFeedback(): ReactElement
-    {
-        if (feedbackSubmitted)
-        {
-            return (
-                <Stack gap="md" p="md" align="center" justify="center"
-                       style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg }}>
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2b8a3e"
-                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="9 12 12 15 16 9" />
-                    </svg>
-                    <Title order={3}>Thank You</Title>
-                    <Text size="sm" c="dimmed">Your feedback has been submitted successfully.</Text>
-                </Stack>
-            );
-        }
-
-        return (
-            <Stack gap="md" p="md" style={{ flex: 1, minWidth: 0, minHeight: 0, background: viewBg, overflowY: "auto" }}>
-                <Title order={3} style={{ flexShrink: 0 }}>Provide Feedback</Title>
-
-                <Radio.Group value={feedbackType} onChange={setFeedbackType}>
-                    <Group gap="lg">
-                        <Radio value="Defect"     label="Defect"     color="blue" />
-                        <Radio value="Problem"    label="Problem"    color="blue" />
-                        <Radio value="Suggestion" label="Suggestion" color="blue" />
-                        <Radio value="Kudos"      label="Kudos"      color="blue" />
-                    </Group>
-                </Radio.Group>
-
-                <Stack key={feedbackType} gap="sm">
-                    <TextInput label="Summary" placeholder="Brief summary" size="sm" />
-
-                    {feedbackType === "Defect" && (
-                        <>
-                            <Textarea label="Steps to Reproduce" placeholder="1. Navigate to...\n2. Click on...\n3. Observe..." minRows={3} size="sm" />
-                            <Textarea label="Expected Behavior"  placeholder="What should have happened" minRows={2} size="sm" />
-                            <Textarea label="Actual Behavior"    placeholder="What actually happened" minRows={2} size="sm" />
-                        </>
-                    )}
-
-                    {feedbackType === "Problem" && (
-                        <>
-                            <Textarea  label="Description" placeholder="Describe the problem in detail" minRows={3} size="sm" />
-                            <TextInput label="Impact"      placeholder="How does this affect your work?" size="sm" />
-                            <Textarea  label="Workaround"  placeholder="Any workaround you are currently using" minRows={2} size="sm" />
-                        </>
-                    )}
-
-                    {feedbackType === "Suggestion" && (
-                        <>
-                            <Textarea label="Description"     placeholder="Describe your suggestion" minRows={3} size="sm" />
-                            <Textarea label="Expected Benefit" placeholder="How would this improvement help?" minRows={2} size="sm" />
-                        </>
-                    )}
-
-                    {feedbackType === "Kudos" && (
-                        <>
-                            <Textarea label="What do you like?"    placeholder="Tell us what's working well for you" minRows={3} size="sm" />
-                            <Textarea label="Additional Comments" placeholder="Anything else you'd like to share" minRows={2} size="sm" />
-                        </>
-                    )}
-
-                    <Group>
-                        <Button variant="filled" size="sm" color="blue" onClick={() => setFeedbackSubmitted(true)}>
-                            Submit Feedback
-                        </Button>
-                    </Group>
-                </Stack>
             </Stack>
         );
     }
@@ -746,7 +669,7 @@ export function HelpView(): ReactElement
 
                 {selectedIndex === 0 && renderSearchHelp()}
                 {selectedIndex === 1 && renderChat()}
-                {selectedIndex === 2 && renderFeedback()}
+                {selectedIndex === 2 && <FeedbackView style={{ background: viewBg }} />}
                 {selectedIndex === 3 && renderSurvey()}
                 {selectedIndex === 4 && renderDiagnostics()}
                 {selectedIndex === 5 && renderAbout()}

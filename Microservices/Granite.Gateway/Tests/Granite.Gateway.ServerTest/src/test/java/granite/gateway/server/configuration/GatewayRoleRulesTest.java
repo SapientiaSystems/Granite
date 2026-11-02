@@ -108,6 +108,36 @@ class GatewayRoleRulesTest
 
     @Test
     public void
+    feedbackMatrix()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String user    = backend.sign(List.of("ROLE_USER"));
+
+        for (String token : List.of(admin,auditor,user))
+        {
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-feedback-output",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/handle-feedback-input",token);
+            assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-feedback-input",token);
+        }
+
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-feedback-review-output",admin);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-user-service/get-feedback-review-output",auditor);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-user-service/get-feedback-review-output",user);
+        assertAllowed(HttpMethod.POST,"/frontendcontroller-admin-service/handle-feedback-review-input",admin);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-feedback-review-input",auditor);
+        assertForbidden(HttpMethod.POST,"/frontendcontroller-admin-service/handle-feedback-review-input",user);
+        assertAllowed(HttpMethod.POST,"/feedback-query-service/find-all-feedback",auditor);
+        assertForbidden(HttpMethod.POST,"/feedback-query-service/find-all-feedback",user);
+        assertAllowed(HttpMethod.POST,"/feedback-command-service/create-feedback",admin);
+        assertForbidden(HttpMethod.POST,"/feedback-command-service/create-feedback",auditor);
+        assertAllowed(HttpMethod.POST,"/feedback-command-service/create-feedback",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-feedback-input",null));
+    }
+
+    @Test
+    public void
     retiredSharedPathsFallToCatchAll()
         throws Exception
     {

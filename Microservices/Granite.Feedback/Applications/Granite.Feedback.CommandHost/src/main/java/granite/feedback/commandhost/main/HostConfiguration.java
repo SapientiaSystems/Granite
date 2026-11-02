@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// HostConfiguration.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.feedback.commandhost.main;
+
+import granite.feedback.server.configuration.GraniteFeedbackCommandServerConfiguration;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public
+class HostConfiguration
+    extends GraniteFeedbackCommandServerConfiguration {}
+
+//////////////////////////////////////////////////////////////////////////////

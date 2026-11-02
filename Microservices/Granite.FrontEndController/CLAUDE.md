@@ -45,6 +45,10 @@ Strata's `FrontEndControllerService` is an abstract pipeline (validate, map to c
 |---|---|---|---|---|
 | Users | `getUsersOutput` | `GetUsersOutputRequest` / `GetUsersOutputReply` | `UsersOutput` | `User.All->UsersEditableView` |
 | Users | `handleUsersInput` | `HandleUsersInputRequest` / `HandleUsersInputReply` | `UsersInput` / `UsersOutput` | `User.All->Save->UsersEditableView`, `User.All->Delete->UsersEditableView` |
+| Feedback | `getFeedbackOutput` | `GetFeedbackOutputRequest` / `GetFeedbackOutputReply` | `FeedbackOutput` | `Feedback.New->FeedbackView` |
+| Feedback | `handleFeedbackInput` | `HandleFeedbackInputRequest` / `HandleFeedbackInputReply` | `FeedbackInput` / `FeedbackOutput` | `Feedback.New->Submit->FeedbackView` |
+| Feedback review | `getFeedbackReviewOutput` | `GetFeedbackReviewOutputRequest` / `GetFeedbackReviewOutputReply` | `FeedbackReviewOutput` | `Feedback.All->FeedbackReviewView` |
+| Feedback review | `handleFeedbackReviewInput` | `HandleFeedbackReviewInputRequest` / `HandleFeedbackReviewInputReply` | `FeedbackReviewInput` / `FeedbackReviewOutput` | `Feedback.All->Save->FeedbackReviewView` |
 | Sessions | `getSessionsOutput` | `GetSessionsOutputRequest` / `GetSessionsOutputReply` | `SessionsOutput` | `Session.Open->SessionsView`, `Session.All->SessionsView` |
 | Sessions | `handleSessionsInput` | `HandleSessionsInputRequest` / `HandleSessionsInputReply` | `SessionsInput` / `SessionsOutput` | `Session.Open->Close->SessionsView`, `Session.All->Close->SessionsView` |
 | Session | `getSessionOutput` | `GetSessionOutputRequest` / `GetSessionOutputReply` | `SessionOutput` | `Session.New->LoginView`, `Session.Current->SessionView` |
@@ -58,6 +62,7 @@ Strata's `FrontEndControllerService` is an abstract pipeline (validate, map to c
 
 - Package `granite.frontendcontroller.service.requestreply`. `IGraniteFrontEndControllerService` declares `handleUsersInput`, `getUsersOutput`, `handleSessionsInput`, `getSessionsOutput`, `handleSessionInput`, `getSessionOutput`, `handlePreferencesInput` and `getPreferencesOutput`, each returning `CompletionStage<...Reply>`. Requests extend Strata `HandleInputRequest<I>` / `GetOutputRequest`; replies extend `HandleInputReply<I,O>` / `GetOutputReply<O>` and have a constructor taking the originating request.
 - `UsersInput`: `usersToCreate: List<CreateUserData>`, `usersToUpdate: List<UpdateUserData>`, `userIdsToDelete: List<Long>`; all default to empty lists. `UsersOutput`: `users: List<UserData>`, `failureMessages: List<String>`, `roles: List<RoleData>` (the application role catalog, Admin first; filled in every Users output). `RoleData {name, label, impliedRoles}`.
+- `FeedbackInput {type, summary, details}` (Granite.Feedback `FeedbackType`; `details` holds the type-specific fields). `FeedbackOutput {types, submitted: FeedbackData, failureMessages}`. `FeedbackReviewInput {changes: List<UpdateFeedbackData>}` (status and notes). `FeedbackReviewOutput {feedback: List<FeedbackData>, userNames: Map<Long,String>, failureMessages}`. The Service component depends on `granite-feedback-service` (Java and TS) for these types.
 - `SessionsInput {sessionIdsToClose: List<Long>}` (default empty). `SessionsOutput {sessions: List<SessionRowData>, currentSessionId, failureMessages}`. `SessionRowData` is the FEC's own flat row (the Service component does not depend on Granite.Session.Service): `sessionId`, `userId`, `userName` (joined from User), `authorities` (the session's, sorted), `deviceId`, `loginMethod`, `created`, `lastActivity`, `expires`, `closedReason`, `continuityId` (times as ISO-8601 strings, enums and the UUID as their names/strings), `replacedBy`, `copiedFrom`, `values`.
 - `SessionInput {userName, password, returnTo, code, state}`: one flat input for every session command. `password` and `code` are write-only: never serialized, never in `toString`. Each command reads only the fields it needs (`Login`: `userName`, `password`; `StartOktaLogin`: `returnTo`; `CompleteOktaLogin`: `code`, `state`; `Logout`: none).
 - `SessionOutput {status, userName, authorities, returnTo, passwordEnabled, oktaEnabled, redirectUrl, loggedOut}`: one flat output for every session key. `status` is `AUTHENTICATED` or `UNAUTHENTICATED`. Each key fills only its own fields (boolean getters are `isX`).
@@ -77,6 +82,7 @@ Strata's `FrontEndControllerService` is an abstract pipeline (validate, map to c
 | `User.All->Delete->UsersEditableView` (handle-input) | `DeleteUsersView` | refuses the verified caller's own id (never the payload `userId`), `destroyUsers` for the rest, then re-queries all users |
 
   Every output copies `source`/`command`/`destination` from the request; its `userId` is the verified caller id (the payload `userId` is ignored). Save and delete report failed users and failed batches as `failureMessages` (`<userName or id>: <reason>`) alongside the refreshed `users` list.
+- `server.control.feedback`: `InitializeFeedbackView` and `SubmitFeedbackView` (any signed-in caller; Feedback `createFeedback` with the verified caller as `userId`, never the payload; type and summary required, each detail at most 4000 characters, blank details dropped), `FeedbackReviewLoader` (Feedback `findAllFeedback` plus one User `findUsersByKeySet` for names), `InitializeFeedbackReviewView` and `SaveFeedbackReviewView` (Feedback `updateFeedbacks`; failed ids give `<id>: not saved`; then re-lists). No caller gives `not authenticated` without a downstream call. The clients come from `GraniteHelpServiceClients` (`context.getHelpServiceClients()`): a holder of lazily created, memoized clients filled by the protected `createHelpServiceClients()` with `createFeedbackCommandClient()` / `createFeedbackQueryClient()` (base URLs `feedback-command-service.base-url` and `feedback-query-service.base-url`, the Gateway, in both hosts and every profile). Because the clients are built only on first use, contexts and tests that never touch Feedback need no Feedback configuration; `GraniteFrontEndControllerContext` keeps its 11-argument constructor (an empty holder whose getters throw) and adds a 12-argument one.
 - `server.control.sessions`: the admin Sessions actions. `SessionsLoader` (Session query `findSessions` with `includeClosed` true only for the source `Session.All`, then one User `findUsersByKeySet(UserKeySet.ofIds(...))` for the user names; a failed session read gives `Unable to refresh session list: <reason>` and no rows, a failed user read keeps the rows without names and adds `Unable to resolve user names: <reason>`). Every Sessions action requires a verified caller; with none it returns `UnauthenticatedSessionsOutput` (`not authenticated`, no rows) without calling Session or User. `currentSessionId` is the caller's verified `jti` (`SessionRequestContext.getSessionId()`), so the web view can disable ending it.
 
 | Key | Action | Behavior |
@@ -131,7 +137,7 @@ TLS for downstream calls: `granite.frontendcontroller.ssl-bundle` (constant `Abs
 - **FrontEndControllerUserHost**: imports `GraniteFrontEndControllerConfiguration` and `ServiceConfiguration`; sets `granite.frontendcontroller.service-path=/frontendcontroller-user-service`. Listens on port 8081.
 - **FrontEndControllerAdminHost**: imports `GraniteFrontEndControllerConfiguration` and `ServiceConfiguration`; sets `granite.frontendcontroller.service-path=/frontendcontroller-admin-service`. Listens on port 8082.
 
-Both hosts serve all four subjects. Each `HostConfiguration` keeps its OpenAPI group, scanning `granite.frontendcontroller.server.platform` (where the controllers live) and the health package.
+Both hosts serve every subject. Each `HostConfiguration` keeps its OpenAPI group, scanning `granite.frontendcontroller.server.platform` (where the controllers live) and the health package.
 
 ## Commonly Used Design Patterns
 
@@ -149,12 +155,16 @@ Spring `@Configuration` classes are composed via `@Import`. `HostConfiguration` 
 
 ## REST Endpoints
 
-Both hosts expose the same eight operations under their own service path (`granite.frontendcontroller.service-path`). All are `POST` and consume and produce JSON.
+Both hosts expose the same twelve operations under their own service path (`granite.frontendcontroller.service-path`). All are `POST` and consume and produce JSON.
 
 | Host | Endpoint | Request | Reply |
 |---|---|---|---|
 | User (`/frontendcontroller-user-service/`) | `POST /get-users-output` | `GetUsersOutputRequest` | `GetUsersOutputReply` |
 | User | `POST /handle-users-input` | `HandleUsersInputRequest` | `HandleUsersInputReply` |
+| User | `POST /get-feedback-output` | `GetFeedbackOutputRequest` | `GetFeedbackOutputReply` |
+| User | `POST /handle-feedback-input` | `HandleFeedbackInputRequest` | `HandleFeedbackInputReply` |
+| User | `POST /get-feedback-review-output` | `GetFeedbackReviewOutputRequest` | `GetFeedbackReviewOutputReply` |
+| User | `POST /handle-feedback-review-input` | `HandleFeedbackReviewInputRequest` | `HandleFeedbackReviewInputReply` |
 | User | `POST /get-sessions-output` | `GetSessionsOutputRequest` | `GetSessionsOutputReply` |
 | User | `POST /handle-sessions-input` | `HandleSessionsInputRequest` | `HandleSessionsInputReply` |
 | User | `POST /get-session-output` | `GetSessionOutputRequest` | `GetSessionOutputReply` |
@@ -163,6 +173,10 @@ Both hosts expose the same eight operations under their own service path (`grani
 | User | `POST /handle-preferences-input` | `HandlePreferencesInputRequest` | `HandlePreferencesInputReply` |
 | Admin (`/frontendcontroller-admin-service/`) | `POST /get-users-output` | `GetUsersOutputRequest` | `GetUsersOutputReply` |
 | Admin | `POST /handle-users-input` | `HandleUsersInputRequest` | `HandleUsersInputReply` |
+| Admin | `POST /get-feedback-output` | `GetFeedbackOutputRequest` | `GetFeedbackOutputReply` |
+| Admin | `POST /handle-feedback-input` | `HandleFeedbackInputRequest` | `HandleFeedbackInputReply` |
+| Admin | `POST /get-feedback-review-output` | `GetFeedbackReviewOutputRequest` | `GetFeedbackReviewOutputReply` |
+| Admin | `POST /handle-feedback-review-input` | `HandleFeedbackReviewInputRequest` | `HandleFeedbackReviewInputReply` |
 | Admin | `POST /get-sessions-output` | `GetSessionsOutputRequest` | `GetSessionsOutputReply` |
 | Admin | `POST /handle-sessions-input` | `HandleSessionsInputRequest` | `HandleSessionsInputReply` |
 | Admin | `POST /get-session-output` | `GetSessionOutputRequest` | `GetSessionOutputReply` |

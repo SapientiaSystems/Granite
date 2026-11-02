@@ -16,6 +16,7 @@
         "ag-grid-react": "^33.0.0",
         "granite.web.account": "1.0.0-snapshot",
         "granite.web.authentication": "1.0.0-snapshot",
+        "granite.web.feedback": "1.0.0-snapshot",
         "granite.web.navigator": "1.0.0-snapshot",
         "granite.web.session": "1.0.0-snapshot",
         "granite.web.user": "1.0.0-snapshot",

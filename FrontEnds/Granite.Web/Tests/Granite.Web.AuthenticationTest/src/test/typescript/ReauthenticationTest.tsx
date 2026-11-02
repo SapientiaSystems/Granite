@@ -90,7 +90,7 @@ describe("re-authentication",() =>
 
         await userEvent.type(within(dialog).getByLabelText(/User name/),"alice");
         await userEvent.type(within(dialog).getByLabelText(/Password/),"secret");
-        await userEvent.click(within(dialog).getByRole("button",{ name: "Log in" }));
+        await userEvent.click(within(dialog).getByRole("button",{ name: "Login" }));
 
         expect(await screen.findByText("loaded")).toBeTruthy();
         expect(rig.send).toHaveBeenCalledTimes(2);
@@ -127,7 +127,7 @@ describe("re-authentication",() =>
 
         await userEvent.type(within(dialog).getByLabelText(/User name/),"alice");
         await userEvent.type(within(dialog).getByLabelText(/Password/),"wrong");
-        await userEvent.click(within(dialog).getByRole("button",{ name: "Log in" }));
+        await userEvent.click(within(dialog).getByRole("button",{ name: "Login" }));
 
         expect((await within(dialog).findByRole("alert")).textContent).toBe("Login failed");
         expect(rig.send).toHaveBeenCalledTimes(1);
@@ -140,7 +140,7 @@ describe("re-authentication",() =>
         await loadWithExpiredSession(rig);
         await userEvent.click(await screen.findByRole("button",{ name: "Cancel login" }));
 
-        expect(await screen.findByRole("heading",{ name: "Log in" })).toBeTruthy();
+        expect(await screen.findByRole("heading",{ name: "Login" })).toBeTruthy();
         expect(rig.send).toHaveBeenCalledTimes(1);
     });
 
@@ -154,7 +154,7 @@ describe("re-authentication",() =>
 
         const dialog = await screen.findByRole("dialog");
 
-        await userEvent.click(await within(dialog).findByRole("button",{ name: "Log in with Okta" }));
+        await userEvent.click(await within(dialog).findByRole("button",{ name: "Login with Okta" }));
 
         await waitFor(() => expect(rig.navigator.assigned).toEqual(["https://okta.example/authorize"]));
         expect(rig.frontEnd.callsFor(KEYS.start)[0].payload).toMatchObject({ returnTo: "/users?x=1" });

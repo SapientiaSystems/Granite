@@ -411,6 +411,205 @@ spec:
           type: Utilization
           averageUtilization: 80
 ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-feedback-commandhost
+  namespace: granite
+  labels:
+    app: granite-feedback-commandhost
+    system: granite
+    microservice: feedback
+    role: command
+spec:
+  selector:
+    matchLabels:
+      app: granite-feedback-commandhost
+  template:
+    metadata:
+      labels:
+        app: granite-feedback-commandhost
+        system: granite
+        microservice: feedback
+        role: command
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: commandhost
+          image: ghcr.io/johnliebenau/granite/granite-feedback-commandhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /feedback-command-service/health/startup
+              port: 8086
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /feedback-command-service/health/readiness
+              port: 8086
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /feedback-command-service/health/liveness
+              port: 8086
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-feedback-commandhost
+  namespace: granite
+  labels:
+    app: granite-feedback-commandhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-feedback-commandhost
+  ports:
+    - port: 443
+      targetPort: 8086
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-feedback-commandhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-feedback-commandhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-feedback-queryhost
+  namespace: granite
+  labels:
+    app: granite-feedback-queryhost
+    system: granite
+    microservice: feedback
+    role: query
+spec:
+  selector:
+    matchLabels:
+      app: granite-feedback-queryhost
+  template:
+    metadata:
+      labels:
+        app: granite-feedback-queryhost
+        system: granite
+        microservice: feedback
+        role: query
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: queryhost
+          image: ghcr.io/johnliebenau/granite/granite-feedback-queryhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8087
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /feedback-query-service/health/startup
+              port: 8087
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /feedback-query-service/health/readiness
+              port: 8087
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /feedback-query-service/health/liveness
+              port: 8087
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-feedback-queryhost
+  namespace: granite
+  labels:
+    app: granite-feedback-queryhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-feedback-queryhost
+  ports:
+    - port: 443
+      targetPort: 8087
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-feedback-queryhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-feedback-queryhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -977,6 +1176,20 @@ spec:
                 port:
                   number: 443
           - path: /session-query-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /feedback-command-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /feedback-query-service
             pathType: Prefix
             backend:
               service:

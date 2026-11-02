@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// FeedbackCreated.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.feedback.server.domain;
+
+public
+class FeedbackCreated
+    extends AbstractFeedbackEvent
+{
+    public
+    FeedbackCreated(Feedback src)
+    {
+        super("FeedbackCreated",src);
+    }
+
+    public
+    FeedbackCreated(String correlId,Feedback src)
+    {
+        super("FeedbackCreated",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -15,6 +15,11 @@ import granite.frontendcontroller.server.control.session.LogoutView;
 import granite.frontendcontroller.server.control.session.SessionLoginSettings;
 import granite.frontendcontroller.server.control.session.SessionStatusView;
 import granite.frontendcontroller.server.control.session.StartOktaLoginView;
+import granite.frontendcontroller.server.control.feedback.FeedbackReviewLoader;
+import granite.frontendcontroller.server.control.feedback.InitializeFeedbackReviewView;
+import granite.frontendcontroller.server.control.feedback.InitializeFeedbackView;
+import granite.frontendcontroller.server.control.feedback.SaveFeedbackReviewView;
+import granite.frontendcontroller.server.control.feedback.SubmitFeedbackView;
 import granite.frontendcontroller.server.control.sessions.CloseSessionsView;
 import granite.frontendcontroller.server.control.sessions.InitializeSessionsView;
 import granite.frontendcontroller.server.control.sessions.SessionsLoader;
@@ -23,6 +28,18 @@ import granite.frontendcontroller.server.control.user.InitializeUsersView;
 import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.GetFeedbackOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputReply;
+import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackInputReply;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputReply;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputRequest;
+import granite.frontendcontroller.service.requestreply.FeedbackInput;
+import granite.frontendcontroller.service.requestreply.FeedbackOutput;
+import granite.frontendcontroller.service.requestreply.FeedbackReviewInput;
+import granite.frontendcontroller.service.requestreply.FeedbackReviewOutput;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -71,6 +88,10 @@ class GraniteFrontEndControllerService
     private final GraniteFrontEndControllerContext                                 context;
     private final Map<String,IInputAction<UsersInput,UsersOutput>>                 usersInputActions;
     private final Map<String,IOutputAction<GetUsersOutputRequest,UsersOutput>>     usersOutputActions;
+    private final Map<String,IInputAction<FeedbackInput,FeedbackOutput>>           feedbackInputActions;
+    private final Map<String,IOutputAction<GetFeedbackOutputRequest,FeedbackOutput>> feedbackOutputActions;
+    private final Map<String,IInputAction<FeedbackReviewInput,FeedbackReviewOutput>> feedbackReviewInputActions;
+    private final Map<String,IOutputAction<GetFeedbackReviewOutputRequest,FeedbackReviewOutput>> feedbackReviewOutputActions;
     private final Map<String,IInputAction<SessionsInput,SessionsOutput>>           sessionsInputActions;
     private final Map<String,IOutputAction<GetSessionsOutputRequest,SessionsOutput>> sessionsOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
@@ -99,6 +120,21 @@ class GraniteFrontEndControllerService
         usersOutputActions =
             Map.of(
                 "User.All->UsersEditableView",new InitializeUsersView(userQueryClient,requestContext,context.getApplicationRoles()));
+
+        FeedbackReviewLoader feedbackReviewLoader = new FeedbackReviewLoader(context.getHelpServiceClients(),userQueryClient);
+
+        feedbackInputActions =
+            Map.of(
+                "Feedback.New->Submit->FeedbackView",new SubmitFeedbackView(context.getHelpServiceClients(),requestContext));
+        feedbackOutputActions =
+            Map.of(
+                "Feedback.New->FeedbackView",new InitializeFeedbackView(requestContext));
+        feedbackReviewInputActions =
+            Map.of(
+                "Feedback.All->Save->FeedbackReviewView",new SaveFeedbackReviewView(context.getHelpServiceClients(),feedbackReviewLoader,requestContext));
+        feedbackReviewOutputActions =
+            Map.of(
+                "Feedback.All->FeedbackReviewView",new InitializeFeedbackReviewView(feedbackReviewLoader,requestContext));
 
         SessionsLoader sessionsLoader = new SessionsLoader(sessionQueryClient,userQueryClient);
 
@@ -140,6 +176,34 @@ class GraniteFrontEndControllerService
     getUsersOutput(GetUsersOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(usersOutputActions,context),GetUsersOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleFeedbackInputReply>
+    handleFeedbackInput(HandleFeedbackInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(feedbackInputActions,context),HandleFeedbackInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetFeedbackOutputReply>
+    getFeedbackOutput(GetFeedbackOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(feedbackOutputActions,context),GetFeedbackOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleFeedbackReviewInputReply>
+    handleFeedbackReviewInput(HandleFeedbackReviewInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(feedbackReviewInputActions,context),HandleFeedbackReviewInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetFeedbackReviewOutputReply>
+    getFeedbackReviewOutput(GetFeedbackReviewOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(feedbackReviewOutputActions,context),GetFeedbackReviewOutputReply::new);
     }
 
     @Override

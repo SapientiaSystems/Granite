@@ -21,7 +21,7 @@ export function LoginView(): ReactElement
         <Center py="xl">
             <Paper withBorder shadow="sm" p="lg" w={360}>
                 <Stack gap="md">
-                    <Title order={3}>Log in</Title>
+                    <Title order={3}>Login</Title>
                     <LoginForm returnTo={target} />
                 </Stack>
             </Paper>

@@ -8,6 +8,14 @@ import type { HandleUsersInputRequest }    from "./HandleUsersInputRequest";
 import type { HandleUsersInputReply }      from "./HandleUsersInputReply";
 import type { GetUsersOutputRequest }      from "./GetUsersOutputRequest";
 import type { GetUsersOutputReply }        from "./GetUsersOutputReply";
+import type { HandleFeedbackInputRequest }         from "./HandleFeedbackInputRequest";
+import type { HandleFeedbackInputReply }           from "./HandleFeedbackInputReply";
+import type { GetFeedbackOutputRequest }           from "./GetFeedbackOutputRequest";
+import type { GetFeedbackOutputReply }             from "./GetFeedbackOutputReply";
+import type { HandleFeedbackReviewInputRequest }   from "./HandleFeedbackReviewInputRequest";
+import type { HandleFeedbackReviewInputReply }     from "./HandleFeedbackReviewInputReply";
+import type { GetFeedbackReviewOutputRequest }     from "./GetFeedbackReviewOutputRequest";
+import type { GetFeedbackReviewOutputReply }       from "./GetFeedbackReviewOutputReply";
 import type { HandleSessionsInputRequest } from "./HandleSessionsInputRequest";
 import type { HandleSessionsInputReply }   from "./HandleSessionsInputReply";
 import type { GetSessionsOutputRequest }   from "./GetSessionsOutputRequest";
@@ -28,6 +36,14 @@ interface IGraniteFrontEndControllerService
     handleUsersInput(request: HandleUsersInputRequest): ICompletionStage<HandleUsersInputReply>;
 
     getUsersOutput(request: GetUsersOutputRequest): ICompletionStage<GetUsersOutputReply>;
+
+    handleFeedbackInput(request: HandleFeedbackInputRequest): ICompletionStage<HandleFeedbackInputReply>;
+
+    getFeedbackOutput(request: GetFeedbackOutputRequest): ICompletionStage<GetFeedbackOutputReply>;
+
+    handleFeedbackReviewInput(request: HandleFeedbackReviewInputRequest): ICompletionStage<HandleFeedbackReviewInputReply>;
+
+    getFeedbackReviewOutput(request: GetFeedbackReviewOutputRequest): ICompletionStage<GetFeedbackReviewOutputReply>;
 
     handleSessionsInput(request: HandleSessionsInputRequest): ICompletionStage<HandleSessionsInputReply>;
 

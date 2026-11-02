@@ -29,6 +29,14 @@ DEFAULT_SERVICE_NAMES=(
     "granite-session-queryhost"
     "granite-gateway-servicehost"
     "granite-outbox-servicehost"
+    "granite-feedback-commandhost"
+    "granite-feedback-queryhost"
+    "granite-survey-commandhost"
+    "granite-survey-queryhost"
+    "granite-content-commandhost"
+    "granite-content-queryhost"
+    "granite-agent-commandhost"
+    "granite-agent-queryhost"
     "granite-web-apphost"
 )
 

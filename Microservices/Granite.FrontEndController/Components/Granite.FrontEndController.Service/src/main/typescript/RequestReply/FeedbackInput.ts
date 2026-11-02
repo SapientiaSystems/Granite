@@ -1,0 +1,17 @@
+//////////////////////////////////////////////////////////////////////////////
+// Granite.FrontEndController.Service
+//////////////////////////////////////////////////////////////////////////////
+
+import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
+import type { FeedbackType }  from "granite.feedback.service/RequestReply";
+
+export
+interface FeedbackInput
+    extends FrontEndInput
+{
+    type:     FeedbackType;
+    summary:  string;
+    details:  Record<string,string>;
+}
+
+//////////////////////////////////////////////////////////////////////////////

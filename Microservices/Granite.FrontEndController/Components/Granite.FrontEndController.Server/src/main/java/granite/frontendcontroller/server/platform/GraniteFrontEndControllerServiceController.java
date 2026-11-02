@@ -4,6 +4,14 @@
 
 package granite.frontendcontroller.server.platform;
 
+import granite.frontendcontroller.service.requestreply.HandleFeedbackInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackInputReply;
+import granite.frontendcontroller.service.requestreply.GetFeedbackOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleFeedbackReviewInputReply;
+import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -57,6 +65,46 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating getUsersOutput to implementation service");
         return getService().getUsersOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-feedback-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleFeedbackInputReply>
+    handleFeedbackInput(@RequestBody HandleFeedbackInputRequest request)
+    {
+        getLogger().info("delegating handleFeedbackInput to implementation service");
+        return getService().handleFeedbackInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-feedback-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetFeedbackOutputReply>
+    getFeedbackOutput(@RequestBody GetFeedbackOutputRequest request)
+    {
+        getLogger().info("delegating getFeedbackOutput to implementation service");
+        return getService().getFeedbackOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-feedback-review-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleFeedbackReviewInputReply>
+    handleFeedbackReviewInput(@RequestBody HandleFeedbackReviewInputRequest request)
+    {
+        getLogger().info("delegating handleFeedbackReviewInput to implementation service");
+        return getService().handleFeedbackReviewInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-feedback-review-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetFeedbackReviewOutputReply>
+    getFeedbackReviewOutput(@RequestBody GetFeedbackReviewOutputRequest request)
+    {
+        getLogger().info("delegating getFeedbackReviewOutput to implementation service");
+        return getService().getFeedbackReviewOutput(request);
     }
 
     @PostMapping(

@@ -28,14 +28,14 @@ describe("LoginForm",() =>
         renderForm(true,false);
 
         expect(await screen.findByLabelText(/User name/)).toBeTruthy();
-        expect(screen.queryByRole("button",{ name: "Log in with Okta" })).toBeNull();
+        expect(screen.queryByRole("button",{ name: "Login with Okta" })).toBeNull();
     });
 
     it("shows only the Okta button when only Okta is enabled",async () =>
     {
         renderForm(false,true);
 
-        expect(await screen.findByRole("button",{ name: "Log in with Okta" })).toBeTruthy();
+        expect(await screen.findByRole("button",{ name: "Login with Okta" })).toBeTruthy();
         expect(screen.queryByLabelText(/User name/)).toBeNull();
         expect(screen.queryByLabelText(/Password/)).toBeNull();
     });
@@ -45,7 +45,7 @@ describe("LoginForm",() =>
         renderForm(true,true);
 
         expect(await screen.findByLabelText(/User name/)).toBeTruthy();
-        expect(screen.getByRole("button",{ name: "Log in with Okta" })).toBeTruthy();
+        expect(screen.getByRole("button",{ name: "Login with Okta" })).toBeTruthy();
     });
 
     it("tells the user when no method is enabled",async () =>
@@ -54,7 +54,7 @@ describe("LoginForm",() =>
 
         expect(await screen.findByText(/No login method is enabled/)).toBeTruthy();
         expect(screen.queryByLabelText(/User name/)).toBeNull();
-        expect(screen.queryByRole("button",{ name: "Log in with Okta" })).toBeNull();
+        expect(screen.queryByRole("button",{ name: "Login with Okta" })).toBeNull();
     });
 
     it("shows an alert when the methods cannot be loaded",async () =>
@@ -72,7 +72,7 @@ describe("LoginForm",() =>
 
         await userEvent.type(await screen.findByLabelText(/User name/),"alice");
         await userEvent.type(screen.getByLabelText(/Password/),"secret");
-        await userEvent.click(screen.getByRole("button",{ name: "Log in" }));
+        await userEvent.click(screen.getByRole("button",{ name: "Login" }));
 
         await waitFor(() => expect(frontEnd.callsFor(KEYS.login)).toHaveLength(1));
         expect(frontEnd.callsFor(KEYS.login)[0].payload).toMatchObject({ userName: "alice", password: "secret" });
@@ -84,7 +84,7 @@ describe("LoginForm",() =>
 
         await userEvent.type(await screen.findByLabelText(/User name/),"alice");
         await userEvent.type(screen.getByLabelText(/Password/),"wrong");
-        await userEvent.click(screen.getByRole("button",{ name: "Log in" }));
+        await userEvent.click(screen.getByRole("button",{ name: "Login" }));
 
         expect((await screen.findByRole("alert")).textContent).toBe("Login failed");
     });
@@ -93,7 +93,7 @@ describe("LoginForm",() =>
     {
         const { frontEnd, navigator } = renderForm(false,true);
 
-        await userEvent.click(await screen.findByRole("button",{ name: "Log in with Okta" }));
+        await userEvent.click(await screen.findByRole("button",{ name: "Login with Okta" }));
 
         await waitFor(() => expect(navigator.assigned).toEqual(["https://okta.example/authorize"]));
         expect(frontEnd.callsFor(KEYS.start)[0].payload).toMatchObject({ returnTo: "/users" });
@@ -107,7 +107,7 @@ describe("LoginForm",() =>
         const navigator = new FakeNavigator();
 
         renderWithAuthentication(authenticationFor(frontEnd,undefined,navigator),"/",<LoginForm returnTo="/" />);
-        await userEvent.click(await screen.findByRole("button",{ name: "Log in with Okta" }));
+        await userEvent.click(await screen.findByRole("button",{ name: "Login with Okta" }));
 
         expect((await screen.findByRole("alert")).textContent).toBe("Login failed");
         expect(navigator.assigned).toEqual([]);

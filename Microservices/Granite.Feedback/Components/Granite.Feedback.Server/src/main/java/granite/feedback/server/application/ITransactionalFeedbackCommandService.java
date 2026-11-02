@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// ITransactionalFeedbackCommandService.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.feedback.server.application;
+
+import granite.feedback.service.requestreply.IFeedbackCommandService;
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public
+interface ITransactionalFeedbackCommandService
+    extends IFeedbackCommandService {}
+
+//////////////////////////////////////////////////////////////////////////////

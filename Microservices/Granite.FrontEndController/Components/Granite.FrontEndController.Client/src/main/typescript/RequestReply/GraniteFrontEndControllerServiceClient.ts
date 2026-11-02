@@ -5,6 +5,10 @@
 import type { ICompletionStage }                          from "strata.foundation.core/Concurrent";
 import type { HandleUsersInputRequest, HandleUsersInputReply,
               GetUsersOutputRequest, GetUsersOutputReply,
+              HandleFeedbackInputRequest, HandleFeedbackInputReply,
+              GetFeedbackOutputRequest, GetFeedbackOutputReply,
+              HandleFeedbackReviewInputRequest, HandleFeedbackReviewInputReply,
+              GetFeedbackReviewOutputRequest, GetFeedbackReviewOutputReply,
               HandleSessionsInputRequest, HandleSessionsInputReply,
               GetSessionsOutputRequest, GetSessionsOutputReply,
               HandleSessionInputRequest, HandleSessionInputReply,
@@ -36,6 +40,34 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetUsersOutputReply,GetUsersOutputRequest>(
             "get-users-output",
+            this.initializeRequest(request));
+    }
+
+    handleFeedbackInput(request: HandleFeedbackInputRequest): ICompletionStage<HandleFeedbackInputReply>
+    {
+        return this.doPost<HandleFeedbackInputReply,HandleFeedbackInputRequest>(
+            "handle-feedback-input",
+            this.initializeRequest(request));
+    }
+
+    getFeedbackOutput(request: GetFeedbackOutputRequest): ICompletionStage<GetFeedbackOutputReply>
+    {
+        return this.doPost<GetFeedbackOutputReply,GetFeedbackOutputRequest>(
+            "get-feedback-output",
+            this.initializeRequest(request));
+    }
+
+    handleFeedbackReviewInput(request: HandleFeedbackReviewInputRequest): ICompletionStage<HandleFeedbackReviewInputReply>
+    {
+        return this.doPost<HandleFeedbackReviewInputReply,HandleFeedbackReviewInputRequest>(
+            "handle-feedback-review-input",
+            this.initializeRequest(request));
+    }
+
+    getFeedbackReviewOutput(request: GetFeedbackReviewOutputRequest): ICompletionStage<GetFeedbackReviewOutputReply>
+    {
+        return this.doPost<GetFeedbackReviewOutputReply,GetFeedbackReviewOutputRequest>(
+            "get-feedback-review-output",
             this.initializeRequest(request));
     }
 

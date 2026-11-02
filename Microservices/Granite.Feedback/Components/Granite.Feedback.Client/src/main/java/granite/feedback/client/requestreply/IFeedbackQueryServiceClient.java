@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IFeedbackQueryServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.feedback.client.requestreply;
+
+import granite.feedback.service.requestreply.IFeedbackQueryService;
+
+public
+interface IFeedbackQueryServiceClient
+    extends IFeedbackQueryService
+{
+    IFeedbackQueryServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

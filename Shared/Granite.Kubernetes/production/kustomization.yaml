@@ -58,6 +58,16 @@ patches:
         path: /spec/rules/0/http/paths/2
       - op: test
         path: /spec/rules/0/http/paths/2/path
+        value: /feedback-command-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /feedback-query-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
         value: /outbox-service
       - op: remove
         path: /spec/rules/0/http/paths/2
