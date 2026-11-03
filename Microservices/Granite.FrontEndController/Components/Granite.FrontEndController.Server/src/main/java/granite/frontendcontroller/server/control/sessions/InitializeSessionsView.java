@@ -4,7 +4,9 @@
 
 package granite.frontendcontroller.server.control.sessions;
 
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.control.IOutputAction;
+import granite.frontendcontroller.server.control.user.RoleCatalogData;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputRequest;
 import granite.frontendcontroller.service.requestreply.SessionsOutput;
@@ -18,14 +20,16 @@ public
 class InitializeSessionsView
     implements IOutputAction<GetSessionsOutputRequest,SessionsOutput>
 {
-    private final SessionsLoader        loader;
-    private final SessionRequestContext context;
+    private final SessionsLoader          loader;
+    private final SessionRequestContext   context;
+    private final ApplicationRolesManager applicationRoles;
 
     public
-    InitializeSessionsView(SessionsLoader loader,SessionRequestContext context)
+    InitializeSessionsView(SessionsLoader loader,SessionRequestContext context,ApplicationRolesManager applicationRoles)
     {
-        this.loader  = loader;
-        this.context = context;
+        this.loader           = loader;
+        this.context          = context;
+        this.applicationRoles = applicationRoles;
     }
 
     @Override
@@ -58,7 +62,8 @@ class InitializeSessionsView
                 .setUserId(context.getCallerUserId().orElse(null))
                 .setSource(request.getSource())
                 .setCommand(request.getCommand())
-                .setDestination(request.getDestination());
+                .setDestination(request.getDestination())
+                .setRoles(RoleCatalogData.from(applicationRoles));
     }
 }
 

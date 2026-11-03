@@ -9,7 +9,7 @@ import { GraniteFrontEndControllerServiceClient }      from "granite.frontendcon
 import type { IGraniteFrontEndControllerServiceClient } from "granite.frontendcontroller.client/RequestReply";
 import { GetOutputRequestBuilder, HandleInputRequestBuilder } from "strata.frontendcontroller.service/RequestReply";
 import type { GetSessionsOutputReply, HandleSessionsInputReply,
-              SessionRowData, SessionsInput, SessionsOutput } from "granite.frontendcontroller.service/RequestReply";
+              RoleData, SessionRowData, SessionsInput, SessionsOutput } from "granite.frontendcontroller.service/RequestReply";
 import { canEdit, useAuthentication }                  from "granite.web.authentication/Authentication";
 import { SessionsGrid }                                from "../View";
 import type { ISessionsResult }                        from "../View";
@@ -35,6 +35,7 @@ export function SessionsView(props: ISessionsViewProps): ReactElement
     const dark: boolean                       = useComputedColorScheme("light") === "dark";
     const [sessions, setSessions]             = useState<Array<SessionRowData>>([]);
     const [currentSessionId, setCurrentId]    = useState<number | null>(null);
+    const [roles, setRoles]                   = useState<Array<RoleData>>([]);
     const [includeClosed, setIncludeClosed]   = useState<boolean>(false);
     const [loading, setLoading]               = useState<boolean>(true);
     const [loadError, setLoadError]           = useState<string | null>(null);
@@ -50,6 +51,7 @@ export function SessionsView(props: ISessionsViewProps): ReactElement
     {
         setSessions(output.sessions ?? []);
         setCurrentId(output.currentSessionId ?? null);
+        setRoles(output.roles ?? []);
     };
 
     const handleEnd = (sessionIds: Array<number>): Promise<ISessionsResult> =>
@@ -176,6 +178,7 @@ export function SessionsView(props: ISessionsViewProps): ReactElement
                 <SessionsGrid
                     sessions={sessions}
                     currentSessionId={currentSessionId}
+                    roles={roles}
                     loading={loading}
                     includeClosed={includeClosed}
                     showEnd={editable}

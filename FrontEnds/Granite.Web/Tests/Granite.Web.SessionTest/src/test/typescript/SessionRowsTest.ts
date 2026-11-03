@@ -4,7 +4,7 @@
 
 import { describe, expect, it }  from "vitest";
 import { authoritiesLabel, canEndSelection, detailRowHeight, displayValue, endableSessionIds, formatInstant,
-         isCurrent, isOpen, toSessionRows, userLabel, valueEntries, withDetailRow } from "granite.web.session/View";
+         isCurrent, isOpen, roleLabel, toSessionRows, userLabel, valueEntries, withDetailRow } from "granite.web.session/View";
 import type { SessionRowData }  from "granite.frontendcontroller.service/RequestReply";
 
 const open:    SessionRowData = { sessionId: 11, userId: 7, userName: "admin", values: { cart: 3 } };
@@ -60,6 +60,15 @@ describe("SessionRows", () =>
     {
         expect(authoritiesLabel({ sessionId: 1, authorities: ["ROLE_USER","ROLE_ADMIN"] })).toBe("ROLE_ADMIN, ROLE_USER");
         expect(authoritiesLabel({ sessionId: 1 })).toBe("");
+    });
+
+    it("shows authorities by their catalog labels", () =>
+    {
+        const roles = [{ name: "ROLE_ADMIN", label: "Admin", impliedRoles: [] }, { name: "ROLE_USER", label: "User", impliedRoles: [] }];
+
+        expect(roleLabel("ROLE_ADMIN",roles)).toBe("Admin");
+        expect(roleLabel("ROLE_OTHER",roles)).toBe("ROLE_OTHER");
+        expect(authoritiesLabel({ sessionId: 1, authorities: ["ROLE_USER","ROLE_ADMIN"] },roles)).toBe("Admin, User");
     });
 
     it("renders values as read-only entries", () =>

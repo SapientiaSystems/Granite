@@ -4,7 +4,9 @@
 
 package granite.frontendcontroller.server.control.sessions;
 
+import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.server.control.user.RoleCatalogData;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.SessionsInput;
 import granite.frontendcontroller.service.requestreply.SessionsOutput;
@@ -30,16 +32,19 @@ class CloseSessionsView
     private final ISessionCommandServiceClient commandClient;
     private final SessionsLoader               loader;
     private final SessionRequestContext        context;
+    private final ApplicationRolesManager      applicationRoles;
 
     public
     CloseSessionsView(
         ISessionCommandServiceClient commandClient,
         SessionsLoader               loader,
-        SessionRequestContext        context)
+        SessionRequestContext        context,
+        ApplicationRolesManager      applicationRoles)
     {
-        this.commandClient = commandClient;
-        this.loader        = loader;
-        this.context       = context;
+        this.commandClient    = commandClient;
+        this.loader           = loader;
+        this.context          = context;
+        this.applicationRoles = applicationRoles;
     }
 
     @Override
@@ -117,7 +122,8 @@ class CloseSessionsView
                 .setUserId(context.getCallerUserId().orElse(null))
                 .setSource(input.getSource())
                 .setCommand(input.getCommand())
-                .setDestination(input.getDestination().orElse(null));
+                .setDestination(input.getDestination().orElse(null))
+                .setRoles(RoleCatalogData.from(applicationRoles));
     }
 
     private String

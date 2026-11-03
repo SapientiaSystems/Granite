@@ -7,6 +7,57 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
+              <build path="$PROJECT_DIR$/Microservices/Granite.Agent" name="Granite.Agent">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Applications/Granite.Agent.CommandHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Applications/Granite.Agent.QueryHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Components/Granite.Agent.Client" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Components/Granite.Agent.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Components/Granite.Agent.Service" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.ClientTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.ServerTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.ServiceTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.TestSuite" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/Microservices/Granite.Content" name="Granite.Content">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Applications/Granite.Content.CommandHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Applications/Granite.Content.QueryHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Components/Granite.Content.Client" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Components/Granite.Content.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Components/Granite.Content.Service" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.ClientTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.ServerTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.ServiceTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.TestSuite" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/Microservices/Granite.Feedback" name="Granite.Feedback">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Applications/Granite.Feedback.CommandHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Applications/Granite.Feedback.QueryHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Components/Granite.Feedback.Client" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Components/Granite.Feedback.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Components/Granite.Feedback.Service" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.ClientTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.ServerTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.ServiceTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.TestSuite" />
+                </projects>
+              </build>
               <build path="$PROJECT_DIR$/Shared/Granite.Foundation" name="Granite.Foundation">
                 <projects>
                   <project path="$PROJECT_DIR$/Shared/Granite.Foundation" />
@@ -73,6 +124,23 @@
                   <project path="$PROJECT_DIR$/Microservices/Granite.Session/Tests/Granite.Session.TestSuite" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/Microservices/Granite.Survey" name="Granite.Survey">
+                <projects>
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Applications" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Applications/Granite.Survey.CommandHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Applications/Granite.Survey.QueryHost" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Components" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Components/Granite.Survey.Client" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Components/Granite.Survey.Server" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Components/Granite.Survey.Service" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Tests" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.ClientTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.ServerTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.ServiceTest" />
+                  <project path="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.TestSuite" />
+                </projects>
+              </build>
               <build path="$PROJECT_DIR$/Microservices/Granite.User" name="Granite.User">
                 <projects>
                   <project path="$PROJECT_DIR$/Microservices/Granite.User" />
@@ -98,6 +166,45 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Applications/Granite.Agent.CommandHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Applications/Granite.Agent.QueryHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Components/Granite.Agent.Client" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Components/Granite.Agent.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Components/Granite.Agent.Service" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.ClientTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.ServiceTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Agent/Tests/Granite.Agent.TestSuite" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Applications/Granite.Content.CommandHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Applications/Granite.Content.QueryHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Components/Granite.Content.Client" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Components/Granite.Content.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Components/Granite.Content.Service" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.ClientTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.ServiceTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Content/Tests/Granite.Content.TestSuite" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Applications/Granite.Feedback.CommandHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Applications/Granite.Feedback.QueryHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Components/Granite.Feedback.Client" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Components/Granite.Feedback.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Components/Granite.Feedback.Service" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.ClientTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.ServiceTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Feedback/Tests/Granite.Feedback.TestSuite" />
             <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController" />
             <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications" />
             <option value="$PROJECT_DIR$/Microservices/Granite.FrontEndController/Applications/Granite.FrontEndController.AdminHost" />
@@ -138,6 +245,19 @@
             <option value="$PROJECT_DIR$/Microservices/Granite.Session/Tests/Granite.Session.ServerTest" />
             <option value="$PROJECT_DIR$/Microservices/Granite.Session/Tests/Granite.Session.ServiceTest" />
             <option value="$PROJECT_DIR$/Microservices/Granite.Session/Tests/Granite.Session.TestSuite" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Applications" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Applications/Granite.Survey.CommandHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Applications/Granite.Survey.QueryHost" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Components" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Components/Granite.Survey.Client" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Components/Granite.Survey.Server" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Components/Granite.Survey.Service" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Tests" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.ClientTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.ServerTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.ServiceTest" />
+            <option value="$PROJECT_DIR$/Microservices/Granite.Survey/Tests/Granite.Survey.TestSuite" />
             <option value="$PROJECT_DIR$/Microservices/Granite.User" />
             <option value="$PROJECT_DIR$/Microservices/Granite.User/Applications" />
             <option value="$PROJECT_DIR$/Microservices/Granite.User/Applications/Granite.User.CommandHost" />

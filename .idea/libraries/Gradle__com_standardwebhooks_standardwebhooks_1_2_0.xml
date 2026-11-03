@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: com.standardwebhooks:standardwebhooks:1.2.0" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="com.standardwebhooks" artifactId="standardwebhooks" version="1.2.0" baseVersion="1.2.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.standardwebhooks/standardwebhooks/1.2.0/30f5abe5fb4d79ba04e30a7c718b4184993f6852/standardwebhooks-1.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

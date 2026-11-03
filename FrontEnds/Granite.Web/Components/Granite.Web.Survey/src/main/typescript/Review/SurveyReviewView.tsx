@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState }                   from "react";
 import type { CSSProperties, ReactElement }               from "react";
-import { ActionIcon, Alert, Group, Stack, Text, Tooltip,
+import { ActionIcon, Alert, Group, Loader, Stack, Text, Tooltip,
          useComputedColorScheme }                         from "@mantine/core";
 import { AgGridReact }                                    from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-community";
@@ -189,7 +189,7 @@ export function SurveyReviewView(props: ISurveyReviewViewProps): ReactElement
 
     return (
         <Stack gap={0} className={props.className === undefined ? "view-container" : "view-container " + props.className}
-               style={{ height: props.height ?? "calc(100vh - var(--app-header-height, 0px))", minHeight: 0, display: "flex", flexDirection: "column", ...props.style }}>
+               style={{ height: props.height ?? "calc(100vh - var(--app-header-height, 0px))", minHeight: 0, display: "flex", flexDirection: "column", position: "relative", ...props.style }}>
             <Group gap="sm" className="view-toolbar" px="sm" py={6} justify="flex-start" wrap="nowrap"
                    style={{ backgroundColor: dark ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-3)", flexShrink: 0, alignItems: "center", height: 64 }}>
                 {toolbarButton("Refresh Survey Responses","Refresh",refreshIcon,() => setReload(previous => previous + 1),loading)}
@@ -202,6 +202,11 @@ export function SurveyReviewView(props: ISurveyReviewViewProps): ReactElement
             <Alert color="red" withCloseButton onClose={() => setMessages([])} mx="sm" my={6}>
                 {messages.map((m, i) => <div key={i}>{m}</div>)}
             </Alert>}
+            {loading &&
+            <div style={{ position: "absolute", inset: 0, display: "flex",
+                          alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <Loader size="lg" />
+            </div>}
             <div className="ag-theme-quartz" style={{ flex: 1, minHeight: 0, width: "100%" }}>
                 <AgGridReact<ISurveyRow>
                     theme={gridTheme}

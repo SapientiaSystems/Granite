@@ -215,12 +215,12 @@ class GraniteFrontEndControllerService
 
         sessionsInputActions =
             Map.of(
-                "Session.Open->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext),
-                "Session.All->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext));
+                "Session.Open->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext,context.getApplicationRoles()),
+                "Session.All->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext,context.getApplicationRoles()));
         sessionsOutputActions =
             Map.of(
-                "Session.Open->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext),
-                "Session.All->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext));
+                "Session.Open->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext,context.getApplicationRoles()),
+                "Session.All->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext,context.getApplicationRoles()));
         sessionInputActions =
             Map.of(
                 "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings,cookies),

@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.sessions;
 
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputRequest;
 import granite.frontendcontroller.service.requestreply.SessionRowData;
@@ -64,6 +65,7 @@ class InitializeSessionsViewTest
         assertEquals(7L,output.getUserId());
         assertEquals("Session.Open",output.getSource());
         assertEquals("SessionsView",output.getDestination());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),output.getRoles().stream().map(r -> r.getName()).toList());
         assertEquals(2,output.getSessions().size());
 
         SessionRowData row = output.getSessions().get(1);
@@ -143,7 +145,8 @@ class InitializeSessionsViewTest
         return
             new InitializeSessionsView(
                 new SessionsLoader(sessionQueryClient,userQueryClient),
-                SessionTestSupport.context("d",sessionId,caller));
+                SessionTestSupport.context("d",sessionId,caller),
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     private SessionsOutput

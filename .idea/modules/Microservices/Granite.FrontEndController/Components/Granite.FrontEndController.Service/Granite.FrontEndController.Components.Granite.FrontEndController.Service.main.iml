@@ -21,6 +21,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: strata.frontendcontroller:strata-frontendcontroller-service:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Service.main" />
+    <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Service.main" />
+    <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Service.main" />
+    <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Service.main" />
+    <orderEntry type="module" module-name="Granite.Agent.Components.Granite.Agent.Service.main" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-core:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-web:3.4.1" level="project" />

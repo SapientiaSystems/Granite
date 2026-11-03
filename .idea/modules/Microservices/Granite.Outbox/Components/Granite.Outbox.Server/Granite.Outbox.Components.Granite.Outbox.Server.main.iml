@@ -12,12 +12,17 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Outbox/Components/Granite.Outbox.Server/src/main">
       <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Outbox/Components/Granite.Outbox.Server/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Outbox/Components/Granite.Outbox.Server/src/main/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-server:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-kafka:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Service.main" />
+    <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Service.main" />
+    <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Service.main" />
+    <orderEntry type="module" module-name="Granite.Agent.Components.Granite.Agent.Service.main" />
+    <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Service.main" />
     <orderEntry type="module" module-name="Granite.Foundation.Components.Granite.Foundation.Core.main" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-core:1.0-SNAPSHOT" level="project" />

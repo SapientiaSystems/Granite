@@ -1,6 +1,6 @@
 {
   "name": "granite.web.content",
-  "version": "1.0.0-snapshot.1793631233283",
+  "version": "1.0.0-snapshot.1793672675434",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
