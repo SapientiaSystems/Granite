@@ -17,6 +17,7 @@ import type { HandleUsersInputRequest, HandleUsersInputReply,
               HandleSurveyReviewInputRequest, HandleSurveyReviewInputReply,
               GetFeedbackReviewOutputRequest, GetFeedbackReviewOutputReply,
               GetSurveyReviewOutputRequest, GetSurveyReviewOutputReply,
+              GetHomeOutputRequest, GetHomeOutputReply,
               HandleSessionsInputRequest, HandleSessionsInputReply,
               GetSessionsOutputRequest, GetSessionsOutputReply,
               HandleSessionInputRequest, HandleSessionInputReply,
@@ -132,6 +133,13 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetSurveyReviewOutputReply,GetSurveyReviewOutputRequest>(
             "get-survey-review-output",
+            this.initializeRequest(request));
+    }
+
+    getHomeOutput(request: GetHomeOutputRequest): ICompletionStage<GetHomeOutputReply>
+    {
+        return this.doPost<GetHomeOutputReply,GetHomeOutputRequest>(
+            "get-home-output",
             this.initializeRequest(request));
     }
 

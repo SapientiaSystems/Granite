@@ -2,14 +2,12 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { HandleInputReply } from "strata.frontendcontroller.service/RequestReply";
-import type { HomeInput } from "./HomeInput";
-import type { HomeOutput } from "./HomeOutput";
-
 export
-interface HandleHomeInputReply
-    extends HandleInputReply<HomeInput,HomeOutput>
+interface HomeBreakdownData
 {
+    key:    string;
+    label:  string;
+    counts: Record<string,number>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

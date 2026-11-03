@@ -32,6 +32,8 @@ import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputReply;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionsOutputRequest;
 import granite.frontendcontroller.service.requestreply.HandleSessionsInputReply;
@@ -211,6 +213,16 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating handleSessionsInput to implementation service");
         return getService().handleSessionsInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-home-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetHomeOutputReply>
+    getHomeOutput(@RequestBody GetHomeOutputRequest request)
+    {
+        getLogger().info("delegating getHomeOutput to implementation service");
+        return getService().getHomeOutput(request);
     }
 
     @PostMapping(

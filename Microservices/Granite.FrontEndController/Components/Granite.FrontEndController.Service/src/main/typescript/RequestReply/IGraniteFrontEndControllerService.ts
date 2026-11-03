@@ -32,6 +32,8 @@ import type { GetFeedbackReviewOutputRequest }     from "./GetFeedbackReviewOutp
 import type { GetSurveyReviewOutputRequest }     from "./GetSurveyReviewOutputRequest";
 import type { GetFeedbackReviewOutputReply }       from "./GetFeedbackReviewOutputReply";
 import type { GetSurveyReviewOutputReply }       from "./GetSurveyReviewOutputReply";
+import type { GetHomeOutputRequest }             from "./GetHomeOutputRequest";
+import type { GetHomeOutputReply }               from "./GetHomeOutputReply";
 import type { HandleSessionsInputRequest } from "./HandleSessionsInputRequest";
 import type { HandleSessionsInputReply }   from "./HandleSessionsInputReply";
 import type { GetSessionsOutputRequest }   from "./GetSessionsOutputRequest";
@@ -72,6 +74,8 @@ interface IGraniteFrontEndControllerService
 
     getFeedbackReviewOutput(request: GetFeedbackReviewOutputRequest): ICompletionStage<GetFeedbackReviewOutputReply>;
     getSurveyReviewOutput(request: GetSurveyReviewOutputRequest): ICompletionStage<GetSurveyReviewOutputReply>;
+
+    getHomeOutput(request: GetHomeOutputRequest): ICompletionStage<GetHomeOutputReply>;
 
     handleSessionsInput(request: HandleSessionsInputRequest): ICompletionStage<HandleSessionsInputReply>;
 
