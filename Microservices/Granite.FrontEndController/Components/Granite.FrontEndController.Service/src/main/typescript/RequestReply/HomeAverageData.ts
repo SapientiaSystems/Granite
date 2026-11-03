@@ -2,13 +2,12 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { HandleInputRequest } from "strata.frontendcontroller.service/RequestReply";
-import type { HomeInput } from "./HomeInput";
-
 export
-interface HandleHomeInputRequest
-    extends HandleInputRequest<HomeInput>
+interface HomeAverageData
 {
+    key:      string;
+    label:    string;
+    average?: number | null;
 }
 
 //////////////////////////////////////////////////////////////////////////////

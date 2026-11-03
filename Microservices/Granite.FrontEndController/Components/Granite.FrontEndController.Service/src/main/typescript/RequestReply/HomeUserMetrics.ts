@@ -2,15 +2,14 @@
 // Granite.FrontEndController.Service
 //////////////////////////////////////////////////////////////////////////////
 
-import type { FrontEndInput } from "strata.frontendcontroller.service/RequestReply";
+import type { HomeCountData } from "./HomeCountData";
 
 export
-interface HomeInput
-    extends FrontEndInput
+interface HomeUserMetrics
 {
-    readonly userId:      number;
-    readonly source:      string;
-    readonly destination: string;
+    total:      number;
+    oktaLinked: number;
+    byRole:     Array<HomeCountData>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

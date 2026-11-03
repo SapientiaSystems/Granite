@@ -1,0 +1,17 @@
+//////////////////////////////////////////////////////////////////////////////
+// Granite.FrontEndController.Service
+//////////////////////////////////////////////////////////////////////////////
+
+import type { HomeBreakdownData } from "./HomeBreakdownData";
+import type { HomeCountData }     from "./HomeCountData";
+
+export
+interface HomeFeedbackMetrics
+{
+    total:    number;
+    byStatus: Array<HomeCountData>;
+    byType:   Array<HomeBreakdownData>;
+    daily:    Array<HomeCountData>;
+}
+
+//////////////////////////////////////////////////////////////////////////////

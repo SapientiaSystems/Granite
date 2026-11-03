@@ -31,6 +31,9 @@ import granite.frontendcontroller.server.control.feedback.SaveFeedbackReviewView
 import granite.frontendcontroller.server.control.survey.SaveSurveyReviewView;
 import granite.frontendcontroller.server.control.feedback.SubmitFeedbackView;
 import granite.frontendcontroller.server.control.survey.SubmitSurveyView;
+import granite.frontendcontroller.server.control.home.HomeMetricsCalculator;
+import granite.frontendcontroller.server.control.home.HomeMetricsLoader;
+import granite.frontendcontroller.server.control.home.InitializeHomeView;
 import granite.frontendcontroller.server.control.sessions.CloseSessionsView;
 import granite.frontendcontroller.server.control.sessions.InitializeSessionsView;
 import granite.frontendcontroller.server.control.sessions.SessionsLoader;
@@ -40,6 +43,9 @@ import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputReply;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputRequest;
+import granite.frontendcontroller.service.requestreply.HomeOutput;
 import granite.frontendcontroller.service.requestreply.AgentInput;
 import granite.frontendcontroller.service.requestreply.AgentOutput;
 import granite.frontendcontroller.service.requestreply.GetAgentOutputReply;
@@ -111,6 +117,7 @@ import strata.frontendcontroller.service.requestreply.FrontEndInput;
 import strata.frontendcontroller.service.requestreply.FrontEndOutput;
 import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
+import java.time.Clock;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -137,6 +144,7 @@ class GraniteFrontEndControllerService
     private final Map<String,IOutputAction<GetSurveyReviewOutputRequest,SurveyReviewOutput>> surveyReviewOutputActions;
     private final Map<String,IInputAction<SessionsInput,SessionsOutput>>           sessionsInputActions;
     private final Map<String,IOutputAction<GetSessionsOutputRequest,SessionsOutput>> sessionsOutputActions;
+    private final Map<String,IOutputAction<GetHomeOutputRequest,HomeOutput>>         homeOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
     private final Map<String,IOutputAction<GetSessionOutputRequest,SessionOutput>> sessionOutputActions;
     private final Map<String,IInputAction<PreferencesInput,PreferencesOutput>>             preferencesInputActions;
@@ -210,6 +218,17 @@ class GraniteFrontEndControllerService
         surveyReviewOutputActions =
             Map.of(
                 "Survey.All->SurveyReviewView",new InitializeSurveyReviewView(surveyReviewLoader,requestContext));
+
+        HomeMetricsLoader homeLoader =
+            new HomeMetricsLoader(
+                context.getHelpServiceClients(),
+                userQueryClient,
+                sessionQueryClient,
+                new HomeMetricsCalculator(context.getApplicationRoles(),Clock.systemDefaultZone()));
+
+        homeOutputActions =
+            Map.of(
+                "Home.Current->HomeView",new InitializeHomeView(homeLoader,requestContext));
 
         SessionsLoader sessionsLoader = new SessionsLoader(sessionQueryClient,userQueryClient);
 
@@ -335,6 +354,13 @@ class GraniteFrontEndControllerService
     getSurveyReviewOutput(GetSurveyReviewOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(surveyReviewOutputActions,context),GetSurveyReviewOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetHomeOutputReply>
+    getHomeOutput(GetHomeOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(homeOutputActions,context),GetHomeOutputReply::new);
     }
 
     @Override

@@ -226,6 +226,24 @@ class GatewayRoleRulesTest
 
     @Test
     public void
+    homeDashboardIsForUsersReaders()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String user    = backend.sign(List.of("ROLE_USER"));
+
+        for (String path : List.of("/frontendcontroller-user-service/get-home-output","/frontendcontroller-admin-service/get-home-output"))
+        {
+            assertAllowed(HttpMethod.POST,path,admin);
+            assertAllowed(HttpMethod.POST,path,auditor);
+            assertForbidden(HttpMethod.POST,path,user);
+            assertEquals(401,call(HttpMethod.POST,path,null));
+        }
+    }
+
+    @Test
+    public void
     retiredSharedPathsFallToCatchAll()
         throws Exception
     {

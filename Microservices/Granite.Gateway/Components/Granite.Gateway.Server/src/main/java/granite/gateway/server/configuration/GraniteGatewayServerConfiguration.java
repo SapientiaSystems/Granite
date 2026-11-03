@@ -443,7 +443,9 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/get-feedback-review-output",
                 "/frontendcontroller-user-service/get-survey-review-output",
                 "/frontendcontroller-admin-service/get-feedback-review-output",
-                "/frontendcontroller-admin-service/get-survey-review-output")
+                "/frontendcontroller-admin-service/get-survey-review-output",
+                "/frontendcontroller-user-service/get-home-output",
+                "/frontendcontroller-admin-service/get-home-output")
                 .hasAnyAuthority(readers)
             .pathMatchers("/user-query-service/**")
                 .hasAnyAuthority(readers)
