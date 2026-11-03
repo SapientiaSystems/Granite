@@ -53,7 +53,8 @@
         "test-granite-web-content": "yarn run build-granite-web-authentication && yarn run build-granite-web-content && cd Tests/Granite.Web.ContentTest && yarn run test",
         "test-granite-web-agent": "yarn run build-granite-web-authentication && yarn run build-granite-web-content && yarn run build-granite-web-agent && cd Tests/Granite.Web.AgentTest && yarn run test",
         "test-granite-web-account": "yarn run build-granite-web-account && cd Tests/Granite.Web.AccountTest && yarn run test",
-        "test-granite-web": "yarn run test-granite-web-authentication && yarn run test-granite-web-user && yarn run test-granite-web-session && yarn run test-granite-web-feedback && yarn run test-granite-web-survey && yarn run test-granite-web-content && yarn run test-granite-web-agent && yarn run test-granite-web-account",
+        "test-granite-web-navigator": "yarn run build-granite-web-authentication && yarn run build-granite-web-feedback && yarn run build-granite-web-survey && yarn run build-granite-web-content && yarn run build-granite-web-agent && yarn run build-granite-web-account && yarn run build-granite-web-navigator && cd Tests/Granite.Web.NavigatorTest && yarn run test",
+        "test-granite-web": "yarn run test-granite-web-authentication && yarn run test-granite-web-user && yarn run test-granite-web-session && yarn run test-granite-web-feedback && yarn run test-granite-web-survey && yarn run test-granite-web-content && yarn run test-granite-web-agent && yarn run test-granite-web-account && yarn run test-granite-web-navigator",
         "test": "yarn run build"
     },
     "devDependencies": {
