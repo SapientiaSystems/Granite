@@ -2,7 +2,7 @@
   <library name="Gradle: strata.client:strata-client-core:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
     <properties groupId="strata.client" artifactId="strata-client-core" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.client/strata-client-core/1.0-SNAPSHOT/7e65c2f8941a3c100c1ef7be097be0e0ab68ad9e/strata-client-core-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.client/strata-client-core/1.0-SNAPSHOT/c9e8aa74b70a51408b41980a4105bc813cc0e147/strata-client-core-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

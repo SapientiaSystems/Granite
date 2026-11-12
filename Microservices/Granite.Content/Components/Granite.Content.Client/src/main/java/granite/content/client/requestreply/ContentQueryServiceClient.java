@@ -6,6 +6,7 @@ package granite.content.client.requestreply;
 
 import granite.content.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
+import strata.client.core.service.CountedClient;
 import strata.client.resteasy.service.RestEasyRestClient;
 
 import java.util.concurrent.CompletionStage;
@@ -20,6 +21,15 @@ class ContentQueryServiceClient
     {
         super(
             builder,
+            preprocessBaseUrl(baseUrl),
+            "content-query-service/");
+    }
+
+    public
+    ContentQueryServiceClient(CountedClient client,String baseUrl)
+    {
+        super(
+            client,
             preprocessBaseUrl(baseUrl),
             "content-query-service/");
     }
@@ -63,10 +73,6 @@ class ContentQueryServiceClient
         setHeader("Authorization","Bearer " + accessToken);
         return this;
     }
-
-    @Override
-    public void
-    close() {}
 
     private static String
     preprocessBaseUrl(String baseUrl)

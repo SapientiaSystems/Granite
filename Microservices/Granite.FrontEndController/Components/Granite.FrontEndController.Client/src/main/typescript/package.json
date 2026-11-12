@@ -1,6 +1,6 @@
 {
   "name": "granite.frontendcontroller.client",
-  "version": "1.0.0-snapshot.1793674830490",
+  "version": "1.0.0-snapshot.1793681740222",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",

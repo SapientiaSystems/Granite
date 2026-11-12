@@ -65,14 +65,20 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
+import strata.client.core.service.CountedClient;
+import strata.client.core.service.ObjectMapperProvider;
 import strata.foundation.core.concurrent.BoundedExecutor;
+import strata.foundation.core.concurrent.BoundedExecutorService;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.frontendcontroller.server.application.ApplicationConfiguration;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 @Configuration
 @EnableWebSecurity
@@ -226,60 +232,109 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 .setAgentQueryClient(this::createAgentQueryClient);
     }
 
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IFeedbackCommandServiceClient
+    feedbackCommandServiceClient()
+    {
+        return new FeedbackCommandServiceClient(graniteServiceClient(),getBaseUrl("feedback-command-service.base-url"));
+    }
+
     protected IFeedbackCommandServiceClient
     createFeedbackCommandClient()
     {
-        GraniteClientSettings client = createClientConfiguration("feedback-command-service.base-url");
+        return feedbackCommandServiceClient();
+    }
 
-        return new FeedbackCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IFeedbackQueryServiceClient
+    feedbackQueryServiceClient()
+    {
+        return new FeedbackQueryServiceClient(graniteServiceClient(),getBaseUrl("feedback-query-service.base-url"));
     }
 
     protected IFeedbackQueryServiceClient
     createFeedbackQueryClient()
     {
-        GraniteClientSettings client = createClientConfiguration("feedback-query-service.base-url");
+        return feedbackQueryServiceClient();
+    }
 
-        return new FeedbackQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public ISurveyCommandServiceClient
+    surveyCommandServiceClient()
+    {
+        return new SurveyCommandServiceClient(graniteServiceClient(),getBaseUrl("survey-command-service.base-url"));
     }
 
     protected ISurveyCommandServiceClient
     createSurveyCommandClient()
     {
-        GraniteClientSettings client = createClientConfiguration("survey-command-service.base-url");
+        return surveyCommandServiceClient();
+    }
 
-        return new SurveyCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public ISurveyQueryServiceClient
+    surveyQueryServiceClient()
+    {
+        return new SurveyQueryServiceClient(graniteServiceClient(),getBaseUrl("survey-query-service.base-url"));
     }
 
     protected ISurveyQueryServiceClient
     createSurveyQueryClient()
     {
-        GraniteClientSettings client = createClientConfiguration("survey-query-service.base-url");
+        return surveyQueryServiceClient();
+    }
 
-        return new SurveyQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IContentQueryServiceClient
+    contentQueryServiceClient()
+    {
+        return new ContentQueryServiceClient(graniteServiceClient(),getBaseUrl("content-query-service.base-url"));
     }
 
     protected IContentQueryServiceClient
     createContentQueryClient()
     {
-        GraniteClientSettings client = createClientConfiguration("content-query-service.base-url");
+        return contentQueryServiceClient();
+    }
 
-        return new ContentQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IAgentCommandServiceClient
+    agentCommandServiceClient()
+    {
+        return new AgentCommandServiceClient(graniteServiceClient(),getBaseUrl("agent-command-service.base-url"));
     }
 
     protected IAgentCommandServiceClient
     createAgentCommandClient()
     {
-        GraniteClientSettings client = createClientConfiguration("agent-command-service.base-url");
+        return agentCommandServiceClient();
+    }
 
-        return new AgentCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IAgentQueryServiceClient
+    agentQueryServiceClient()
+    {
+        return new AgentQueryServiceClient(graniteServiceClient(),getBaseUrl("agent-query-service.base-url"));
     }
 
     protected IAgentQueryServiceClient
     createAgentQueryClient()
     {
-        GraniteClientSettings client = createClientConfiguration("agent-query-service.base-url");
-
-        return new AgentQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+        return agentQueryServiceClient();
     }
 
     @Bean
@@ -305,36 +360,64 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     protected abstract S
     createService(GraniteFrontEndControllerContext context);
 
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IUserQueryServiceClient
+    userQueryServiceClient()
+    {
+        return new UserQueryServiceClient(graniteServiceClient(),getBaseUrl("user-query-service.base-url"));
+    }
+
     protected IUserQueryServiceClient
     createUserQueryClient()
     {
-        GraniteClientSettings client = createClientConfiguration("user-query-service.base-url");
+        return userQueryServiceClient();
+    }
 
-        return new UserQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IUserCommandServiceClient
+    userCommandServiceClient()
+    {
+        return new UserCommandServiceClient(graniteServiceClient(),getBaseUrl("user-command-service.base-url"));
     }
 
     protected IUserCommandServiceClient
     createUserCommandClient()
     {
-        GraniteClientSettings client = createClientConfiguration("user-command-service.base-url");
+        return userCommandServiceClient();
+    }
 
-        return new UserCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public ISessionCommandServiceClient
+    sessionCommandServiceClient()
+    {
+        return new SessionCommandServiceClient(graniteServiceClient(),getBaseUrl("session-command-service.base-url"));
     }
 
     protected ISessionCommandServiceClient
     createSessionCommandClient()
     {
-        GraniteClientSettings client = createClientConfiguration("session-command-service.base-url");
+        return sessionCommandServiceClient();
+    }
 
-        return new SessionCommandServiceClient(client.getBuilder(),client.getBaseUrl());
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public ISessionQueryServiceClient
+    sessionQueryServiceClient()
+    {
+        return new SessionQueryServiceClient(graniteServiceClient(),getBaseUrl("session-query-service.base-url"));
     }
 
     protected ISessionQueryServiceClient
     createSessionQueryClient()
     {
-        GraniteClientSettings client = createClientConfiguration("session-query-service.base-url");
-
-        return new SessionQueryServiceClient(client.getBuilder(),client.getBaseUrl());
+        return sessionQueryServiceClient();
     }
 
     protected ISessionCommandServiceClient
@@ -346,14 +429,47 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 configuration.getProperty("session-command-service.base-url"));
     }
 
+    @Bean(destroyMethod = "shutdown")
+    @Lazy
+    @SingletonScoped
+    public ExecutorService
+    graniteServiceClientExecutor()
+    {
+        return BoundedExecutorService.of(100,Duration.ofSeconds(30));
+    }
+
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public CountedClient
+    graniteServiceClient()
+    {
+        return
+            CountedClient.ofCountedClient(
+                createServiceClientBuilder()
+                    .executorService(graniteServiceClientExecutor())
+                    .register(new ObjectMapperProvider())
+                    .build());
+    }
+
     protected GraniteClientSettings
     createClientConfiguration(String baseUrlProperty)
     {
-        ClientBuilder builder =
+        return new GraniteClientSettings(createServiceClientBuilder(),configuration.getProperty(baseUrlProperty));
+    }
+
+    private ClientBuilder
+    createServiceClientBuilder()
+    {
+        return
             createClientBuilder()
                 .register(new ServiceTokenClientRequestFilter(serviceTokenSource()));
+    }
 
-        return new GraniteClientSettings(builder,configuration.getProperty(baseUrlProperty));
+    private String
+    getBaseUrl(String baseUrlProperty)
+    {
+        return Objects.requireNonNull(configuration.getProperty(baseUrlProperty),baseUrlProperty);
     }
 
     private ClientBuilder
