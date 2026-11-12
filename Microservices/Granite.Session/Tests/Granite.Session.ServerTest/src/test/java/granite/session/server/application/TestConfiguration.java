@@ -23,11 +23,11 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
+import strata.foundation.spring.inject.SingletonScoped;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -56,7 +56,7 @@ class TestConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -65,7 +65,7 @@ class TestConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public Clock
     clock()
     {
@@ -73,7 +73,7 @@ class TestConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapper
     objectMapper()
     {
@@ -81,7 +81,7 @@ class TestConfiguration
     }
 
     @Bean(destroyMethod = "stop")
-    @Scope("singleton")
+    @SingletonScoped
     public FakeOkta
     fakeOkta()
     {
@@ -90,7 +90,7 @@ class TestConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public OktaSettings
     oktaSettings(Environment environment)
     {
@@ -102,7 +102,7 @@ class TestConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IOktaClient
     oktaClient(OktaSettings settings,Environment environment,ResourceLoader loader,Clock clock)
     {
@@ -111,7 +111,7 @@ class TestConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IUserCommandServiceClient
     userCommandServiceClient(
         ObjectProvider<SslBundles> sslBundles,
@@ -186,7 +186,7 @@ class TestConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IUserQueryServiceClient
     userQueryServiceClient(
         ObjectProvider<SslBundles> sslBundles,

@@ -38,9 +38,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 import java.time.Clock;
@@ -65,7 +65,7 @@ class GraniteAgentCommandServerConfiguration
     private ObjectProvider<SslBundles> sslBundles;
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public IAgentEventSender
     agentEventSender(IOutboxEventRepository repository)
     {
@@ -73,7 +73,7 @@ class GraniteAgentCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IAgentProvider
     agentProvider(Environment environment)
     {
@@ -100,7 +100,7 @@ class GraniteAgentCommandServerConfiguration
 
     @Bean
     @Lazy
-    @Scope("singleton")
+    @SingletonScoped
     public Supplier<String>
     agentServiceTokenSource(Environment environment)
     {
@@ -113,7 +113,7 @@ class GraniteAgentCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IDelegatedTokenSource
     delegatedTokenSource(Environment environment,@Lazy Supplier<String> agentServiceTokenSource)
     {
@@ -125,7 +125,7 @@ class GraniteAgentCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public AgentTurnRunner
     agentTurnRunner(IAgentProvider agentProvider,Clock clock,Environment environment,@Lazy Supplier<String> agentServiceTokenSource)
     {
@@ -139,7 +139,7 @@ class GraniteAgentCommandServerConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalAgentCommandService
     agentCommandService(
         IConversationRepository repository,

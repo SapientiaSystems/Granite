@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
-import org.springframework.context.annotation.Scope;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.foundation.spring.mapper.StrataModelResolver;
 import strata.foundation.spring.mapper.StrataObjectMapperProvider;
@@ -45,7 +45,7 @@ class HostConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -68,7 +68,7 @@ class HostConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public GroupedOpenApi
     openApi()
     {
@@ -86,7 +86,7 @@ class HostConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapperProvider
     objectMapperProvider(SpringDocConfigProperties properties)
     {
@@ -96,7 +96,7 @@ class HostConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SpringDocConfigProperties
     springDocConfigProperties()
     {

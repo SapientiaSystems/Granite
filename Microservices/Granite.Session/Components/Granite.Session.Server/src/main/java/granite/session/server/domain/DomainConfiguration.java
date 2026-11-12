@@ -7,7 +7,7 @@ package granite.session.server.domain;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 import strata.server.core.unitofwork.IUnitOfWork;
 
 @Configuration
@@ -16,7 +16,7 @@ public
 class DomainConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISessionRepository
     sessionRepository(IUnitOfWork unitOfWork)
     {
@@ -24,7 +24,7 @@ class DomainConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public IOktaLoginTransactionRepository
     oktaLoginTransactionRepository(IUnitOfWork unitOfWork)
     {

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 import strata.outbox.core.repository.RequestScopedRepositoryConfiguration;
 
 @Configuration
@@ -22,7 +22,7 @@ class CommandPlatformConfiguration
     extends PlatformConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public SessionCommandServiceController
     sessionCommandServiceController(ISessionCommandService service)
     {

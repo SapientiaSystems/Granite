@@ -35,6 +35,8 @@ import granite.session.server.platform.ServiceTokenClientRequestFilter;
 import granite.session.server.platform.SessionPurgeJob;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 import granite.session.service.event.ISessionEventSender;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -50,12 +52,10 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.web.context.annotation.RequestScope;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 import java.security.KeyPair;
@@ -74,7 +74,7 @@ class GraniteSessionCommandServerConfiguration
     extends AbstractGraniteSessionServerConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISessionEventSender
     sessionEventSender(IOutboxEventRepository repository)
     {
@@ -82,7 +82,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IJwtTokenService
     jwtTokenService(Environment environment,ResourceLoader loader)
     {
@@ -106,7 +106,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IJwkSetProvider
     jwkSetProvider(Environment environment,ResourceLoader loader)
     {
@@ -124,7 +124,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IRefreshTokenService
     refreshTokenService()
     {
@@ -132,7 +132,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public OktaSettings
     oktaSettings(Environment environment)
     {
@@ -160,7 +160,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IOktaClient
     oktaClient(OktaSettings settings,Environment environment,ResourceLoader loader,Clock clock)
     {
@@ -172,7 +172,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SessionPurgeJob
     sessionPurgeJob(
         ObjectProvider<ISessionRepository>              repositories,
@@ -193,7 +193,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IServiceTokenProvider
     serviceTokenProvider(IJwtTokenService jwtTokenService,Clock clock,Environment environment)
     {
@@ -210,7 +210,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IServiceTokenIssuer
     serviceTokenIssuer(IJwtTokenService jwtTokenService,Environment environment)
     {
@@ -249,7 +249,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ILoginGate
     loginGate(Environment environment,ApplicationRolesManager roles)
     {
@@ -267,7 +267,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public RequiredAuthoritiesCheck
     requiredAuthoritiesCheck(Environment environment,ApplicationRolesManager roles)
     {
@@ -281,7 +281,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public OktaGroupMappingCheck
     oktaGroupMappingCheck(OktaSettings settings,ApplicationRolesManager roles)
     {
@@ -289,7 +289,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IUserCommandServiceClient
     userCommandServiceClient(
         ObjectProvider<SslBundles> sslBundles,
@@ -303,7 +303,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IUserQueryServiceClient
     userQueryServiceClient(
         ObjectProvider<SslBundles> sslBundles,

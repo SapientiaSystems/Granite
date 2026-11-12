@@ -11,10 +11,10 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import strata.foundation.spring.inject.SingletonScoped;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -40,7 +40,7 @@ class SecuredUserCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public KeyPair
     signingKeys()
     {
@@ -49,7 +49,7 @@ class SecuredUserCommandServerConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public JwtDecoder
     jwtDecoder(Environment environment,ObjectProvider<SslBundles> sslBundles)
     {

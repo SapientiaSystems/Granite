@@ -10,7 +10,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 
 import java.time.Clock;
 
@@ -20,7 +20,7 @@ public
 class ApplicationConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalSurveyCommandService
     surveyCommandService(
         ISurveyResponseRepository   repository,
@@ -32,7 +32,7 @@ class ApplicationConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalSurveyQueryService
     surveyQueryService(ISurveyResponseRepository repository,ModelMapper mapper)
     {

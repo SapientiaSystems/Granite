@@ -15,12 +15,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.Scope;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.server.core.unitofwork.IUnitOfWorkSynchronizationManager;
 import strata.server.spring.repository.LocalContainerEntityManagerFactoryBeanProvider;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
@@ -47,7 +47,7 @@ class TestConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration()
     {
@@ -56,7 +56,7 @@ class TestConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public LocalContainerEntityManagerFactoryBean
     localContainerEntityManagerFactoryBean(IConfiguration configuration)
     {
@@ -66,7 +66,7 @@ class TestConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public InitializingBean
     schemaInitializer(EntityManagerFactory factory)
     {
@@ -107,7 +107,7 @@ class TestConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISpringUnitOfWorkManager
     unitOfWorkManager(JpaUnitOfWork unitOfWork)
     {
@@ -115,7 +115,7 @@ class TestConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public JpaUnitOfWork
     unitOfWork(EntityManagerFactory factory)
     {
@@ -123,7 +123,7 @@ class TestConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public IUnitOfWorkSynchronizationManager
     synchronizer()
     {

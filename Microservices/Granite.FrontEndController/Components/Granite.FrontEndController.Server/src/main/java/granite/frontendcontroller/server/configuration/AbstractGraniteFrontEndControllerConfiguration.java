@@ -57,7 +57,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -97,7 +96,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     private SslBundles     sslBundles;
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     @Named("FrontEndController")
     public Executor
     frontEndControllerExecutor()
@@ -106,7 +105,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ApplicationRolesManager
     applicationRoles()
     {
@@ -114,7 +113,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public InitializingBean
     applicationRolesStartupLog(ApplicationRolesManager roles)
     {
@@ -137,7 +136,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
 
     @Bean
     @Lazy
-    @Scope("singleton")
+    @SingletonScoped
     public IServiceTokenSource
     serviceTokenSource()
     {
@@ -168,7 +167,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public JwtDecoder
     jwtDecoder(Environment environment)
     {
@@ -338,7 +337,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SessionCookies
     sessionCookies()
     {

@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -26,7 +26,7 @@ public
 class ApplicationConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalSessionCommandService
     sessionCommandService(
         ISessionRepository              repository,
@@ -67,7 +67,7 @@ class ApplicationConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalSessionQueryService
     sessionQueryService(ISessionRepository repository,ModelMapper mapper)
     {

@@ -21,7 +21,6 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.foundation.spring.mapper.StrataModelResolver;
 import strata.foundation.spring.mapper.StrataObjectMapperProvider;
@@ -66,7 +66,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -74,7 +74,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ModelMapper
     mapper()
     {
@@ -82,7 +82,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public Clock
     clock()
     {
@@ -120,7 +120,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public JwtDecoder
     jwtDecoder(Environment environment,ObjectProvider<SslBundles> sslBundles)
     {
@@ -132,7 +132,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public GroupedOpenApi
     openApi()
     {
@@ -150,7 +150,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapperProvider
     objectMapperProvider(SpringDocConfigProperties properties)
     {
@@ -158,7 +158,7 @@ class AbstractGraniteFeedbackServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SpringDocConfigProperties
     springDocConfigProperties()
     {
