@@ -7,9 +7,12 @@ package granite.agent.client.requestreply;
 import granite.agent.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
 import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class AgentQueryServiceClient
@@ -32,6 +35,19 @@ class AgentQueryServiceClient
             client,
             preprocessBaseUrl(baseUrl),
             "agent-query-service/");
+    }
+
+    public
+    AgentQueryServiceClient(CountedClient client,ExecutorService executor,String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "agent-query-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override

@@ -237,7 +237,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IFeedbackCommandServiceClient
     feedbackCommandServiceClient()
     {
-        return new FeedbackCommandServiceClient(graniteServiceClient(),getBaseUrl("feedback-command-service.base-url"));
+        return new FeedbackCommandServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("feedback-command-service.base-url"));
     }
 
     protected IFeedbackCommandServiceClient
@@ -252,7 +252,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IFeedbackQueryServiceClient
     feedbackQueryServiceClient()
     {
-        return new FeedbackQueryServiceClient(graniteServiceClient(),getBaseUrl("feedback-query-service.base-url"));
+        return new FeedbackQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("feedback-query-service.base-url"));
     }
 
     protected IFeedbackQueryServiceClient
@@ -267,7 +267,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public ISurveyCommandServiceClient
     surveyCommandServiceClient()
     {
-        return new SurveyCommandServiceClient(graniteServiceClient(),getBaseUrl("survey-command-service.base-url"));
+        return new SurveyCommandServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("survey-command-service.base-url"));
     }
 
     protected ISurveyCommandServiceClient
@@ -282,7 +282,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public ISurveyQueryServiceClient
     surveyQueryServiceClient()
     {
-        return new SurveyQueryServiceClient(graniteServiceClient(),getBaseUrl("survey-query-service.base-url"));
+        return new SurveyQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("survey-query-service.base-url"));
     }
 
     protected ISurveyQueryServiceClient
@@ -297,7 +297,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IContentQueryServiceClient
     contentQueryServiceClient()
     {
-        return new ContentQueryServiceClient(graniteServiceClient(),getBaseUrl("content-query-service.base-url"));
+        return new ContentQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("content-query-service.base-url"));
     }
 
     protected IContentQueryServiceClient
@@ -312,7 +312,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IAgentCommandServiceClient
     agentCommandServiceClient()
     {
-        return new AgentCommandServiceClient(graniteServiceClient(),getBaseUrl("agent-command-service.base-url"));
+        return new AgentCommandServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("agent-command-service.base-url"));
     }
 
     protected IAgentCommandServiceClient
@@ -327,7 +327,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IAgentQueryServiceClient
     agentQueryServiceClient()
     {
-        return new AgentQueryServiceClient(graniteServiceClient(),getBaseUrl("agent-query-service.base-url"));
+        return new AgentQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("agent-query-service.base-url"));
     }
 
     protected IAgentQueryServiceClient
@@ -365,7 +365,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IUserQueryServiceClient
     userQueryServiceClient()
     {
-        return new UserQueryServiceClient(graniteServiceClient(),getBaseUrl("user-query-service.base-url"));
+        return new UserQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("user-query-service.base-url"));
     }
 
     protected IUserQueryServiceClient
@@ -380,7 +380,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public IUserCommandServiceClient
     userCommandServiceClient()
     {
-        return new UserCommandServiceClient(graniteServiceClient(),getBaseUrl("user-command-service.base-url"));
+        return new UserCommandServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("user-command-service.base-url"));
     }
 
     protected IUserCommandServiceClient
@@ -395,7 +395,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public ISessionCommandServiceClient
     sessionCommandServiceClient()
     {
-        return new SessionCommandServiceClient(graniteServiceClient(),getBaseUrl("session-command-service.base-url"));
+        return new SessionCommandServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("session-command-service.base-url"));
     }
 
     protected ISessionCommandServiceClient
@@ -410,7 +410,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     public ISessionQueryServiceClient
     sessionQueryServiceClient()
     {
-        return new SessionQueryServiceClient(graniteServiceClient(),getBaseUrl("session-query-service.base-url"));
+        return new SessionQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("session-query-service.base-url"));
     }
 
     protected ISessionQueryServiceClient
@@ -432,7 +432,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     @Lazy
     @SingletonScoped
     public ExecutorService
-    graniteServiceClientExecutor()
+    sharedServiceClientExecutor()
     {
         return BoundedExecutorService.of(100,Duration.ofSeconds(30));
     }
@@ -441,12 +441,12 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     @Lazy
     @SingletonScoped
     public CountedClient
-    graniteServiceClient()
+    sharedServiceClient()
     {
         return
             CountedClient.ofCountedClient(
                 createServiceClientBuilder()
-                    .executorService(graniteServiceClientExecutor())
+                    .executorService(sharedServiceClientExecutor())
                     .register(new ObjectMapperProvider())
                     .build());
     }

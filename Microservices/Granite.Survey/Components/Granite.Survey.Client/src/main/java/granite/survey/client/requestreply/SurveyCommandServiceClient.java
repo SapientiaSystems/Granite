@@ -7,9 +7,12 @@ package granite.survey.client.requestreply;
 import granite.survey.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
 import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class SurveyCommandServiceClient
@@ -32,6 +35,19 @@ class SurveyCommandServiceClient
             client,
             preprocessBaseUrl(baseUrl),
             "survey-command-service/");
+    }
+
+    public
+    SurveyCommandServiceClient(CountedClient client,ExecutorService executor,String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "survey-command-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override
