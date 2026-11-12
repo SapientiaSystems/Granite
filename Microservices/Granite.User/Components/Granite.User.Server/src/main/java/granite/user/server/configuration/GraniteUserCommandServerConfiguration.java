@@ -17,11 +17,11 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 
@@ -37,7 +37,7 @@ class GraniteUserCommandServerConfiguration
     extends AbstractGraniteUserServerConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public IUserEventSender
     userEventSender(IOutboxEventRepository repository)
     {
@@ -45,7 +45,7 @@ class GraniteUserCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public UserBootstrapper
     userBootstrapper(
         ObjectProvider<IUserRepository>          repositories,
@@ -81,7 +81,7 @@ class GraniteUserCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public AuthorityRenamer
     authorityRenamer(
         ObjectProvider<IUserRepository>          repositories,

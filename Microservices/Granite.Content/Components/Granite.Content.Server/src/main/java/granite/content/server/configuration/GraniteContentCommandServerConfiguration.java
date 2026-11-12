@@ -15,8 +15,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 import java.util.List;
@@ -28,7 +28,7 @@ class GraniteContentCommandServerConfiguration
     extends AbstractGraniteContentServerConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public IContentEventSender
     contentEventSender(IOutboxEventRepository repository)
     {
@@ -36,7 +36,7 @@ class GraniteContentCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ContentSynchronizer
     contentSynchronizer(ObjectProvider<ITransactionalContentCommandService> commandService)
     {

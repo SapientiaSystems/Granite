@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.RequestScoped;
 import strata.server.core.unitofwork.IUnitOfWorkSynchronizationManager;
 import strata.server.spring.repository.LocalContainerEntityManagerFactoryBeanProvider;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
@@ -29,7 +29,7 @@ class QueryPlatformConfiguration
     extends PlatformConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public UserQueryServiceController
     userQueryServiceController(IUserQueryService service)
     {

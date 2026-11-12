@@ -9,7 +9,7 @@ import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.foundation.core.security.RoleDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import strata.foundation.spring.inject.SingletonScoped;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ class PoplarUserCommandServerConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ApplicationRolesManager
     applicationRoles()
     {

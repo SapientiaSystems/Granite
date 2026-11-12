@@ -23,7 +23,6 @@ import granite.outbox.server.user.UserEventOutboxEventReceiver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -31,6 +30,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.kafka.event.IKafkaConfigurationProvider;
 import strata.foundation.kafka.event.KafkaConfigurationProvider;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.outbox.core.receiver.IOutboxEventReceiverMapProvider;
 import strata.outbox.server.configuration.StrataPollingOutboxServerConfiguration;
@@ -95,7 +95,7 @@ class HostConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {

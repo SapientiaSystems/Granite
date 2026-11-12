@@ -7,9 +7,12 @@ package granite.feedback.client.requestreply;
 import granite.feedback.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
 import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class FeedbackQueryServiceClient
@@ -32,6 +35,19 @@ class FeedbackQueryServiceClient
             client,
             preprocessBaseUrl(baseUrl),
             "feedback-query-service/");
+    }
+
+    public
+    FeedbackQueryServiceClient(CountedClient client,ExecutorService executor,String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "feedback-query-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override

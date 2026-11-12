@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 
 @Configuration
 @EnableTransactionManagement
@@ -20,7 +20,7 @@ public
 class ApplicationConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalUserCommandService
     userCommandService(
         IUserRepository  repository,
@@ -33,7 +33,7 @@ class ApplicationConfiguration
         return new UserCommandService(repository,sender,mapper,encoder,lockoutPolicy,roles);
     }
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalUserQueryService
     userQueryService(
         IUserRepository  repository,

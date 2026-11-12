@@ -10,7 +10,7 @@ import granite.survey.service.event.ISurveyEventSender;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 @Configuration
@@ -20,7 +20,7 @@ class GraniteSurveyCommandServerConfiguration
     extends AbstractGraniteSurveyServerConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISurveyEventSender
     surveyEventSender(IOutboxEventRepository repository)
     {

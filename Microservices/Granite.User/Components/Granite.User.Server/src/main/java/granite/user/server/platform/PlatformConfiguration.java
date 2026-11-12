@@ -10,11 +10,11 @@ import jakarta.persistence.EntityManagerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.server.core.unitofwork.IUnitOfWorkSynchronizationManager;
 import strata.server.spring.health.HealthCheckConfiguration;
 import strata.server.spring.repository.LocalContainerEntityManagerFactoryBeanProvider;
@@ -30,7 +30,7 @@ public
 class PlatformConfiguration
 {
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public LocalContainerEntityManagerFactoryBean
     localContainerEntityManagerFactoryBean(IConfiguration configuration)
     {
@@ -40,7 +40,7 @@ class PlatformConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISpringUnitOfWorkManager
     unitOfWorkManager(JpaUnitOfWork unitOfWork)
     {
@@ -48,7 +48,7 @@ class PlatformConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public JpaUnitOfWork
     unitOfWork(EntityManagerFactory factory)
     {
@@ -56,7 +56,7 @@ class PlatformConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public IUnitOfWorkSynchronizationManager
     synchronizer()
     {

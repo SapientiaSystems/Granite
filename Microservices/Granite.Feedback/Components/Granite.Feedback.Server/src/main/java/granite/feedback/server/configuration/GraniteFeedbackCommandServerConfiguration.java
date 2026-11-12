@@ -10,7 +10,7 @@ import granite.feedback.service.event.IFeedbackEventSender;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 @Configuration
@@ -20,7 +20,7 @@ class GraniteFeedbackCommandServerConfiguration
     extends AbstractGraniteFeedbackServerConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public IFeedbackEventSender
     feedbackEventSender(IOutboxEventRepository repository)
     {

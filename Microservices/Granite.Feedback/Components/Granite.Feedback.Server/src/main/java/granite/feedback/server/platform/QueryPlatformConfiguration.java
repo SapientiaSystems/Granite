@@ -8,7 +8,7 @@ import granite.feedback.service.requestreply.IFeedbackQueryService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 
 @Configuration
 @EnableTransactionManagement
@@ -17,7 +17,7 @@ class QueryPlatformConfiguration
     extends PlatformConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public FeedbackQueryServiceController
     feedbackQueryServiceController(IFeedbackQueryService service)
     {
