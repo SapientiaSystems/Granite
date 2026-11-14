@@ -37,7 +37,10 @@ DEFAULT_SERVICE_NAMES=(
     "granite-content-queryhost"
     "granite-agent-commandhost"
     "granite-agent-queryhost"
+    "granite-client-commandhost"
+    "granite-client-queryhost"
     "granite-web-apphost"
+    "granite-web-clienthost"
 )
 
 FOUNDATION_CORE_DIR="$(cd "$SCRIPT_DIR/../../Granite.Foundation/Components/Granite.Foundation.Core" && pwd)"

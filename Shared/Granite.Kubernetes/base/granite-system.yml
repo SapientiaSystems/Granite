@@ -610,6 +610,204 @@ spec:
           type: Utilization
           averageUtilization: 80
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-client-commandhost
+  namespace: granite
+  labels:
+    app: granite-client-commandhost
+    system: granite
+    microservice: client
+    role: command
+spec:
+  selector:
+    matchLabels:
+      app: granite-client-commandhost
+  template:
+    metadata:
+      labels:
+        app: granite-client-commandhost
+        system: granite
+        microservice: client
+        role: command
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: commandhost
+          image: ghcr.io/johnliebenau/granite/granite-client-commandhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8097
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /client-command-service/health/startup
+              port: 8097
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /client-command-service/health/readiness
+              port: 8097
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /client-command-service/health/liveness
+              port: 8097
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-client-commandhost
+  namespace: granite
+  labels:
+    app: granite-client-commandhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-client-commandhost
+  ports:
+    - port: 443
+      targetPort: 8097
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-client-commandhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-client-commandhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-client-queryhost
+  namespace: granite
+  labels:
+    app: granite-client-queryhost
+    system: granite
+    microservice: client
+    role: query
+spec:
+  selector:
+    matchLabels:
+      app: granite-client-queryhost
+  template:
+    metadata:
+      labels:
+        app: granite-client-queryhost
+        system: granite
+        microservice: client
+        role: query
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: queryhost
+          image: ghcr.io/johnliebenau/granite/granite-client-queryhost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8098
+          envFrom:
+            - configMapRef:
+                name: granite-environment
+            - secretRef:
+                name: granite-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /client-query-service/health/startup
+              port: 8098
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /client-query-service/health/readiness
+              port: 8098
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /client-query-service/health/liveness
+              port: 8098
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-client-queryhost
+  namespace: granite
+  labels:
+    app: granite-client-queryhost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-client-queryhost
+  ports:
+    - port: 443
+      targetPort: 8098
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-client-queryhost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-client-queryhost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1731,6 +1929,99 @@ spec:
           type: Utilization
           averageUtilization: 80
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-web-clienthost
+  namespace: granite
+  labels:
+    app: granite-web-clienthost
+    system: granite
+    microservice: web
+    role: clienthost
+spec:
+  selector:
+    matchLabels:
+      app: granite-web-clienthost
+  template:
+    metadata:
+      labels:
+        app: granite-web-clienthost
+        system: granite
+        microservice: web
+        role: clienthost
+    spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      containers:
+        - name: clienthost
+          image: ghcr.io/johnliebenau/granite/granite-web-clienthost:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 443
+          env:
+            - name: API_BASE_URL
+              value: ""
+            - name: COOKIE_PREFIX
+              value: GRANITE
+            - name: GATEWAY_URL
+              value: https://granite-gateway-servicehost:443
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 443
+              scheme: HTTPS
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 443
+              scheme: HTTPS
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-web-clienthost
+  namespace: granite
+  labels:
+    app: granite-web-clienthost
+spec:
+  type: ClusterIP
+  selector:
+    app: granite-web-clienthost
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: granite-web-clienthost
+  namespace: granite
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: granite-web-clienthost
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -1749,6 +2040,7 @@ spec:
   tls:
     - hosts:
         - granite.example
+        - client.granite.example
       secretName: granite-tls
   rules:
     - host: granite.example
@@ -1852,6 +2144,20 @@ spec:
                 name: granite-gateway-servicehost
                 port:
                   number: 443
+          - path: /client-command-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /client-query-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
           - path: /outbox-service
             pathType: Prefix
             backend:
@@ -1871,5 +2177,22 @@ spec:
             backend:
               service:
                 name: granite-web-apphost
+                port:
+                  number: 443
+    - host: client.granite.example
+      http:
+        paths:
+          - path: /frontendcontroller-user-service
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-gateway-servicehost
+                port:
+                  number: 443
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: granite-web-clienthost
                 port:
                   number: 443
