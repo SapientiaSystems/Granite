@@ -13,6 +13,7 @@ import granite.foundation.core.security.JwtCheckMode;
 import granite.client.server.application.ApplicationConfiguration;
 import granite.client.server.application.MappingModule;
 import granite.client.server.domain.DomainConfiguration;
+import granite.client.server.platform.JwtCallerSubject;
 import org.apache.logging.log4j.LogManager;
 import org.modelmapper.ModelMapper;
 import org.springdoc.core.models.GroupedOpenApi;
@@ -115,7 +116,7 @@ class AbstractGraniteClientServerConfiguration
     public Supplier<Optional<String>>
     clientCallerSubject()
     {
-        return Optional::empty;
+        return new JwtCallerSubject();
     }
 
     @Bean

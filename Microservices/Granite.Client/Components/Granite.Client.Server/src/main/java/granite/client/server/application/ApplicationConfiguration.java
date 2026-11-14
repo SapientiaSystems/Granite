@@ -36,6 +36,14 @@ class ApplicationConfiguration
     {
         return new ClientCommandService(repository,sender,mapper,roles,clock,callerSubject);
     }
+
+    @Bean
+    @RequestScoped
+    public ITransactionalClientQueryService
+    clientQueryService(IClientRepository repository,ModelMapper mapper)
+    {
+        return new ClientQueryService(repository,mapper);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,20 @@ class FindClientsReply
         clients = new ArrayList<>();
     }
 
+    public
+    FindClientsReply(FindClientsByIdsRequest originatingRequest)
+    {
+        super(originatingRequest);
+        clients = new ArrayList<>();
+    }
+
+    public
+    FindClientsReply(FindClientsByOwnerRequest originatingRequest)
+    {
+        super(originatingRequest);
+        clients = new ArrayList<>();
+    }
+
     @Override
     public FindClientsReply
     setReplyId(UUID replyId)
