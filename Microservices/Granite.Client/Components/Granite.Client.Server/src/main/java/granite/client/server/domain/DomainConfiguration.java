@@ -4,11 +4,13 @@
 
 package granite.client.server.domain;
 
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import strata.foundation.spring.inject.RequestScoped;
 import strata.server.core.unitofwork.IUnitOfWork;
+import strata.server.spring.unitofwork.JpaUnitOfWork;
 
 @Configuration
 @EnableTransactionManagement
@@ -18,9 +20,9 @@ class DomainConfiguration
     @Bean
     @RequestScoped
     public IClientRepository
-    clientRepository(IUnitOfWork unitOfWork)
+    clientRepository(IUnitOfWork unitOfWork,EntityManagerFactory factory)
     {
-        return new ClientRepository(unitOfWork);
+        return new ClientRepository(unitOfWork,() -> new JpaUnitOfWork(factory));
     }
 }
 

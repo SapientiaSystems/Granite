@@ -12,16 +12,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public
 class ClientRepository
     extends AbstractRepository<Long,Client>
     implements IClientRepository
 {
+    private static final String RECORD_QUERY = "recordClientTokenIssued";
+
+    private final Supplier<IUnitOfWork> independentUnitOfWork;
+
     public
-    ClientRepository(IUnitOfWork uow)
+    ClientRepository(IUnitOfWork uow,Supplier<IUnitOfWork> independent)
     {
         super(Client.class,"primaryId",uow);
+        independentUnitOfWork = independent;
         getUnitOfWork()
             .registerQuery(
                 "findClientByClientId",
@@ -34,10 +40,7 @@ class ClientRepository
                 "select e from Client e where e.clientId IN :clientIds order by e.name")
             .registerQuery(
                 "findAllClients",
-                "select e from Client e order by e.name")
-            .registerQuery(
-                "recordClientTokenIssued",
-                "update Client e set e.lastTokenIssuedAt = :at where e.clientId = :clientId");
+                "select e from Client e order by e.name");
     }
 
     @Override
@@ -88,11 +91,29 @@ class ClientRepository
     public int
     recordTokenIssued(String clientId,Instant at)
     {
-        return
-            getUnitOfWork()
-                .executeUpdateOrDelete(
-                    "recordClientTokenIssued",
-                    Map.of("clientId",clientId,"at",at));
+        try (IUnitOfWork uow = independentUnitOfWork.get())
+        {
+            uow.registerQuery(
+                RECORD_QUERY,
+                "update Client e set e.lastTokenIssuedAt = :at where e.clientId = :clientId");
+            uow.begin();
+
+            try
+            {
+                int updated =
+                    uow.executeUpdateOrDelete(
+                        RECORD_QUERY,
+                        Map.of("clientId",clientId,"at",at));
+
+                uow.commit();
+                return updated;
+            }
+            catch (RuntimeException e)
+            {
+                uow.rollback();
+                throw e;
+            }
+        }
     }
 }
 

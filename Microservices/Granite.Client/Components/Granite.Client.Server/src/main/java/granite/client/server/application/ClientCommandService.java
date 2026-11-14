@@ -179,7 +179,7 @@ class ClientCommandService
                 .exceptionally(
                     e ->
                     {
-                        logger.info("<verifyClientCredentials> exception reply: {}",e.getClass().getSimpleName());
+                        logger.info("<verifyClientCredentials> exception reply: {}",rootMessage(e));
                         return
                             new VerifyClientCredentialsReply(request)
                                 .setSuccess(false)
@@ -421,6 +421,7 @@ class ClientCommandService
         boolean                      matches  = MessageDigest.isEqual(stored == null ? UNKNOWN_HASH : stored,ClientCredentials.hash(secret));
         boolean                      valid    =
             found.isPresent()
+            && found.get().getSecretSha256() != null
             && matches
             && found.get().isEnabled()
             && found.get().isSecretCurrent(now);

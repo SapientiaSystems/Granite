@@ -23,11 +23,16 @@ import granite.client.service.requestreply.UpdateClientsReply;
 import granite.client.service.requestreply.UpdateClientsRequest;
 import granite.client.service.requestreply.VerifyClientCredentialsReply;
 import granite.client.service.requestreply.VerifyClientCredentialsRequest;
+import granite.client.service.event.IClientEventSender;
+import granite.foundation.core.security.ApplicationRolesManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.AdditionalAnswers;
+import org.mockito.Mockito;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -359,6 +364,55 @@ class ClientCommandServiceTest
         assertEquals(List.of(id),reply.getClientIds());
         assertTrue(inTransaction(r -> r.findByClientId(id)).isEmpty());
         assertTrue(create(name,Set.of("ROLE_USER"),null).isSuccess());
+    }
+
+    @Test
+    public void
+    verifyRejectsMissingStoredHash()
+    {
+        CreateClientReply created = create(uniqueName(),Set.of("ROLE_USER"),null);
+        String            id      = created.getClient().getClientId();
+
+        inTransaction(r -> { r.save(r.findByClientId(id).orElseThrow().setSecretSha256(null)); return null; });
+
+        VerifyClientCredentialsReply reply = verify(id,"unknown-client");
+
+        assertFalse(reply.isValid());
+        assertEquals("invalid client",reply.getFailureMessage());
+    }
+
+    @Test
+    public void
+    verifySucceedsWhenRecordingTokenIssueFails()
+    {
+        CreateClientReply created = create(uniqueName(),Set.of("ROLE_USER"),null);
+        String            id      = created.getClient().getClientId();
+        IClientRepository real    = context.getBean(IClientRepository.class);
+        IClientRepository failing = Mockito.mock(IClientRepository.class,AdditionalAnswers.delegatesTo(real));
+
+        Mockito.doThrow(new IllegalStateException("lock timeout")).when(failing).recordTokenIssued(Mockito.any(),Mockito.any());
+
+        ITransactionalClientCommandService service =
+            new ClientCommandService(
+                failing,
+                context.getBean(IClientEventSender.class),
+                context.getBean(ModelMapper.class),
+                context.getBean(ApplicationRolesManager.class),
+                TestConfiguration.CLOCK,
+                new TestCallerSubject());
+
+        VerifyClientCredentialsReply reply =
+            new TransactionTemplate(context.getBean(PlatformTransactionManager.class))
+                .execute(
+                    status ->
+                        await(
+                            service.verifyClientCredentials(
+                                new VerifyClientCredentialsRequest().setClientId(id).setClientSecret(created.getClientSecret()))));
+
+        assertTrue(reply.isValid());
+        assertTrue(reply.isSuccess());
+        Mockito.verify(failing).recordTokenIssued(Mockito.eq(id),Mockito.any());
+        assertTrue(verify(id,created.getClientSecret()).isValid());
     }
 
     private IClientCommandService
