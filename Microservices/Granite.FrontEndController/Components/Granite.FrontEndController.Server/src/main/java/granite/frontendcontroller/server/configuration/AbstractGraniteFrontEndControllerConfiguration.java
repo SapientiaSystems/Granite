@@ -11,6 +11,11 @@ import granite.agent.client.requestreply.IAgentCommandServiceClient;
 import granite.agent.client.requestreply.IAgentQueryServiceClient;
 import granite.content.client.requestreply.ContentQueryServiceClient;
 import granite.content.client.requestreply.IContentQueryServiceClient;
+import granite.client.client.requestreply.ClientCommandServiceClient;
+import granite.client.client.requestreply.ClientQueryServiceClient;
+import granite.client.client.requestreply.IClientCommandServiceClient;
+import granite.client.client.requestreply.IClientQueryServiceClient;
+import granite.frontendcontroller.server.application.GraniteClientServiceClients;
 import granite.survey.client.requestreply.SurveyCommandServiceClient;
 import granite.feedback.client.requestreply.FeedbackQueryServiceClient;
 import granite.survey.client.requestreply.SurveyQueryServiceClient;
@@ -214,7 +219,47 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
                 sessionCookies(),
                 roles,
                 preferenceDefinitions(),
-                createHelpServiceClients());
+                createHelpServiceClients(),
+                createClientServiceClients());
+    }
+
+    protected GraniteClientServiceClients
+    createClientServiceClients()
+    {
+        return
+            new GraniteClientServiceClients()
+                .setClientCommandClient(this::createClientCommandClient)
+                .setClientQueryClient(this::createClientQueryClient);
+    }
+
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IClientCommandServiceClient
+    clientCommandServiceClient()
+    {
+        return new ClientCommandServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("client-command-service.base-url"));
+    }
+
+    protected IClientCommandServiceClient
+    createClientCommandClient()
+    {
+        return clientCommandServiceClient();
+    }
+
+    @Bean(destroyMethod = "close")
+    @Lazy
+    @SingletonScoped
+    public IClientQueryServiceClient
+    clientQueryServiceClient()
+    {
+        return new ClientQueryServiceClient(sharedServiceClient(),sharedServiceClientExecutor(),getBaseUrl("client-query-service.base-url"));
+    }
+
+    protected IClientQueryServiceClient
+    createClientQueryClient()
+    {
+        return clientQueryServiceClient();
     }
 
     protected GraniteHelpServiceClients

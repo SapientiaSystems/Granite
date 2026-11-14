@@ -46,6 +46,14 @@ import type { HandlePreferencesInputRequest } from "./HandlePreferencesInputRequ
 import type { HandlePreferencesInputReply }   from "./HandlePreferencesInputReply";
 import type { GetPreferencesOutputRequest }   from "./GetPreferencesOutputRequest";
 import type { GetPreferencesOutputReply }     from "./GetPreferencesOutputReply";
+import type { HandleClientsInputRequest }     from "./HandleClientsInputRequest";
+import type { HandleClientsInputReply }       from "./HandleClientsInputReply";
+import type { GetClientsOutputRequest }       from "./GetClientsOutputRequest";
+import type { GetClientsOutputReply }         from "./GetClientsOutputReply";
+import type { HandleOwnedClientSecretInputRequest } from "./HandleOwnedClientSecretInputRequest";
+import type { HandleOwnedClientSecretInputReply }   from "./HandleOwnedClientSecretInputReply";
+import type { GetOwnedClientsOutputRequest }  from "./GetOwnedClientsOutputRequest";
+import type { GetOwnedClientsOutputReply }    from "./GetOwnedClientsOutputReply";
 
 export
 interface IGraniteFrontEndControllerService
@@ -88,6 +96,14 @@ interface IGraniteFrontEndControllerService
     handlePreferencesInput(request: HandlePreferencesInputRequest): ICompletionStage<HandlePreferencesInputReply>;
 
     getPreferencesOutput(request: GetPreferencesOutputRequest): ICompletionStage<GetPreferencesOutputReply>;
+
+    handleClientsInput(request: HandleClientsInputRequest): ICompletionStage<HandleClientsInputReply>;
+
+    getClientsOutput(request: GetClientsOutputRequest): ICompletionStage<GetClientsOutputReply>;
+
+    handleOwnedClientSecretInput(request: HandleOwnedClientSecretInputRequest): ICompletionStage<HandleOwnedClientSecretInputReply>;
+
+    getOwnedClientsOutput(request: GetOwnedClientsOutputRequest): ICompletionStage<GetOwnedClientsOutputReply>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

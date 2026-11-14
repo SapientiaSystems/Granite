@@ -25,6 +25,7 @@ class SessionRowData
     private String             expires;
     private String             closedReason;
     private String             continuityId;
+    private String             application;
     private Long               replacedBy;
     private Long               copiedFrom;
     private Map<String,Object> values;
@@ -43,6 +44,7 @@ class SessionRowData
         expires      = null;
         closedReason = null;
         continuityId = null;
+        application  = null;
         replacedBy   = null;
         copiedFrom   = null;
         values       = new LinkedHashMap<>();
@@ -119,6 +121,13 @@ class SessionRowData
     }
 
     public SessionRowData
+    setApplication(String name)
+    {
+        application = name;
+        return this;
+    }
+
+    public SessionRowData
     setContinuityId(String id)
     {
         continuityId = id;
@@ -178,6 +187,9 @@ class SessionRowData
 
     public String
     getContinuityId() { return continuityId; }
+
+    public String
+    getApplication() { return application; }
 
     public Long
     getReplacedBy() { return replacedBy; }

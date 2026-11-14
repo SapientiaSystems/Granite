@@ -5,6 +5,13 @@
 package granite.frontendcontroller.server.application;
 
 import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.server.control.client.ClientsLoader;
+import granite.frontendcontroller.server.control.client.DeleteClientsView;
+import granite.frontendcontroller.server.control.client.InitializeClientsView;
+import granite.frontendcontroller.server.control.client.InitializeOwnedClientsView;
+import granite.frontendcontroller.server.control.client.RotateClientSecret;
+import granite.frontendcontroller.server.control.client.RotateOwnedClientSecret;
+import granite.frontendcontroller.server.control.client.UpdateClientsView;
 import granite.frontendcontroller.server.control.IOutputAction;
 import granite.frontendcontroller.server.control.preference.InitializePreferencesView;
 import granite.frontendcontroller.server.control.preference.SavePreferencesView;
@@ -42,6 +49,17 @@ import granite.frontendcontroller.server.control.user.InitializeUsersView;
 import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.service.requestreply.ClientsInput;
+import granite.frontendcontroller.service.requestreply.ClientsOutput;
+import granite.frontendcontroller.service.requestreply.GetClientsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetClientsOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetOwnedClientsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetOwnedClientsOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleClientsInputReply;
+import granite.frontendcontroller.service.requestreply.HandleClientsInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleOwnedClientSecretInputReply;
+import granite.frontendcontroller.service.requestreply.HandleOwnedClientSecretInputRequest;
+import granite.frontendcontroller.service.requestreply.OwnedClientSecretInput;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
 import granite.frontendcontroller.service.requestreply.GetHomeOutputReply;
 import granite.frontendcontroller.service.requestreply.GetHomeOutputRequest;
@@ -149,6 +167,10 @@ class GraniteFrontEndControllerService
     private final Map<String,IOutputAction<GetSessionOutputRequest,SessionOutput>> sessionOutputActions;
     private final Map<String,IInputAction<PreferencesInput,PreferencesOutput>>             preferencesInputActions;
     private final Map<String,IOutputAction<GetPreferencesOutputRequest,PreferencesOutput>> preferencesOutputActions;
+    private final Map<String,IInputAction<ClientsInput,ClientsOutput>>                     clientsInputActions;
+    private final Map<String,IOutputAction<GetClientsOutputRequest,ClientsOutput>>         clientsOutputActions;
+    private final Map<String,IInputAction<OwnedClientSecretInput,ClientsOutput>>           ownedClientInputActions;
+    private final Map<String,IOutputAction<GetOwnedClientsOutputRequest,ClientsOutput>>    ownedClientOutputActions;
 
     public
     GraniteFrontEndControllerService(GraniteFrontEndControllerContext context)
@@ -256,6 +278,24 @@ class GraniteFrontEndControllerService
         preferencesOutputActions =
             Map.of(
                 "Preferences.Current->PreferencesView",new InitializePreferencesView(userQueryClient,requestContext,context.getPreferenceDefinitions()));
+
+        ClientsLoader clientsLoader =
+            new ClientsLoader(context.getClientServiceClients(),userQueryClient,context.getApplicationRoles());
+
+        clientsInputActions =
+            Map.of(
+                "Client.All->Save->ClientsEditableView",new UpdateClientsView(context.getClientServiceClients(),clientsLoader,requestContext),
+                "Client.All->Delete->ClientsEditableView",new DeleteClientsView(context.getClientServiceClients(),clientsLoader,requestContext),
+                "Client.All->Rotate->ClientsEditableView",new RotateClientSecret(context.getClientServiceClients(),clientsLoader,requestContext));
+        clientsOutputActions =
+            Map.of(
+                "Client.All->ClientsEditableView",new InitializeClientsView(clientsLoader,requestContext));
+        ownedClientInputActions =
+            Map.of(
+                "Client.Owned->Rotate->OwnedClientsView",new RotateOwnedClientSecret(context.getClientServiceClients(),clientsLoader,requestContext));
+        ownedClientOutputActions =
+            Map.of(
+                "Client.Owned->OwnedClientsView",new InitializeOwnedClientsView(clientsLoader,requestContext));
     }
 
     @Override
@@ -403,6 +443,34 @@ class GraniteFrontEndControllerService
     getPreferencesOutput(GetPreferencesOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(preferencesOutputActions,context),GetPreferencesOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleClientsInputReply>
+    handleClientsInput(HandleClientsInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(clientsInputActions,context),HandleClientsInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetClientsOutputReply>
+    getClientsOutput(GetClientsOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(clientsOutputActions,context),GetClientsOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleOwnedClientSecretInputReply>
+    handleOwnedClientSecretInput(HandleOwnedClientSecretInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(ownedClientInputActions,context),HandleOwnedClientSecretInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetOwnedClientsOutputReply>
+    getOwnedClientsOutput(GetOwnedClientsOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(ownedClientOutputActions,context),GetOwnedClientsOutputReply::new);
     }
 
     protected GraniteFrontEndControllerContext

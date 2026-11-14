@@ -94,9 +94,9 @@ class ExtendedFrontEndControllerConfigurationTest
 
         GetUsersOutputReply reply = usersOutput(configuration(roles));
 
-        assertEquals(List.of("ROLE_ADMIN","ROLE_CLERK","ROLE_MANAGER"),names(reply));
-        assertEquals(List.of("ROLE_CLERK"),reply.getOutput().getRoles().get(2).getImpliedRoles());
-        assertEquals("Manager",reply.getOutput().getRoles().get(2).getLabel());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_CLIENT_ADMIN","ROLE_CLERK","ROLE_MANAGER"),names(reply));
+        assertEquals(List.of("ROLE_CLERK"),reply.getOutput().getRoles().get(3).getImpliedRoles());
+        assertEquals("Manager",reply.getOutput().getRoles().get(3).getLabel());
     }
 
     @Test
@@ -122,7 +122,7 @@ class ExtendedFrontEndControllerConfigurationTest
     public void
     graniteUsersOutputListsGraniteCatalog()
     {
-        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),names(usersOutput(configuration(null))));
+        assertEquals(List.of("ROLE_ADMIN","ROLE_CLIENT_ADMIN","ROLE_AUDITOR","ROLE_USER"),names(usersOutput(configuration(null))));
     }
 
     private ExtendedFrontEndControllerConfiguration

@@ -62,7 +62,8 @@ class LoginView
                         .setUserName(input.getUserName())
                         .setCredential(input.getPassword())
                         .setCredentialKind(CredentialKind.PASSWORD)
-                        .setDeviceId(deviceId.get()))
+                        .setDeviceId(deviceId.get())
+                        .setApplication(SessionApplication.resolve(input.getApplication())))
                 .thenApply(reply -> toOutput(input,reply))
                 .exceptionally(e -> refused(input));
     }

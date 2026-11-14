@@ -16,6 +16,7 @@ interface SessionRowData
     expires?:      string | null;
     closedReason?: string | null;
     continuityId?: string | null;
+    application?:  string | null;
     replacedBy?:   number | null;
     copiedFrom?:   number | null;
     values?:       Record<string,unknown>;

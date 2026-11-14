@@ -38,6 +38,7 @@ publishing {
 dependencies {
     api project(":Components:Granite.FrontEndController.Service")
     api "granite.user:granite-user-client:$system_version"
+    api "granite.client:granite-client-client:$system_version"
     api "granite.session:granite-session-client:$system_version"
     api "granite.feedback:granite-feedback-client:$system_version"
     api "granite.survey:granite-survey-client:$system_version"

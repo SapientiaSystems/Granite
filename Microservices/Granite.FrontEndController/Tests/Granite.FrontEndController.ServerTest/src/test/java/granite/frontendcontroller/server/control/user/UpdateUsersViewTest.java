@@ -80,7 +80,7 @@ class UpdateUsersViewTest
 
         UsersOutput output = run(new UsersInput().setUsersToCreate(creates).setUsersToUpdate(updates));
 
-        assertEquals(3,output.getRoles().size());
+        assertEquals(4,output.getRoles().size());
 
         InOrder order = Mockito.inOrder(commandClient,queryClient);
         order
