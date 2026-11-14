@@ -332,7 +332,9 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
 
         try
         {
-            applyResult(await props.onRotate(target.clientId),rowsRef.current);
+            const saved: IClientRow | undefined = baselineRef.current.find(r => r.rowKey === target.rowKey);
+
+            applyResult(await props.onRotate(target.clientId,saved?.secretExpiryDate ?? null),rowsRef.current);
         }
         catch (error)
         {

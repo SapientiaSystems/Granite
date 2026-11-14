@@ -2,9 +2,15 @@
 // Granite.Web.Client
 //////////////////////////////////////////////////////////////////////////////
 
-import type { ClientsOutput }       from "granite.frontendcontroller.service/RequestReply";
+import type { ClientsInput, ClientsOutput } from "granite.frontendcontroller.service/RequestReply";
 import type { IClientsResult }      from "../EditableView";
 import type { ISecretReveal }       from "./SecretDialog";
+import { toSecretExpiry }       from "../EditableView";
+
+export function rotateFields(clientId: string,secretExpiryDate: string | null): Partial<ClientsInput>
+{
+    return { clientIdToRotate: clientId, secretExpiresAt: toSecretExpiry(secretExpiryDate) };
+}
 
 export function toResult(output: ClientsOutput): IClientsResult
 {

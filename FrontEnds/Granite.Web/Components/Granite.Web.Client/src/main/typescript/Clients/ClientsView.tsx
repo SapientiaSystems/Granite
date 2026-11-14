@@ -14,7 +14,7 @@ import type { ClientOwnerData, ClientsInput, ClientsOutput, GetClientsOutputRepl
 import { canEdit, useAuthentication }                    from "granite.web.authentication/Authentication";
 import { ClientsEditableView }                           from "../EditableView";
 import type { IClientsResult }                           from "../EditableView";
-import { toResult, toReveal }                            from "./ClientsOutputs";
+import { rotateFields, toResult, toReveal }                            from "./ClientsOutputs";
 import { SecretDialog }                                  from "./SecretDialog";
 import type { ISecretReveal }                            from "./SecretDialog";
 
@@ -96,8 +96,8 @@ export function ClientsView(props: IClientsViewProps): ReactElement
     const handleDelete = (clientIds: Array<string>): Promise<IClientsResult> =>
         sendInput("Delete",{ clientIdsToDelete: clientIds });
 
-    const handleRotate = (clientId: string): Promise<IClientsResult> =>
-        sendInput("Rotate",{ clientIdToRotate: clientId });
+    const handleRotate = (clientId: string,secretExpiryDate: string | null): Promise<IClientsResult> =>
+        sendInput("Rotate",rotateFields(clientId,secretExpiryDate));
 
     useEffect(() =>
     {
@@ -171,7 +171,7 @@ export function ClientsView(props: IClientsViewProps): ReactElement
                     roles={roles}
                     users={users}
                     editable={editable}
-                    showOwners={true}
+                    showOwners={editable}
                     loading={loading}
                     onRenderToolbar={setToolbar}
                     onSave={handleSave}

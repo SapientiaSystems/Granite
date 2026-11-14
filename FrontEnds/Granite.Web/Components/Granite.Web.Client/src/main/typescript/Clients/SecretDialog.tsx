@@ -36,7 +36,7 @@ export function downloadEnvFile(reveal: ISecretReveal): void
     }
     finally
     {
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url),1000);
     }
 }
 

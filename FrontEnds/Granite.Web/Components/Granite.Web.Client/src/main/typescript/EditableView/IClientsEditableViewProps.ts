@@ -23,7 +23,7 @@ export interface IClientsEditableViewProps
     readonly onRenderToolbar?: (toolbar: ReactElement) => void;
     readonly onSave?:          (changes: { clientsToCreate: Array<CreateClientData>; clientsToUpdate: Array<UpdateClientData> }) => Promise<IClientsResult>;
     readonly onDelete?:        (clientIds: Array<string>) => Promise<IClientsResult>;
-    readonly onRotate?:        (clientId: string) => Promise<IClientsResult>;
+    readonly onRotate?:        (clientId: string,secretExpiryDate: string | null) => Promise<IClientsResult>;
 }
 
 //////////////////////////////////////////////////////////////////////////////
