@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// ClientCreated.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.client.server.domain;
+
+public
+class ClientCreated
+    extends AbstractClientEvent
+{
+    public
+    ClientCreated(Client src)
+    {
+        super("ClientCreated",src);
+    }
+
+    public
+    ClientCreated(String correlId,Client src)
+    {
+        super("ClientCreated",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
