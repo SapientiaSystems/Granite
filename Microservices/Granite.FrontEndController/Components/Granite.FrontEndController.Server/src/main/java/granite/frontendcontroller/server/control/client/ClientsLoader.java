@@ -7,6 +7,7 @@ package granite.frontendcontroller.server.control.client;
 import granite.client.service.requestreply.FindAllClientsRequest;
 import granite.client.service.requestreply.FindClientsByOwnerRequest;
 import granite.client.service.requestreply.FindClientsReply;
+import granite.client.service.requestreply.RotateClientSecretReply;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.frontendcontroller.server.application.GraniteClientServiceClients;
 import granite.frontendcontroller.server.control.user.RoleCatalogData;
@@ -17,6 +18,9 @@ import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.FindAllUsersReply;
 import granite.user.service.requestreply.FindAllUsersRequest;
 import granite.user.service.requestreply.UserData;
+
+import strata.frontendcontroller.service.requestreply.FrontEndInput;
+import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +66,75 @@ class ClientsLoader
                 .getClientQueryClient()
                 .findClientsByOwner(new FindClientsByOwnerRequest().setUserId(ownerUserId))
                 .thenApply(reply -> toOutput(reply,null,failures));
+    }
+
+    public CompletionStage<ClientsOutput>
+    loadAll(List<String> failures,String[] revealed)
+    {
+        return keepReveal(loadAll(failures),failures,revealed);
+    }
+
+    public CompletionStage<ClientsOutput>
+    loadOwned(Long ownerUserId,List<String> failures,String[] revealed)
+    {
+        return keepReveal(loadOwned(ownerUserId,failures),failures,revealed);
+    }
+
+    public void
+    collectReveal(String id,RotateClientSecretReply reply,List<String> failures,String[] revealed)
+    {
+        if (reply.isSuccess() && reply.getClientSecret() != null)
+        {
+            revealed[0] = reply.getClient() == null || reply.getClient().getClientId() == null ? id : reply.getClient().getClientId();
+            revealed[1] = reply.getClientSecret();
+        }
+        else
+            failures.add(id + ": " + reason(reply.getFailureMessage(),"not rotated"));
+    }
+
+    public ClientsOutput
+    describe(ClientsOutput output,Long userId,String source,String command,String destination)
+    {
+        return output.setUserId(userId).setSource(source).setCommand(command).setDestination(destination);
+    }
+
+    public ClientsOutput
+    describe(ClientsOutput output,Long userId,FrontEndInput input)
+    {
+        return describe(output,userId,input.getSource(),input.getCommand(),input.getDestination().orElse(null));
+    }
+
+    public ClientsOutput
+    describe(ClientsOutput output,Long userId,GetOutputRequest request)
+    {
+        return describe(output,userId,request.getSource(),request.getCommand(),request.getDestination());
+    }
+
+    public String
+    reason(String message,String fallback)
+    {
+        return message == null || message.isBlank() ? fallback : message;
+    }
+
+    private CompletionStage<ClientsOutput>
+    keepReveal(CompletionStage<ClientsOutput> stage,List<String> failures,String[] revealed)
+    {
+        return
+            stage.handle(
+                (output,error) ->
+                {
+                    ClientsOutput result = output;
+
+                    if (error != null)
+                    {
+                        Throwable cause = error.getCause() == null ? error : error.getCause();
+
+                        failures.add("Unable to refresh client list: " + reason(cause.getMessage(),"unknown error"));
+                        result = new ClientsOutput().setFailureMessages(failures).setRoles(roles());
+                    }
+
+                    return result.setRevealedClientId(revealed[0]).setRevealedClientSecret(revealed[1]);
+                });
     }
 
     protected ClientsOutput

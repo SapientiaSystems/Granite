@@ -35,23 +35,12 @@ class InitializeOwnedClientsView
         Optional<Long> caller = context.getCallerUserId();
 
         if (caller.isEmpty())
-            return CompletableFuture.completedFuture(describe(request,null,UnauthenticatedClientsOutput.create()));
+            return CompletableFuture.completedFuture(loader.describe(UnauthenticatedClientsOutput.create(),null,request));
 
         return
             loader
                 .loadOwned(caller.get(),new ArrayList<>())
-                .thenApply(output -> describe(request,caller.get(),output));
-    }
-
-    private ClientsOutput
-    describe(GetOwnedClientsOutputRequest request,Long userId,ClientsOutput output)
-    {
-        return
-            output
-                .setUserId(userId)
-                .setSource(request.getSource())
-                .setCommand(request.getCommand())
-                .setDestination(request.getDestination());
+                .thenApply(output -> loader.describe(output,caller.get(),request));
     }
 }
 

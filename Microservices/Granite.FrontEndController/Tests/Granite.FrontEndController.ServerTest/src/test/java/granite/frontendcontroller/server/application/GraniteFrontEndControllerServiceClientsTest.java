@@ -259,6 +259,72 @@ class GraniteFrontEndControllerServiceClientsTest
 
     @Test
     public void
+    reloadFailureAfterCreateStillRevealsSecret()
+        throws Exception
+    {
+        Mockito
+            .when(clientQuery.findAllClients(Mockito.any(FindAllClientsRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("down")));
+
+        ClientsOutput output =
+            save(
+                createService(SessionTestSupport.context("d",11L,1L)),
+                input("Save").setClientsToCreate(List.of(new CreateClientData().setName("n"))))
+                .getOutput();
+
+        assertEquals("gc_new",output.getRevealedClientId());
+        assertEquals(SECRET,output.getRevealedClientSecret());
+        assertEquals(1,output.getFailureMessages().size());
+        assertEquals(1L,output.getUserId());
+    }
+
+    @Test
+    public void
+    reloadFailureAfterRotateStillRevealsSecret()
+        throws Exception
+    {
+        Mockito
+            .when(clientQuery.findAllClients(Mockito.any(FindAllClientsRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("down")));
+
+        ClientsOutput output =
+            save(createService(SessionTestSupport.context("d",11L,1L)),input("Rotate").setClientIdToRotate("gc_a")).getOutput();
+
+        assertEquals("gc_a",output.getRevealedClientId());
+        assertEquals(SECRET,output.getRevealedClientSecret());
+        assertEquals(1,output.getFailureMessages().size());
+    }
+
+    @Test
+    public void
+    reloadFailureAfterOwnedRotateStillRevealsSecret()
+        throws Exception
+    {
+        Mockito
+            .when(clientQuery.findClientsByOwner(Mockito.any(FindClientsByOwnerRequest.class)))
+            .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("down")));
+
+        ClientsOutput output =
+            createService(SessionTestSupport.context("d",11L,7L))
+                .handleOwnedClientSecretInput(
+                    new HandleOwnedClientSecretInputRequest()
+                        .setInput(
+                            new OwnedClientSecretInput()
+                                .setClientId("gc_own")
+                                .setSource("Client.Owned")
+                                .setCommand("Rotate")
+                                .setDestination("OwnedClientsView")))
+                .toCompletableFuture()
+                .get()
+                .getOutput();
+
+        assertEquals("gc_own",output.getRevealedClientId());
+        assertEquals(SECRET,output.getRevealedClientSecret());
+        assertEquals(1,output.getFailureMessages().size());
+    }
+
+    @Test
+    public void
     unauthenticatedCallerGetsFailureWithoutClientCall()
         throws Exception
     {

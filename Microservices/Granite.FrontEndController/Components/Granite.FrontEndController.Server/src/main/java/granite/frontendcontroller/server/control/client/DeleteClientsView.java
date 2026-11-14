@@ -49,7 +49,7 @@ class DeleteClientsView
         Optional<Long> caller = context.getCallerUserId();
 
         if (caller.isEmpty())
-            return CompletableFuture.completedFuture(describe(input,null,UnauthenticatedClientsOutput.create()));
+            return CompletableFuture.completedFuture(loader.describe(UnauthenticatedClientsOutput.create(),null,input));
 
         List<String> failures = new ArrayList<>();
         Set<String>  ids      = new LinkedHashSet<>();
@@ -62,7 +62,7 @@ class DeleteClientsView
         return
             destroy(ids,failures)
                 .thenCompose(v -> loader.loadAll(failures))
-                .thenApply(output -> describe(input,caller.get(),output));
+                .thenApply(output -> loader.describe(output,caller.get(),input));
     }
 
     protected CompletionStage<Void>
@@ -88,24 +88,7 @@ class DeleteClientsView
 
         for (String id : requested)
             if (!destroyed.contains(id))
-                failures.add(id + ": " + reason(reply.getFailureMessage()));
-    }
-
-    private ClientsOutput
-    describe(ClientsInput input,Long userId,ClientsOutput output)
-    {
-        return
-            output
-                .setUserId(userId)
-                .setSource(input.getSource())
-                .setCommand(input.getCommand())
-                .setDestination(input.getDestination().orElse(null));
-    }
-
-    private String
-    reason(String failureMessage)
-    {
-        return failureMessage == null || failureMessage.isBlank() ? NOT_DELETED : failureMessage;
+                failures.add(id + ": " + loader.reason(reply.getFailureMessage(),NOT_DELETED));
     }
 }
 

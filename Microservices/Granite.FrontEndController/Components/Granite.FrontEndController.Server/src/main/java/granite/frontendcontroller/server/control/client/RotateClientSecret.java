@@ -22,8 +22,6 @@ public
 class RotateClientSecret
     implements IInputAction<ClientsInput,ClientsOutput>
 {
-    private static final String NOT_ROTATED = "not rotated";
-
     private final GraniteClientServiceClients clients;
     private final ClientsLoader               loader;
     private final SessionRequestContext       context;
@@ -46,7 +44,7 @@ class RotateClientSecret
         Optional<Long> caller = context.getCallerUserId();
 
         if (caller.isEmpty())
-            return CompletableFuture.completedFuture(describe(input,null,UnauthenticatedClientsOutput.create()));
+            return CompletableFuture.completedFuture(loader.describe(UnauthenticatedClientsOutput.create(),null,input));
 
         List<String> failures = new ArrayList<>();
         String       id       = input.getClientIdToRotate();
@@ -55,7 +53,7 @@ class RotateClientSecret
         if (id == null || id.isBlank())
         {
             failures.add("client id required");
-            return loader.loadAll(failures).thenApply(output -> describe(input,caller.get(),output));
+            return loader.loadAll(failures).thenApply(output -> loader.describe(output,caller.get(),input));
         }
 
         return
@@ -65,43 +63,9 @@ class RotateClientSecret
                     new RotateClientSecretRequest()
                         .setClientId(id)
                         .setSecretExpiresAt(input.getSecretExpiresAt()))
-                .thenAccept(reply -> collect(id,reply,failures,revealed))
-                .thenCompose(v -> loader.loadAll(failures))
-                .thenApply(
-                    output ->
-                        describe(
-                            input,
-                            caller.get(),
-                            output.setRevealedClientId(revealed[0]).setRevealedClientSecret(revealed[1])));
-    }
-
-    protected void
-    collect(String id,RotateClientSecretReply reply,List<String> failures,String[] revealed)
-    {
-        if (reply.isSuccess() && reply.getClientSecret() != null)
-        {
-            revealed[0] = reply.getClient() == null || reply.getClient().getClientId() == null ? id : reply.getClient().getClientId();
-            revealed[1] = reply.getClientSecret();
-        }
-        else
-            failures.add(id + ": " + reason(reply.getFailureMessage()));
-    }
-
-    private ClientsOutput
-    describe(ClientsInput input,Long userId,ClientsOutput output)
-    {
-        return
-            output
-                .setUserId(userId)
-                .setSource(input.getSource())
-                .setCommand(input.getCommand())
-                .setDestination(input.getDestination().orElse(null));
-    }
-
-    private String
-    reason(String failureMessage)
-    {
-        return failureMessage == null || failureMessage.isBlank() ? NOT_ROTATED : failureMessage;
+                .thenAccept(reply -> loader.collectReveal(id,reply,failures,revealed))
+                .thenCompose(v -> loader.loadAll(failures,revealed))
+                .thenApply(output -> loader.describe(output,caller.get(),input));
     }
 }
 

@@ -55,7 +55,7 @@ class UpdateClientsView
         Optional<Long> caller = context.getCallerUserId();
 
         if (caller.isEmpty())
-            return CompletableFuture.completedFuture(describe(input,null,UnauthenticatedClientsOutput.create()));
+            return CompletableFuture.completedFuture(loader.describe(UnauthenticatedClientsOutput.create(),null,input));
 
         List<String> failures = new ArrayList<>();
         String[]     revealed = new String[2];
@@ -63,13 +63,8 @@ class UpdateClientsView
         return
             create(input.getClientsToCreate(),failures,revealed)
                 .thenCompose(v -> update(input.getClientsToUpdate(),failures))
-                .thenCompose(v -> loader.loadAll(failures))
-                .thenApply(
-                    output ->
-                        describe(
-                            input,
-                            caller.get(),
-                            output.setRevealedClientId(revealed[0]).setRevealedClientSecret(revealed[1])));
+                .thenCompose(v -> loader.loadAll(failures,revealed))
+                .thenApply(output -> loader.describe(output,caller.get(),input));
     }
 
     protected CompletionStage<Void>
@@ -102,7 +97,7 @@ class UpdateClientsView
             revealed[1] = reply.getClientSecret();
         }
         else
-            failures.add(data.getName() + ": " + reason(reply.getFailureMessage()));
+            failures.add(data.getName() + ": " + loader.reason(reply.getFailureMessage(),NOT_SAVED));
     }
 
     protected CompletionStage<Void>
@@ -132,24 +127,7 @@ class UpdateClientsView
 
         for (UpdateClientData client : requested)
             if (!updated.contains(client.getClientId()))
-                failures.add(client.getClientId() + ": " + reason(reply.getFailureMessage()));
-    }
-
-    private ClientsOutput
-    describe(ClientsInput input,Long userId,ClientsOutput output)
-    {
-        return
-            output
-                .setUserId(userId)
-                .setSource(input.getSource())
-                .setCommand(input.getCommand())
-                .setDestination(input.getDestination().orElse(null));
-    }
-
-    private String
-    reason(String failureMessage)
-    {
-        return failureMessage == null || failureMessage.isBlank() ? NOT_SAVED : failureMessage;
+                failures.add(client.getClientId() + ": " + loader.reason(reply.getFailureMessage(),NOT_SAVED));
     }
 }
 
