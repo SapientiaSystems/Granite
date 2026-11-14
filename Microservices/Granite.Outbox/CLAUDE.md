@@ -43,7 +43,8 @@ Contains Kafka event sender implementations for each entity type in the Granite 
 - **`server.survey`**: `KafkaAvroSurveyEventSender` and `SurveyEventOutboxEventReceiver` for `SurveyEvent` (Granite.Survey), topic `granite.surveyevent.avro`.
 - **`server.content`**: `KafkaAvroContentEventSender` and `ContentEventOutboxEventReceiver` for `ContentEvent` (Granite.Content), topic `granite.contentevent.avro`.
 - **`server.agent`**: `KafkaAvroAgentEventSender` and `AgentEventOutboxEventReceiver` for `AgentEvent` (Granite.Agent), topic `granite.agentevent.avro`.
-- `HostConfiguration.receiverMapProvider` maps each event's simple name (`UserEvent`, `FeedbackEvent`, `SurveyEvent`, `ContentEvent`, `AgentEvent`) to its receiver; topics `granite.userevent.avro`, `granite.feedbackevent.avro`, `granite.surveyevent.avro`, `granite.contentevent.avro` and `granite.agentevent.avro`. Because every service shares one database per environment, this single host relays all of their outbox rows.
+- **`server.client`**: `KafkaAvroClientEventSender` and `ClientEventOutboxEventReceiver` for `ClientEvent` (Granite.Client), topic `granite.clientevent.avro`.
+- `HostConfiguration.receiverMapProvider` maps each event's simple name (`UserEvent`, `FeedbackEvent`, `SurveyEvent`, `ContentEvent`, `AgentEvent`, `ClientEvent`) to its receiver; topics `granite.userevent.avro`, `granite.feedbackevent.avro`, `granite.surveyevent.avro`, `granite.contentevent.avro`, `granite.agentevent.avro` and `granite.clientevent.avro`. Because every service shares one database per environment, this single host relays all of their outbox rows.
 
 #### Granite.Outbox.Server security (`server.configuration`)
 

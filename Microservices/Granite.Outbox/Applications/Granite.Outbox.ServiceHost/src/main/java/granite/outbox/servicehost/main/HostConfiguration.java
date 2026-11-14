@@ -16,6 +16,9 @@ import granite.agent.service.event.AgentEvent;
 import granite.outbox.server.content.KafkaAvroContentEventSender;
 import granite.outbox.server.content.ContentEventOutboxEventReceiver;
 import granite.content.service.event.ContentEvent;
+import granite.outbox.server.client.ClientEventOutboxEventReceiver;
+import granite.outbox.server.client.KafkaAvroClientEventSender;
+import granite.client.service.event.ClientEvent;
 import granite.user.service.event.UserEvent;
 import granite.outbox.server.configuration.GraniteOutboxSecurityConfiguration;
 import granite.outbox.server.user.KafkaAvroUserEventSender;
@@ -91,7 +94,14 @@ class HostConfiguration
                     new AgentEventOutboxEventReceiver(
                         new KafkaAvroAgentEventSender(
                             provider,
-                            "granite.agentevent.avro")));
+                            "granite.agentevent.avro")),
+                    ClientEvent
+                        .class
+                        .getSimpleName(),
+                    new ClientEventOutboxEventReceiver(
+                        new KafkaAvroClientEventSender(
+                            provider,
+                            "granite.clientevent.avro")));
     }
 
     @Bean
