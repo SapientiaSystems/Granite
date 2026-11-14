@@ -133,7 +133,7 @@ class AbstractGraniteSessionServerConfiguration
     public CommonsRequestLoggingFilter
     requestLoggingFilter()
     {
-        CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
+        CommonsRequestLoggingFilter filter = new TokenPathRedactingRequestLoggingFilter();
 
         filter.setIncludeQueryString(true);
         filter.setIncludePayload(false);
