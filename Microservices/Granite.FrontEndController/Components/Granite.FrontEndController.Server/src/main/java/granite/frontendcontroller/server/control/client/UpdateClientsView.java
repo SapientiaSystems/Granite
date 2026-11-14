@@ -62,7 +62,7 @@ class UpdateClientsView
 
         return
             create(input.getClientsToCreate(),failures,revealed)
-                .thenCompose(v -> update(input.getClientsToUpdate(),failures))
+                .thenCompose(v -> updateKeepingFailures(input.getClientsToUpdate(),failures))
                 .thenCompose(v -> loader.loadAll(failures,revealed))
                 .thenApply(output -> loader.describe(output,caller.get(),input));
     }
@@ -111,6 +111,25 @@ class UpdateClientsView
                 .getClientCommandClient()
                 .updateClients(new UpdateClientsRequest().setClients(toUpdate))
                 .thenAccept(reply -> collectUpdate(toUpdate,reply,failures));
+    }
+
+    private CompletionStage<Void>
+    updateKeepingFailures(List<UpdateClientData> toUpdate,List<String> failures)
+    {
+        return
+            update(toUpdate,failures)
+                .handle(
+                    (v,error) ->
+                    {
+                        if (error != null)
+                        {
+                            Throwable cause = error.getCause() != null ? error.getCause() : error;
+
+                            failures.add("Unable to save client changes: " + loader.reason(cause.getMessage(),NOT_SAVED));
+                        }
+
+                        return (Void)null;
+                    });
     }
 
     protected void
