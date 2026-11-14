@@ -8,3 +8,5 @@ export {computeChanges,displayValue,findDuplicateKeys,isRefreshFailure,mergePend
 export type {IActionState,IDetailGridRegistry,IEditableGridApi,IValueEntry,UsersAction} from "./UsersValueEntries";
 export {createDetailGridRegistry,createEntry,entryDisplay,entryMessages,isActionAllowed,isReservedValueKey,nextMacrotask,removeOrphanEntries,
         toEntries,toValues,validateEntries}         from "./UsersValueEntries";
+export {AuthoritiesCellEditor}                           from "./AuthoritiesCellEditor";
+export {AuthoritiesCellRenderer}                       from "./AuthoritiesCellRenderer";

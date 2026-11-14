@@ -8,6 +8,7 @@ import { CompletionError }                                                    fr
 import type { IGraniteFrontEndControllerServiceClient }                       from "granite.frontendcontroller.client/RequestReply";
 import type { GetSessionOutputReply, HandleSessionInputReply,
               SessionInput, SessionOutput }                                   from "granite.frontendcontroller.service/RequestReply";
+import { APPLICATION }                                                       from "./RuntimeConfig";
 import type { ILoginMethods, ILogoutResult, ISessionService, ISessionStatus } from "./ISessionService";
 
 const NEW_SOURCE:          string = "Session.New";
@@ -37,12 +38,12 @@ export class FrontEndSessionService
 
     async login(userName: string,password: string): Promise<ISessionStatus>
     {
-        return toStatus(await this.send(NEW_SOURCE,"Login",LOGIN_DESTINATION,{ userName, password }));
+        return toStatus(await this.send(NEW_SOURCE,"Login",LOGIN_DESTINATION,{ userName, password, application: APPLICATION }));
     }
 
     async startOktaLogin(returnTo: string): Promise<string | undefined>
     {
-        const output: SessionOutput = await this.send(NEW_SOURCE,"StartOktaLogin",LOGIN_DESTINATION,{ returnTo });
+        const output: SessionOutput = await this.send(NEW_SOURCE,"StartOktaLogin",LOGIN_DESTINATION,{ returnTo, application: APPLICATION });
 
         return typeof output.redirectUrl === "string" && output.redirectUrl.length > 0 ? output.redirectUrl : undefined;
     }

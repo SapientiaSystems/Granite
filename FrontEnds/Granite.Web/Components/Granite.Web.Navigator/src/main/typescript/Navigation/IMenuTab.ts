@@ -6,6 +6,7 @@ export interface IMenuTab
 {
     readonly label: string;
     readonly path:  string;
+    readonly authorities?: Array<string>;
 }
 
 //////////////////////////////////////////////////////////////////////////////
