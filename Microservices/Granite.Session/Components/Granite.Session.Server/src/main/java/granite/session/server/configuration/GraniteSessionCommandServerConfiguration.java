@@ -4,6 +4,8 @@
 
 package granite.session.server.configuration;
 
+import granite.client.client.requestreply.ClientCommandServiceClient;
+import granite.client.client.requestreply.IClientCommandServiceClient;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteAuthorities;
 import granite.session.server.application.CatalogRoleLoginGate;
@@ -315,6 +317,20 @@ class GraniteSessionCommandServerConfiguration
                 createClientBuilder(sslBundles,environment,serviceTokenProvider),
                 environment.getRequiredProperty("granite.user-query-service.host"));
     }
+    @Bean
+    @SingletonScoped
+    public IClientCommandServiceClient
+    clientCommandServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
+    {
+        return
+            new ClientCommandServiceClient(
+                createClientBuilder(sslBundles,environment,serviceTokenProvider),
+                environment.getRequiredProperty("granite.client-command-service.host"));
+    }
+
 
     @Override
     protected List<String>

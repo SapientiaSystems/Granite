@@ -4,7 +4,19 @@
 
 package granite.session.server.configuration;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import granite.client.client.requestreply.IClientCommandServiceClient;
+import granite.client.service.requestreply.VerifyClientCredentialsRequest;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
+import granite.foundation.core.security.GraniteJwtDecoderFactory;
+import granite.foundation.core.security.GraniteResourceServerSettings;
+import granite.session.server.application.IJwtTokenService;
+import granite.session.server.application.IServiceTokenProvider;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.security.oauth2.jwt.Jwt;
 import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
@@ -29,6 +41,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -402,6 +421,67 @@ class GraniteSessionCommandServerConfigurationTest
         assertInstanceOf(
             IOktaClient.class,
             subject.oktaClient(settings,env,new DefaultResourceLoader(),java.time.Clock.systemUTC()));
+    }
+
+    @Test
+    public void
+    clientCommandClientTargetsGatewayWithServiceToken()
+    {
+        WireMockServer gateway = new WireMockServer(wireMockConfig().dynamicPort());
+
+        gateway.start();
+
+        try
+        {
+            gateway.stubFor(
+                post(urlEqualTo("/client-command-service/verify-client-credentials"))
+                    .willReturn(okJson("{\"success\":true,\"valid\":true,\"clientId\":\"gc_x\"}")));
+
+            MockEnvironment env = new MockEnvironment();
+
+            env.setActiveProfiles("local");
+            env.setProperty("granite.client-command-service.host",gateway.baseUrl());
+
+            IJwtTokenService            tokens   = subject.jwtTokenService(env,new DefaultResourceLoader());
+            IServiceTokenProvider       provider = subject.serviceTokenProvider(tokens,java.time.Clock.systemUTC(),env);
+            IClientCommandServiceClient client   = subject.clientCommandServiceClient(noSslBundles(),env,provider);
+
+            assertTrue(
+                client
+                    .verifyClientCredentials(
+                        new VerifyClientCredentialsRequest().setClientId("gc_x").setClientSecret("s"))
+                    .toCompletableFuture()
+                    .join()
+                    .isValid());
+
+            List<LoggedRequest> requests = gateway.findAll(postRequestedFor(anyUrl()));
+
+            assertEquals(1,requests.size());
+
+            String header = requests.get(0).getHeader("Authorization");
+
+            assertTrue(header != null && header.startsWith("Bearer "));
+
+            Jwt jwt =
+                new GraniteJwtDecoderFactory()
+                    .create(
+                        subject.jwkSetProvider(env,new DefaultResourceLoader()).getPublicJwkSet(),
+                        GraniteResourceServerSettings.from(env))
+                    .decode(header.substring("Bearer ".length()));
+
+            assertEquals("service:granite-session",jwt.getSubject());
+        }
+        finally
+        {
+            gateway.stop();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ObjectProvider<SslBundles>
+    noSslBundles()
+    {
+        return Mockito.mock(ObjectProvider.class);
     }
 
     private Object

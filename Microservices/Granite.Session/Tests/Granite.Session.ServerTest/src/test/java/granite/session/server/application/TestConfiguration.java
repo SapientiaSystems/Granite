@@ -5,6 +5,7 @@
 package granite.session.server.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import granite.client.client.requestreply.IClientCommandServiceClient;
 import granite.session.server.configuration.GraniteSessionCommandServerConfiguration;
 import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
@@ -182,6 +183,18 @@ class TestConfiguration
                 });
 
         return client;
+    }
+
+    @Override
+    @Bean
+    @SingletonScoped
+    public IClientCommandServiceClient
+    clientCommandServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
+    {
+        return Mockito.mock(IClientCommandServiceClient.class);
     }
 
     @Override
