@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 @SpringBootTest(
@@ -118,6 +119,61 @@ class GatewayClientTokenTest
             assertEquals(200,post(TOKEN_PATH,null,"grant_type=client_credentials"),"request " + i);
 
         assertEquals(429,post(TOKEN_PATH,null,"grant_type=client_credentials"));
+    }
+
+    @Test
+    public void
+    perClientLimitIsolatesClientsOnTheSameAddress()
+    {
+        for (int i = 0; i < 10; i++)
+            assertEquals(200,form("client_id=gc_iso_a&client_secret=x&grant_type=client_credentials",null),"request " + i);
+
+        assertEquals(429,form("client_id=gc_iso_a&client_secret=x&grant_type=client_credentials",null));
+        assertEquals(200,form("client_id=gc_iso_b&client_secret=x&grant_type=client_credentials",null));
+    }
+
+    @Test
+    public void
+    perClientLimitKeysOnTheBasicHeader()
+    {
+        String basic = "Basic " + java.util.Base64.getEncoder().encodeToString("gc_basic:s3cr3t".getBytes());
+
+        for (int i = 0; i < 10; i++)
+            assertEquals(200,form("grant_type=client_credentials",basic),"request " + i);
+
+        assertEquals(429,form("grant_type=client_credentials",basic));
+        assertEquals(200,form("client_id=gc_basic_other&grant_type=client_credentials",null));
+    }
+
+    @Test
+    public void
+    formBodyStillReachesTheBackend()
+    {
+        String body = "grant_type=client_credentials&client_id=gc_body&client_secret=zzz";
+
+        assertEquals(200,form(body,null));
+        assertTrue(backend.getReceivedBodies().contains(body));
+    }
+
+    private int
+    form(String body,String authorization)
+    {
+        return
+            client
+                .post()
+                .uri(TOKEN_PATH)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .headers(
+                    headers ->
+                    {
+                        if (authorization != null)
+                            headers.set("Authorization",authorization);
+                    })
+                .bodyValue(body)
+                .exchange()
+                .returnResult(String.class)
+                .getStatus()
+                .value();
     }
 
     @Test

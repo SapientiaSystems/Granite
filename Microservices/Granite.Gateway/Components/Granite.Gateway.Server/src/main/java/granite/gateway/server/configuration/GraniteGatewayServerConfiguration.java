@@ -13,6 +13,7 @@ import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.gateway.server.health.GatewayHealthCheckController;
 import granite.gateway.server.security.ApplicationSessionPathWebFilter;
 import granite.gateway.server.security.ClientTokenPathWebFilter;
+import granite.gateway.server.security.ClientTokenPerClientRateLimitWebFilter;
 import granite.gateway.server.security.CookieCsrfProtectionMatcher;
 import granite.gateway.server.security.CsrfCookieWebFilter;
 import granite.gateway.server.security.CurrentSessionFrontEndInputMatcher;
@@ -128,6 +129,7 @@ class GraniteGatewayServerConfiguration
                             .requireCsrfProtectionMatcher(new CookieCsrfProtectionMatcher()))
                 .addFilterBefore(createServiceTokenRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
                 .addFilterBefore(createClientTokenRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
+                .addFilterBefore(createClientTokenPerClientRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
                 .addFilterBefore(
                     new ClientTokenPathWebFilter(
                         ServerWebExchangeMatchers.pathMatchers(getClientDeniedPathPatterns(environment).toArray(String[]::new)),
@@ -385,9 +387,26 @@ class GraniteGatewayServerConfiguration
             new RateLimitWebFilter(
                 ServerWebExchangeMatchers.pathMatchers(CLIENT_TOKEN_PATH),
                 new FixedWindowRateLimiter(
-                    environment.getProperty("granite.gateway.client-token.rate-limit.requests",Integer.class,10),
+                    environment.getProperty("granite.gateway.client-token.rate-limit.requests",Integer.class,600),
                     Duration.parse(environment.getProperty("granite.gateway.client-token.rate-limit.window","PT1M")),
                     environment.getProperty("granite.gateway.client-token.rate-limit.max-clients",Integer.class,10000),
+                    Clock.systemUTC()));
+    }
+
+    protected ClientTokenPerClientRateLimitWebFilter
+    createClientTokenPerClientRateLimitWebFilter(Environment environment)
+    {
+        return
+            new ClientTokenPerClientRateLimitWebFilter(
+                CLIENT_TOKEN_PATH,
+                new FixedWindowRateLimiter(
+                    environment.getProperty("granite.gateway.client-token.per-client-rate-limit.requests",Integer.class,10),
+                    Duration.parse(
+                        environment.getProperty("granite.gateway.client-token.per-client-rate-limit.window","PT1M")),
+                    environment.getProperty(
+                        "granite.gateway.client-token.per-client-rate-limit.max-clients",
+                        Integer.class,
+                        10000),
                     Clock.systemUTC()));
     }
 
