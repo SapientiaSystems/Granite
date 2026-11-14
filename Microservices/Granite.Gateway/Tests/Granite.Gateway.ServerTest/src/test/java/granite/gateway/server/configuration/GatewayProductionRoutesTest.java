@@ -51,7 +51,9 @@ class GatewayProductionRoutesTest
             "/survey-command-service/submit-survey-response",
             "/agent-command-service/send-agent-message",
             "/content-command-service/upsert-content-documents",
-            "/outbox-service/get-entries");
+            "/outbox-service/get-entries",
+            "/client-query-service/find-clients-by-key",
+            "/client-command-service/create-client");
 
     private static GatewayTestBackend backend;
 
@@ -108,7 +110,9 @@ class GatewayProductionRoutesTest
                 "survey-query-route",
                 "agent-query-route",
                 "content-query-route",
-                "outbox-route"),
+                "outbox-route",
+                "client-command-route",
+                "client-query-route"),
             routes.stream().map(Route::getId).collect(Collectors.toSet()));
     }
 
