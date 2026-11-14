@@ -31,9 +31,9 @@ class ApplicationRolesManager
         Objects.requireNonNull(applicationRoles,"applicationRoles");
         Objects.requireNonNull(defaultRole,"defaultRole");
 
-        List<RoleDefinition>       all   = new ArrayList<>();
-        Map<String,RoleDefinition> map   = new HashMap<>();
-        RoleDefinition             admin = new RoleDefinition(ADMIN,"Admin",Set.of());
+        List<RoleDefinition>       all         = new ArrayList<>();
+        Map<String,RoleDefinition> map         = new HashMap<>();
+        RoleDefinition             admin       = new RoleDefinition(ADMIN,"Admin",Set.of());
         RoleDefinition             clientAdmin = new RoleDefinition(CLIENT_ADMIN,"ClientAdmin",Set.of());
 
         all.add(admin);

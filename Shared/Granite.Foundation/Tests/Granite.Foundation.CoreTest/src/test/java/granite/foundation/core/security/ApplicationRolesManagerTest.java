@@ -193,12 +193,17 @@ class ApplicationRolesManagerTest
     public void
     clientAdminIsReserved()
     {
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new ApplicationRolesManager(
-                    List.of(new RoleDefinition(ApplicationRolesManager.CLIENT_ADMIN,"ClientAdmin",Set.of())),
-                    REVIEWER));
+        IllegalArgumentException thrown =
+            assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ApplicationRolesManager(
+                        List.of(
+                            new RoleDefinition("ROLE_A","A",Set.of()),
+                            new RoleDefinition(ApplicationRolesManager.CLIENT_ADMIN,"ClientAdmin",Set.of())),
+                        "ROLE_A"));
+
+        assertTrue(thrown.getMessage().contains("ROLE_CLIENT_ADMIN is reserved"));
     }
 
     @Test
