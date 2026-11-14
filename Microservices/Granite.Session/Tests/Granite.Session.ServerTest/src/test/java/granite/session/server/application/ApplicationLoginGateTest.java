@@ -56,6 +56,41 @@ class ApplicationLoginGateTest
 
     @Test
     public void
+    otherApplicationWithoutOwnGateUsesGraniteRuleWithoutClientAdmin()
+    {
+        IApplicationLoginGate custom = new ApplicationLoginGate(List.of("granite","client","foo"),catalogGate,gates);
+
+        assertFalse(custom.permits("foo",Set.of("ROLE_CLIENT_ADMIN")));
+        assertTrue(custom.permits("foo",Set.of("ROLE_USER")));
+        assertTrue(custom.permits("foo",Set.of("ROLE_USER","ROLE_CLIENT_ADMIN")));
+    }
+
+    @Test
+    public void
+    clientLoginWithEmptyConfiguredListStillRequiresClientAdmin()
+    {
+        IApplicationLoginGate empty =
+            new ApplicationLoginGate(
+                List.of("granite","client"),
+                catalogGate,
+                Map.of("client",new RequiredAuthoritiesLoginGate(List.of())));
+
+        assertFalse(empty.permits("client",Set.of("ROLE_ADMIN")));
+        assertTrue(empty.permits("client",Set.of("ROLE_CLIENT_ADMIN")));
+    }
+
+    @Test
+    public void
+    clientLoginWithoutAnyGateStillRequiresClientAdmin()
+    {
+        IApplicationLoginGate none = new ApplicationLoginGate(List.of("granite","client"),catalogGate,Map.of());
+
+        assertFalse(none.permits("client",Set.of("ROLE_ADMIN")));
+        assertTrue(none.permits("client",Set.of("ROLE_CLIENT_ADMIN")));
+    }
+
+    @Test
+    public void
     nullApplicationMeansGraniteAndUnknownIsRefused()
     {
         assertTrue(subject.permits(null,Set.of("ROLE_USER")));

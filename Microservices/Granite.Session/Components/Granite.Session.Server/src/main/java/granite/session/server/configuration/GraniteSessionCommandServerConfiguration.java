@@ -349,13 +349,19 @@ class GraniteSessionCommandServerConfiguration
     protected List<String>
     applicationRequiredAuthorities(Environment environment,String application)
     {
-        return
+        List<String> configured =
             Binder
                 .get(environment)
                 .bind(
                     "granite.session.login.applications." + application + ".required-authorities",
                     Bindable.listOf(String.class))
-                .orElse("client".equals(application) ? List.of(ApplicationRolesManager.CLIENT_ADMIN) : List.of());
+                .orElse(List.of());
+
+        for (String authority : configured)
+            if (authority != null && !authority.isBlank())
+                return configured;
+
+        return "client".equals(application) ? List.of(ApplicationRolesManager.CLIENT_ADMIN) : List.of();
     }
 
     @Bean

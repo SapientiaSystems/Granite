@@ -9,6 +9,7 @@ import granite.session.server.domain.Session;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -17,6 +18,8 @@ public
 class ApplicationLoginGate
     implements IApplicationLoginGate
 {
+    private static final String CLIENT_APPLICATION = "client";
+
     private final Set<String>           applications;
     private final ILoginGate            graniteGate;
     private final Map<String,ILoginGate> gates;
@@ -58,14 +61,21 @@ class ApplicationLoginGate
         if (!applications.contains(name) || authorities == null)
             return false;
 
-        if (Session.DEFAULT_APPLICATION.equals(name))
-        {
-            Set<String> kept = withoutClientAdmin(authorities);
+        if (CLIENT_APPLICATION.equals(name))
+            return
+                authorities.contains(ApplicationRolesManager.CLIENT_ADMIN)
+                && gates
+                    .getOrDefault(name,new RequiredAuthoritiesLoginGate(List.of(ApplicationRolesManager.CLIENT_ADMIN)))
+                    .permits(authorities);
 
-            return (!kept.isEmpty() || !authorities.contains(ApplicationRolesManager.CLIENT_ADMIN)) && graniteGate.permits(kept);
-        }
+        ILoginGate own = Session.DEFAULT_APPLICATION.equals(name) ? null : gates.get(name);
 
-        return gates.getOrDefault(name,graniteGate).permits(authorities);
+        if (own != null)
+            return own.permits(authorities);
+
+        Set<String> kept = withoutClientAdmin(authorities);
+
+        return (!kept.isEmpty() || !authorities.contains(ApplicationRolesManager.CLIENT_ADMIN)) && graniteGate.permits(kept);
     }
 
     private Set<String>
