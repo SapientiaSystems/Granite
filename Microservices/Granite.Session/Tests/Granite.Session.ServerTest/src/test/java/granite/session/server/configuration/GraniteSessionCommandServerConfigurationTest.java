@@ -410,6 +410,22 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    oktaRedirectUrisBindFromEnvironmentVariableNames()
+    {
+        org.springframework.core.env.StandardEnvironment env = new org.springframework.core.env.StandardEnvironment();
+
+        env.getPropertySources().replace(org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+            new org.springframework.core.env.SystemEnvironmentPropertySource(
+                org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+                new java.util.HashMap<String,Object>(
+                    Map.of("GRANITE_SESSION_OKTA_REDIRECTURIS_CLIENT","https://client.granite.localhost/login/callback"))));
+        OktaSettings settings = subject.oktaSettings(env);
+
+        assertEquals("https://client.granite.localhost/login/callback",settings.getRedirectUri("client"));
+    }
+
+    @Test
+    public void
     oktaIsDisabledByDefaultAndNeedsNoKeyStore()
     {
         MockEnvironment env      = new MockEnvironment();
