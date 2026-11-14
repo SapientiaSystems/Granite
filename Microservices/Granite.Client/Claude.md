@@ -28,7 +28,7 @@ Images: `granite-client-commandhost` and `granite-client-queryhost`.
 - `clientId` is `gc_` plus 32 lowercase base32 characters (`a-z2-7`, 20 random bytes) and never changes. The secret is 32 `SecureRandom` bytes, base64url without padding, stored only as SHA-256 and compared in constant time; an unknown id is compared against a fixed dummy hash.
 - `name` is required, unique, at most 100 characters; `description` at most 1000.
 - `authorities` are catalog roles only (`ApplicationRolesManager`), stored closed under the role hierarchy. `ROLE_ADMIN` and `SCOPE_*` are rejected, and so is a role whose expansion contains `ROLE_ADMIN` (`ClientAuthorityPolicy`); on update only newly added roles are checked against the catalog.
-- Secret expiry (`ClientSecretExpiry`): the UI edits a date, stored as the `Instant` at the start of the following day UTC. The secret is valid while `now < secretExpiresAt`; null means no expiry.
+- Secret expiry: the UI edits a date, stored as the `Instant` at the start of the following day UTC. The secret is valid while `now < secretExpiresAt`; null means no expiry.
 - Commands (`IClientCommandService`, `/client-command-service/`):
 
 | Endpoint | Request → Reply | Behavior |
@@ -47,7 +47,7 @@ Images: `granite-client-commandhost` and `granite-client-queryhost`.
 ## Server
 
 - `domain`: `Client` (`AbstractEntityAndDomainEventSource`), `Client.orm.xml`, `IClientRepository`/`ClientRepository`, `LongSetConverter` (owners), domain events `ClientCreated`, `ClientUpdated`, `ClientDestroyed`.
-- `application`: `ClientCommandService`, `ClientQueryService`, `ClientCredentials`, `ClientSecretExpiry`, `ClientAuthorityPolicy`, `MappingModule`, `ApplicationConfiguration`.
+- `application`: `ClientCommandService`, `ClientQueryService`, `ClientCredentials`, `ClientAuthorityPolicy`, `MappingModule`, `ApplicationConfiguration`.
 - `platform`: controllers, `JwtCallerSubject`, `OutboxEventClientEventSender`, `ClientEventToOutboxEventMapper`, `PlatformConfiguration`/`CommandPlatformConfiguration`/`QueryPlatformConfiguration`.
 - `configuration` (seams, overridden with `@Bean` like User and Feedback): `AbstractGraniteClientServerConfiguration` (`configuration(Environment)`, `mapper()`/`configureMapper(ModelMapper)`, `applicationRoles()` and `applicationRolesStartupLog(ApplicationRolesManager)`, `clientCallerSubject()`, `clock()`, `securityFilterChain` (JWT check, `REQUIRED`), `jwtDecoder`, `openApi`, `getTokenlessPathPatterns(Environment)`, `createJwkSetRestOperations(...)`), `GraniteClientCommandServerConfiguration` (`clientEventSender(IOutboxEventRepository)`), `GraniteClientQueryServerConfiguration`. An application returns its own catalog from `applicationRoles()` (see "Role catalog" in the root `CLAUDE.md`).
 
