@@ -152,6 +152,35 @@ class ClientTokenIssuerTest
 
     @Test
     public void
+    verifyCallIsBoundedByTimeout()
+    {
+        environment.setProperty("granite.session.client-token.verify-timeout","PT0.2S");
+        Mockito
+            .when(clientService.verifyClientCredentials(Mockito.any()))
+            .thenReturn(new CompletableFuture<>());
+
+        assertEquals(ClientTokenOutcome.UNAVAILABLE,issue().getOutcome());
+    }
+
+    @Test
+    public void
+    mismatchedClientIdInReplyIsNotMinted()
+    {
+        reply(
+            new VerifyClientCredentialsReply()
+                .setSuccess(true)
+                .setValid(true)
+                .setClientId("gc_someoneelse")
+                .setAuthorities(new TreeSet<>(List.of("ROLE_USER"))));
+
+        ClientTokenResult result = issue();
+
+        assertEquals(ClientTokenOutcome.UNAVAILABLE,result.getOutcome());
+        assertNull(result.getToken());
+    }
+
+    @Test
+    public void
     lifetimeIsConfigurable()
     {
         environment.setProperty("granite.session.client-token.lifetime","PT1H");

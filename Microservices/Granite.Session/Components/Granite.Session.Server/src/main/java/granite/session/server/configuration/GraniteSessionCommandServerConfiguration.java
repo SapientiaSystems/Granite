@@ -268,7 +268,15 @@ class GraniteSessionCommandServerConfiguration
                 new IllegalArgumentException(
                     "granite.session.client-token.lifetime must be positive and at most PT1H");
 
-        return new ClientTokenIssuer(jwtTokenService,clientCommandServiceClient,lifetime);
+        Duration verifyTimeout =
+            Duration.parse(environment.getProperty("granite.session.client-token.verify-timeout","PT5S"));
+
+        if (verifyTimeout.isZero() || verifyTimeout.isNegative())
+            throw
+                new IllegalArgumentException(
+                    "granite.session.client-token.verify-timeout must be positive");
+
+        return new ClientTokenIssuer(jwtTokenService,clientCommandServiceClient,lifetime,verifyTimeout);
     }
 
     @Bean

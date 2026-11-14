@@ -7,6 +7,7 @@ package granite.session.server.platform;
 import granite.session.server.application.ClientTokenResult;
 import granite.session.server.application.IClientTokenIssuer;
 import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -56,9 +57,13 @@ class ClientTokenController
         produces = MediaType.APPLICATION_JSON_VALUE)
     public CompletionStage<ResponseEntity<Map<String,Object>>>
     token(
+        HttpServletRequest                                         request,
         @RequestHeader(value = "Authorization",required = false) String authorization,
         @RequestParam MultiValueMap<String,String>                 form)
     {
+        if (request.getQueryString() != null && !request.getQueryString().isEmpty())
+            return immediate(error(HttpStatus.BAD_REQUEST,INVALID_REQUEST));
+
         List<String> grants  = form.get("grant_type");
         List<String> ids     = form.get("client_id");
         List<String> secrets = form.get("client_secret");

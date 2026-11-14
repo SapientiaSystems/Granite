@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 
 public
 class ClientTokenIssuer
@@ -29,17 +30,20 @@ class ClientTokenIssuer
     private final IJwtTokenService            jwtTokenService;
     private final IClientCommandServiceClient clientService;
     private final Duration                    lifetime;
+    private final Duration                    verifyTimeout;
     private final Logger                      logger;
 
     public
     ClientTokenIssuer(
         IJwtTokenService            jwtTokenService,
         IClientCommandServiceClient clientService,
-        Duration                    lifetime)
+        Duration                    lifetime,
+        Duration                    verifyTimeout)
     {
         this.jwtTokenService = Objects.requireNonNull(jwtTokenService,"jwtTokenService");
         this.clientService   = Objects.requireNonNull(clientService,"clientService");
         this.lifetime        = Objects.requireNonNull(lifetime,"lifetime");
+        this.verifyTimeout   = Objects.requireNonNull(verifyTimeout,"verifyTimeout");
         this.logger          = LogManager.getLogger(ClientTokenIssuer.class);
     }
 
@@ -65,7 +69,11 @@ class ClientTokenIssuer
             return CompletableFuture.completedFuture(unavailable(e));
         }
 
-        return stage.handle((reply,failure) -> resolve(clientId,reply,failure));
+        return
+            stage
+                .toCompletableFuture()
+                .orTimeout(verifyTimeout.toMillis(),TimeUnit.MILLISECONDS)
+                .handle((reply,failure) -> resolve(clientId,reply,failure));
     }
 
     private ClientTokenResult
@@ -93,7 +101,7 @@ class ClientTokenIssuer
         {
             String verifiedId = reply.getClientId();
 
-            if (verifiedId == null || verifiedId.isBlank())
+            if (!clientId.equals(verifiedId))
                 return unavailable(null);
 
             String token =

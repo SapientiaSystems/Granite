@@ -130,6 +130,34 @@ class ClientTokenEndpointTest
 
     @Test
     public void
+    queryStringCredentialsAreRejected()
+        throws Exception
+    {
+        MvcResult started =
+            mvc
+                .perform(
+                    post(PATH + "?client_id=" + CLIENT_ID + "&client_secret=secret")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("grant_type","client_credentials"))
+                .andReturn();
+        MvcResult result  = mvc.perform(asyncDispatch(started)).andReturn();
+
+        assertError(result,400,"invalid_request");
+        Mockito.verifyNoInteractions(clientService);
+    }
+
+    @Test
+    public void
+    malformedBasicValuesAreRejected()
+        throws Exception
+    {
+        assertError(perform(form("client_credentials",null,null),basic(CLIENT_ID + ":%zz")),400,"invalid_request");
+        assertError(perform(form("client_credentials",null,null),"Basic "),400,"invalid_request");
+        Mockito.verifyNoInteractions(clientService);
+    }
+
+    @Test
+    public void
     jsonBodyIsRejectedWithoutServerError()
         throws Exception
     {
