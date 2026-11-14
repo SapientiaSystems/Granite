@@ -44,8 +44,8 @@
         "build-granite-web": "cd FrontEnds/Granite.Web && yarn run build",
         "build-frontends": "yarn run build-granite-web",
         "build": "yarn run dev-init && yarn run build-microservices && yarn run build-frontends",
-        "containerize-granite-web": "cd FrontEnds/Granite.Web && yarn run containerize-granite-web-apphost",
-        "push-granite-web": "cd FrontEnds/Granite.Web && yarn run push-granite-web-apphost",
+        "containerize-granite-web": "cd FrontEnds/Granite.Web && yarn run containerize-granite-web-apphost && yarn run containerize-granite-web-clienthost",
+        "push-granite-web": "cd FrontEnds/Granite.Web && yarn run push-granite-web-apphost && yarn run push-granite-web-clienthost",
         "test-granite-web": "cd FrontEnds/Granite.Web && yarn run test-granite-web",
         "test-granite": "yarn run test-granite-web",
         "test": "yarn run build"
