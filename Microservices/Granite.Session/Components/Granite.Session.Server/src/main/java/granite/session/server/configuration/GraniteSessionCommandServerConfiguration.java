@@ -9,6 +9,8 @@ import granite.client.client.requestreply.IClientCommandServiceClient;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteAuthorities;
 import granite.session.server.application.CatalogRoleLoginGate;
+import granite.session.server.application.ClientTokenIssuer;
+import granite.session.server.application.IClientTokenIssuer;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
 import granite.session.server.application.ILoginGate;
@@ -252,6 +254,25 @@ class GraniteSessionCommandServerConfiguration
 
     @Bean
     @SingletonScoped
+    public IClientTokenIssuer
+    clientTokenIssuer(
+        IJwtTokenService            jwtTokenService,
+        IClientCommandServiceClient clientCommandServiceClient,
+        Environment                 environment)
+    {
+        Duration lifetime =
+            Duration.parse(environment.getProperty("granite.session.client-token.lifetime","PT15M"));
+
+        if (lifetime.isZero() || lifetime.isNegative() || lifetime.compareTo(Duration.ofHours(1)) > 0)
+            throw
+                new IllegalArgumentException(
+                    "granite.session.client-token.lifetime must be positive and at most PT1H");
+
+        return new ClientTokenIssuer(jwtTokenService,clientCommandServiceClient,lifetime);
+    }
+
+    @Bean
+    @SingletonScoped
     public ILoginGate
     loginGate(Environment environment,ApplicationRolesManager roles)
     {
@@ -344,6 +365,7 @@ class GraniteSessionCommandServerConfiguration
                 "/session-command-service/refresh",
                 "/session-command-service/resolve-session",
                 "/session-command-service/issue-service-token",
+                "/session-command-service/oauth2/token",
                 "/.well-known/jwks.json"));
         return paths;
     }

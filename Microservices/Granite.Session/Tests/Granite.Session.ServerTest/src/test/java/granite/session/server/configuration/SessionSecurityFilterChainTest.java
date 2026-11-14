@@ -140,6 +140,18 @@ class SessionSecurityFilterChainTest
 
     @Test
     public void
+    tokenEndpointIsTokenless()
+        throws Exception
+    {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain         chain    = run("POST","/session-command-service/oauth2/token",null,response);
+
+        assertNotNull(chain.getRequest());
+        assertTrue(response.getStatus() != 401 && response.getStatus() != 403);
+    }
+
+    @Test
+    public void
     validTokenWithoutRoleAuthoritiesReachesServicePath()
         throws Exception
     {
