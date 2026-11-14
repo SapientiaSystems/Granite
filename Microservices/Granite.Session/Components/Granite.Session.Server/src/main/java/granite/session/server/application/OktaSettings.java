@@ -15,6 +15,7 @@ class OktaSettings
     private String                issuer;
     private String                clientId;
     private String                redirectUri;
+    private Map<String,String>    redirectUris;
     private String                scope;
     private OktaRoleAssignment    roleAssignment;
     private OktaUnmappedGroups    unmappedGroups;
@@ -31,6 +32,7 @@ class OktaSettings
         issuer                = null;
         clientId              = null;
         redirectUri           = null;
+        redirectUris          = new LinkedHashMap<>();
         scope                 = "openid profile email groups";
         roleAssignment        = OktaRoleAssignment.ON_CREATE;
         unmappedGroups        = OktaUnmappedGroups.DEFAULT_ROLE;
@@ -66,6 +68,13 @@ class OktaSettings
     setRedirectUri(String value)
     {
         redirectUri = value;
+        return this;
+    }
+
+    public OktaSettings
+    setRedirectUris(Map<String,String> value)
+    {
+        redirectUris = value != null ? new LinkedHashMap<>(value) : new LinkedHashMap<>();
         return this;
     }
 
@@ -129,6 +138,17 @@ class OktaSettings
 
     public String
     getRedirectUri() { return redirectUri; }
+
+    public String
+    getRedirectUri(String application)
+    {
+        String uri = application != null ? redirectUris.get(application) : null;
+
+        if (uri != null && !uri.isBlank())
+            return uri;
+
+        return application == null || "granite".equals(application) ? redirectUri : null;
+    }
 
     public String
     getScope() { return scope; }

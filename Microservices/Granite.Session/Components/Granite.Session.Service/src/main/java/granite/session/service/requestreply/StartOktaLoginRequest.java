@@ -16,6 +16,7 @@ class StartOktaLoginRequest
 {
     private String deviceId;
     private String returnTo;
+    private String application;
 
     public
     StartOktaLoginRequest()
@@ -23,6 +24,7 @@ class StartOktaLoginRequest
         super();
         deviceId = null;
         returnTo = null;
+        application = null;
     }
 
     @Override
@@ -80,6 +82,16 @@ class StartOktaLoginRequest
         this.returnTo = returnTo;
         return this;
     }
+
+    public StartOktaLoginRequest
+    setApplication(String application)
+    {
+        this.application = application;
+        return this;
+    }
+
+    public String
+    getApplication() { return application; }
 
     public String
     getDeviceId() { return deviceId; }

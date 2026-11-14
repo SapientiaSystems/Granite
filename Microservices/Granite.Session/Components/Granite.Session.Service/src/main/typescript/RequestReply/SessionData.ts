@@ -17,4 +17,5 @@ interface SessionData
     copiedFrom?: number;
     lastActivity?: string;
     loginMethod?: SessionLoginMethod;
+    application?: string;
 }

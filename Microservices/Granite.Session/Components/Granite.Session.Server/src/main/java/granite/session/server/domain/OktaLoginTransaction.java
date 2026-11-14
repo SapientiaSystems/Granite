@@ -19,6 +19,7 @@ class OktaLoginTransaction
     private String  returnTo;
     private String  deviceId;
     private Instant expires;
+    private String  application;
 
     public
     OktaLoginTransaction()
@@ -31,6 +32,7 @@ class OktaLoginTransaction
         returnTo            = null;
         deviceId            = null;
         expires             = null;
+        application         = Session.DEFAULT_APPLICATION;
     }
 
     public OktaLoginTransaction
@@ -81,6 +83,16 @@ class OktaLoginTransaction
         expires = value;
         return this;
     }
+
+    public OktaLoginTransaction
+    setApplication(String value)
+    {
+        application = value == null || value.isBlank() ? Session.DEFAULT_APPLICATION : value;
+        return this;
+    }
+
+    public String
+    getApplication() { return application; }
 
     public String
     getHashedTransactionId() { return hashedTransactionId; }

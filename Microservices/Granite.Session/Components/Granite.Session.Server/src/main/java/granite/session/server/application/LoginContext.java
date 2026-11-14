@@ -26,6 +26,7 @@ class LoginContext
     private String             refreshToken;
     private String             sessionHandle;
     private LoginLifecycle     lifecycle;
+    private boolean            invalidApplication;
 
     public
     LoginContext(LoginRequest req)
@@ -40,6 +41,7 @@ class LoginContext
         refreshToken         = null;
         sessionHandle        = null;
         lifecycle            = null;
+        invalidApplication   = false;
     }
 
     public LoginContext
@@ -60,6 +62,13 @@ class LoginContext
     setValidatedValues(Map<String,Object> values)
     {
         validatedValues = values != null ? values : new LinkedHashMap<>();
+        return this;
+    }
+
+    public LoginContext
+    setInvalidApplication(boolean value)
+    {
+        invalidApplication = value;
         return this;
     }
 
@@ -116,6 +125,17 @@ class LoginContext
 
     public CredentialKind
     getCredentialKind() { return request.getCredentialKind(); }
+
+    public String
+    getApplication()
+    {
+        String application = request.getApplication();
+
+        return application == null || application.isBlank() ? Session.DEFAULT_APPLICATION : application;
+    }
+
+    public boolean
+    isInvalidApplication() { return invalidApplication; }
 
     public String
     getDeviceId() { return request.getDeviceId(); }

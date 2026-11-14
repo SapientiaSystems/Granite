@@ -44,6 +44,9 @@ class Session
     private Long                       copiedFrom;
     private LoginMethod                loginMethod;
     private Set<String>                oktaGroups;
+    private String                     application;
+
+    public static final String DEFAULT_APPLICATION = "granite";
 
     private static final StringMapperRegistry registry = StringMapperRegistry.of();
 
@@ -68,6 +71,7 @@ class Session
         copiedFrom               = null;
         loginMethod              = null;
         oktaGroups               = new LinkedHashSet<>();
+        application              = DEFAULT_APPLICATION;
     }
 
     @Override
@@ -212,6 +216,13 @@ class Session
     }
 
     public Session
+    setApplication(String name)
+    {
+        application = name == null || name.isBlank() ? DEFAULT_APPLICATION : name;
+        return this;
+    }
+
+    public Session
     setValues(Map<String,Object> source)
     {
         values = source != null ? new LinkedHashMap<>(source) : new LinkedHashMap<>();
@@ -299,6 +310,9 @@ class Session
 
     public Set<String>
     getOktaGroups() { return oktaGroups; }
+
+    public String
+    getApplication() { return application; }
 
     public boolean
     isClosed() { return closedReason != null; }

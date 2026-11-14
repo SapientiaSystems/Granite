@@ -9,4 +9,5 @@ interface LoginRequest
     credential?: string;
     credentialKind?: CredentialKind;
     deviceId?: string;
+    application?: string;
 }

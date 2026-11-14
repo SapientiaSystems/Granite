@@ -87,7 +87,7 @@ class GraniteSessionCommandServerConfigurationTest
 
         env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
 
-        ILoginGate gate = subject.loginGate(env,new GraniteApplicationRolesManagerSupplier().get());
+        ILoginGate gate = subject.graniteLoginGate(env,new GraniteApplicationRolesManagerSupplier().get());
 
         assertInstanceOf(RequiredAuthoritiesLoginGate.class,gate);
         assertFalse(gate.permits(Set.of("ROLE_USER")));
@@ -98,7 +98,7 @@ class GraniteSessionCommandServerConfigurationTest
     public void
     loginGateAbsentUsesCatalogRoles()
     {
-        ILoginGate gate = subject.loginGate(new MockEnvironment(),new GraniteApplicationRolesManagerSupplier().get());
+        ILoginGate gate = subject.graniteLoginGate(new MockEnvironment(),new GraniteApplicationRolesManagerSupplier().get());
 
         assertInstanceOf(CatalogRoleLoginGate.class,gate);
         assertTrue(gate.permits(Set.of("ROLE_USER")));
@@ -113,7 +113,7 @@ class GraniteSessionCommandServerConfigurationTest
         MockEnvironment env = new MockEnvironment();
 
         env.setProperty("granite.session.login.required-authorities","");
-        assertInstanceOf(CatalogRoleLoginGate.class,subject.loginGate(env,new GraniteApplicationRolesManagerSupplier().get()));
+        assertInstanceOf(CatalogRoleLoginGate.class,subject.graniteLoginGate(env,new GraniteApplicationRolesManagerSupplier().get()));
     }
 
     @Test

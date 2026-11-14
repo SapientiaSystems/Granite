@@ -37,7 +37,7 @@ class ApplicationConfiguration
         IUserQueryServiceClient         userQueryServiceClient,
         IOktaClient                     oktaClient,
         OktaSettings                    oktaSettings,
-        ILoginGate                      loginGate,
+        IApplicationLoginGate           loginGate,
         ISessionEventSender             sender,
         ModelMapper                     mapper,
         @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,

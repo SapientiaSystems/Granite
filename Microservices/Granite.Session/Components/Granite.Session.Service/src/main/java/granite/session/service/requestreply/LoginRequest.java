@@ -19,6 +19,7 @@ class LoginRequest
     private String credential;
     private CredentialKind credentialKind;
     private String deviceId;
+    private String application;
 
     public
     LoginRequest()
@@ -28,6 +29,7 @@ class LoginRequest
         credential = null;
         credentialKind = null;
         deviceId = null;
+        application = null;
     }
 
     @Override
@@ -108,6 +110,16 @@ class LoginRequest
         this.deviceId = deviceId;
         return this;
     }
+
+    public LoginRequest
+    setApplication(String application)
+    {
+        this.application = application;
+        return this;
+    }
+
+    public String
+    getApplication() { return application; }
 
     public String
     getDeviceId() { return deviceId; }

@@ -82,6 +82,9 @@
                 <column name="oktaGroups" column-definition="VARCHAR(4096)"/>
                 <convert converter="strata.server.spring.value.StringSetConverter"/>
             </basic>
+            <basic name="application">
+                <column name="application" column-definition="VARCHAR(32)"/>
+            </basic>
             <version name="version">
                 <column name="version"/>
             </version>
@@ -125,6 +128,9 @@
             </basic>
             <basic name="expires" optional="false">
                 <column name="expires" nullable="false"/>
+            </basic>
+            <basic name="application">
+                <column name="application" column-definition="VARCHAR(32)"/>
             </basic>
             <version name="version">
                 <column name="version"/>

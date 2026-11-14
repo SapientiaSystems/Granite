@@ -8,11 +8,13 @@ import granite.client.client.requestreply.ClientCommandServiceClient;
 import granite.client.client.requestreply.IClientCommandServiceClient;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteAuthorities;
+import granite.session.server.application.ApplicationLoginGate;
 import granite.session.server.application.CatalogRoleLoginGate;
 import granite.session.server.application.ClientTokenIssuer;
 import granite.session.server.application.IClientTokenIssuer;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
+import granite.session.server.application.IApplicationLoginGate;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.IOktaClient;
 import granite.session.server.application.IRefreshTokenService;
@@ -68,6 +70,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -146,6 +149,11 @@ class GraniteSessionCommandServerConfiguration
                 .setIssuer(environment.getProperty("granite.session.okta.issuer"))
                 .setClientId(environment.getProperty("granite.session.okta.client-id"))
                 .setRedirectUri(environment.getProperty("granite.session.okta.redirect-uri"))
+                .setRedirectUris(
+                    Binder
+                        .get(environment)
+                        .bind("granite.session.okta.redirect-uris",Bindable.mapOf(String.class,String.class))
+                        .orElse(Map.of()))
                 .setRoleAssignment(
                     OktaRoleAssignment.valueOf(
                         environment.getProperty("granite.session.okta.role-assignment","ON_CREATE").trim().toUpperCase()))
@@ -281,8 +289,18 @@ class GraniteSessionCommandServerConfiguration
 
     @Bean
     @SingletonScoped
-    public ILoginGate
-    loginGate(Environment environment,ApplicationRolesManager roles)
+    public IApplicationLoginGate
+    applicationLoginGate(Environment environment,ApplicationRolesManager roles)
+    {
+        return
+            new ApplicationLoginGate(
+                applications(environment),
+                graniteLoginGate(environment,roles),
+                applicationGates(environment));
+    }
+
+    protected ILoginGate
+    graniteLoginGate(Environment environment,ApplicationRolesManager roles)
     {
         List<String> required =
             Binder
@@ -297,16 +315,64 @@ class GraniteSessionCommandServerConfiguration
         return new CatalogRoleLoginGate(roles);
     }
 
+    protected List<String>
+    applications(Environment environment)
+    {
+        List<String> names =
+            Binder
+                .get(environment)
+                .bind("granite.session.applications",Bindable.listOf(String.class))
+                .orElse(List.of("granite","client"));
+
+        return names;
+    }
+
+    protected Map<String,ILoginGate>
+    applicationGates(Environment environment)
+    {
+        Map<String,ILoginGate> gates = new LinkedHashMap<>();
+
+        for (String application : applications(environment))
+        {
+            if ("granite".equals(application))
+                continue;
+
+            List<String> required = applicationRequiredAuthorities(environment,application);
+
+            if (!required.isEmpty())
+                gates.put(application,new RequiredAuthoritiesLoginGate(required));
+        }
+
+        return gates;
+    }
+
+    protected List<String>
+    applicationRequiredAuthorities(Environment environment,String application)
+    {
+        return
+            Binder
+                .get(environment)
+                .bind(
+                    "granite.session.login.applications." + application + ".required-authorities",
+                    Bindable.listOf(String.class))
+                .orElse("client".equals(application) ? List.of(ApplicationRolesManager.CLIENT_ADMIN) : List.of());
+    }
+
     @Bean
     @SingletonScoped
     public RequiredAuthoritiesCheck
     requiredAuthoritiesCheck(Environment environment,ApplicationRolesManager roles)
     {
         List<String> required =
-            Binder
-                .get(environment)
-                .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
-                .orElse(List.of());
+            new ArrayList<>(
+                Binder
+                    .get(environment)
+                    .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
+                    .orElse(List.of()));
+
+        for (String application : applications(environment))
+            if (!"granite".equals(application))
+                required.addAll(applicationRequiredAuthorities(environment,application));
 
         return new RequiredAuthoritiesCheck(required,roles);
     }

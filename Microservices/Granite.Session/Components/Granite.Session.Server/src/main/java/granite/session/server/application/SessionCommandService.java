@@ -104,7 +104,7 @@ class SessionCommandService
     private final OktaSettings                    oktaSettings;
     private final OktaRoles                       oktaRoles;
     private final ApplicationRolesManager roles;
-    private final ILoginGate                      loginGate;
+    private final IApplicationLoginGate           loginGate;
     private final ISessionEventSender             sender;
     private final ModelMapper                     mapper;
     private final Duration                        maxLifetime;
@@ -118,9 +118,48 @@ class SessionCommandService
     private static final Duration ACTIVITY_INTERVAL   = Duration.ofMinutes(1);
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
+    private static final String   INVALID_APPLICATION = "invalid application";
     private static final String   OKTA_PROVIDER       = "okta";
 
     public static final Duration  DELEGATED_TOKEN_LIFETIME = Duration.ofMinutes(5);
+
+    public
+    SessionCommandService(
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        ILoginGate                      loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
+        Duration                        maxLifetime,
+        Duration                        renewalMargin,
+        Clock                           clock,
+        ApplicationRolesManager         roles,
+        IServiceTokenIssuer             serviceTokenIssuer)
+    {
+        this(
+            repository,
+            transactionRepository,
+            jwtTokenService,
+            refreshTokenService,
+            userCommandServiceClient,
+            userQueryServiceClient,
+            oktaClient,
+            oktaSettings,
+            new ApplicationLoginGate(List.of(Session.DEFAULT_APPLICATION),loginGate,Map.of()),
+            sender,
+            mapper,
+            maxLifetime,
+            renewalMargin,
+            clock,
+            roles,
+            serviceTokenIssuer);
+    }
 
     @Inject
     public
@@ -133,7 +172,7 @@ class SessionCommandService
         IUserQueryServiceClient         userQueryServiceClient,
         IOktaClient                     oktaClient,
         OktaSettings                    oktaSettings,
-        ILoginGate                      loginGate,
+        IApplicationLoginGate           loginGate,
         ISessionEventSender             sender,
         ModelMapper                     mapper,
         Duration                        maxLifetime,
@@ -421,6 +460,12 @@ class SessionCommandService
     {
         logger.debug("<login> dispatch(kind={})",context.getCredentialKind());
 
+        if (!loginGate.isKnown(context.getApplication()))
+        {
+            logger.info("<login> unknown application");
+            return context.setInvalidApplication(true);
+        }
+
         switch (context.getCredentialKind())
         {
             case PASSWORD:
@@ -491,7 +536,7 @@ class SessionCommandService
         if (context.getValidatedUserId() == null || context.isUnsupportedKind())
             return context;
 
-        if (loginGate.permits(context.getValidatedAuthorities()))
+        if (loginGate.permits(context.getApplication(),context.getValidatedAuthorities()))
             return context;
 
         logger.info("<login> refused by login gate");
@@ -534,7 +579,8 @@ class SessionCommandService
                         sessionHandle,
                         context.getCredentialKind() == CredentialKind.ACCESS_TOKEN
                             ? LoginMethod.ACCESS_TOKEN
-                            : LoginMethod.PASSWORD))
+                            : LoginMethod.PASSWORD)
+                        .setApplication(context.getApplication()))
                 .setRefreshToken(refreshToken)
                 .setSessionHandle(sessionHandle);
     }
@@ -613,6 +659,12 @@ class SessionCommandService
         if (!oktaSettings.isEnabled())
             return context.setRejected(true);
 
+        if (!loginGate.isKnown(context.getApplication()))
+            return context.setRejected(true).setInvalidApplication(true);
+
+        if (oktaSettings.getRedirectUri(context.getApplication()) == null)
+            return context.setRejected(true);
+
         Instant now           = Instant.now(clock);
         String  transactionId = refreshTokenService.generate();
         String  verifier      = refreshTokenService.generate();
@@ -630,6 +682,7 @@ class SessionCommandService
                         .setCodeVerifier(verifier)
                         .setReturnTo(sanitizeReturnTo(context.getReturnTo()))
                         .setDeviceId(context.getDeviceId())
+                        .setApplication(context.getApplication())
                         .setExpires(now.plus(oktaSettings.getTransactionTtl())));
     }
 
@@ -649,7 +702,8 @@ class SessionCommandService
                     transaction.getState(),
                     transaction.getNonce(),
                     context.getCodeChallenge(),
-                    context.isPromptLogin()));
+                    context.isPromptLogin(),
+                    oktaSettings.getRedirectUri(context.getApplication())));
     }
 
     protected StartOktaLoginContext
@@ -739,7 +793,8 @@ class SessionCommandService
                 oktaClient.exchange(
                     context.getCode(),
                     transaction.getCodeVerifier(),
-                    transaction.getNonce());
+                    transaction.getNonce(),
+                    oktaSettings.getRedirectUri(transaction.getApplication()));
 
             exchangedIdentities.put(context.getHashedTransactionId(),identity);
             return context.setIdentity(identity);
@@ -796,7 +851,7 @@ class SessionCommandService
     {
         logger.debug("<completeOktaLogin> applyLoginGate");
 
-        if (context.isRejected() || loginGate.permits(context.getAuthorities()))
+        if (context.isRejected() || loginGate.permits(context.getApplication(),context.getAuthorities()))
             return context;
 
         logger.info("<completeOktaLogin> refused by login gate");
@@ -838,6 +893,7 @@ class SessionCommandService
                         refreshToken,
                         sessionHandle,
                         LoginMethod.OKTA)
+                        .setApplication(context.getApplication())
                         .setOktaGroups(context.getIdentity().getGroups()))
                 .setSessionHandle(sessionHandle);
     }
@@ -950,6 +1006,14 @@ class SessionCommandService
                         "CredentialKind "
                             + context.getCredentialKind()
                             + " is not supported");
+        }
+
+        if (context.isInvalidApplication())
+        {
+            return
+                new LoginReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage(INVALID_APPLICATION);
         }
 
         if (context.getValidatedUserId() == null || context.getCreated() == null)
@@ -2031,6 +2095,12 @@ class SessionCommandService
         if (context.isRejected())
         {
             logger.info("<startOktaLogin> Okta login is disabled");
+            if (context.isInvalidApplication())
+                return
+                    new StartOktaLoginReply(context.getRequest())
+                        .setSuccess(false)
+                        .setFailureMessage(INVALID_APPLICATION);
+
             return
                 new StartOktaLoginReply(context.getRequest())
                     .setSuccess(false)
