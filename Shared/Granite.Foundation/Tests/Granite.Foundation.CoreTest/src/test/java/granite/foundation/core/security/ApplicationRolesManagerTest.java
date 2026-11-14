@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
 public
@@ -172,10 +173,65 @@ class ApplicationRolesManagerTest
         ApplicationRolesManager subject = supplier.get();
 
         assertEquals(
-            List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),
+            List.of("ROLE_ADMIN","ROLE_CLIENT_ADMIN","ROLE_AUDITOR","ROLE_USER"),
             subject.getRoles().stream().map(RoleDefinition::getName).toList());
-        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),subject.getRoleNames());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_CLIENT_ADMIN","ROLE_AUDITOR","ROLE_USER"),subject.getRoleNames());
         assertEquals("ROLE_USER",subject.getDefaultRole());
+    }
+
+    @Test
+    public void
+    clientAdminIsCoreRole()
+    {
+        ApplicationRolesManager subject = new GraniteApplicationRolesManagerSupplier().get();
+
+        assertTrue(subject.isRole("ROLE_CLIENT_ADMIN"));
+        assertTrue(subject.getRoleNames().contains("ROLE_CLIENT_ADMIN"));
+    }
+
+    @Test
+    public void
+    clientAdminIsReserved()
+    {
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ApplicationRolesManager(
+                    List.of(new RoleDefinition(ApplicationRolesManager.CLIENT_ADMIN,"ClientAdmin",Set.of())),
+                    REVIEWER));
+    }
+
+    @Test
+    public void
+    clientAdminCannotBeImplied()
+    {
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ApplicationRolesManager(
+                    List.of(new RoleDefinition("ROLE_A","A",Set.of(ApplicationRolesManager.CLIENT_ADMIN))),
+                    "ROLE_A"));
+    }
+
+    @Test
+    public void
+    clientAdminCannotBeDefault()
+    {
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ApplicationRolesManager(
+                    List.of(new RoleDefinition("ROLE_A","A",Set.of())),
+                    ApplicationRolesManager.CLIENT_ADMIN));
+    }
+
+    @Test
+    public void
+    clientAdminExpandsToItselfOnly()
+    {
+        assertEquals(
+            Set.of(ApplicationRolesManager.CLIENT_ADMIN),
+            poplar().expand(Set.of(ApplicationRolesManager.CLIENT_ADMIN)));
     }
 
     private ApplicationRolesManager

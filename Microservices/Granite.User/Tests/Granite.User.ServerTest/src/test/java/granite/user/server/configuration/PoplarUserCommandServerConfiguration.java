@@ -38,7 +38,7 @@ class PoplarUserCommandServerConfiguration
         List<RoleDefinition> roles = new ArrayList<>();
 
         for (RoleDefinition role : new GraniteApplicationRolesManagerSupplier().get().getRoles())
-            if (!ApplicationRolesManager.ADMIN.equals(role.getName()))
+            if (!ApplicationRolesManager.ADMIN.equals(role.getName()) && !ApplicationRolesManager.CLIENT_ADMIN.equals(role.getName()))
                 roles.add(role);
 
         roles.add(new RoleDefinition(REVIEWER,"Promotions Reviewer",Set.of(GraniteApplicationRolesManagerSupplier.USER)));
