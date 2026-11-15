@@ -13,21 +13,42 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public
 class ApplicationSessionPathWebFilter
     implements WebFilter
 {
-    public static final String APPLICATION_CLAIM  = "app";
-    public static final String CLIENT_APPLICATION = "client";
+    public static final String       APPLICATION_CLAIM                  = "app";
+    public static final String       CLIENT_ADMIN_APPLICATIONS_PROPERTY = "granite.client.admin-applications";
+    public static final List<String> DEFAULT_CLIENT_ADMIN_APPLICATIONS  = List.of("client");
 
+    private final Set<String>              applications;
     private final ServerWebExchangeMatcher allowed;
 
     public
     ApplicationSessionPathWebFilter(ServerWebExchangeMatcher allowed)
     {
-        this.allowed = Objects.requireNonNull(allowed,"allowed");
+        this(DEFAULT_CLIENT_ADMIN_APPLICATIONS,allowed);
+    }
+
+    public
+    ApplicationSessionPathWebFilter(Collection<String> applications,ServerWebExchangeMatcher allowed)
+    {
+        Objects.requireNonNull(applications,"applications");
+
+        Set<String> names = new LinkedHashSet<>();
+
+        for (String application : applications)
+            if (application != null && !application.isBlank())
+                names.add(application.trim());
+
+        this.applications = Set.copyOf(names);
+        this.allowed      = Objects.requireNonNull(allowed,"allowed");
     }
 
     @Override
@@ -40,7 +61,7 @@ class ApplicationSessionPathWebFilter
                 .mapNotNull(context -> context.getAuthentication())
                 .filter(authentication -> authentication.getPrincipal() instanceof Jwt)
                 .map(authentication -> (Jwt)authentication.getPrincipal())
-                .filter(jwt -> CLIENT_APPLICATION.equals(jwt.getClaimAsString(APPLICATION_CLAIM)))
+                .filter(jwt -> isConfined(jwt.getClaimAsString(APPLICATION_CLAIM)))
                 .flatMap(jwt -> allowed.matches(exchange))
                 .map(match -> !match.isMatch())
                 .defaultIfEmpty(false)
@@ -53,6 +74,12 @@ class ApplicationSessionPathWebFilter
                         exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                         return exchange.getResponse().setComplete();
                     });
+    }
+
+    private boolean
+    isConfined(String application)
+    {
+        return application != null && applications.contains(application);
     }
 }
 

@@ -24,8 +24,14 @@ class ClientCredentials
     public static String
     newClientId()
     {
+        return newClientId(PREFIX);
+    }
+
+    public static String
+    newClientId(String prefix)
+    {
         byte[]        bytes  = new byte[20];
-        StringBuilder result = new StringBuilder(PREFIX);
+        StringBuilder result = new StringBuilder(prefix);
 
         RANDOM.nextBytes(bytes);
 

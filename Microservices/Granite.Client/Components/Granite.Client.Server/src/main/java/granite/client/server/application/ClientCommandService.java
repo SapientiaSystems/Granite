@@ -52,6 +52,7 @@ class ClientCommandService
     private final ClientAuthorityPolicy      policy;
     private final Clock                      clock;
     private final Supplier<Optional<String>> callerSubject;
+    private final ClientIdGenerator          idGenerator;
     private final Logger                     logger;
 
     public
@@ -63,12 +64,26 @@ class ClientCommandService
         Clock                      c,
         Supplier<Optional<String>> subject)
     {
+        this(r,s,m,roles,c,subject,new ClientIdGenerator(ClientIdGenerator.DEFAULT_PREFIX));
+    }
+
+    public
+    ClientCommandService(
+        IClientRepository          r,
+        IClientEventSender         s,
+        ModelMapper                m,
+        ApplicationRolesManager    roles,
+        Clock                      c,
+        Supplier<Optional<String>> subject,
+        ClientIdGenerator          generator)
+    {
         repository    = r;
         sender        = s;
         mapper        = m;
         policy        = new ClientAuthorityPolicy(roles);
         clock         = c;
         callerSubject = subject;
+        idGenerator   = generator;
         logger        = LogManager.getLogger(ClientCommandService.class);
     }
 
@@ -238,7 +253,7 @@ class ClientCommandService
         String secret = ClientCredentials.newSecret();
         Client client =
             new Client()
-                .setClientId(ClientCredentials.newClientId())
+                .setClientId(idGenerator.newClientId())
                 .setName(name)
                 .setDescription(description)
                 .setAuthorities(authorities)

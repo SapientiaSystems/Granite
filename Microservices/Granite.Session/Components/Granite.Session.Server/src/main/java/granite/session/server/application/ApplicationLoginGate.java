@@ -18,9 +18,11 @@ public
 class ApplicationLoginGate
     implements IApplicationLoginGate
 {
-    private static final String CLIENT_APPLICATION = "client";
+    public static final String       CLIENT_ADMIN_APPLICATIONS_PROPERTY = "granite.client.admin-applications";
+    public static final List<String> DEFAULT_CLIENT_ADMIN_APPLICATIONS  = List.of("client");
 
     private final Set<String>           applications;
+    private final Set<String>           clientAdminApplications;
     private final ILoginGate            graniteGate;
     private final Map<String,ILoginGate> gates;
 
@@ -30,19 +32,25 @@ class ApplicationLoginGate
         ILoginGate              graniteGate,
         Map<String,ILoginGate>  gates)
     {
+        this(applications,DEFAULT_CLIENT_ADMIN_APPLICATIONS,graniteGate,gates);
+    }
+
+    public
+    ApplicationLoginGate(
+        Collection<String>      applications,
+        Collection<String>      clientAdminApplications,
+        ILoginGate              graniteGate,
+        Map<String,ILoginGate>  gates)
+    {
         Objects.requireNonNull(applications,"applications");
+        Objects.requireNonNull(clientAdminApplications,"clientAdminApplications");
         Objects.requireNonNull(graniteGate,"graniteGate");
         Objects.requireNonNull(gates,"gates");
 
-        Set<String> known = new LinkedHashSet<>();
-
-        for (String application : applications)
-            if (application != null && !application.isBlank())
-                known.add(application.trim());
-
-        this.applications = Set.copyOf(known);
-        this.graniteGate  = graniteGate;
-        this.gates        = Map.copyOf(gates);
+        this.applications            = names(applications);
+        this.clientAdminApplications = names(clientAdminApplications);
+        this.graniteGate             = graniteGate;
+        this.gates                   = Map.copyOf(gates);
     }
 
     @Override
@@ -61,7 +69,7 @@ class ApplicationLoginGate
         if (!applications.contains(name) || authorities == null)
             return false;
 
-        if (CLIENT_APPLICATION.equals(name))
+        if (clientAdminApplications.contains(name))
             return
                 authorities.contains(ApplicationRolesManager.CLIENT_ADMIN)
                 && gates
@@ -76,6 +84,18 @@ class ApplicationLoginGate
         Set<String> kept = withoutClientAdmin(authorities);
 
         return (!kept.isEmpty() || !authorities.contains(ApplicationRolesManager.CLIENT_ADMIN)) && graniteGate.permits(kept);
+    }
+
+    private Set<String>
+    names(Collection<String> values)
+    {
+        Set<String> result = new LinkedHashSet<>();
+
+        for (String value : values)
+            if (value != null && !value.isBlank())
+                result.add(value.trim());
+
+        return Set.copyOf(result);
     }
 
     private Set<String>

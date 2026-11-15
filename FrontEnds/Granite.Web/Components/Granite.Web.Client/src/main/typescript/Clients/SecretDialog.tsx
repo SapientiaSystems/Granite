@@ -4,7 +4,7 @@
 
 import type { ReactElement }                                from "react";
 import { Alert, Button, CopyButton, Group, Modal, Stack, TextInput } from "@mantine/core";
-import { envFileName, toEnvFile }                           from "./EnvFile";
+import { DEFAULT_ENV_PREFIX, envFileName, toEnvFile }                         from "./EnvFile";
 
 export interface ISecretReveal
 {
@@ -15,13 +15,14 @@ export interface ISecretReveal
 
 export interface ISecretDialogProps
 {
-    readonly reveal:  ISecretReveal | null;
-    readonly onClose: () => void;
+    readonly reveal:     ISecretReveal | null;
+    readonly onClose:    () => void;
+    readonly envPrefix?: string;
 }
 
-export function downloadEnvFile(reveal: ISecretReveal): void
+export function downloadEnvFile(reveal: ISecretReveal,envPrefix: string = DEFAULT_ENV_PREFIX): void
 {
-    const blob: Blob   = new Blob([toEnvFile(reveal.clientId,reveal.secret)],{ type: "text/plain" });
+    const blob: Blob   = new Blob([toEnvFile(reveal.clientName,reveal.clientId,reveal.secret,envPrefix)],{ type: "text/plain" });
     const url:  string = URL.createObjectURL(blob);
 
     try
@@ -66,7 +67,7 @@ export function SecretDialog(props: ISecretDialogProps): ReactElement
                 {copyField("Client ID",reveal.clientId,true)}
                 {copyField("Client secret",reveal.secret,true)}
                 <Group justify="flex-end">
-                    <Button variant="default" onClick={() => downloadEnvFile(reveal)}>Download .env</Button>
+                    <Button variant="default" onClick={() => downloadEnvFile(reveal,props.envPrefix)}>Download .env</Button>
                     <Button onClick={props.onClose}>Close</Button>
                 </Group>
             </Stack>}
