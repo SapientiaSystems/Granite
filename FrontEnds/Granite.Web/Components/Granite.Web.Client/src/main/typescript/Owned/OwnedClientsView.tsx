@@ -28,6 +28,7 @@ export interface IOwnedClientsViewProps
     readonly height?:    string;
     readonly className?: string;
     readonly style?:     CSSProperties;
+    readonly envPrefix?: string;
 }
 
 export function OwnedClientsView(props: IOwnedClientsViewProps): ReactElement
@@ -166,7 +167,7 @@ export function OwnedClientsView(props: IOwnedClientsViewProps): ReactElement
                     onRefresh={load}
                 />
             </div>
-            <SecretDialog reveal={reveal} onClose={() => setReveal(null)} />
+            <SecretDialog reveal={reveal} envPrefix={props.envPrefix} onClose={() => setReveal(null)} />
         </Stack>
     );
 }

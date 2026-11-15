@@ -28,6 +28,7 @@ export interface IClientsViewProps
     readonly height?:    string;
     readonly className?: string;
     readonly style?:     CSSProperties;
+    readonly envPrefix?: string;
 }
 
 export function ClientsView(props: IClientsViewProps): ReactElement
@@ -179,7 +180,7 @@ export function ClientsView(props: IClientsViewProps): ReactElement
                     onRotate={editable ? handleRotate : undefined}
                 />
             </div>
-            <SecretDialog reveal={reveal} onClose={() => setReveal(null)} />
+            <SecretDialog reveal={reveal} envPrefix={props.envPrefix} onClose={() => setReveal(null)} />
         </Stack>
     );
 }

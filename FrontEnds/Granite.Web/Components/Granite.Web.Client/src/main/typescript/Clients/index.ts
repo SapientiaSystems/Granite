@@ -3,4 +3,4 @@ export type {IClientsViewProps}      from "./ClientsView";
 export {SecretDialog,downloadEnvFile} from "./SecretDialog";
 export type {ISecretDialogProps,ISecretReveal} from "./SecretDialog";
 export {rotateFields}              from "./ClientsOutputs";
-export {envFileName,toEnvFile}      from "./EnvFile";
+export {DEFAULT_ENV_PREFIX,envFileName,isValidEnvPrefix,toEnvFile} from "./EnvFile";
