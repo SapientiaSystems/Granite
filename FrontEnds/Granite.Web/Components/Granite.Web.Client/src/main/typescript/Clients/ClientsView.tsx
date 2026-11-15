@@ -151,7 +151,7 @@ export function ClientsView(props: IClientsViewProps): ReactElement
         <Stack
             gap={0}
             className={props.className === undefined ? "view-container" : "view-container " + props.className}
-            style={{ height: props.height ?? "100%", minHeight: 0, display: "flex", flexDirection: "column", ...props.style }}
+            style={{ height: props.height ?? "calc(100vh - var(--app-header-height, 0px))", minHeight: 0, display: "flex", flexDirection: "column", ...props.style }}
         >
             {loadError && <Alert color="red" mx="sm" mt="xs">{loadError}</Alert>}
             <Group
