@@ -137,6 +137,7 @@ class GraniteGatewayServerConfiguration
                     SecurityWebFiltersOrder.AUTHORIZATION)
                 .addFilterBefore(
                     new ApplicationSessionPathWebFilter(
+                        getClientApplicationNames(environment),
                         new OrServerWebExchangeMatcher(
                             ServerWebExchangeMatchers.pathMatchers(
                                 getClientApplicationPathPatterns(environment).toArray(String[]::new)),
@@ -420,6 +421,21 @@ class GraniteGatewayServerConfiguration
                 "/session-*-service/**",
                 "/client-*-service/**",
                 "/outbox-service/**");
+    }
+
+    protected List<String>
+    getClientApplicationNames(Environment environment)
+    {
+        String[]     configured =
+            environment.getProperty(ApplicationSessionPathWebFilter.CLIENT_ADMIN_APPLICATIONS_PROPERTY,String[].class);
+        List<String> names      = new ArrayList<>();
+
+        if (configured != null)
+            for (String name : configured)
+                if (name != null && !name.isBlank())
+                    names.add(name.trim());
+
+        return names.isEmpty() ? ApplicationSessionPathWebFilter.DEFAULT_CLIENT_ADMIN_APPLICATIONS : names;
     }
 
     protected List<String>
