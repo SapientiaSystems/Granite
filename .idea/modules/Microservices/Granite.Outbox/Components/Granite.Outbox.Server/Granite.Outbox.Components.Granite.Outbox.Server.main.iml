@@ -23,6 +23,7 @@
     <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Service.main" />
     <orderEntry type="module" module-name="Granite.Agent.Components.Granite.Agent.Service.main" />
     <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Service.main" />
+    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Service.main" />
     <orderEntry type="module" module-name="Granite.Foundation.Components.Granite.Foundation.Core.main" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-core:1.0-SNAPSHOT" level="project" />

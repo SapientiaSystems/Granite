@@ -25,6 +25,7 @@
     <orderEntry type="library" name="Gradle: strata.frontendcontroller:strata-frontendcontroller-server:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Client.main" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Client.main" />
+    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Client.main" />
     <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Client.main" />
     <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Client.main" />
     <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Client.main" />
@@ -57,6 +58,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apiguardian:apiguardian-api:1.1.2" level="project" />
     <orderEntry type="library" name="Gradle: strata.frontendcontroller:strata-frontendcontroller-service:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Service.main" />
+    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Service.main" />
     <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Service.main" />
     <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Service.main" />
     <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Service.main" />
