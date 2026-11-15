@@ -30,7 +30,8 @@ const masterGridTheme = themeQuartz.withParams({ columnBorder: true, headerBackg
                                                   selectedRowBackgroundColor: "#3264C8" });
 const defaultColDef: ColDef<IClientRow> = { sortable: true, resizable: true, filter: true };
 
-const gridStyles: string = ".client-editable-cell { background: #fff8e1; }"
+const gridStyles: string = ".client-editable-cell { background: #f4f6f9; box-shadow: inset 0 0 0 1px #9fb3cc; }"
+                         + " [data-mantine-color-scheme=\"dark\"] .client-editable-cell { background: #474a4f; box-shadow: inset 0 0 0 1px #7b8aa0; }"
                          + " .client-invalid-row { background: #fdecea !important; }";
 
 const svgProps = { xmlns: "http://www.w3.org/2000/svg", width: 20, height: 20, viewBox: "0 0 24 24",

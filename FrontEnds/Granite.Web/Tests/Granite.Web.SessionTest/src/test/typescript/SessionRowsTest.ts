@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }  from "vitest";
-import { authoritiesLabel, canEndSelection, detailRowHeight, displayValue, endableSessionIds, formatInstant,
+import { applicationLabel, authoritiesLabel, canEndSelection, detailRowHeight, displayValue, endableSessionIds, formatInstant,
          isCurrent, isOpen, roleLabel, toSessionRows, userLabel, valueEntries, withDetailRow } from "granite.web.session/View";
 import type { SessionRowData }  from "granite.frontendcontroller.service/RequestReply";
 
@@ -92,6 +92,13 @@ describe("SessionRows", () =>
     {
         expect(detailRowHeight(0)).toBe(detailRowHeight(1));
         expect(detailRowHeight(20)).toBe(detailRowHeight(8));
+    });
+
+    it("labels the application, treating a missing one as granite", () =>
+    {
+        expect(applicationLabel({ ...open, application: "client" })).toBe("client");
+        expect(applicationLabel(open)).toBe("granite");
+        expect(applicationLabel({ ...open, application: "" })).toBe("granite");
     });
 });
 

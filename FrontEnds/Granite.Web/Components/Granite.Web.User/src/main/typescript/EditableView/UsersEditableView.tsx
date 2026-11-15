@@ -36,7 +36,8 @@ const masterGridTheme = themeQuartz.withParams({ columnBorder: true, headerBackg
                                                   selectedRowBackgroundColor: "#3264C8" });
 const defaultColDef: ColDef<IUserRow> = { sortable: true, resizable: true, filter: true };
 
-const gridStyles: string = ".user-editable-cell { background: #fff8e1; }"
+const gridStyles: string = ".user-editable-cell { background: #f4f6f9; box-shadow: inset 0 0 0 1px #9fb3cc; }"
+                         + " [data-mantine-color-scheme=\"dark\"] .user-editable-cell { background: #474a4f; box-shadow: inset 0 0 0 1px #7b8aa0; }"
                          + " .user-invalid-row { background: #fdecea !important; }"
                          + " .user-expanded-parent { border-bottom: none; }";
 

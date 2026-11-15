@@ -32,6 +32,7 @@ class Session
     private String                     refreshTokenHash;
     private String                     previousRefreshTokenHash;
     private Instant                    expires;
+    private String                     application;
     private String                     deviceId;
     private Set<String>                authorities;
     private Map<String,Object>         values;
@@ -44,7 +45,6 @@ class Session
     private Long                       copiedFrom;
     private LoginMethod                loginMethod;
     private Set<String>                oktaGroups;
-    private String                     application;
 
     public static final String DEFAULT_APPLICATION = "granite";
 
@@ -59,6 +59,7 @@ class Session
         refreshTokenHash         = null;
         previousRefreshTokenHash = null;
         expires                  = null;
+        application              = DEFAULT_APPLICATION;
         deviceId                 = null;
         authorities              = new LinkedHashSet<>();
         values                   = new LinkedHashMap<>();
@@ -71,7 +72,6 @@ class Session
         copiedFrom               = null;
         loginMethod              = null;
         oktaGroups               = new LinkedHashSet<>();
-        application              = DEFAULT_APPLICATION;
     }
 
     @Override
@@ -123,18 +123,17 @@ class Session
     }
 
     public Session
-    rotateRefreshTokenHash(String hash)
-    {
-        previousRefreshTokenHash = refreshTokenHash;
-        refreshTokenHash         = hash;
-        return this;
-    }
-
-    public Session
     setExpires(Instant time)
     {
         expires = time;
         notifyUpdated();
+        return this;
+    }
+
+    public Session
+    setApplication(String name)
+    {
+        application = name == null || name.isBlank() ? DEFAULT_APPLICATION : name;
         return this;
     }
 
@@ -149,6 +148,29 @@ class Session
     setAuthorities(Set<String> values)
     {
         authorities = values;
+        return this;
+    }
+
+    public Session
+    setValues(Map<String,Object> source)
+    {
+        values = source != null ? new LinkedHashMap<>(source) : new LinkedHashMap<>();
+        return this;
+    }
+
+    public <T> Session
+    setValue(String key,T value)
+    {
+        Optional<IMapper<String,T>> mapper =
+            registry.get(String.class,(Class<T>)value.getClass());
+
+        values.put(
+            key,
+            mustStringify(value)
+                ? mapper
+                    .map(m -> m.map(value))
+                    .orElse(value.toString())
+                : value);
         return this;
     }
 
@@ -215,48 +237,6 @@ class Session
         return this;
     }
 
-    public Session
-    setApplication(String name)
-    {
-        application = name == null || name.isBlank() ? DEFAULT_APPLICATION : name;
-        return this;
-    }
-
-    public Session
-    setValues(Map<String,Object> source)
-    {
-        values = source != null ? new LinkedHashMap<>(source) : new LinkedHashMap<>();
-        return this;
-    }
-
-    public Session
-    close(SessionClosedReason reason,Instant at)
-    {
-        closedReason = reason;
-        activeMarker = null;
-
-        if (expires == null || expires.isAfter(at))
-            expires = at;
-
-        return notifyUpdated();
-    }
-
-    public <T> Session
-    setValue(String key,T value)
-    {
-        Optional<IMapper<String,T>> mapper =
-            registry.get(String.class,(Class<T>)value.getClass());
-
-        values.put(
-            key,
-            mustStringify(value)
-                ? mapper
-                    .map(m -> m.map(value))
-                    .orElse(value.toString())
-                : value);
-        return this;
-    }
-
     public Long
     getSessionId() { return super.getPrimaryId(); }
 
@@ -276,6 +256,9 @@ class Session
     getExpires() { return expires; }
 
     public String
+    getApplication() { return application; }
+
+    public String
     getDeviceId() { return deviceId; }
 
     public Set<String>
@@ -283,6 +266,21 @@ class Session
 
     public Map<String,Object>
     getValues() { return values; }
+
+    public <T> Optional<T>
+    getValue(Class<T> type,String key)
+    {
+        Optional<IMapper<T,String>> mapper = registry.get(type,String.class);
+        Object                      stored = values.get(key);
+
+        if (stored instanceof String s && !type.equals(String.class))
+            return mapper.map(m -> m.map(s));
+
+        return
+            type.isInstance(stored)
+                ? Optional.of(type.cast(stored))
+                : Optional.empty();
+    }
 
     public String
     getHashedHandle() { return hashedHandle; }
@@ -311,31 +309,36 @@ class Session
     public Set<String>
     getOktaGroups() { return oktaGroups; }
 
-    public String
-    getApplication() { return application; }
+    public static StringMapperRegistry
+    getRegistry() { return registry; }
 
     public boolean
     isClosed() { return closedReason != null; }
-
-    public <T> Optional<T>
-    getValue(Class<T> type,String key)
-    {
-        Optional<IMapper<T,String>> mapper = registry.get(type,String.class);
-        Object                      stored = values.get(key);
-
-        if (stored instanceof String s && !type.equals(String.class))
-            return mapper.map(m -> m.map(s));
-
-        return
-            type.isInstance(stored)
-                ? Optional.of(type.cast(stored))
-                : Optional.empty();
-    }
 
     public boolean
     hasValue(String key)
     {
         return values.containsKey(key);
+    }
+
+    public Session
+    rotateRefreshTokenHash(String hash)
+    {
+        previousRefreshTokenHash = refreshTokenHash;
+        refreshTokenHash         = hash;
+        return this;
+    }
+
+    public Session
+    close(SessionClosedReason reason,Instant at)
+    {
+        closedReason = reason;
+        activeMarker = null;
+
+        if (expires == null || expires.isAfter(at))
+            expires = at;
+
+        return notifyUpdated();
     }
 
     public Session
@@ -349,9 +352,6 @@ class Session
 
     public Session
     notifyDestroyed() { return super.notify(new SessionDestroyed(this)); }
-
-    public static StringMapperRegistry
-    getRegistry() { return registry; }
 
     @Override
     protected Session
