@@ -18,6 +18,7 @@ public
 class ApplicationRolesManager
 {
     public static final String ADMIN = "ROLE_ADMIN";
+    public static final String CLIENT_ADMIN = "ROLE_CLIENT_ADMIN";
 
     private static final Pattern NAME_PATTERN = Pattern.compile("ROLE_[A-Z0-9_]+");
 
@@ -30,20 +31,23 @@ class ApplicationRolesManager
         Objects.requireNonNull(applicationRoles,"applicationRoles");
         Objects.requireNonNull(defaultRole,"defaultRole");
 
-        List<RoleDefinition>       all   = new ArrayList<>();
-        Map<String,RoleDefinition> map   = new HashMap<>();
-        RoleDefinition             admin = new RoleDefinition(ADMIN,"Admin",Set.of());
+        List<RoleDefinition>       all         = new ArrayList<>();
+        Map<String,RoleDefinition> map         = new HashMap<>();
+        RoleDefinition             admin       = new RoleDefinition(ADMIN,"Admin",Set.of());
+        RoleDefinition             clientAdmin = new RoleDefinition(CLIENT_ADMIN,"ClientAdmin",Set.of());
 
         all.add(admin);
         map.put(ADMIN,admin);
+        all.add(clientAdmin);
+        map.put(CLIENT_ADMIN,clientAdmin);
 
         for (RoleDefinition role : applicationRoles)
         {
             if (!NAME_PATTERN.matcher(role.getName()).matches())
                 throw new IllegalArgumentException("role name must match ROLE_[A-Z0-9_]+: " + role.getName());
 
-            if (ADMIN.equals(role.getName()))
-                throw new IllegalArgumentException(ADMIN + " is reserved");
+            if (isCore(role.getName()))
+                throw new IllegalArgumentException(role.getName() + " is reserved");
 
             if (map.put(role.getName(),role) != null)
                 throw new IllegalArgumentException("duplicate role " + role.getName());
@@ -54,8 +58,8 @@ class ApplicationRolesManager
         for (RoleDefinition role : applicationRoles)
             for (String implied : role.getImpliedRoles())
             {
-                if (ADMIN.equals(implied))
-                    throw new IllegalArgumentException(role.getName() + " must not imply " + ADMIN);
+                if (isCore(implied))
+                    throw new IllegalArgumentException(role.getName() + " must not imply " + implied);
 
                 if (!map.containsKey(implied))
                     throw new IllegalArgumentException(role.getName() + " implies unknown role " + implied);
@@ -69,7 +73,7 @@ class ApplicationRolesManager
             if (reachesSelf(role.getName()))
                 throw new IllegalArgumentException("implication cycle at " + role.getName());
 
-        if (ADMIN.equals(defaultRole) || !map.containsKey(defaultRole))
+        if (isCore(defaultRole) || !map.containsKey(defaultRole))
             throw new IllegalArgumentException("default role " + defaultRole + " is not an application role");
     }
 
@@ -111,6 +115,9 @@ class ApplicationRolesManager
 
         return result;
     }
+
+    private static boolean
+    isCore(String name) { return ADMIN.equals(name) || CLIENT_ADMIN.equals(name); }
 
     private Set<String>
     closure(String role)

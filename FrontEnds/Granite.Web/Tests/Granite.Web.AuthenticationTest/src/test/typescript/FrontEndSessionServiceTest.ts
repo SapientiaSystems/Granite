@@ -31,7 +31,7 @@ describe("FrontEndSessionService",() =>
 
         expect(status).toMatchObject({ authenticated: true, userName: "alice", authorities: ["ROLE_USER"] });
         expect(frontEnd.calls[0].payload).toEqual(
-            { userId: null, source: "Session.New", command: "Login", destination: "LoginView", userName: "alice", password: "secret" });
+            { userId: null, source: "Session.New", command: "Login", destination: "LoginView", userName: "alice", password: "secret", application: "granite" });
     });
 
     it("maps UNAUTHENTICATED to a refusal",async () =>
@@ -47,7 +47,7 @@ describe("FrontEndSessionService",() =>
 
         expect(await serviceOver(frontEnd).startOktaLogin("/users")).toBe("https://okta.example/a");
         expect(frontEnd.calls[0].payload).toEqual(
-            { userId: null, source: "Session.New", command: "StartOktaLogin", destination: "LoginView", returnTo: "/users" });
+            { userId: null, source: "Session.New", command: "StartOktaLogin", destination: "LoginView", returnTo: "/users", application: "granite" });
     });
 
     it("returns no URL when Okta start is refused",async () =>

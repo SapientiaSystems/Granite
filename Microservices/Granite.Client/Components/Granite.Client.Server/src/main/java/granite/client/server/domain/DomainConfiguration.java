@@ -1,0 +1,29 @@
+//////////////////////////////////////////////////////////////////////////////
+// DomainConfiguration.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.client.server.domain;
+
+import jakarta.persistence.EntityManagerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.server.core.unitofwork.IUnitOfWork;
+import strata.server.spring.unitofwork.JpaUnitOfWork;
+
+@Configuration
+@EnableTransactionManagement
+public
+class DomainConfiguration
+{
+    @Bean
+    @RequestScoped
+    public IClientRepository
+    clientRepository(IUnitOfWork unitOfWork,EntityManagerFactory factory)
+    {
+        return new ClientRepository(unitOfWork,() -> new JpaUnitOfWork(factory));
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

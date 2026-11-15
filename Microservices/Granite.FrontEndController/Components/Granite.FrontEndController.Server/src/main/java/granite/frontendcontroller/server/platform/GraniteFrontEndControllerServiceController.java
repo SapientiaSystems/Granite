@@ -28,6 +28,14 @@ import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputRe
 import granite.frontendcontroller.service.requestreply.GetSurveyReviewOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetFeedbackReviewOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSurveyReviewOutputReply;
+import granite.frontendcontroller.service.requestreply.GetClientsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetClientsOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetOwnedClientsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetOwnedClientsOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleClientsInputReply;
+import granite.frontendcontroller.service.requestreply.HandleClientsInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleOwnedClientSecretInputReply;
+import granite.frontendcontroller.service.requestreply.HandleOwnedClientSecretInputRequest;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputRequest;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
@@ -273,6 +281,46 @@ class GraniteFrontEndControllerServiceController<S extends IGraniteFrontEndContr
     {
         getLogger().info("delegating getPreferencesOutput to implementation service");
         return getService().getPreferencesOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-clients-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleClientsInputReply>
+    handleClientsInput(@RequestBody HandleClientsInputRequest request)
+    {
+        getLogger().info("delegating handleClientsInput to implementation service");
+        return getService().handleClientsInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-clients-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetClientsOutputReply>
+    getClientsOutput(@RequestBody GetClientsOutputRequest request)
+    {
+        getLogger().info("delegating getClientsOutput to implementation service");
+        return getService().getClientsOutput(request);
+    }
+
+    @PostMapping(
+        value = "/handle-owned-client-secret-input",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<HandleOwnedClientSecretInputReply>
+    handleOwnedClientSecretInput(@RequestBody HandleOwnedClientSecretInputRequest request)
+    {
+        getLogger().info("delegating handleOwnedClientSecretInput to implementation service");
+        return getService().handleOwnedClientSecretInput(request);
+    }
+
+    @PostMapping(
+        value = "/get-owned-clients-output",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<GetOwnedClientsOutputReply>
+    getOwnedClientsOutput(@RequestBody GetOwnedClientsOutputRequest request)
+    {
+        getLogger().info("delegating getOwnedClientsOutput to implementation service");
+        return getService().getOwnedClientsOutput(request);
     }
 }
 

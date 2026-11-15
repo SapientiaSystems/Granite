@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// ClientUpdated.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.client.server.domain;
+
+public
+class ClientUpdated
+    extends AbstractClientEvent
+{
+    public
+    ClientUpdated(Client src)
+    {
+        super("ClientUpdated",src);
+    }
+
+    public
+    ClientUpdated(String correlId,Client src)
+    {
+        super("ClientUpdated",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

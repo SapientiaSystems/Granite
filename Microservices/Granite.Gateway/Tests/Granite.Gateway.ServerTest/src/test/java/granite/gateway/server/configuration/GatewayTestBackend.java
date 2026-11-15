@@ -133,6 +133,8 @@ class GatewayTestBackend
         registry.add("granite.frontendcontroller-user-service.host",() -> base);
         registry.add("granite.frontendcontroller-admin-service.host",() -> base);
         registry.add("granite.outbox-service.host",() -> base);
+        registry.add("granite.client-command-service.host",() -> base);
+        registry.add("granite.client-query-service.host",() -> base);
     }
 
     public String
@@ -189,6 +191,35 @@ class GatewayTestBackend
                 authorities,
                 Duration.ofSeconds(300),
                 false);
+    }
+
+    public String
+    signClientToken(String clientId,List<String> authorities)
+        throws JOSEException
+    {
+        return
+            sign(
+                trusted,
+                "client:" + clientId,
+                UUID.randomUUID().toString(),
+                authorities,
+                Duration.ofSeconds(300),
+                false);
+    }
+
+    public String
+    sign(List<String> authorities,String application)
+        throws JOSEException
+    {
+        return
+            sign(
+                trusted,
+                "1001",
+                newSessionId(),
+                authorities,
+                Duration.ofSeconds(300),
+                true,
+                application);
     }
 
     public String
@@ -326,6 +357,20 @@ class GatewayTestBackend
         boolean      session)
         throws JOSEException
     {
+        return sign(keys,subject,sessionId,authorities,lifetime,session,null);
+    }
+
+    private String
+    sign(
+        KeyPair      keys,
+        String       subject,
+        String       sessionId,
+        List<String> authorities,
+        Duration     lifetime,
+        boolean      session,
+        String       application)
+        throws JOSEException
+    {
         Instant              now     = Instant.now();
         JWTClaimsSet.Builder builder =
             new JWTClaimsSet.Builder()
@@ -339,6 +384,9 @@ class GatewayTestBackend
 
         if (session)
             builder.claim("did","device-" + sessionId);
+
+        if (application != null)
+            builder.claim("app",application);
 
         JWTClaimsSet claims = builder.build();
         SignedJWT    jwt    =

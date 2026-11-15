@@ -129,6 +129,7 @@ class SessionsLoader
                 .setExpires(session.getExpires() == null ? null : session.getExpires().toString())
                 .setClosedReason(session.getClosedReason() == null ? null : session.getClosedReason().name())
                 .setContinuityId(session.getContinuityId() == null ? null : session.getContinuityId().toString())
+                .setApplication(session.getApplication())
                 .setReplacedBy(session.getReplacedBy())
                 .setCopiedFrom(session.getCopiedFrom())
                 .setValues(session.getValues() == null ? new LinkedHashMap<>() : new LinkedHashMap<>(session.getValues()));

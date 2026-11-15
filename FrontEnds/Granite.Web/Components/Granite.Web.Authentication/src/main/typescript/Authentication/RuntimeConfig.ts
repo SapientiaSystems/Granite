@@ -6,6 +6,7 @@ export interface IRuntimeConfig
 {
     apiBaseUrl:   string;
     cookiePrefix: string;
+    application:  string;
 }
 
 declare global
@@ -17,6 +18,8 @@ declare global
 }
 
 export const DEFAULT_COOKIE_PREFIX: string = "GRANITE";
+
+export const DEFAULT_APPLICATION: string = "granite";
 
 const COOKIE_PREFIX_PATTERN: RegExp = /^[A-Z0-9_]+$/;
 
@@ -38,6 +41,13 @@ export function normalizeCookiePrefix(prefix: string | undefined): string
     return DEFAULT_COOKIE_PREFIX;
 }
 
+export function normalizeApplication(application: string | undefined): string
+{
+    const trimmed: string = (application ?? "").trim();
+
+    return trimmed === "" ? DEFAULT_APPLICATION : trimmed;
+}
+
 export function getRuntimeConfig(): IRuntimeConfig
 {
     const config: Partial<IRuntimeConfig> = window.__GRANITE_CONFIG__ ?? {};
@@ -45,7 +55,10 @@ export function getRuntimeConfig(): IRuntimeConfig
     return {
         apiBaseUrl:   (config.apiBaseUrl ?? "").replace(/\/+$/,""),
         cookiePrefix: normalizeCookiePrefix(config.cookiePrefix),
+        application:  normalizeApplication(config.application),
     };
 }
+
+export const APPLICATION: string = getRuntimeConfig().application;
 
 //////////////////////////////////////////////////////////////////////////////

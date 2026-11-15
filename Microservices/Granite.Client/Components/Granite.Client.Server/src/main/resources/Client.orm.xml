@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings>
+    xmlns="http://java.sun.com/xml/ns/persistence/orm"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="1.0"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd">
+    <description>Client object relational entity mappings</description>
+
+    <entity class="granite.client.server.domain.Client" access="PROPERTY">
+        <table name="Client"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <attributes>
+            <id name="primaryId">
+                <column name="primaryId"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="created">
+                <column name="created"/>
+            </basic>
+            <basic name="lastModified">
+                <column name="lastModified"/>
+            </basic>
+            <basic name="clientId" optional="false">
+                <column name="clientId" unique="true" nullable="false" column-definition="VARCHAR(64)"/>
+            </basic>
+            <basic name="name" optional="false">
+                <column name="name" unique="true" nullable="false" column-definition="VARCHAR(100)"/>
+            </basic>
+            <basic name="description">
+                <column name="description" column-definition="VARCHAR(1000)"/>
+            </basic>
+            <basic name="authorities">
+                <column name="authorities" column-definition="VARCHAR(1024)"/>
+                <convert converter="strata.server.spring.value.StringSetConverter"/>
+            </basic>
+            <basic name="owners">
+                <column name="owners" column-definition="VARCHAR(1024)"/>
+                <convert converter="granite.client.server.domain.LongSetConverter"/>
+            </basic>
+            <basic name="enabled" optional="false">
+                <column name="enabled" nullable="false"/>
+            </basic>
+            <basic name="secretSha256">
+                <column name="secretSha256" length="32"/>
+            </basic>
+            <basic name="secretExpiresAt">
+                <column name="secretExpiresAt"/>
+            </basic>
+            <basic name="lastTokenIssuedAt">
+                <column name="lastTokenIssuedAt"/>
+            </basic>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <transient name="self"/>
+            <transient name="observers"/>
+        </attributes>
+    </entity>
+</entity-mappings>

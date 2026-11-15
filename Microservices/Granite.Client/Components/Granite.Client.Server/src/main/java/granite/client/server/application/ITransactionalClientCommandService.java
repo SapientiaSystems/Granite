@@ -1,0 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////
+// ITransactionalClientCommandService.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.client.server.application;
+
+import granite.client.service.requestreply.IClientCommandService;
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public
+interface ITransactionalClientCommandService
+    extends IClientCommandService {}
+
+//////////////////////////////////////////////////////////////////////////////

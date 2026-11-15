@@ -64,7 +64,7 @@ class HomeMetricsCalculatorTest
 
         assertEquals(3,metrics.getTotal());
         assertEquals(1,metrics.getOktaLinked());
-        assertEquals(Map.of("ROLE_ADMIN",1L,"ROLE_AUDITOR",1L,"ROLE_USER",2L),counts(metrics.getByRole()));
+        assertEquals(Map.of("ROLE_ADMIN",1L,"ROLE_CLIENT_ADMIN",0L,"ROLE_AUDITOR",1L,"ROLE_USER",2L),counts(metrics.getByRole()));
         assertEquals("Admin",metrics.getByRole().get(0).getLabel());
     }
 

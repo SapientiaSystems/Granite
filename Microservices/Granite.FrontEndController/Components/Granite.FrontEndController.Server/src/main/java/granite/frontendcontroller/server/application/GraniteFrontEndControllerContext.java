@@ -35,6 +35,7 @@ class GraniteFrontEndControllerContext
     private final ApplicationRolesManager applicationRoles;
     private final List<PreferenceDefinition>   preferenceDefinitions;
     private final GraniteHelpServiceClients    helpServiceClients;
+    private final GraniteClientServiceClients  clientServiceClients;
 
     public
     GraniteFrontEndControllerContext(
@@ -80,6 +81,38 @@ class GraniteFrontEndControllerContext
         List<PreferenceDefinition>   preferenceDefinitions,
         GraniteHelpServiceClients    helpServiceClients)
     {
+        this(
+            mapper,
+            executor,
+            userQueryClient,
+            userCommandClient,
+            sessionCommandClient,
+            sessionQueryClient,
+            sessionRequestContext,
+            sessionLoginSettings,
+            sessionCookies,
+            applicationRoles,
+            preferenceDefinitions,
+            helpServiceClients,
+            new GraniteClientServiceClients());
+    }
+
+    public
+    GraniteFrontEndControllerContext(
+        ModelMapper                  mapper,
+        Executor                     executor,
+        IUserQueryServiceClient      userQueryClient,
+        IUserCommandServiceClient    userCommandClient,
+        ISessionCommandServiceClient sessionCommandClient,
+        ISessionQueryServiceClient   sessionQueryClient,
+        SessionRequestContext        sessionRequestContext,
+        SessionLoginSettings         sessionLoginSettings,
+        SessionCookies               sessionCookies,
+        ApplicationRolesManager      applicationRoles,
+        List<PreferenceDefinition>   preferenceDefinitions,
+        GraniteHelpServiceClients    helpServiceClients,
+        GraniteClientServiceClients  clientServiceClients)
+    {
         this.mapper                = Objects.requireNonNull(mapper,"mapper");
         this.executor              = Objects.requireNonNull(executor,"executor");
         this.userQueryClient       = Objects.requireNonNull(userQueryClient,"userQueryClient");
@@ -92,6 +125,7 @@ class GraniteFrontEndControllerContext
         this.applicationRoles      = Objects.requireNonNull(applicationRoles,"applicationRoles");
         this.preferenceDefinitions = List.copyOf(Objects.requireNonNull(preferenceDefinitions,"preferenceDefinitions"));
         this.helpServiceClients    = Objects.requireNonNull(helpServiceClients,"helpServiceClients");
+        this.clientServiceClients  = Objects.requireNonNull(clientServiceClients,"clientServiceClients");
 
         Set<String> keys = new HashSet<>();
 
@@ -135,6 +169,9 @@ class GraniteFrontEndControllerContext
 
     public GraniteHelpServiceClients
     getHelpServiceClients() { return helpServiceClients; }
+
+    public GraniteClientServiceClients
+    getClientServiceClients() { return clientServiceClients; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

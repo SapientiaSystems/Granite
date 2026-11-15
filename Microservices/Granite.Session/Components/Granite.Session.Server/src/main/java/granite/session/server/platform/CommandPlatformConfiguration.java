@@ -6,6 +6,7 @@ package granite.session.server.platform;
 
 import granite.session.server.application.ConcurrencyRetryingSessionCommandService;
 import granite.session.server.application.IJwkSetProvider;
+import granite.session.server.application.IClientTokenIssuer;
 import granite.session.service.requestreply.ISessionCommandService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,13 @@ class CommandPlatformConfiguration
     jwkSetController(IJwkSetProvider provider)
     {
         return new JwkSetController(provider);
+    }
+
+    @Bean
+    public ClientTokenController
+    clientTokenController(IClientTokenIssuer issuer)
+    {
+        return new ClientTokenController(issuer);
     }
 }
 

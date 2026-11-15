@@ -31,8 +31,14 @@ patches:
         path: /spec/rules/0/host
         value: granite.__domain__
       - op: replace
+        path: /spec/rules/1/host
+        value: client.granite.__domain__
+      - op: replace
         path: /spec/tls/0/hosts/0
         value: granite.__domain__
+      - op: replace
+        path: /spec/tls/0/hosts/1
+        value: client.granite.__domain__
       - op: add
         path: /metadata/annotations/cert-manager.io~1cluster-issuer
         value: granite-letsencrypt-prod
@@ -98,6 +104,36 @@ patches:
         path: /spec/rules/0/http/paths/2
       - op: test
         path: /spec/rules/0/http/paths/2/path
+        value: /client-command-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
+        value: /client-query-service
+      - op: remove
+        path: /spec/rules/0/http/paths/2
+      - op: test
+        path: /spec/rules/0/http/paths/2/path
         value: /outbox-service
       - op: remove
         path: /spec/rules/0/http/paths/2
+      - op: add
+        path: /spec/rules/0/http/paths/2
+        value:
+          path: /session-command-service/oauth2/token
+          pathType: Exact
+          backend:
+            service:
+              name: granite-gateway-servicehost
+              port:
+                number: 443
+      - op: add
+        path: /spec/rules/0/http/paths/2
+        value:
+          path: /client-command-service/rotate-own-client-secret
+          pathType: Exact
+          backend:
+            service:
+              name: granite-gateway-servicehost
+              port:
+                number: 443

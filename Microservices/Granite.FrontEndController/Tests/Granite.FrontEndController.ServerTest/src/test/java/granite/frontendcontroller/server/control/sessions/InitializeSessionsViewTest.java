@@ -65,7 +65,7 @@ class InitializeSessionsViewTest
         assertEquals(7L,output.getUserId());
         assertEquals("Session.Open",output.getSource());
         assertEquals("SessionsView",output.getDestination());
-        assertEquals(List.of("ROLE_ADMIN","ROLE_AUDITOR","ROLE_USER"),output.getRoles().stream().map(r -> r.getName()).toList());
+        assertEquals(List.of("ROLE_ADMIN","ROLE_CLIENT_ADMIN","ROLE_AUDITOR","ROLE_USER"),output.getRoles().stream().map(r -> r.getName()).toList());
         assertEquals(2,output.getSessions().size());
 
         SessionRowData row = output.getSessions().get(1);

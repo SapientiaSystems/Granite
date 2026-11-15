@@ -42,7 +42,10 @@ $DefaultServiceNames = @(
     "granite-content-queryhost"
     "granite-agent-commandhost"
     "granite-agent-queryhost"
+    "granite-client-commandhost"
+    "granite-client-queryhost"
     "granite-web-apphost"
+    "granite-web-clienthost"
 )
 
 $FoundationCoreDir = [System.IO.Path]::GetFullPath((Join-Path $ScriptDir "..\..\Granite.Foundation\Components\Granite.Foundation.Core"))

@@ -88,12 +88,19 @@ class OktaClient
     public String
     buildAuthorizeUrl(String state,String nonce,String codeChallenge,boolean promptLogin)
     {
+        return buildAuthorizeUrl(state,nonce,codeChallenge,promptLogin,settings.getRedirectUri());
+    }
+
+    @Override
+    public String
+    buildAuthorizeUrl(String state,String nonce,String codeChallenge,boolean promptLogin,String redirectUri)
+    {
         UriComponentsBuilder builder =
             UriComponentsBuilder
                 .fromUriString(getEndpoints().getAuthorizationEndpoint())
                 .queryParam("response_type","code")
                 .queryParam("client_id",settings.getClientId())
-                .queryParam("redirect_uri",settings.getRedirectUri())
+                .queryParam("redirect_uri",redirectUri)
                 .queryParam("scope",settings.getScope())
                 .queryParam("state",state)
                 .queryParam("nonce",nonce)
@@ -110,8 +117,15 @@ class OktaClient
     public OktaIdentity
     exchange(String code,String codeVerifier,String nonce)
     {
+        return exchange(code,codeVerifier,nonce,settings.getRedirectUri());
+    }
+
+    @Override
+    public OktaIdentity
+    exchange(String code,String codeVerifier,String nonce,String redirectUri)
+    {
         OktaEndpoints current = getEndpoints();
-        String        idToken = requestIdToken(current,code,codeVerifier);
+        String        idToken = requestIdToken(current,code,codeVerifier,redirectUri);
         Jwt           jwt     = decode(current,idToken);
 
         verifyNonce(jwt,nonce);
@@ -173,7 +187,7 @@ class OktaClient
     }
 
     private String
-    requestIdToken(OktaEndpoints current,String code,String codeVerifier)
+    requestIdToken(OktaEndpoints current,String code,String codeVerifier,String redirectUri)
     {
         if (signer == null)
             throw new OktaLoginException("no client assertion key is configured");
@@ -182,7 +196,7 @@ class OktaClient
 
         form.add("grant_type","authorization_code");
         form.add("code",code);
-        form.add("redirect_uri",settings.getRedirectUri());
+        form.add("redirect_uri",redirectUri);
         form.add("code_verifier",codeVerifier);
         form.add("client_id",settings.getClientId());
         form.add("client_assertion_type",ASSERTION_TYPE);

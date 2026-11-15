@@ -23,6 +23,8 @@ class SessionInput
 
     private String state;
 
+    private String application;
+
     public
     SessionInput()
     {
@@ -32,6 +34,7 @@ class SessionInput
         returnTo = null;
         code     = null;
         state    = null;
+        application = null;
     }
 
     @Override
@@ -97,6 +100,13 @@ class SessionInput
         return this;
     }
 
+    public SessionInput
+    setApplication(String value)
+    {
+        application = value;
+        return this;
+    }
+
     public String
     getUserName() { return userName; }
 
@@ -111,6 +121,9 @@ class SessionInput
 
     public String
     getState() { return state; }
+
+    public String
+    getApplication() { return application; }
 
     @Override
     public String

@@ -8,11 +8,13 @@ import { NavLink, Outlet } from "react-router-dom";
 import { AppShell, Burger, Group, Text } from "@mantine/core";
 import type { IMenuTab }     from "./IMenuTab";
 import { UserMenu }          from "granite.web.authentication/Login";
+import { hasAuthority, useAuthentication } from "granite.web.authentication/Authentication";
 
 const menuTabs: Array<IMenuTab> =
 [
     { label: "Home",         path: "/" },
     { label: "Users",  path: "/users" },
+    { label: "Clients",      path: "/clients", authorities: ["ROLE_ADMIN","ROLE_AUDITOR","SCOPE_internal"] },
     { label: "Sessions",     path: "/sessions" },
     { label: "Feedback",     path: "/feedback" },
     { label: "Surveys",      path: "/surveys" },
@@ -22,6 +24,8 @@ const menuTabs: Array<IMenuTab> =
 export function MenuBar(): ReactElement
 {
     const [opened, { toggle, close }] = useDisclosure(false);
+    const { state }                   = useAuthentication();
+    const visibleTabs: Array<IMenuTab> = menuTabs.filter(tab => tab.authorities === undefined || tab.authorities.some(authority => hasAuthority(state,authority)));
 
     return (
         <AppShell
@@ -38,7 +42,7 @@ export function MenuBar(): ReactElement
                     </Text>
                     <div style={{ width: 1, height: "40%", background: "rgba(255, 255, 255, 0.2)", marginInline: 8 }} />
                     <Group gap={4} visibleFrom="sm" h="100%">
-                        {menuTabs.map((tab) => (
+                        {visibleTabs.map((tab) => (
                             <NavLink
                                 key={tab.path}
                                 to={tab.path}
@@ -56,7 +60,7 @@ export function MenuBar(): ReactElement
             </AppShell.Header>
 
             <AppShell.Navbar p="md" style={{ background: "var(--app-bar-bg, #2e2e2e)" }}>
-                {menuTabs.map((tab) => (
+                {visibleTabs.map((tab) => (
                     <NavLink
                         key={tab.path}
                         to={tab.path}
