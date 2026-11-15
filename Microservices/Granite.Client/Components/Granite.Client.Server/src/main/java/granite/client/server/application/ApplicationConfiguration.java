@@ -32,9 +32,10 @@ class ApplicationConfiguration
         ModelMapper                                         mapper,
         ApplicationRolesManager                             roles,
         Clock                                               clock,
-        @Qualifier("clientCallerSubject") Supplier<Optional<String>> callerSubject)
+        @Qualifier("clientCallerSubject") Supplier<Optional<String>> callerSubject,
+        ClientIdGenerator                                   idGenerator)
     {
-        return new ClientCommandService(repository,sender,mapper,roles,clock,callerSubject);
+        return new ClientCommandService(repository,sender,mapper,roles,clock,callerSubject,idGenerator);
     }
 
     @Bean

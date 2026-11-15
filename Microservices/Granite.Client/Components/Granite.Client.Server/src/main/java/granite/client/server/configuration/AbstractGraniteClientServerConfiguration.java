@@ -11,6 +11,7 @@ import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.foundation.core.security.JwtCheckMode;
 import granite.client.server.application.ApplicationConfiguration;
+import granite.client.server.application.ClientIdGenerator;
 import granite.client.server.application.MappingModule;
 import granite.client.server.domain.DomainConfiguration;
 import granite.client.server.platform.JwtCallerSubject;
@@ -109,6 +110,16 @@ class AbstractGraniteClientServerConfiguration
                         "application role catalog: {} (default {})",
                         roles.getRoleNames(),
                         roles.getDefaultRole());
+    }
+
+    @Bean
+    @SingletonScoped
+    public ClientIdGenerator
+    clientIdGenerator(Environment environment)
+    {
+        return
+            new ClientIdGenerator(
+                environment.getProperty(ClientIdGenerator.PREFIX_PROPERTY,ClientIdGenerator.DEFAULT_PREFIX));
     }
 
     @Bean
