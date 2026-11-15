@@ -148,6 +148,14 @@ export function computeChanges(baseline: Array<IClientRow>,rows: Array<IClientRo
     return { clientsToCreate, clientsToUpdate };
 }
 
+export function pendingEditKeys(refreshed: Array<IClientRow>,merged: Array<IClientRow>): Set<string>
+{
+    const pending: IClientsChanges = computeChanges(refreshed,merged);
+
+    return new Set([ ...merged.filter(r => r.isNew).map(r => r.rowKey),
+                     ...pending.clientsToUpdate.map(c => c.clientId ?? "") ]);
+}
+
 export function validateRows(rows: Array<IClientRow>): Map<string,Array<string>>
 {
     const result: Map<string,Array<string>> = new Map<string,Array<string>>();

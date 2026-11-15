@@ -4,7 +4,7 @@
 
 import { describe, expect, it }                      from "vitest";
 import type { ClientData }                           from "granite.client.service/RequestReply";
-import { computeChanges, fromSecretExpiry, toRows, toSecretExpiry,
+import { computeChanges, fromSecretExpiry, pendingEditKeys, toRows, toSecretExpiry,
          validateRows }                              from "granite.web.client/EditableView";
 import type { IClientRow }                           from "granite.web.client/EditableView";
 
@@ -116,6 +116,21 @@ describe("ClientsChangeSet", () =>
         expect(fromSecretExpiry("2027-01-01T00:00:00Z")).toBe("2026-12-31");
         expect(fromSecretExpiry(null)).toBeNull();
         expect(fromSecretExpiry(toSecretExpiry("2030-06-15"))).toBe("2030-06-15");
+    });
+
+    it("pendingEditKeysIsEmptyWhenEverythingWasSaved", () =>
+    {
+        const rows = toRows([client("gc_a","A"),client("gc_b","B")]);
+
+        expect(pendingEditKeys(rows,rows)).toEqual(new Set());
+    });
+
+    it("pendingEditKeysKeepsUnsavedNewAndChangedRowsEditing", () =>
+    {
+        const refreshed = toRows([client("gc_a","A"),client("gc_b","B")]);
+        const merged    = [refreshed[0],{ ...refreshed[1], description: "changed" },newRow(1,"C")];
+
+        expect(pendingEditKeys(refreshed,merged)).toEqual(new Set(["new-1","gc_b"]));
     });
 });
 

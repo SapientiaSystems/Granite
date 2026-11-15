@@ -5,18 +5,20 @@
 import { useEffect, useMemo, useRef, useState }  from "react";
 import type { ReactElement }                     from "react";
 import { Stack, Group, ActionIcon, Loader, Tooltip,
-         Text, Modal, Button, Alert }            from "@mantine/core";
+         Text, Modal, Button, Divider, Alert }   from "@mantine/core";
 import { AgGridReact }                           from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry,
          themeQuartz }                           from "ag-grid-community";
-import type { ColDef, CellClassParams, CellValueChangedEvent,
+import type { ColDef, CellClassParams, CellKeyDownEvent, CellValueChangedEvent,
               RowClassParams }                   from "ag-grid-community";
 import { AuthoritiesCellEditor, AuthoritiesCellRenderer,
+         isActionAllowed, nextMacrotask,
          removeRole }                            from "granite.web.user/EditableView";
+import type { UsersAction }                      from "granite.web.user/EditableView";
 import type { IClientsEditableViewProps, IClientsResult } from "./IClientsEditableViewProps";
 import { clientRoles }                           from "./ClientsAuthorityOptions";
 import { computeChanges, isRefreshFailure, mergePending, normalizeAuthorities,
-         toRows, validateRows }                  from "./ClientsChangeSet";
+         pendingEditKeys, toRows, validateRows } from "./ClientsChangeSet";
 import type { IClientRow }                       from "./ClientsChangeSet";
 import { OwnersCellEditor }                      from "./OwnersCellEditor";
 import { OwnersCellRenderer }                    from "./OwnersCellRenderer";
@@ -36,6 +38,8 @@ const svgProps = { xmlns: "http://www.w3.org/2000/svg", width: 20, height: 20, v
                    strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
 const createIcon: ReactElement = (<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>);
+const editIcon:   ReactElement = (<><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></>);
+const undoIcon:   ReactElement = (<><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></>);
 const saveIcon:   ReactElement = (<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                                      <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></>);
 const deleteIcon: ReactElement = (<><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -69,12 +73,13 @@ function formatInstant(value: string | undefined): string
     return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
 }
 
-function toolbarButton(label: string,text: string,icon: ReactElement,onClick: () => void,disabled: boolean): ReactElement
+function toolbarButton(label: string,text: string,icon: ReactElement,onClick: () => void,disabled: boolean,active: boolean = false): ReactElement
 {
     return (
         <Tooltip label={label}>
             <Stack align="center" gap={2}>
-                <ActionIcon variant="default" size="lg" onClick={onClick} disabled={disabled}>
+                <ActionIcon variant={active ? "filled" : "default"} color={active ? "blue" : undefined}
+                            size="lg" onClick={onClick} disabled={disabled}>
                     <svg {...svgProps}>{icon}</svg>
                 </ActionIcon>
                 <Text size="xs" c={disabled ? "dimmed" : undefined}>{text}</Text>
@@ -122,6 +127,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     const [rows, setRows]                 = useState<Array<IClientRow>>(() => toRows(props.clients ?? []));
     const [baseline, setBaseline]         = useState<Array<IClientRow>>(() => toRows(props.clients ?? []));
     const [selectedKeys, setSelectedKeys] = useState<Array<string>>([]);
+    const [editingKeys, setEditingKeys]   = useState<Set<string>>(new Set());
     const [invalidKeys, setInvalidKeys]   = useState<Set<string>>(new Set());
     const [messages, setMessages]         = useState<Array<string>>([]);
     const [busy, setBusy]                 = useState<boolean>(false);
@@ -131,17 +137,22 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     const rowsRef                         = useRef<Array<IClientRow>>(rows);
     const baselineRef                     = useRef<Array<IClientRow>>(baseline);
     const busyRef                         = useRef<boolean>(false);
+    const settlingRef                     = useRef<boolean>(false);
+    const pendingVisibleKey               = useRef<string | null>(null);
     const newRowCounter                   = useRef<number>(0);
-    const actions                         = useRef<{ create: () => void; save: () => void; remove: () => void; rotate: () => void }>(
-                                                { create: () => undefined, save: () => undefined, remove: () => undefined, rotate: () => undefined });
+    const actions                         = useRef<{ create: () => void; edit: () => void; save: () => void; undo: () => void;
+                                                     remove: () => void; rotate: () => void }>(
+                                                { create: () => undefined, edit: () => undefined, save: () => undefined, undo: () => undefined,
+                                                  remove: () => undefined, rotate: () => undefined });
 
     rowsRef.current     = rows;
     baselineRef.current = baseline;
 
     const loading:       boolean = (props.loading ?? false) || busy;
     const hasSelection:  boolean = selectedKeys.length > 0;
+    const isEditing:     boolean = editingKeys.size > 0;
     const hasNewRow:     boolean = rows.some(r => r.isNew);
-    const rotateTarget:  IClientRow | undefined = selectedKeys.length === 1 ? rows.find(r => r.rowKey === selectedKeys[0] && !r.isNew) : undefined;
+    const rotateTarget:  IClientRow | undefined = !isEditing && selectedKeys.length === 1 ? rows.find(r => r.rowKey === selectedKeys[0] && !r.isNew) : undefined;
     const roles                  = useMemo(() => clientRoles(props.roles),[props.roles]);
 
     useEffect(() =>
@@ -153,6 +164,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
             commitRows(fresh);
             baselineRef.current = fresh;
             setBaseline(fresh);
+            setEditingKeys(new Set());
             setInvalidKeys(new Set());
         }
     },[props.clients]);
@@ -160,7 +172,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     useEffect(() =>
     {
         gridRef.current?.api?.redrawRows();
-    },[invalidKeys,busy]);
+    },[editingKeys,invalidKeys,busy]);
 
     function commitRows(next: Array<IClientRow>): void
     {
@@ -189,31 +201,77 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
         }
 
         const refreshed: Array<IClientRow> = toRows(result.clients);
+        const merged:    Array<IClientRow> = mergePending(result.clients,current,baselineRef.current);
 
-        commitRows(mergePending(result.clients,current,baselineRef.current));
+        commitRows(merged);
         baselineRef.current = refreshed;
         setBaseline(refreshed);
+        setEditingKeys(pendingEditKeys(refreshed,merged));
         setSelectedKeys([]);
         setInvalidKeys(new Set());
         setMessages(result.failureMessages ?? []);
     }
 
+    function actionAllowed(action: UsersAction): boolean
+    {
+        return editable && isActionAllowed(action,{ busy: busyRef.current || settlingRef.current, isEditing, hasSelection,
+                                                     deleteDisabled: false });
+    }
+
+    async function settleOpenEdits(): Promise<void>
+    {
+        settlingRef.current = true;
+
+        try
+        {
+            gridRef.current?.api?.stopEditing();
+            await nextMacrotask();
+        }
+        finally
+        {
+            settlingRef.current = false;
+        }
+    }
+
     function handleCreate(): void
     {
-        if (!editable || busyRef.current || rowsRef.current.some(r => r.isNew))
+        if (!actionAllowed("create") || rowsRef.current.some(r => r.isNew))
             return;
 
         const rowKey: string = `new-${++newRowCounter.current}`;
 
+        pendingVisibleKey.current = rowKey;
         commitRows([...rowsRef.current,createNewRow(rowKey)]);
+        setEditingKeys(prev => new Set([...prev,rowKey]));
+    }
+
+    function handleEdit(): void
+    {
+        if (actionAllowed("edit"))
+            setEditingKeys(prev => new Set([...prev,...selectedKeys]));
+    }
+
+    function handleUndo(): void
+    {
+        if (!actionAllowed("undo"))
+            return;
+
+        gridRef.current?.api?.stopEditing(true);
+        commitRows(baselineRef.current);
+        setEditingKeys(new Set());
+        setInvalidKeys(new Set());
+        setMessages([]);
     }
 
     async function handleSave(): Promise<void>
     {
-        if (!editable || busyRef.current)
+        if (!actionAllowed("save"))
             return;
 
-        gridRef.current?.api?.stopEditing();
+        await settleOpenEdits();
+
+        if (!actionAllowed("save"))
+            return;
 
         const current:  Array<IClientRow>           = rowsRef.current;
         const problems: Map<string,Array<string>>   = validateRows(current);
@@ -238,6 +296,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
 
         if (changes.clientsToCreate.length === 0 && changes.clientsToUpdate.length === 0)
         {
+            setEditingKeys(new Set());
             setInvalidKeys(new Set());
             setMessages([]);
             return;
@@ -290,6 +349,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
         if (ids.length === 0)
         {
             commitRows(remaining);
+            setEditingKeys(prev => new Set([...prev].filter(k => !keys.has(k))));
             setSelectedKeys([]);
             return;
         }
@@ -346,7 +406,8 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
         }
     }
 
-    actions.current = { create: handleCreate, save: () => { void handleSave(); }, remove: handleDelete, rotate: handleRotate };
+    actions.current = { create: handleCreate, edit: handleEdit, save: () => { void handleSave(); }, undo: handleUndo,
+                        remove: handleDelete, rotate: handleRotate };
 
     function handleCellValueChanged(event: CellValueChangedEvent<IClientRow>): void
     {
@@ -360,7 +421,31 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
                                   secretExpiryDate: edited.secretExpiryDate ?? null });
     }
 
-    const isCellEditable = (row: IClientRow | undefined): boolean => editable && row !== undefined && !busyRef.current;
+    function handleCellKeyDown(event: CellKeyDownEvent<IClientRow>): void
+    {
+        const e = event.event as KeyboardEvent;
+
+        if (!editable)
+            return;
+
+        if (e.ctrlKey && e.key === "z") { e.preventDefault(); event.api.undoCellEditing(); return; }
+        if (e.ctrlKey && e.key === "y") { e.preventDefault(); event.api.redoCellEditing(); return; }
+        if (e.ctrlKey && e.key === "e") { e.preventDefault(); handleEdit();   return; }
+        if (e.ctrlKey && e.key === "n") { e.preventDefault(); handleCreate(); return; }
+
+        if (e.ctrlKey && e.key === "s" && isEditing)
+        {
+            e.preventDefault();
+            void handleSave();
+            return;
+        }
+
+        if (e.key === "Delete" && event.api.getEditingCells().length === 0)
+            handleDelete();
+    }
+
+    const isCellEditable = (row: IClientRow | undefined): boolean =>
+        editable && row !== undefined && editingKeys.has(row.rowKey) && !busyRef.current;
 
     const editableRules: Record<string,(params: CellClassParams<IClientRow>) => boolean> =
     {
@@ -408,7 +493,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     {
         roles:           roles,
         users:           props.users,
-        isEditing:       () => editable && !busy,
+        isEditing:       (rowKey: string) => editable && editingKeys.has(rowKey) && !busy,
         removeAuthority: (rowKey: string,authority: string) =>
         {
             const row: IClientRow | undefined = rowsRef.current.find(r => r.rowKey === rowKey);
@@ -420,9 +505,12 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     const toolbarContent: ReactElement = (
         <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
             {editable   && toolbarButton("Add Client","Add",createIcon,() => actions.current.create(),busy || hasNewRow)}
-            {editable   && toolbarButton("Delete Clients","Delete",deleteIcon,() => actions.current.remove(),!hasSelection || busy)}
+            {editable   && toolbarButton("Edit Clients","Edit",editIcon,() => actions.current.edit(),!hasSelection || busy,isEditing)}
+            {editable   && toolbarButton("Save Clients","Save",saveIcon,() => actions.current.save(),!isEditing || busy)}
+            {editable   && toolbarButton("Undo Changes","Undo",undoIcon,() => actions.current.undo(),!isEditing || busy)}
+            {(editable || canRotate) && <Divider orientation="vertical" mx="md" />}
             {canRotate  && toolbarButton("Rotate secret","Rotate secret",rotateIcon,() => actions.current.rotate(),rotateTarget === undefined || busy)}
-            {editable   && toolbarButton("Save Clients","Save",saveIcon,() => actions.current.save(),busy)}
+            {editable   && toolbarButton("Delete Clients","Delete",deleteIcon,() => actions.current.remove(),!hasSelection || busy)}
             <div style={{ flex: 1 }} />
         </Group>
     );
@@ -431,7 +519,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     {
         if (props.onRenderToolbar != null)
             props.onRenderToolbar(toolbarContent);
-    },[hasSelection,hasNewRow,busy,editable,canRotate,rotateTarget?.rowKey]);
+    },[hasSelection,hasNewRow,isEditing,busy,editable,canRotate,rotateTarget?.rowKey]);
 
     const detached: boolean = props.onRenderToolbar != null;
 
@@ -456,11 +544,31 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
                         "client-invalid-row": (params: RowClassParams<IClientRow>) =>
                             params.data != null && invalidKeys.has(params.data.rowKey),
                     }}
+                    undoRedoCellEditing={editable}
+                    undoRedoCellEditingLimit={20}
                     rowSelection={editable
-                        ? { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false }
+                        ? { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false,
+                            isRowSelectable: (node) => editingKeys.size === 0 || editingKeys.has(node.data?.rowKey ?? "") }
                         : { mode: "singleRow", checkboxes: false, enableClickSelection: canRotate }}
-                    onSelectionChanged={(event) => setSelectedKeys(event.api.getSelectedRows().map(r => r.rowKey))}
+                    onSelectionChanged={(event) =>
+                    {
+                        setSelectedKeys(event.api.getSelectedRows().map(r => r.rowKey));
+                        event.api.refreshCells({ force: true });
+                    }}
                     onCellValueChanged={handleCellValueChanged}
+                    onCellKeyDown={handleCellKeyDown}
+                    onRowDataUpdated={(event) =>
+                    {
+                        if (pendingVisibleKey.current !== null)
+                        {
+                            const node = event.api.getRowNode(pendingVisibleKey.current);
+
+                            pendingVisibleKey.current = null;
+
+                            if (node != null)
+                                event.api.ensureNodeVisible(node);
+                        }
+                    }}
                     getRowId={(params) => params.data.rowKey}
                 />
             </div>
