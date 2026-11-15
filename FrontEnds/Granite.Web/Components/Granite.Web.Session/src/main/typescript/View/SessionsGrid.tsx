@@ -14,7 +14,7 @@ import type { ColDef, PostSortRowsParams,
               RowClassParams }                    from "ag-grid-community";
 import type { ISessionsGridProps }                from "./ISessionsGridProps";
 import { authoritiesLabel, canEndSelection, detailRowHeight, endableSessionIds, formatInstant,
-         isCurrent, toSessionRows, userLabel, withDetailRow } from "./SessionRows";
+         applicationLabel, isCurrent, toSessionRows, userLabel, withDetailRow } from "./SessionRows";
 import type { ISessionRow }                       from "./SessionRows";
 import { ExpandCellRenderer }                     from "./ExpandCellRenderer";
 import { AuthoritiesCellRenderer }                from "./AuthoritiesCellRenderer";
@@ -169,6 +169,8 @@ export function SessionsGrid(props: ISessionsGridProps): ReactElement
           valueGetter: (p) => p.data == null ? "" : authoritiesLabel(p.data,props.roles),
           cellRenderer: AuthoritiesCellRenderer },
         { field: "userId",       headerName: "User Id",       width: 100, hide: true, filter: "agNumberColumnFilter" },
+        { field: "application",  headerName: "Application",   width: 130, headerTooltip: "Web application the session is bound to",
+          valueGetter: (p) => p.data == null ? "" : applicationLabel(p.data) },
         { field: "deviceId",     headerName: "Device",        flex: 2, headerTooltip: "Device id" },
         { field: "loginMethod",  headerName: "Login Method",  width: 130 },
         { field: "created",      headerName: "Created",       flex: 2, valueFormatter: (p) => formatInstant(p.value) },

@@ -62,6 +62,13 @@ export function canEndSelection(selected: Array<SessionRowData>, currentSessionI
     return !selected.some(row => isCurrent(row,currentSessionId)) && endableSessionIds(selected,currentSessionId).length > 0;
 }
 
+export const DEFAULT_APPLICATION: string = "granite";
+
+export function applicationLabel(row: SessionRowData): string
+{
+    return row.application == null || row.application === "" ? DEFAULT_APPLICATION : row.application;
+}
+
 export function userLabel(row: SessionRowData): string
 {
     if (row.userName != null && row.userName !== "")
