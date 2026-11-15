@@ -148,6 +148,11 @@ export function computeChanges(baseline: Array<IClientRow>,rows: Array<IClientRo
     return { clientsToCreate, clientsToUpdate };
 }
 
+export function gridCopies(rows: Array<IClientRow>): Array<IClientRow>
+{
+    return rows.map(row => ({ ...row, authorities: [...row.authorities], owners: [...row.owners] }));
+}
+
 export function pendingEditKeys(refreshed: Array<IClientRow>,merged: Array<IClientRow>): Set<string>
 {
     const pending: IClientsChanges = computeChanges(refreshed,merged);

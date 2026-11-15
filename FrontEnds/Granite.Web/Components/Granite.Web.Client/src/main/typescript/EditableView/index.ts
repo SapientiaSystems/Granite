@@ -3,7 +3,7 @@ export type {IClientsEditableViewProps,IClientsResult} from "./IClientsEditableV
 export {clientAuthorityOptions,clientRoles} from "./ClientsAuthorityOptions";
 export type {IClientRow,IClientsChanges} from "./ClientsChangeSet";
 export {computeChanges,fromSecretExpiry,isRefreshFailure,isValidDate,mergePending,normalizeAuthorities,
-        pendingEditKeys,toRows,toSecretExpiry,validateRows} from "./ClientsChangeSet";
+        gridCopies,pendingEditKeys,toRows,toSecretExpiry,validateRows} from "./ClientsChangeSet";
 export {OwnersCellEditor,ownerLabel} from "./OwnersCellEditor";
 export {OwnersCellRenderer}         from "./OwnersCellRenderer";
 export {SecretExpiryCellEditor}     from "./SecretExpiryCellEditor";

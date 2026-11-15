@@ -18,7 +18,7 @@ import type { UsersAction }                      from "granite.web.user/Editable
 import type { IClientsEditableViewProps, IClientsResult } from "./IClientsEditableViewProps";
 import { clientRoles }                           from "./ClientsAuthorityOptions";
 import { computeChanges, isRefreshFailure, mergePending, normalizeAuthorities,
-         pendingEditKeys, toRows, validateRows } from "./ClientsChangeSet";
+         gridCopies, pendingEditKeys, toRows, validateRows } from "./ClientsChangeSet";
 import type { IClientRow }                       from "./ClientsChangeSet";
 import { OwnersCellEditor }                      from "./OwnersCellEditor";
 import { OwnersCellRenderer }                    from "./OwnersCellRenderer";
@@ -157,6 +157,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     const hasNewRow:     boolean = rows.some(r => r.isNew);
     const rotateTarget:  IClientRow | undefined = !isEditing && selectedKeys.length === 1 ? rows.find(r => r.rowKey === selectedKeys[0] && !r.isNew) : undefined;
     const roles                  = useMemo(() => clientRoles(props.roles),[props.roles]);
+    const gridRows               = useMemo(() => gridCopies(rows),[rows]);
 
     useEffect(() =>
     {
@@ -541,7 +542,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
                     theme={masterGridTheme}
                     loading={loading}
                     overlayLoadingTemplate="Retrieving Clients..."
-                    rowData={rows}
+                    rowData={gridRows}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
                     context={gridContext}

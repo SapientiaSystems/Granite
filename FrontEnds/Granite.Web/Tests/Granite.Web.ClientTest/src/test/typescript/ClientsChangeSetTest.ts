@@ -4,7 +4,7 @@
 
 import { describe, expect, it }                      from "vitest";
 import type { ClientData }                           from "granite.client.service/RequestReply";
-import { computeChanges, fromSecretExpiry, pendingEditKeys, toRows, toSecretExpiry,
+import { computeChanges, fromSecretExpiry, gridCopies, pendingEditKeys, toRows, toSecretExpiry,
          validateRows }                              from "granite.web.client/EditableView";
 import type { IClientRow }                           from "granite.web.client/EditableView";
 
@@ -116,6 +116,19 @@ describe("ClientsChangeSet", () =>
         expect(fromSecretExpiry("2027-01-01T00:00:00Z")).toBe("2026-12-31");
         expect(fromSecretExpiry(null)).toBeNull();
         expect(fromSecretExpiry(toSecretExpiry("2030-06-15"))).toBe("2030-06-15");
+    });
+
+    it("gridCopiesKeepTheBaselineIntactWhenTheGridEditsInPlace", () =>
+    {
+        const rows   = toRows([client("gc_a","A")]);
+        const copies = gridCopies(rows);
+
+        copies[0].description = "edited";
+        copies[0].authorities.push("ROLE_AUDITOR");
+
+        expect(rows[0].description).toBe("");
+        expect(rows[0].authorities).toEqual(["ROLE_USER"]);
+        expect(computeChanges(rows,copies).clientsToUpdate).toHaveLength(1);
     });
 
     it("pendingEditKeysIsEmptyWhenEverythingWasSaved", () =>
