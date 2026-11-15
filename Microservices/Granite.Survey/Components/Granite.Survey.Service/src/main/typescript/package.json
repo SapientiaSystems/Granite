@@ -1,6 +1,6 @@
 {
   "name": "granite.survey.service",
-  "version": "1.0.0-snapshot.1793681621742",
+  "version": "1.0.0-snapshot.1794725269706",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",

@@ -22,7 +22,7 @@
         "@mantine/hooks": "^7.17.0",
         "granite.frontendcontroller.client": "1.0.0-snapshot",
         "granite.frontendcontroller.service": "1.0.0-snapshot",
-        "granite.web.authentication": "1.0.0-snapshot",
+        "granite.web.authentication": "^1.0.0-snapshot.1794750504769",
         "react": "^19.0.0",
         "strata.frontendcontroller.service": "0.0.0-snapshot"
     },
