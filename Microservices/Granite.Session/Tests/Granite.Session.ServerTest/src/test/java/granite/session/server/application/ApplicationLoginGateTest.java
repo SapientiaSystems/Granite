@@ -91,6 +91,20 @@ class ApplicationLoginGateTest
 
     @Test
     public void
+    configuredClientAdminApplicationRequiresClientAdmin()
+    {
+        IApplicationLoginGate poplar =
+            new ApplicationLoginGate(List.of("granite","poplar-clients"),List.of("poplar-clients"),catalogGate,Map.of());
+
+        assertFalse(poplar.permits("poplar-clients",Set.of("ROLE_USER")));
+        assertFalse(poplar.permits("poplar-clients",Set.of("ROLE_ADMIN")));
+        assertTrue(poplar.permits("poplar-clients",Set.of("ROLE_CLIENT_ADMIN")));
+        assertFalse(poplar.permits("granite",Set.of("ROLE_CLIENT_ADMIN")));
+        assertFalse(poplar.isKnown("client"));
+    }
+
+    @Test
+    public void
     nullApplicationMeansGraniteAndUnknownIsRefused()
     {
         assertTrue(subject.permits(null,Set.of("ROLE_USER")));

@@ -18,6 +18,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.security.oauth2.jwt.Jwt;
 import granite.session.server.application.CatalogRoleLoginGate;
+import granite.session.server.application.IApplicationLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ILoginGate;
@@ -104,6 +105,35 @@ class GraniteSessionCommandServerConfigurationTest
         assertTrue(gate.permits(Set.of("ROLE_USER")));
         assertFalse(gate.permits(Set.of("SCOPE_internal")));
         assertFalse(gate.permits(Set.of()));
+    }
+
+    @Test
+    public void
+    clientAdminApplicationsDefaultToClient()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        assertEquals(List.of("client"),subject.clientAdminApplications(env));
+        assertEquals(List.of("granite","client"),subject.applications(env));
+        assertEquals(List.of("ROLE_CLIENT_ADMIN"),subject.applicationRequiredAuthorities(env,"client"));
+    }
+
+    @Test
+    public void
+    clientAdminApplicationsComeFromTheSharedClientProperty()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setProperty("granite.client.admin-applications","poplar-clients");
+
+        IApplicationLoginGate gate = subject.applicationLoginGate(env,new GraniteApplicationRolesManagerSupplier().get());
+
+        assertEquals(List.of("granite","poplar-clients"),subject.applications(env));
+        assertEquals(List.of("ROLE_CLIENT_ADMIN"),subject.applicationRequiredAuthorities(env,"poplar-clients"));
+        assertTrue(subject.applicationRequiredAuthorities(env,"client").isEmpty());
+        assertTrue(gate.permits("poplar-clients",Set.of("ROLE_CLIENT_ADMIN")));
+        assertFalse(gate.permits("poplar-clients",Set.of("ROLE_USER")));
+        assertFalse(gate.isKnown("client"));
     }
 
     @Test

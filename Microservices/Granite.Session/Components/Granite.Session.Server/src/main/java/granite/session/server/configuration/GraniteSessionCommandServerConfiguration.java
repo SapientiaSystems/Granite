@@ -41,6 +41,7 @@ import granite.session.server.platform.ServiceTokenClientRequestFilter;
 import granite.session.server.platform.SessionPurgeJob;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
+import granite.session.server.domain.Session;
 import strata.foundation.spring.inject.RequestScoped;
 import strata.foundation.spring.inject.SingletonScoped;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
@@ -295,6 +296,7 @@ class GraniteSessionCommandServerConfiguration
         return
             new ApplicationLoginGate(
                 applications(environment),
+                clientAdminApplications(environment),
                 graniteLoginGate(environment,roles),
                 applicationGates(environment));
     }
@@ -318,13 +320,31 @@ class GraniteSessionCommandServerConfiguration
     protected List<String>
     applications(Environment environment)
     {
-        List<String> names =
+        List<String> defaults = new ArrayList<>();
+
+        defaults.add(Session.DEFAULT_APPLICATION);
+        defaults.addAll(clientAdminApplications(environment));
+
+        return
             Binder
                 .get(environment)
                 .bind("granite.session.applications",Bindable.listOf(String.class))
-                .orElse(List.of("granite","client"));
+                .orElse(defaults);
+    }
 
-        return names;
+    protected List<String>
+    clientAdminApplications(Environment environment)
+    {
+        List<String> names = new ArrayList<>();
+
+        for (String name : Binder
+                               .get(environment)
+                               .bind(ApplicationLoginGate.CLIENT_ADMIN_APPLICATIONS_PROPERTY,Bindable.listOf(String.class))
+                               .orElse(ApplicationLoginGate.DEFAULT_CLIENT_ADMIN_APPLICATIONS))
+            if (name != null && !name.isBlank())
+                names.add(name.trim());
+
+        return names.isEmpty() ? ApplicationLoginGate.DEFAULT_CLIENT_ADMIN_APPLICATIONS : names;
     }
 
     protected Map<String,ILoginGate>
@@ -361,7 +381,10 @@ class GraniteSessionCommandServerConfiguration
             if (authority != null && !authority.isBlank())
                 return configured;
 
-        return "client".equals(application) ? List.of(ApplicationRolesManager.CLIENT_ADMIN) : List.of();
+        return
+            clientAdminApplications(environment).contains(application)
+                ? List.of(ApplicationRolesManager.CLIENT_ADMIN)
+                : List.of();
     }
 
     @Bean
