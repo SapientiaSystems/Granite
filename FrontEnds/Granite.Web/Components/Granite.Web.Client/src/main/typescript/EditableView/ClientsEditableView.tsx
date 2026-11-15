@@ -44,7 +44,9 @@ const saveIcon:   ReactElement = (<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 
                                      <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></>);
 const deleteIcon: ReactElement = (<><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                                      <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></>);
-const rotateIcon: ReactElement = (<><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></>);
+const refreshIcon: ReactElement = (<><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+                                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></>);
+const rotateIcon: ReactElement =(<><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></>);
 const copyIcon:   ReactElement = (<><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>);
 
 function errorText(error: unknown): string
@@ -124,6 +126,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     const editable:   boolean   = props.editable ?? false;
     const showOwners: boolean   = props.showOwners ?? false;
     const canRotate:  boolean   = props.onRotate !== undefined;
+    const canRefresh: boolean   = props.onRefresh !== undefined;
     const [rows, setRows]                 = useState<Array<IClientRow>>(() => toRows(props.clients ?? []));
     const [baseline, setBaseline]         = useState<Array<IClientRow>>(() => toRows(props.clients ?? []));
     const [selectedKeys, setSelectedKeys] = useState<Array<string>>([]);
@@ -504,12 +507,14 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
 
     const toolbarContent: ReactElement = (
         <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
+            {canRefresh && toolbarButton("Refresh Clients","Refresh",refreshIcon,() => props.onRefresh?.(),loading || isEditing)}
+            {canRefresh && (editable || canRotate) && <Divider orientation="vertical" mx="md" />}
             {editable   && toolbarButton("Add Client","Add",createIcon,() => actions.current.create(),busy || hasNewRow)}
             {editable   && toolbarButton("Edit Clients","Edit",editIcon,() => actions.current.edit(),!hasSelection || busy,isEditing)}
             {editable   && toolbarButton("Save Clients","Save",saveIcon,() => actions.current.save(),!isEditing || busy)}
             {editable   && toolbarButton("Undo Changes","Undo",undoIcon,() => actions.current.undo(),!isEditing || busy)}
-            {(editable || canRotate) && <Divider orientation="vertical" mx="md" />}
-            {canRotate  && toolbarButton("Rotate secret","Rotate secret",rotateIcon,() => actions.current.rotate(),rotateTarget === undefined || busy)}
+            {editable && <Divider orientation="vertical" mx="md" />}
+            {canRotate  && toolbarButton("Rotate Secret","Rotate Secret",rotateIcon,() => actions.current.rotate(),rotateTarget === undefined || busy)}
             {editable   && toolbarButton("Delete Clients","Delete",deleteIcon,() => actions.current.remove(),!hasSelection || busy)}
             <div style={{ flex: 1 }} />
         </Group>
@@ -519,7 +524,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
     {
         if (props.onRenderToolbar != null)
             props.onRenderToolbar(toolbarContent);
-    },[hasSelection,hasNewRow,isEditing,busy,editable,canRotate,rotateTarget?.rowKey]);
+    },[hasSelection,hasNewRow,isEditing,busy,loading,editable,canRotate,canRefresh,rotateTarget?.rowKey]);
 
     const detached: boolean = props.onRenderToolbar != null;
 
@@ -582,7 +587,7 @@ export function ClientsEditableView(props: IClientsEditableViewProps): ReactElem
                     <Button color="red" onClick={() => { void confirmDelete(); }}>Delete</Button>
                 </Group>
             </Modal>
-            <Modal opened={rotateKey !== null} onClose={() => setRotateKey(null)} title="Rotate secret" centered>
+            <Modal opened={rotateKey !== null} onClose={() => setRotateKey(null)} title="Rotate Secret" centered>
                 <Text size="sm">
                     Rotate the secret of {rows.find(r => r.rowKey === rotateKey)?.name ?? "this client"}? The current secret stops working immediately.
                 </Text>

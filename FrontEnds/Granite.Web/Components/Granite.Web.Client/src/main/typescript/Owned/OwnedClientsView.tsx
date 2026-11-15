@@ -2,7 +2,7 @@
 // Granite.Web.Client
 //////////////////////////////////////////////////////////////////////////////
 
-import { useEffect, useState }                          from "react";
+import { useEffect, useRef, useState }                  from "react";
 import type { CSSProperties, ReactElement }              from "react";
 import { Alert, Stack, Group, useComputedColorScheme }   from "@mantine/core";
 import { GraniteFrontEndControllerServiceClient }       from "granite.frontendcontroller.client/RequestReply";
@@ -41,6 +41,7 @@ export function OwnedClientsView(props: IOwnedClientsViewProps): ReactElement
     const [loadError, setLoadError]       = useState<string | null>(null);
     const [toolbar, setToolbar]           = useState<ReactElement | null>(null);
     const [reveal, setReveal]             = useState<ISecretReveal | null>(null);
+    const closeLoad                       = useRef<(() => void) | null>(null);
 
     const createClient = (): IGraniteFrontEndControllerServiceClient =>
         createFrontEndClient((url,fetchFunction) => new GraniteFrontEndControllerServiceClient(url,fetchFunction),service);
@@ -77,9 +78,15 @@ export function OwnedClientsView(props: IOwnedClientsViewProps): ReactElement
         }
     }
 
-    useEffect(() =>
+    function load(): void
     {
+        closeLoad.current?.();
+
         const client: IGraniteFrontEndControllerServiceClient = createClient();
+
+        closeLoad.current = () => client.close();
+        setLoading(true);
+        setLoadError(null);
 
         client
             .getOwnedClientsOutput(
@@ -120,8 +127,13 @@ export function OwnedClientsView(props: IOwnedClientsViewProps): ReactElement
                 setLoadError(error?.message ?? "Failed to load clients");
                 setLoading(false);
             });
+    }
 
-        return () => { client.close(); };
+    useEffect(() =>
+    {
+        load();
+
+        return () => { closeLoad.current?.(); };
     },[]);
 
     return (
@@ -151,6 +163,7 @@ export function OwnedClientsView(props: IOwnedClientsViewProps): ReactElement
                     loading={loading}
                     onRenderToolbar={setToolbar}
                     onRotate={handleRotate}
+                    onRefresh={load}
                 />
             </div>
             <SecretDialog reveal={reveal} onClose={() => setReveal(null)} />

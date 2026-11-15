@@ -24,6 +24,7 @@ export interface IClientsEditableViewProps
     readonly onSave?:          (changes: { clientsToCreate: Array<CreateClientData>; clientsToUpdate: Array<UpdateClientData> }) => Promise<IClientsResult>;
     readonly onDelete?:        (clientIds: Array<string>) => Promise<IClientsResult>;
     readonly onRotate?:        (clientId: string,secretExpiryDate: string | null) => Promise<IClientsResult>;
+    readonly onRefresh?:       () => void;
 }
 
 //////////////////////////////////////////////////////////////////////////////

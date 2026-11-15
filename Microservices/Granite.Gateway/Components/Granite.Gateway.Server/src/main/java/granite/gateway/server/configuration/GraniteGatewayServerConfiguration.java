@@ -428,7 +428,9 @@ class GraniteGatewayServerConfiguration
         return
             List.of(
                 "/frontendcontroller-user-service/get-owned-clients-output",
-                "/frontendcontroller-user-service/handle-owned-client-secret-input");
+                "/frontendcontroller-user-service/handle-owned-client-secret-input",
+                "/frontendcontroller-user-service/get-preferences-output",
+                "/frontendcontroller-user-service/handle-preferences-input");
     }
 
     protected CookieServerCsrfTokenRepository

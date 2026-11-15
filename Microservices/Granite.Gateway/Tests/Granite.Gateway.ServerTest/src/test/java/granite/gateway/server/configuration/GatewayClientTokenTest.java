@@ -214,7 +214,9 @@ class GatewayClientTokenTest
         assertEquals(200,post(FEC + "handle-owned-client-secret-input",confined,"{}"));
         assertEquals(200,post(FEC + "handle-session-input",confined,logout));
         assertEquals(403,post(FEC + "handle-users-input",confined,"{}"));
-        assertEquals(403,post(FEC + "get-preferences-output",confined,"{}"));
+        assertEquals(200,post(FEC + "get-preferences-output",confined,"{}"));
+        assertEquals(200,post(FEC + "handle-preferences-input",confined,"{}"));
+        assertEquals(403,post(FEC + "get-feedback-output",confined,"{}"));
         assertEquals(403,post("/user-query-service/x",confined,"{}"));
         assertEquals(200,post(FEC + "handle-users-input",plain,"{}"));
         assertEquals(200,post("/user-query-service/x",plain,"{}"));
