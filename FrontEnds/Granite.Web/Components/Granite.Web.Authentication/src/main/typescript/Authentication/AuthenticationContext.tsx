@@ -5,7 +5,7 @@
 import { createContext, useContext }            from "react";
 import type { FetchFunction }                        from "../Http/CsrfFetch";
 import type { IAuthenticationState }            from "./IAuthenticationState";
-import type { ILoginMethods }                   from "./ISessionService";
+import type { IChangePasswordResult, ILoginMethods } from "./ISessionService";
 
 export interface IAuthenticationContext
 {
@@ -15,6 +15,7 @@ export interface IAuthenticationContext
     completeOktaLogin:      (code: string,state: string) => Promise<string>;
     logout:                 () => Promise<boolean>;
     getLoginMethods:        () => Promise<ILoginMethods>;
+    changePassword:         (currentPassword: string,newPassword: string) => Promise<IChangePasswordResult>;
     cancelReauthentication: () => void;
     createFrontEndClient:   <C>(create: (serviceUrl: string,fetchFunction: FetchFunction) => C,service: string) => C;
 }

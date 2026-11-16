@@ -4,7 +4,7 @@
 
 import { describe, expect, it }   from "vitest";
 import { FrontEndSessionService } from "granite.web.authentication/Authentication";
-import { FakeFrontEnd, KEYS, logoutOutput, methodsOutput, redirectOutput, serviceError,
+import { FakeFrontEnd, KEYS, changePasswordOutput, logoutOutput, methodsOutput, redirectOutput, serviceError,
          sessionOutput }          from "./TestSupport";
 
 function serviceOver(frontEnd: FakeFrontEnd): FrontEndSessionService
@@ -97,6 +97,36 @@ describe("FrontEndSessionService",() =>
         expect(await serviceOver(frontEnd).logout()).toEqual({ loggedOut: true });
         expect(frontEnd.calls[0].payload).toEqual(
             { userId: null, source: "Session.Current", command: "Logout", destination: "LoginView" });
+    });
+
+    it("sends the change password input and maps CHANGED",async () =>
+    {
+        const frontEnd = new FakeFrontEnd().respond(KEYS.change,() => changePasswordOutput(true));
+
+        expect(await serviceOver(frontEnd).changePassword("old","new-password")).toEqual({ success: true });
+        expect(frontEnd.calls[0].payload).toEqual(
+            { userId: null, source: "Session.Current", command: "ChangePassword", destination: "ChangePasswordView", currentPassword: "old", newPassword: "new-password" });
+    });
+
+    it("maps FAILED to the first failure message",async () =>
+    {
+        const frontEnd = new FakeFrontEnd().respond(KEYS.change,() => changePasswordOutput(false,"invalid credentials"));
+
+        expect(await serviceOver(frontEnd).changePassword("old","new-password")).toEqual({ success: false, message: "invalid credentials" });
+    });
+
+    it("maps FAILED without a message to the generic message",async () =>
+    {
+        const frontEnd = new FakeFrontEnd().respond(KEYS.change,() => changePasswordOutput(false));
+
+        expect(await serviceOver(frontEnd).changePassword("a","b")).toEqual({ success: false, message: "Unable to change password" });
+    });
+
+    it("maps a thrown error to the generic message",async () =>
+    {
+        const frontEnd = new FakeFrontEnd().respond(KEYS.change,() => serviceError(500));
+
+        expect(await serviceOver(frontEnd).changePassword("a","b")).toEqual({ success: false, message: "Unable to change password" });
     });
 
     it("rejects with the failure message when the reply is not successful",async () =>

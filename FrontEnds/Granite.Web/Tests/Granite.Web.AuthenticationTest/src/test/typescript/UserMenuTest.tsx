@@ -14,11 +14,11 @@ import type { AuthenticationStatus,
 import { UserMenu }                                    from "granite.web.authentication/Login";
 import type { IUserMenuProps }                         from "granite.web.authentication/Login";
 
-function renderMenu(status: AuthenticationStatus,props: IUserMenuProps,logout: () => Promise<boolean> = () => Promise.resolve(true),path: string = "/home"): void
+function renderMenu(status: AuthenticationStatus,props: IUserMenuProps,logout: () => Promise<boolean> = () => Promise.resolve(true),path: string = "/home",flags: { passwordEnabled?: boolean; passwordSet?: boolean } = {}): void
 {
     const context =
     {
-        state:  { status,userName: status === "anonymous" || status === "restoring" ? undefined : "alice",authorities: [] },
+        state:  { status,userName: status === "anonymous" || status === "restoring" ? undefined : "alice",authorities: [],...flags },
         logout,
     } as unknown as IAuthenticationContext;
 
@@ -162,6 +162,30 @@ describe("UserMenu",() =>
     {
         renderMenu("authenticated",{ preferencesPath: "/user" },undefined,"/user/detail");
         expect(screen.getByLabelText("User menu").closest(".app-bar-user-menu")?.classList.contains("active")).toBe(true);
+    });
+
+    it.each([
+        [true,true,true],
+        [false,true,false],
+        [true,false,false],
+    ])("changePasswordItemWhenEnabled=%s set=%s shown=%s",async (passwordEnabled: boolean,passwordSet: boolean,shown: boolean) =>
+    {
+        renderMenu("authenticated",{},undefined,"/home",{ passwordEnabled,passwordSet });
+
+        await userEvent.click(screen.getByLabelText("User menu"));
+        await screen.findByRole("menuitem",{ name: "Logout" });
+
+        expect(screen.queryByRole("menuitem",{ name: "Change Password" }) !== null).toBe(shown);
+    });
+
+    it("changePasswordItemOpensDialog",async () =>
+    {
+        renderMenu("authenticated",{},undefined,"/home",{ passwordEnabled: true,passwordSet: true });
+
+        await userEvent.click(screen.getByLabelText("User menu"));
+        await userEvent.click(await screen.findByRole("menuitem",{ name: "Change Password" }));
+
+        expect(await screen.findByLabelText("Current password")).toBeTruthy();
     });
 
     it("rendersWithoutAppHostCss",() =>

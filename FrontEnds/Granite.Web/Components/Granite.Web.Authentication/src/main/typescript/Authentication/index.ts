@@ -3,7 +3,7 @@ export {ANONYMOUS,RESTORING}                                                    
 export {canEdit,hasAuthority}                                                        from "./Authorities";
 export type {IRuntimeConfig}                                                         from "./RuntimeConfig";
 export {APPLICATION,DEFAULT_APPLICATION,DEFAULT_COOKIE_PREFIX,getRuntimeConfig,normalizeApplication,normalizeCookiePrefix} from "./RuntimeConfig";
-export type {ILoginMethods,ILogoutResult,ISessionService,ISessionStatus}             from "./ISessionService";
+export type {IChangePasswordResult,ILoginMethods,ILogoutResult,ISessionService,ISessionStatus}           from "./ISessionService";
 export {FrontEndSessionService}                                                      from "./FrontEndSessionService";
 export type {AuthenticationListener,INavigator}                                      from "./AuthenticationManager";
 export {AuthenticationManager,browserNavigator}                                      from "./AuthenticationManager";

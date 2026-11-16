@@ -9,13 +9,16 @@ import type { IGraniteFrontEndControllerServiceClient }                       fr
 import type { GetSessionOutputReply, HandleSessionInputReply,
               SessionInput, SessionOutput }                                   from "granite.frontendcontroller.service/RequestReply";
 import { APPLICATION }                                                       from "./RuntimeConfig";
-import type { ILoginMethods, ILogoutResult, ISessionService, ISessionStatus } from "./ISessionService";
+import type { IChangePasswordResult, ILoginMethods, ILogoutResult, ISessionService,
+              ISessionStatus }                                                    from "./ISessionService";
 
 const NEW_SOURCE:          string = "Session.New";
 const CURRENT_SOURCE:      string = "Session.Current";
 const LOGIN_DESTINATION:   string = "LoginView";
 const SESSION_DESTINATION: string = "SessionView";
 const AUTHENTICATED:       string = "AUTHENTICATED";
+const CHANGED:             string = "CHANGED";
+const CHANGE_FAILED:       string = "Unable to change password";
 
 export const UNAUTHENTICATED: ISessionStatus = { authenticated: false, authorities: [] };
 
@@ -85,6 +88,23 @@ export class FrontEndSessionService
         }
     }
 
+    async changePassword(currentPassword: string,newPassword: string): Promise<IChangePasswordResult>
+    {
+        try
+        {
+            const output: SessionOutput = await this.send(CURRENT_SOURCE,"ChangePassword","ChangePasswordView",{ currentPassword, newPassword });
+
+            if (output.status === CHANGED)
+                return { success: true };
+
+            return { success: false, message: output.failureMessages?.[0] || CHANGE_FAILED };
+        }
+        catch
+        {
+            return { success: false, message: CHANGE_FAILED };
+        }
+    }
+
     private async read(source: string,destination: string): Promise<SessionOutput>
     {
         const client: IGraniteFrontEndControllerServiceClient = this.createClient();
@@ -140,6 +160,8 @@ function toStatus(output: SessionOutput): ISessionStatus
         userName:      output.userName ?? undefined,
         authorities:   output.authorities ?? [],
         returnTo:      output.returnTo ?? undefined,
+        passwordEnabled: output.passwordEnabled === true,
+        passwordSet:     output.passwordSet === true,
     };
 }
 

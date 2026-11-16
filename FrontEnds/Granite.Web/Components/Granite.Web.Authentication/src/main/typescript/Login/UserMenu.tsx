@@ -2,11 +2,13 @@
 // Granite.Web.Authentication
 //////////////////////////////////////////////////////////////////////////////
 
+import { useState }                         from "react";
 import type { CSSProperties, ReactElement }     from "react";
 import { useLocation, useNavigate }            from "react-router-dom";
 import { ActionIcon, Group, Menu, Text,
          UnstyledButton }                      from "@mantine/core";
 import { useAuthentication }                   from "../Authentication/AuthenticationContext";
+import { ChangePasswordDialog }                from "./ChangePasswordDialog";
 
 export interface IUserMenuItem
 {
@@ -29,14 +31,17 @@ export function UserMenu(props: IUserMenuProps): ReactElement
     const loginPath: string           = props.loginPath ?? "/login";
     const { state, logout }           = useAuthentication();
     const navigate                    = useNavigate();
+    const [changing, setChanging]       = useState<boolean>(false);
     const location                    = useLocation();
     const loggedIn: boolean           = state.status === "authenticated" || state.status === "reauthenticating";
     const restoring: boolean          = state.status === "restoring";
     const pathname: string            = location.pathname;
     const active: boolean             = preferencesPath !== undefined && (pathname === preferencesPath || pathname.startsWith(preferencesPath + "/"));
+    const canChangePassword: boolean  = loggedIn && state.passwordEnabled === true && state.passwordSet === true;
     const classes: string             = ["app-bar-user-menu", active ? "active" : "", props.className ?? ""].filter((name: string) => name !== "").join(" ");
 
     return (
+        <>
         <Menu shadow="md" width={200}>
             <Menu.Target>
                 <UnstyledButton
@@ -77,12 +82,16 @@ export function UserMenu(props: IUserMenuProps): ReactElement
                     : loggedIn
                     ? <Menu.Item onClick={() => { void logout().then((done: boolean) => { if (done) navigate(loginPath); }); }}>Logout</Menu.Item>
                     : <Menu.Item onClick={() => navigate(loginPath)}>Login</Menu.Item>}
+                {canChangePassword &&
+                    <Menu.Item onClick={() => setChanging(true)}>Change Password</Menu.Item>}
                 {preferencesPath !== undefined &&
                     <Menu.Item onClick={() => navigate(preferencesPath)}>Preferences</Menu.Item>}
                 {(items ?? []).map((item: IUserMenuItem, index: number) =>
                     <Menu.Item key={`${index}-${item.label}`} onClick={item.onClick}>{item.label}</Menu.Item>)}
             </Menu.Dropdown>
         </Menu>
+        <ChangePasswordDialog opened={changing} onClose={() => setChanging(false)} />
+        </>
     );
 }
 

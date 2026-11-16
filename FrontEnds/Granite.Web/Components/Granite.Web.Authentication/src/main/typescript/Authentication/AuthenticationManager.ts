@@ -4,7 +4,7 @@
 
 import { ANONYMOUS, RESTORING }                           from "./IAuthenticationState";
 import type { IAuthenticationState }                      from "./IAuthenticationState";
-import type { ILoginMethods, ISessionService, ISessionStatus } from "./ISessionService";
+import type { IChangePasswordResult, ILoginMethods, ISessionService, ISessionStatus } from "./ISessionService";
 import { UNAUTHENTICATED }                                from "./FrontEndSessionService";
 
 export type AuthenticationListener = (state: IAuthenticationState) => void;
@@ -59,6 +59,11 @@ export class AuthenticationManager
     getLoginMethods(): Promise<ILoginMethods>
     {
         return this.service.getLoginMethods();
+    }
+
+    changePassword(currentPassword: string,newPassword: string): Promise<IChangePasswordResult>
+    {
+        return this.service.changePassword(currentPassword,newPassword);
     }
 
     async restore(): Promise<void>
@@ -209,7 +214,7 @@ export class AuthenticationManager
 
     private accept(status: ISessionStatus): void
     {
-        this.setState({ status: "authenticated", userName: status.userName, authorities: status.authorities });
+        this.setState({ status: "authenticated", userName: status.userName, authorities: status.authorities, passwordEnabled: status.passwordEnabled === true, passwordSet: status.passwordSet === true });
         this.settle(true);
     }
 
