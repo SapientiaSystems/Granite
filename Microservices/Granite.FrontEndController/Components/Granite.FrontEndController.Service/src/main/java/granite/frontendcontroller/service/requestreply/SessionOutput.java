@@ -15,15 +15,15 @@ public
 class SessionOutput
     extends FrontEndOutput
 {
-    private String      status;
-    private String      userName;
-    private Set<String> authorities;
-    private String      returnTo;
-    private boolean     passwordEnabled;
-    private boolean     oktaEnabled;
-    private String      redirectUrl;
-    private boolean     loggedOut;
-    private boolean     passwordSet;
+    private String       status;
+    private String       userName;
+    private Set<String>  authorities;
+    private String       returnTo;
+    private boolean      passwordEnabled;
+    private boolean      oktaEnabled;
+    private String       redirectUrl;
+    private boolean      loggedOut;
+    private boolean      passwordSet;
     private List<String> failureMessages;
 
     public
