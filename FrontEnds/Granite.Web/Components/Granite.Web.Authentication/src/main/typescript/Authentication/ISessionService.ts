@@ -10,10 +10,10 @@ export interface ILoginMethods
 
 export interface ISessionStatus
 {
-    authenticated: boolean;
-    userName?:     string;
-    authorities:   Array<string>;
-    returnTo?:     string;
+    authenticated:    boolean;
+    userName?:        string;
+    authorities:      Array<string>;
+    returnTo?:        string;
     passwordEnabled?: boolean;
     passwordSet?:     boolean;
 }
