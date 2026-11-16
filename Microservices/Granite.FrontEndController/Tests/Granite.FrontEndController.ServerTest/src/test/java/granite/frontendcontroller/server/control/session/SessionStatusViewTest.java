@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -77,6 +78,29 @@ class SessionStatusViewTest
                 .setAuthorities(Set.of("ROLE_ADMIN","ROLE_AUDITOR"));
     }
 
+    private void
+    userHasPassword(String password)
+    {
+        Mockito
+            .when(userClient.findUsersByKey(Mockito.any(FindUsersByKeyRequest.class)))
+            .thenReturn(
+                CompletableFuture.completedFuture(
+                    new FindUsersByKeyReply()
+                        .setFoundUsers(List.of(new UserData().setUserId(7L).setUserName("amy").setPassword(password)))
+                        .setSuccess(true)));
+    }
+
+    private SessionOutput
+    run(SessionRequestContext context,SessionLoginSettings settings)
+        throws Exception
+    {
+        return
+            new SessionStatusView(sessionClient,userClient,context,settings)
+                .apply(new GetSessionOutputRequest().setUserId(7L).setSource("Session.Current").setDestination("SessionView"))
+                .toCompletableFuture()
+                .get();
+    }
+
     private SessionOutput
     run(SessionRequestContext context)
         throws Exception
@@ -115,6 +139,30 @@ class SessionStatusViewTest
 
         Mockito.verify(sessionClient).findSessionsByKey(captor.capture());
         assertEquals("11",captor.getValue().getKey().getValue());
+    }
+
+    @Test
+    public void
+    passwordSetFollowsTheUsersMaskedPassword()
+        throws Exception
+    {
+        sessionIs(open());
+
+        userHasPassword("********");
+        assertTrue(run(SessionTestSupport.context("d",11L,7L)).isPasswordSet());
+
+        userHasPassword(null);
+        assertFalse(run(SessionTestSupport.context("d",11L,7L)).isPasswordSet());
+    }
+
+    @Test
+    public void
+    passwordEnabledComesFromTheSettings()
+        throws Exception
+    {
+        sessionIs(open());
+        assertTrue(run(SessionTestSupport.context("d",11L,7L),new SessionLoginSettings(true,false)).isPasswordEnabled());
+        assertFalse(run(SessionTestSupport.context("d",11L,7L),new SessionLoginSettings(false,true)).isPasswordEnabled());
     }
 
     @Test

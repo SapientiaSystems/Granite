@@ -15,6 +15,7 @@ import granite.frontendcontroller.server.control.client.UpdateClientsView;
 import granite.frontendcontroller.server.control.IOutputAction;
 import granite.frontendcontroller.server.control.preference.InitializePreferencesView;
 import granite.frontendcontroller.server.control.preference.SavePreferencesView;
+import granite.frontendcontroller.server.control.session.ChangePasswordView;
 import granite.frontendcontroller.server.control.session.CompleteOktaLoginView;
 import granite.frontendcontroller.server.control.session.LoginMethodsView;
 import granite.frontendcontroller.server.control.session.LoginView;
@@ -267,11 +268,12 @@ class GraniteFrontEndControllerService
                 "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings,cookies),
                 "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(sessionCommandClient,requestContext,settings,cookies),
                 "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(sessionCommandClient,requestContext,settings,cookies),
-                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext,cookies));
+                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext,cookies),
+                "Session.Current->ChangePassword->ChangePasswordView",new ChangePasswordView(sessionCommandClient,requestContext,settings));
         sessionOutputActions =
             Map.of(
                 "Session.New->LoginView",new LoginMethodsView(settings),
-                "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,requestContext));
+                "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,requestContext,settings));
         preferencesInputActions =
             Map.of(
                 "Preferences.Current->Save->PreferencesView",new SavePreferencesView(userQueryClient,userCommandClient,requestContext,context.getPreferenceDefinitions()));

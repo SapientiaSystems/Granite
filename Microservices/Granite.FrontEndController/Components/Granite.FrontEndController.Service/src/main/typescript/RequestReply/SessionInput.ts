@@ -14,6 +14,8 @@ interface SessionInput
     code?:     string | null;
     state?:    string | null;
     application?: string | null;
+    currentPassword?: string | null;
+    newPassword?: string | null;
 }
 
 //////////////////////////////////////////////////////////////////////////////
