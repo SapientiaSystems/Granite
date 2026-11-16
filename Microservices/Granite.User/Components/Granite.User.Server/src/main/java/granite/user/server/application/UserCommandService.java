@@ -42,9 +42,9 @@ class UserCommandService
     private final PasswordEncoder    encoder;
     private final LoginLockoutPolicy lockoutPolicy;
     private final ApplicationRolesManager roles;
+    private final PasswordPolicy     passwordPolicy;
     private final Logger             logger;
 
-    @Inject
     public UserCommandService(
         IUserRepository    r,
         IUserEventSender   s,
@@ -53,13 +53,27 @@ class UserCommandService
         LoginLockoutPolicy p,
         ApplicationRolesManager a)
     {
-        repository    = r;
-        sender        = s;
-        mapper        = m;
-        encoder       = e;
-        lockoutPolicy = p;
-        roles         = a;
-        logger        = LogManager.getLogger(UserCommandService.class);
+        this(r,s,m,e,p,a,new PasswordPolicy(1,PasswordPolicy.MAX_LENGTH));
+    }
+
+    @Inject
+    public UserCommandService(
+        IUserRepository    r,
+        IUserEventSender   s,
+        ModelMapper        m,
+        PasswordEncoder    e,
+        LoginLockoutPolicy p,
+        ApplicationRolesManager a,
+        PasswordPolicy     pp)
+    {
+        repository     = r;
+        sender         = s;
+        mapper         = m;
+        encoder        = e;
+        lockoutPolicy  = p;
+        roles          = a;
+        passwordPolicy = pp;
+        logger         = LogManager.getLogger(UserCommandService.class);
     }
 
     @Override
@@ -184,6 +198,25 @@ class UserCommandService
                 .thenApply(context -> checkLockout(context))
                 .thenApply(context -> checkCredential(context))
                 .thenApply(context -> recordOutcome(context))
+                .thenApply(context -> buildReply(context))
+                .exceptionally(exception -> buildReply(exception,request));
+    }
+
+    @Override
+    public CompletionStage<ChangeUserPasswordReply>
+    changeUserPassword(ChangeUserPasswordRequest request)
+    {
+        logger.debug("changeUserPassword({})",request.getRequestId());
+        return
+            CompletableFuture
+                .supplyAsync(() -> validate(request),new CurrentThreadExecutor())
+                .thenApply(changeRequest -> mapToContext(changeRequest))
+                .thenApply(context -> lookupUser(context))
+                .thenApply(context -> checkLockout(context))
+                .thenApply(context -> checkCredential(context))
+                .thenApply(context -> recordOutcome(context))
+                .thenApply(context -> checkNewPassword(context))
+                .thenApply(context -> storePassword(context))
                 .thenApply(context -> buildReply(context))
                 .exceptionally(exception -> buildReply(exception,request));
     }
@@ -463,6 +496,24 @@ class UserCommandService
         return request;
     }
 
+    protected ChangeUserPasswordRequest
+    validate(ChangeUserPasswordRequest request)
+    {
+        logger.debug("<change password> validate({})",request.getRequestId());
+
+        Objects.requireNonNull(request,"request");
+        Objects.requireNonNull(
+            request.getUserId(),
+            "validation failed: userId was not provided");
+        Objects.requireNonNull(
+            request.getCurrentPassword(),
+            "validation failed: currentPassword was not provided");
+        Objects.requireNonNull(
+            request.getNewPassword(),
+            "validation failed: newPassword was not provided");
+        return request;
+    }
+
     protected CreateUserContext
     mapToContext(CreateUserRequest request)
     {
@@ -598,6 +649,109 @@ class UserCommandService
         return context;
     }
 
+    protected ChangeUserPasswordContext
+    mapToContext(ChangeUserPasswordRequest request)
+    {
+        logger.debug("<change password> mapToContext({})",request.getRequestId());
+        return new ChangeUserPasswordContext(request);
+    }
+
+    protected ChangeUserPasswordContext
+    lookupUser(ChangeUserPasswordContext context)
+    {
+        logger.debug("<change password> lookup User");
+        return context.setUser(repository.findById(context.getUserId()).map(entity -> entity.attach(this)));
+    }
+
+    protected ChangeUserPasswordContext
+    checkLockout(ChangeUserPasswordContext context)
+    {
+        logger.debug("<change password> check lockout");
+
+        boolean locked =
+            context
+                .getUser()
+                .map(user -> user.isLocked(lockoutPolicy.now()))
+                .orElse(false);
+
+        return context.setLocked(locked);
+    }
+
+    protected ChangeUserPasswordContext
+    checkCredential(ChangeUserPasswordContext context)
+    {
+        logger.debug("<change password> check credential");
+
+        User    user    = context.getUser().orElse(null);
+        boolean hasHash = user != null && user.getPassword() != null;
+        boolean matches =
+            encoder.matches(
+                context.getCurrentPassword(),
+                hasHash ? user.getPassword() : dummyHash());
+
+        return context.setValid(hasHash && matches && !context.isLocked());
+    }
+
+    protected ChangeUserPasswordContext
+    recordOutcome(ChangeUserPasswordContext context)
+    {
+        logger.debug("<change password> record outcome");
+
+        User user = context.getUser().orElse(null);
+
+        if (user == null || context.isLocked())
+            return context;
+
+        if (context.getValid())
+        {
+            if (user.getFailedLoginAttempts() > 0 || user.getLockedUntil() != null)
+                repository.save(user.resetFailedLogins());
+
+            return context;
+        }
+
+        user.recordFailedLogin(
+            lockoutPolicy.now(),
+            lockoutPolicy.getMaxAttempts(),
+            lockoutPolicy.getLockDuration());
+        repository.save(user);
+        return context;
+    }
+
+    protected ChangeUserPasswordContext
+    checkNewPassword(ChangeUserPasswordContext context)
+    {
+        logger.debug("<change password> check new password");
+
+        if (!context.getValid())
+            return context.setFailureMessage("invalid credentials");
+
+        Optional<String> violation = passwordPolicy.check(context.getNewPassword());
+
+        if (violation.isPresent())
+            return context.setValid(false).setFailureMessage(violation.get());
+
+        if (context.getNewPassword().equals(context.getCurrentPassword()))
+            return context.setValid(false).setFailureMessage("new password must differ from the current one");
+
+        return context;
+    }
+
+    protected ChangeUserPasswordContext
+    storePassword(ChangeUserPasswordContext context)
+    {
+        logger.debug("<change password> store password");
+
+        if (!context.getValid())
+            return context;
+
+        User user = context.getUser().orElseThrow();
+
+        user.setPassword(hash(context.getNewPassword()));
+        repository.save(user).notifyUpdated();
+        return context.setChanged(true);
+    }
+
     protected CreateUserContext
     createUser(CreateUserContext context)
     {
@@ -669,6 +823,7 @@ class UserCommandService
         User user = context.getUpdatedUser().orElseThrow();
 
         requireAddedRoles(user,data);
+        requireStrongPassword(data);
         applyUpdate(user,data);
 
         return context;
@@ -757,7 +912,10 @@ class UserCommandService
             UpdateUserData data = dataById.get(entity.getPrimaryId());
 
             if (data != null)
+            {
                 requireAddedRoles(entity,data);
+                requireStrongPassword(data);
+            }
         }
 
         for (User entity : context.getUpdatedUsers())
@@ -858,7 +1016,10 @@ class UserCommandService
     {
         Throwable cause = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
 
-        return cause instanceof UnknownRoleException ? cause.getMessage() : fallback;
+        return
+            cause instanceof UnknownRoleException || cause instanceof WeakPasswordException
+                ? cause.getMessage()
+                : fallback;
     }
 
     private void
@@ -888,10 +1049,36 @@ class UserCommandService
         requireRoles(added);
     }
 
+    private void
+    requireStrongPassword(UpdateUserData data)
+    {
+        data
+            .getPassword()
+            .filter(password -> !isUnchangedPassword(password))
+            .ifPresent(this::requireStrongPassword);
+    }
+
+    private void
+    requireStrongPassword(String password)
+    {
+        passwordPolicy
+            .check(password)
+            .ifPresent(message -> { throw new WeakPasswordException(message); });
+    }
+
+    private boolean
+    isUnchangedPassword(String password)
+    {
+        return password.isBlank() || MappingModule.PASSWORD_MASK.equals(password);
+    }
+
     private User
     mapToUser(CreateUserData data)
     {
         requireRoles(data.getAuthorities());
+
+        if (data.getPassword() != null && !data.getPassword().isBlank())
+            requireStrongPassword(data.getPassword());
 
         User user = mapper.map(data,User.class);
 
@@ -915,7 +1102,7 @@ class UserCommandService
             .ifPresent(user::setExternalIdentity);
         data
             .getPassword()
-            .filter(password -> !password.isBlank())
+            .filter(password -> !isUnchangedPassword(password))
             .ifPresent(password -> user.setPassword(hash(password)));
         data
             .getAuthorities()
@@ -1255,6 +1442,34 @@ class UserCommandService
                 .setSuccess(false)
                 .setValid(false)
                 .setFailureMessage("Unable to authenticate user")
+                .setException(ExceptionData.of(e));
+    }
+
+    private ChangeUserPasswordReply
+    buildReply(ChangeUserPasswordContext context)
+    {
+        logger.info("building change password reply (changed={})",context.isChanged());
+
+        ChangeUserPasswordReply reply = new ChangeUserPasswordReply(context.getRequest());
+
+        if (context.isChanged())
+            return reply.setSuccess(true).setSuccessMessage("password changed");
+
+        return
+            reply
+                .setSuccess(false)
+                .setFailureMessage(
+                    context.getFailureMessage() != null ? context.getFailureMessage() : "invalid credentials");
+    }
+
+    private ChangeUserPasswordReply
+    buildReply(Throwable e,ChangeUserPasswordRequest request)
+    {
+        logger.info("building change password exception reply: {}",e.getMessage());
+        return
+            new ChangeUserPasswordReply(request)
+                .setSuccess(false)
+                .setFailureMessage("Unable to change password")
                 .setException(ExceptionData.of(e));
     }
 

@@ -26,6 +26,8 @@ export {FindUsersByKeySetReply} from "./FindUsersByKeySetReply";
 export {FindUsersByKeySetRequestBuilder} from "./FindUsersByKeySetRequestBuilder";
 export {AuthenticateUserRequest} from "./AuthenticateUserRequest";
 export {AuthenticateUserReply} from "./AuthenticateUserReply";
+export {ChangeUserPasswordRequest} from "./ChangeUserPasswordRequest";
+export {ChangeUserPasswordReply} from "./ChangeUserPasswordReply";
 export {FindUsersByExternalIdentityRequest} from "./FindUsersByExternalIdentityRequest";
 export {FindUsersByExternalIdentityReply} from "./FindUsersByExternalIdentityReply";
 export {FindAllUsersRequest} from "./FindAllUsersRequest";

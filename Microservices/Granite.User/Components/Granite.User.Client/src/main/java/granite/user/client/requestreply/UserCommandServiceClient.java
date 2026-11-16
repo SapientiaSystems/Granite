@@ -139,6 +139,17 @@ class UserCommandServiceClient
                 request);
     }
 
+    @Override
+    public CompletionStage<ChangeUserPasswordReply>
+    changeUserPassword(ChangeUserPasswordRequest request)
+    {
+        return
+            doPostAsync(
+                "change-user-password",
+                ChangeUserPasswordReply.class,
+                request);
+    }
+
     /*
     @Override
     public CompletionStage<FindUserReply>

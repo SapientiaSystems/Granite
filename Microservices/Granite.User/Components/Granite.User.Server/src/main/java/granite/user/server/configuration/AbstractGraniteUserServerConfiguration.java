@@ -13,6 +13,7 @@ import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.application.ApplicationConfiguration;
 import granite.user.server.application.LoginLockoutPolicy;
 import granite.user.server.application.MappingModule;
+import granite.user.server.application.PasswordPolicy;
 import granite.user.server.domain.DomainConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.modelmapper.ModelMapper;
@@ -131,6 +132,17 @@ class AbstractGraniteUserServerConfiguration
                 environment.getProperty("granite.user.lockout.max-attempts",Integer.class,5),
                 Duration.parse(environment.getProperty("granite.user.lockout.duration","PT15M")),
                 Clock.systemUTC());
+    }
+
+    @Bean
+    @SingletonScoped
+    public PasswordPolicy
+    passwordPolicy(Environment environment)
+    {
+        return
+            new PasswordPolicy(
+                environment.getProperty("granite.user.password.min-length",Integer.class,8),
+                PasswordPolicy.MAX_LENGTH);
     }
 
     @Bean

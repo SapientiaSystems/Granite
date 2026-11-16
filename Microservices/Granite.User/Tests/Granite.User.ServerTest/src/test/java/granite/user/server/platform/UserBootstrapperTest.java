@@ -85,6 +85,16 @@ class UserBootstrapperTest
 
     @Test
     public void
+    shortPasswordIsExemptFromPasswordPolicy()
+    {
+        String userName = uniqueUserName();
+
+        assertTrue(bootstrapper(true,userName,"x").bootstrap());
+        assertTrue(encoder.matches("x",find(userName).orElseThrow().getPassword()));
+    }
+
+    @Test
+    public void
     secondRunIsNoOpAndKeepsExistingPassword()
     {
         String userName = uniqueUserName();
