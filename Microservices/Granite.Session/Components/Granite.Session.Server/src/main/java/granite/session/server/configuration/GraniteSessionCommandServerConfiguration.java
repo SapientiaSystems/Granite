@@ -27,6 +27,7 @@ import granite.session.server.application.OktaGroupMappingCheck;
 import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
 import granite.session.server.application.OktaUnmappedGroups;
+import granite.session.server.application.PasswordLoginSettings;
 import granite.session.server.application.RefreshTokenService;
 import granite.session.server.application.RequiredAuthoritiesCheck;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
@@ -137,6 +138,16 @@ class GraniteSessionCommandServerConfiguration
     refreshTokenService()
     {
         return new RefreshTokenService();
+    }
+
+    @Bean
+    @SingletonScoped
+    public PasswordLoginSettings
+    passwordLoginSettings(Environment environment)
+    {
+        return
+            new PasswordLoginSettings()
+                .setEnabled(environment.getProperty("granite.session.login.password.enabled",Boolean.class,true));
     }
 
     @Bean

@@ -11,6 +11,8 @@ import {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
 import {LogoutAllForUserReply} from "./LogoutAllForUserReply";
 import {CloseSessionsRequest} from "./CloseSessionsRequest";
 import {CloseSessionsReply} from "./CloseSessionsReply";
+import {ChangePasswordRequest} from "./ChangePasswordRequest";
+import {ChangePasswordReply} from "./ChangePasswordReply";
 import {RefreshRequest} from "./RefreshRequest";
 import {RefreshReply} from "./RefreshReply";
 import {ResolveSessionRequest} from "./ResolveSessionRequest";
@@ -40,6 +42,9 @@ interface ISessionCommandService
 
     closeSessions(request: CloseSessionsRequest):
         ICompletionStage<CloseSessionsReply>;
+
+    changePassword(request: ChangePasswordRequest):
+        ICompletionStage<ChangePasswordReply>;
 
     refresh(request: RefreshRequest):
         ICompletionStage<RefreshReply>;

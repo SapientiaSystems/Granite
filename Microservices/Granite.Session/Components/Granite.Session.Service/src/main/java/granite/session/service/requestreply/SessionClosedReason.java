@@ -12,7 +12,8 @@ enum SessionClosedReason
     REPLACED,
     DISPLACED,
     REVOKED_SECURITY,
-    ADMIN
+    ADMIN,
+    PASSWORD_CHANGED
 }
 
 //////////////////////////////////////////////////////////////////////////////

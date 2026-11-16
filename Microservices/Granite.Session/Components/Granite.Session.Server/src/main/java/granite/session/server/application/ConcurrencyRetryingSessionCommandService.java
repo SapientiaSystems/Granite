@@ -4,6 +4,8 @@
 
 package granite.session.server.application;
 
+import granite.session.service.requestreply.ChangePasswordReply;
+import granite.session.service.requestreply.ChangePasswordRequest;
 import granite.session.service.requestreply.CloseSessionsReply;
 import granite.session.service.requestreply.CloseSessionsRequest;
 import granite.session.service.requestreply.ISessionCommandService;
@@ -105,6 +107,13 @@ class ConcurrencyRetryingSessionCommandService
     closeSessions(CloseSessionsRequest request)
     {
         return delegate.closeSessions(request);
+    }
+
+    @Override
+    public CompletionStage<ChangePasswordReply>
+    changePassword(ChangePasswordRequest request)
+    {
+        return delegate.changePassword(request);
     }
 
     @Override

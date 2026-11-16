@@ -93,6 +93,16 @@ class SessionCommandServiceController
     }
 
     @PostMapping(
+        value = "/change-password",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<ChangePasswordReply>
+    changePassword(@RequestBody ChangePasswordRequest request)
+    {
+        logger.info("delegating changePassword to implementation service");
+        return implementation.changePassword(request);
+    }
+
+    @PostMapping(
         value = "/refresh",
         produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody CompletionStage<RefreshReply>

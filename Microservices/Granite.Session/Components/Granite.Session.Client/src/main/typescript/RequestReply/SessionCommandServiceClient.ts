@@ -17,6 +17,8 @@ import {
     LogoutAllForUserRequest,
     CloseSessionsReply,
     CloseSessionsRequest,
+    ChangePasswordReply,
+    ChangePasswordRequest,
     RefreshReply,
     RefreshRequest,
     ResolveSessionReply,
@@ -98,6 +100,14 @@ class SessionCommandServiceClient
         console.log("SessionCommandServiceClient.closeSessions");
         return this.doPost<CloseSessionsReply,CloseSessionsRequest>(
             "close-sessions",
+            this.initializeRequest(request));
+    }
+
+    changePassword(request: ChangePasswordRequest): ICompletionStage<ChangePasswordReply>
+    {
+        console.log("SessionCommandServiceClient.changePassword");
+        return this.doPost<ChangePasswordReply,ChangePasswordRequest>(
+            "change-password",
             this.initializeRequest(request));
     }
 
