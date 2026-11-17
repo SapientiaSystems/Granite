@@ -4,7 +4,7 @@ spec:
       containers:
         - name: commandhost
           env:
-            - name: GRANITE_SESSION_LOGIN_OKTA_ENABLED
+            - name: OKTA_ENABLED
               value: "true"
             - name: GRANITE_SESSION_OKTA_ISSUER
               value: http://oauth2-mock.localhost:8090/default

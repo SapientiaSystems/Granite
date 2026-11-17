@@ -105,6 +105,8 @@ if ($sessionExists) {
     Write-Host "Configuring granite-session-commandhost for the mock issuer..." -ForegroundColor Cyan
     kubectl -n $Namespace patch deployment granite-session-commandhost --type=strategic --patch-file="$patchFile"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    kubectl -n $Namespace set env deployment/granite-session-commandhost GRANITE_SESSION_LOGIN_OKTA_ENABLED-
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $mockIp = kubectl -n $Namespace get service granite-oauth2-mock -o jsonpath="{.spec.clusterIP}"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "  Mapping oauth2-mock.localhost to $mockIp inside granite-session-commandhost..." -ForegroundColor DarkGray
