@@ -2,27 +2,72 @@
 // Granite.Web.ClientHost
 //////////////////////////////////////////////////////////////////////////////
 
-import type { ReactElement } from "react";
-import { Outlet }            from "react-router-dom";
-import { AppShell, Group, Text } from "@mantine/core";
-import { UserMenu }          from "granite.web.authentication/Login";
+import type { ReactElement }             from "react";
+import { NavLink, Outlet }               from "react-router-dom";
+import { AppShell, Burger, Group, Text } from "@mantine/core";
+import { useDisclosure }                 from "@mantine/hooks";
+import { UserMenu }                      from "granite.web.authentication/Login";
+
+interface IClientHostTab
+{
+    readonly label: string;
+    readonly path:  string;
+}
+
+const menuTabs: Array<IClientHostTab> =
+[
+    { label: "Clients", path: "/clients" },
+];
 
 export function ClientHostFrame(): ReactElement
 {
+    const [opened, { toggle, close }] = useDisclosure(false);
+
     return (
         <AppShell
             header={{ height: 56 }}
+            navbar={{ width: 260, breakpoint: "sm", collapsed: { desktop: true, mobile: !opened } }}
             padding="md"
             withBorder={false}
         >
             <AppShell.Header style={{ background: "var(--app-bar-bg, #2e2e2e)" }}>
                 <Group h="100%" px="md">
+                    <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="white" />
                     <Text fw={700} size="lg" c="var(--mantine-color-graniteBrand-7)">
                         Granite Clients
                     </Text>
+                    <div style={{ width: 1, height: "40%", background: "rgba(255, 255, 255, 0.2)", marginInline: 8 }} />
+                    <Group gap={4} visibleFrom="sm" h="100%">
+                        {menuTabs.map((tab) => (
+                            <NavLink
+                                key={tab.path}
+                                to={tab.path}
+                                className={({ isActive }) =>
+                                    isActive ? "app-bar-tab active" : "app-bar-tab"
+                                }
+                            >
+                                {tab.label}
+                            </NavLink>
+                        ))}
+                    </Group>
                     <UserMenu preferencesPath="/preferences" />
                 </Group>
             </AppShell.Header>
+
+            <AppShell.Navbar p="md" style={{ background: "var(--app-bar-bg, #2e2e2e)" }}>
+                {menuTabs.map((tab) => (
+                    <NavLink
+                        key={tab.path}
+                        to={tab.path}
+                        className={({ isActive }) =>
+                            isActive ? "nav-link active" : "nav-link"
+                        }
+                        onClick={close}
+                    >
+                        {tab.label}
+                    </NavLink>
+                ))}
+            </AppShell.Navbar>
 
             <AppShell.Main>
                 <Outlet />
