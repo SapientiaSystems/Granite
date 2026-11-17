@@ -17,11 +17,11 @@ export function readCachedTheme(): Theme
     {
         const cached: string | null = window.localStorage.getItem(THEME_KEY);
 
-        return isTheme(cached) ? cached : "light";
+        return isTheme(cached) ? cached : "dark";
     }
     catch
     {
-        return "light";
+        return "dark";
     }
 }
 

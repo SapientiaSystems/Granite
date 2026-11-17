@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import type { ReactElement }                             from "react";
-import { BrowserRouter, Routes, Route }                  from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route }        from "react-router-dom";
 import { AuthenticationProvider, RequireAuthentication } from "granite.web.authentication/Authentication";
 import { LoginCallbackView, LoginView }                  from "granite.web.authentication/Login";
 import { PreferencesProvider }                           from "granite.web.account/Preference";
@@ -19,7 +19,8 @@ export function App(): ReactElement
                 <BrowserRouter>
                     <Routes>
                         <Route element={<ClientHostFrame />}>
-                            <Route index                 element={<RequireAuthentication><OwnedClientsView /></RequireAuthentication>} />
+                            <Route index                 element={<Navigate to="/clients" replace />} />
+                            <Route path="clients"        element={<RequireAuthentication><OwnedClientsView /></RequireAuthentication>} />
                             <Route path="login"          element={<LoginView />} />
                             <Route path="login/callback" element={<LoginCallbackView />} />
                             <Route path="preferences"    element={<RequireAuthentication><ClientHostPreferencesView /></RequireAuthentication>} />

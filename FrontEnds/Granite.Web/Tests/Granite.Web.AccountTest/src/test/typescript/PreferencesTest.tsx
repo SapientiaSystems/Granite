@@ -185,6 +185,19 @@ describe("Preferences",() =>
         expect((screen.getByRole("switch") as HTMLInputElement).disabled).toBe(true);
     });
 
+    it("noCachedThemeDefaultsToDark",async () =>
+    {
+        window.localStorage.removeItem("granite.theme");
+
+        const client = clientWith("light");
+
+        client.loadFailures = ["unable to read preferences"];
+        renderWithPreferences(client,<PreferencesView userName="ann" userRole="User" />);
+
+        expect(await screen.findByText("unable to read preferences")).toBeTruthy();
+        expect(scheme()).toBe("dark");
+    });
+
     it("saveReplyWithFailureMessagesIsAFailure",async () =>
     {
         const client = flagClient();

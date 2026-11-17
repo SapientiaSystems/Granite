@@ -120,6 +120,20 @@ class ExtendedFrontEndControllerConfigurationTest
 
     @Test
     public void
+    graniteThemeDefaultsToDark()
+    {
+        PreferencesOutput output =
+            service(configuration(null))
+                .getPreferencesOutput(new GetPreferencesOutputRequest().setSource("Preferences.Current").setDestination("PreferencesView"))
+                .toCompletableFuture()
+                .join()
+                .getOutput();
+
+        assertEquals("dark",output.getDefinitions().get(0).getDefaultValue());
+    }
+
+    @Test
+    public void
     graniteUsersOutputListsGraniteCatalog()
     {
         assertEquals(List.of("ROLE_ADMIN","ROLE_CLIENT_ADMIN","ROLE_AUDITOR","ROLE_USER"),names(usersOutput(configuration(null))));

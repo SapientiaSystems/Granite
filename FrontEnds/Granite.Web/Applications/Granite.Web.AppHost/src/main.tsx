@@ -12,7 +12,7 @@ import "./style.css";
 
 createRoot(document.getElementById("app")!).render(
     <StrictMode>
-        <MantineProvider theme={graniteTheme} defaultColorScheme="light">
+        <MantineProvider theme={graniteTheme} defaultColorScheme="dark">
             <App />
         </MantineProvider>
     </StrictMode>,

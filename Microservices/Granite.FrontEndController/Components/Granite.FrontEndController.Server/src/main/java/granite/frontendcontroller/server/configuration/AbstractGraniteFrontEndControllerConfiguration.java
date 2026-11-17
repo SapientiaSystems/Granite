@@ -398,7 +398,7 @@ class AbstractGraniteFrontEndControllerConfiguration<S extends IGraniteFrontEndC
     protected List<PreferenceDefinition>
     preferenceDefinitions()
     {
-        return List.of(PreferenceDefinition.enumeration("granite.theme",List.of("light","dark"),"light"));
+        return List.of(PreferenceDefinition.enumeration("granite.theme",List.of("light","dark"),"dark"));
     }
 
     protected abstract S
