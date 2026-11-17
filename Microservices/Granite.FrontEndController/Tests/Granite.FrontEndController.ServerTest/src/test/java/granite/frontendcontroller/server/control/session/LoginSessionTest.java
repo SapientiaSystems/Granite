@@ -172,7 +172,7 @@ class LoginSessionTest
     {
         SessionRequestContext context = SessionTestSupport.context("device-1",null,null);
 
-        assertRefused(run(context,new SessionLoginSettings(false,false),SessionTestSupport.login("amy",PASSWORD)),context);
+        assertRefused(run(context,new SessionLoginSettings(false,true),SessionTestSupport.login("amy",PASSWORD)),context);
         Mockito.verifyNoInteractions(commandClient);
     }
 

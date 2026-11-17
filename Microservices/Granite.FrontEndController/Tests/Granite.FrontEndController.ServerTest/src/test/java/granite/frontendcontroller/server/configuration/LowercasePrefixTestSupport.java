@@ -20,6 +20,7 @@ class LowercasePrefixTestSupport
         IConfiguration configuration = Mockito.mock(IConfiguration.class);
 
         Mockito.when(configuration.getProperty("granite.cookies.prefix","GRANITE")).thenReturn("poplar");
+        Mockito.when(configuration.getProperty("granite.session.login.password.enabled","true")).thenReturn("true");
         return configuration;
     }
 }

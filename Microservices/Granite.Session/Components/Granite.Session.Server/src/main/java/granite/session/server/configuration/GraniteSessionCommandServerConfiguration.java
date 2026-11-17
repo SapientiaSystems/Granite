@@ -22,6 +22,7 @@ import granite.session.server.application.IServiceTokenProvider;
 import granite.session.server.application.IServiceTokenIssuer;
 import granite.session.server.application.JwkSetProvider;
 import granite.session.server.application.JwtTokenService;
+import granite.session.server.application.LoginMethods;
 import granite.session.server.application.OktaClient;
 import granite.session.server.application.OktaGroupMappingCheck;
 import granite.session.server.application.OktaRoleAssignment;
@@ -148,6 +149,14 @@ class GraniteSessionCommandServerConfiguration
         return
             new PasswordLoginSettings()
                 .setEnabled(environment.getProperty("granite.session.login.password.enabled",Boolean.class,true));
+    }
+
+    @Bean
+    @SingletonScoped
+    public LoginMethods
+    loginMethods(PasswordLoginSettings passwordLoginSettings,OktaSettings oktaSettings)
+    {
+        return new LoginMethods(passwordLoginSettings.isEnabled(),oktaSettings.isEnabled());
     }
 
     @Bean

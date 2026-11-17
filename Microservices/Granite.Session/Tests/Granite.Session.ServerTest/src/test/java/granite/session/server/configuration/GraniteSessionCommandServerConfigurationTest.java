@@ -23,6 +23,7 @@ import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.JwtTokenService;
+import granite.session.server.application.LoginMethods;
 import granite.session.server.application.IOktaClient;
 import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
@@ -410,6 +411,42 @@ class GraniteSessionCommandServerConfigurationTest
         env.setProperty("granite.session.jwt.public-key-location",PUBLIC_KEY);
 
         assertNotNull(subject.jwtTokenService(env,new DefaultResourceLoader()));
+    }
+
+    @Test
+    public void
+    loginMethodsRefusesBothDisabled()
+    {
+        MockEnvironment env =
+            new MockEnvironment()
+                .withProperty("granite.session.login.password.enabled","false")
+                .withProperty("granite.session.login.okta.enabled","false");
+
+        IllegalStateException failure =
+            assertThrows(
+                IllegalStateException.class,
+                () -> subject.loginMethods(subject.passwordLoginSettings(env),subject.oktaSettings(env)));
+
+        assertEquals(LoginMethods.NONE_ENABLED,failure.getMessage());
+    }
+
+    @Test
+    public void
+    loginMethodsAcceptsEitherEnabled()
+    {
+        MockEnvironment passwordOnly = new MockEnvironment();
+        MockEnvironment oktaOnly     =
+            new MockEnvironment()
+                .withProperty("granite.session.login.password.enabled","false")
+                .withProperty("granite.session.login.okta.enabled","true");
+
+        LoginMethods password = subject.loginMethods(subject.passwordLoginSettings(passwordOnly),subject.oktaSettings(passwordOnly));
+        LoginMethods okta     = subject.loginMethods(subject.passwordLoginSettings(oktaOnly),subject.oktaSettings(oktaOnly));
+
+        assertTrue(password.isPasswordEnabled());
+        assertFalse(password.isOktaEnabled());
+        assertFalse(okta.isPasswordEnabled());
+        assertTrue(okta.isOktaEnabled());
     }
 
     @Test

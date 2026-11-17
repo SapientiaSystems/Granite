@@ -88,6 +88,7 @@ if kubectl -n "$NAMESPACE" get deployment granite-session-commandhost >/dev/null
     say "Configuring granite-session-commandhost for the mock issuer..." "$CYAN"
     kubectl -n "$NAMESPACE" patch deployment granite-session-commandhost \
         --type=strategic --patch-file="$MANIFEST_DIR/session-commandhost-okta-patch.yaml"
+    kubectl -n "$NAMESPACE" set env deployment/granite-session-commandhost GRANITE_SESSION_LOGIN_OKTA_ENABLED-
     mock_ip="$(kubectl -n "$NAMESPACE" get service granite-oauth2-mock -o jsonpath='{.spec.clusterIP}')"
     say "  Mapping oauth2-mock.localhost to $mock_ip inside granite-session-commandhost..." "$GRAY"
     alias_patch="$(mktemp)"

@@ -13,6 +13,7 @@ import strata.foundation.core.configuration.IConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("CommitStage")
@@ -48,10 +49,26 @@ class LoginMethodsViewTest
     disabledPasswordLoginIsMissingFromLoginMethods()
         throws Exception
     {
-        SessionOutput output = run(new SessionLoginSettings(false,false));
+        SessionOutput output = run(new SessionLoginSettings(false,true));
 
         assertFalse(output.isPasswordEnabled());
-        assertFalse(output.isOktaEnabled());
+        assertTrue(output.isOktaEnabled());
+    }
+
+    @Test
+    public void
+    bothLoginMethodsDisabledIsRefused()
+    {
+        IConfiguration configuration = Mockito.mock(IConfiguration.class);
+
+        Mockito.when(configuration.getProperty("granite.session.login.password.enabled","true")).thenReturn("false");
+        Mockito.when(configuration.getProperty("granite.session.login.okta.enabled","false")).thenReturn("false");
+
+        IllegalStateException direct     = assertThrows(IllegalStateException.class,() -> new SessionLoginSettings(false,false));
+        IllegalStateException configured = assertThrows(IllegalStateException.class,() -> SessionLoginSettings.fromConfiguration(configuration));
+
+        assertEquals(SessionLoginSettings.NONE_ENABLED,direct.getMessage());
+        assertEquals(SessionLoginSettings.NONE_ENABLED,configured.getMessage());
     }
 
     @Test
