@@ -23,6 +23,7 @@ class MvcTestSupport
         IConfiguration configuration = Mockito.mock(IConfiguration.class);
 
         Mockito.when(configuration.getProperty("granite.cookies.prefix","GRANITE")).thenReturn("GRANITE");
+        Mockito.when(configuration.getProperty("granite.session.login.password.enabled","true")).thenReturn("true");
         return configuration;
     }
 

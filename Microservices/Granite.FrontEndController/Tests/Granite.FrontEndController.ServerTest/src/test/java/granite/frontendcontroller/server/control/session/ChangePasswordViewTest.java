@@ -132,7 +132,7 @@ class ChangePasswordViewTest
         throws Exception
     {
         return
-            new ChangePasswordView(commandClient,context,new SessionLoginSettings(passwordEnabled,false))
+            new ChangePasswordView(commandClient,context,new SessionLoginSettings(passwordEnabled,!passwordEnabled))
                 .apply(
                     new SessionInput()
                         .setCurrentPassword(CURRENT)

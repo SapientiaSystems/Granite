@@ -92,6 +92,7 @@ class GraniteFrontEndControllerConfigurationTest
         Mockito.when(configuration.getProperty("granite.frontendcontroller.service-client.secret","")).thenReturn("fec-secret");
         Mockito.when(configuration.getProperty("granite.frontendcontroller.ssl-bundle","granite-services")).thenReturn("granite-services");
         Mockito.when(configuration.getProperty("granite.cookies.prefix","GRANITE")).thenReturn("GRANITE");
+        Mockito.when(configuration.getProperty("granite.session.login.password.enabled","true")).thenReturn("true");
         Mockito.when(sslBundles.getBundle("granite-services")).thenReturn(bundle);
         Mockito.when(bundle.createSslContext()).thenReturn(SSLContext.getDefault());
 
