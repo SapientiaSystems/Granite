@@ -28,9 +28,10 @@ class ApplicationConfiguration
         ModelMapper            mapper,
         PasswordEncoder        encoder,
         LoginLockoutPolicy     lockoutPolicy,
+        PasswordPolicy         passwordPolicy,
         ApplicationRolesManager roles)
     {
-        return new UserCommandService(repository,sender,mapper,encoder,lockoutPolicy,roles);
+        return new UserCommandService(repository,sender,mapper,encoder,lockoutPolicy,roles,passwordPolicy);
     }
     @Bean
     @RequestScoped

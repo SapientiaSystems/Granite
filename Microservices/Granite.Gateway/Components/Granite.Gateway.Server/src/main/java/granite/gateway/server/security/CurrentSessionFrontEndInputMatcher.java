@@ -11,7 +11,7 @@ class CurrentSessionFrontEndInputMatcher
     extends FrontEndInputKeyMatcher
 {
     public static final Set<String> CURRENT_SESSION_OUTPUT_KEYS = Set.of("Session.Current->SessionView");
-    public static final Set<String> CURRENT_SESSION_INPUT_KEYS  = Set.of("Session.Current->Logout->LoginView");
+    public static final Set<String> CURRENT_SESSION_INPUT_KEYS  = Set.of("Session.Current->Logout->LoginView","Session.Current->ChangePassword->ChangePasswordView");
 
     public
     CurrentSessionFrontEndInputMatcher()

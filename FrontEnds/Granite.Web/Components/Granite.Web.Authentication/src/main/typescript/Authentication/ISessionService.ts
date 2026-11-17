@@ -10,15 +10,23 @@ export interface ILoginMethods
 
 export interface ISessionStatus
 {
-    authenticated: boolean;
-    userName?:     string;
-    authorities:   Array<string>;
-    returnTo?:     string;
+    authenticated:    boolean;
+    userName?:        string;
+    authorities:      Array<string>;
+    returnTo?:        string;
+    passwordEnabled?: boolean;
+    passwordSet?:     boolean;
 }
 
 export interface ILogoutResult
 {
     loggedOut: boolean;
+}
+
+export interface IChangePasswordResult
+{
+    success:  boolean;
+    message?: string;
 }
 
 export interface ISessionService
@@ -34,6 +42,8 @@ export interface ISessionService
     getCurrent(): Promise<ISessionStatus>;
 
     logout(): Promise<ILogoutResult>;
+
+    changePassword(currentPassword: string,newPassword: string): Promise<IChangePasswordResult>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

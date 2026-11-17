@@ -31,6 +31,7 @@ class SessionStatusView
     private final ISessionQueryServiceClient sessionClient;
     private final IUserQueryServiceClient    userClient;
     private final SessionRequestContext      context;
+    private final SessionLoginSettings       settings;
 
     public
     SessionStatusView(
@@ -38,9 +39,20 @@ class SessionStatusView
         IUserQueryServiceClient    userClient,
         SessionRequestContext      context)
     {
+        this(sessionClient,userClient,context,new SessionLoginSettings(true,false));
+    }
+
+    public
+    SessionStatusView(
+        ISessionQueryServiceClient sessionClient,
+        IUserQueryServiceClient    userClient,
+        SessionRequestContext      context,
+        SessionLoginSettings       settings)
+    {
         this.sessionClient = sessionClient;
         this.userClient = userClient;
         this.context = context;
+        this.settings = settings;
     }
 
     @Override
@@ -98,9 +110,13 @@ class SessionStatusView
         if (!reply.isSuccess() || reply.getFoundUsers() == null || reply.getFoundUsers().isEmpty())
             return unauthenticated(request);
 
+        String password = reply.getFoundUsers().get(0).getPassword();
+
         return
             describe(request)
                 .setUserName(reply.getFoundUsers().get(0).getUserName())
+                .setPasswordSet(password != null && !password.isBlank())
+                .setPasswordEnabled(settings.isPasswordEnabled())
                 .setAuthorities(session.getAuthorities() == null ? Set.of() : session.getAuthorities())
                 .setStatus("AUTHENTICATED");
     }

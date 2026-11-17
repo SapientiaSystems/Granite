@@ -25,6 +25,12 @@ class SessionInput
 
     private String application;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String currentPassword;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String newPassword;
+
     public
     SessionInput()
     {
@@ -35,6 +41,8 @@ class SessionInput
         code     = null;
         state    = null;
         application = null;
+        currentPassword = null;
+        newPassword = null;
     }
 
     @Override
@@ -107,6 +115,20 @@ class SessionInput
         return this;
     }
 
+    public SessionInput
+    setCurrentPassword(String value)
+    {
+        currentPassword = value;
+        return this;
+    }
+
+    public SessionInput
+    setNewPassword(String value)
+    {
+        newPassword = value;
+        return this;
+    }
+
     public String
     getUserName() { return userName; }
 
@@ -124,6 +146,12 @@ class SessionInput
 
     public String
     getApplication() { return application; }
+
+    public String
+    getCurrentPassword() { return currentPassword; }
+
+    public String
+    getNewPassword() { return newPassword; }
 
     @Override
     public String

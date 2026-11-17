@@ -27,6 +27,7 @@ class LoginContext
     private String             sessionHandle;
     private LoginLifecycle     lifecycle;
     private boolean            invalidApplication;
+    private boolean            passwordUnavailable;
 
     public
     LoginContext(LoginRequest req)
@@ -42,6 +43,7 @@ class LoginContext
         sessionHandle        = null;
         lifecycle            = null;
         invalidApplication   = false;
+        passwordUnavailable  = false;
     }
 
     public LoginContext
@@ -69,6 +71,13 @@ class LoginContext
     setInvalidApplication(boolean value)
     {
         invalidApplication = value;
+        return this;
+    }
+
+    public LoginContext
+    setPasswordUnavailable(boolean value)
+    {
+        passwordUnavailable = value;
         return this;
     }
 
@@ -148,6 +157,9 @@ class LoginContext
 
     public Map<String,Object>
     getValidatedValues() { return validatedValues; }
+
+    public boolean
+    isPasswordUnavailable() { return passwordUnavailable; }
 
     public boolean
     isUnsupportedKind() { return unsupportedKind; }

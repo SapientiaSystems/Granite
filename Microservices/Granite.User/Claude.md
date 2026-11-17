@@ -121,6 +121,7 @@ Downstream application systems reuse Granite.User by depending on `granite-user-
 | `applicationRoles()` | Abstract | `new GraniteApplicationRolesManagerSupplier().get()` (Admin, Auditor, User); `applicationRolesStartupLog(ApplicationRolesManager)` logs the catalog role names once at startup. `UserCommandService` rejects non-catalog roles (`unknown role: <name>`; on update only newly added ones) and stores the hierarchy-expanded set |
 | `passwordEncoder()` | Abstract | `BCryptPasswordEncoder(12)` |
 | `loginLockoutPolicy(Environment)` | Abstract | `LoginLockoutPolicy`: `granite.user.lockout.max-attempts` (default 5) failed password attempts lock the account for `granite.user.lockout.duration` (default `PT15M`) |
+| `passwordPolicy(Environment)` | Abstract | `PasswordPolicy`: `granite.user.password.min-length` (default 8, allowed 1..128; the maximum length is 128). Applied on admin create/update and on `change-user-password`; the bootstrap admin (`UserBootstrapper`) is exempt |
 | `requestLoggingFilter()` | Abstract | query string only (payloads and headers would leak passwords and bearer tokens) |
 | `openApi()` | Abstract | group `User`, service path + `/health/**` |
 | `securityFilterChain(HttpSecurity,JwtDecoder,Environment)` | Abstract | delegates to `GraniteJwtCheckSecurity.jwtCheckChain(...,REQUIRED,...)`: the only `SecurityFilterChain`, JWT check only (signature, expiry, issuer, audience), stateless, CSRF off, no authority or role path rules. `OPTIONS` and the tokenless paths are open; everything else needs a valid token. Tokenless paths come from the `getTokenlessPathPatterns(Environment)` hook (default `GraniteJwtCheckSecurity.defaultTokenlessPaths`: `${strata.health.base-path}/**`, `/error`, springdoc paths outside `production`) |
@@ -136,6 +137,8 @@ First login on a fresh `local` or `development` database: the CommandHost files 
 - `recordOutcome` updates `User.failedLoginAttempts` / `lockedUntil` and saves them without firing `UserUpdated`.
 - While an account is locked, even the correct password returns `valid=false` with `failureMessage="account locked"`, and the lock is not extended.
 - A successful login resets the counters.
+
+`changeUserPassword` (`{userId,currentPassword,newPassword}` → `ChangeUserPasswordReply`) uses the same pipeline with lockout as `authenticateUser`: `lookupUser → checkLockout → checkCredential → recordOutcome`, then the policy check and the update. Failures reply `invalid credentials`, a `PasswordPolicy` message, `new password must differ from the current one` or `Unable to change password`. Admin create/update apply the policy to a supplied password; on update a null, blank or `********` password leaves the stored hash unchanged (the Users grid sends the masked value back), and create without a password is allowed.
 
 Security: User authenticates and validates stored roles against the catalog, but does not authorize requests by path. Every non-public request needs a valid Session-issued access token. Authorization rules belong only to the Gateway chain. `SecurityAutoConfiguration` stays excluded in the host mains: the entry configuration enables web security itself (`@EnableWebSecurity`). The SecurityContextHolder strategy is set in `beanFactoryPostProcessor()`, before any security filter captures it.
 
@@ -220,6 +223,7 @@ Spring `@Configuration` classes are composed via `@Import`. A base `PlatformConf
 | `POST /merge-user-values` | `MergeUserValuesRequest` | `MergeUserValuesReply` |
 | `POST /destroy-user` | `DestroyUserRequest` | `DestroyUserReply` |
 | `POST /destroy-users` | `DestroyUsersRequest` | `DestroyUsersReply` |
+| `POST /change-user-password` | `ChangeUserPasswordRequest` | `ChangeUserPasswordReply` |
 
 ### User Query Service (`/user-query-service/`)
 

@@ -108,6 +108,7 @@ export class FakeSession
     async completeOktaLogin() { return this.current; }
     async getCurrent() { return this.current; }
     async logout() { return { loggedOut: true }; }
+    async changePassword() { return { success: true }; }
 }
 
 export function authenticationWith(client: FakePreferencesClient,session: FakeSession): IAuthentication

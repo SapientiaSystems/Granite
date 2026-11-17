@@ -15,7 +15,7 @@ public
 class MappingModule
     implements Module
 {
-    private static final String PASSWORD_MASK = "********";
+    public static final String PASSWORD_MASK = "********";
 
     @Override
     public void

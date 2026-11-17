@@ -137,6 +137,7 @@ export const KEYS =
     complete: "Session.New->CompleteOktaLogin->LoginView",
     current:  "Session.Current->SessionView",
     logout:   "Session.Current->Logout->LoginView",
+    change:   "Session.Current->ChangePassword->ChangePasswordView",
 };
 
 export function scriptedFrontEnd(): FakeFrontEnd
@@ -174,3 +175,11 @@ export async function flush(): Promise<void>
 }
 
 //////////////////////////////////////////////////////////////////////////////
+
+export function changePasswordOutput(changed: boolean,message?: string): FrontEndOutput
+{
+    return {
+        userId: null, source: "Session.Current", destination: "ChangePasswordView", command: "ChangePassword",
+        status: changed ? "CHANGED" : "FAILED", failureMessages: changed || message === undefined ? [] : [message],
+    } as FrontEndOutput;
+}

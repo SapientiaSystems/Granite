@@ -27,6 +27,9 @@ interface ISessionCommandService
     CompletionStage<CloseSessionsReply>
     closeSessions(CloseSessionsRequest request);
 
+    CompletionStage<ChangePasswordReply>
+    changePassword(ChangePasswordRequest request);
+
     CompletionStage<RefreshReply>
     refresh(RefreshRequest request);
 

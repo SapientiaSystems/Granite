@@ -162,7 +162,8 @@ class GraniteGatewayServerConfiguration
                             .pathMatchers(
                                 "/session-command-service/start-okta-login",
                                 "/session-command-service/complete-okta-login",
-                                "/session-command-service/issue-delegated-token")
+                                "/session-command-service/issue-delegated-token",
+                                "/session-command-service/change-password")
                             .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();

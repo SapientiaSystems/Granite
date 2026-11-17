@@ -148,6 +148,16 @@ class GatewayRoleRulesTest
 
     @Test
     public void
+    changePasswordIsOnlyForServiceTokens()
+        throws Exception
+    {
+        assertForbidden(HttpMethod.POST,"/session-command-service/change-password",backend.sign(List.of("ROLE_ADMIN")));
+        assertAllowed(HttpMethod.POST,"/session-command-service/change-password",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/session-command-service/change-password",null));
+    }
+
+    @Test
+    public void
     agentMatrix()
         throws Exception
     {

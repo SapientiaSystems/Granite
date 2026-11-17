@@ -40,6 +40,7 @@ export function AuthenticationProvider({ children, authentication }: IAuthentica
                 completeOktaLogin:      (code: string,oktaState: string) => manager.completeOktaLogin(code,oktaState),
                 logout:                 () => manager.logout(),
                 getLoginMethods:        () => manager.getLoginMethods(),
+                changePassword:         (currentPassword: string,newPassword: string) => manager.changePassword(currentPassword,newPassword),
                 cancelReauthentication: () => manager.cancelReauthentication(),
                 createFrontEndClient,
             }),

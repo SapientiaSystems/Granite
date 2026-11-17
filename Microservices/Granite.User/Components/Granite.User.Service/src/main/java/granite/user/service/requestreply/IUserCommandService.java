@@ -33,6 +33,9 @@ interface IUserCommandService
     CompletionStage<AuthenticateUserReply>
     authenticateUser(AuthenticateUserRequest request);
 
+    CompletionStage<ChangeUserPasswordReply>
+    changeUserPassword(ChangeUserPasswordRequest request);
+
 }
 
 //////////////////////////////////////////////////////////////////////////////

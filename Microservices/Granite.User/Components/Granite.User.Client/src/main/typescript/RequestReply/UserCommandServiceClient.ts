@@ -18,7 +18,9 @@ import {
     DestroyUsersReply,
     DestroyUsersRequest,
     AuthenticateUserReply,
-    AuthenticateUserRequest
+    AuthenticateUserRequest,
+    ChangeUserPasswordReply,
+    ChangeUserPasswordRequest
 } from "granite.user.service/RequestReply";
 
 export
@@ -100,6 +102,14 @@ class UserCommandServiceClient
         console.log("UserCommandServiceClient.authenticateUser");
         return this.doPost<AuthenticateUserReply,AuthenticateUserRequest>(
             "authenticate-user",
+            this.initializeRequest(request));
+    }
+
+    changeUserPassword(request: ChangeUserPasswordRequest): ICompletionStage<ChangeUserPasswordReply>
+    {
+        console.log("UserCommandServiceClient.changeUserPassword");
+        return this.doPost<ChangeUserPasswordReply,ChangeUserPasswordRequest>(
+            "change-user-password",
             this.initializeRequest(request));
     }
 

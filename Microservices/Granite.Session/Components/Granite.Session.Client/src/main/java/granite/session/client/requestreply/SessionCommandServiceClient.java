@@ -117,6 +117,17 @@ class SessionCommandServiceClient
     }
 
     @Override
+    public CompletionStage<ChangePasswordReply>
+    changePassword(ChangePasswordRequest request)
+    {
+        return
+            doPostAsync(
+                "change-password",
+                ChangePasswordReply.class,
+                request);
+    }
+
+    @Override
     public CompletionStage<RefreshReply>
     refresh(RefreshRequest request)
     {
