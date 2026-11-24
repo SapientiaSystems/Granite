@@ -4,6 +4,10 @@
     <facet external-system-id="GRADLE" type="web" name="Web">
       <configuration>
         <webroots />
+        <sourceRoots>
+          <root url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Session/Components/Granite.Session.Service/src/main/java" />
+          <root url="file://$MODULE_DIR$/../../../../../../Microservices/Granite.Session/Components/Granite.Session.Service/src/main/schema" />
+        </sourceRoots>
       </configuration>
     </facet>
   </component>

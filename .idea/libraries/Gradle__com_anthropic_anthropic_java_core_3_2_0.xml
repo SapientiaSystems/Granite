@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: com.anthropic:anthropic-java-core:3.2.0" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="com.anthropic" artifactId="anthropic-java-core" version="3.2.0" baseVersion="3.2.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.anthropic/anthropic-java-core/3.2.0/1a8296f1159d0f3be038762de433929c52b15145/anthropic-java-core-3.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

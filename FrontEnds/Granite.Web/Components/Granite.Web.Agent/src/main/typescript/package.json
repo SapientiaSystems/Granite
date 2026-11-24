@@ -1,6 +1,6 @@
 {
   "name": "granite.web.agent",
-  "version": "1.0.0-snapshot.1793631270969",
+  "version": "1.0.0-snapshot.1793660512948",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"

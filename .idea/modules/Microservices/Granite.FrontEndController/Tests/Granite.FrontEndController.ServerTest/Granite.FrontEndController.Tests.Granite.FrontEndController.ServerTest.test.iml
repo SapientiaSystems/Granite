@@ -24,6 +24,10 @@
     <orderEntry type="library" name="Gradle: org.junit.jupiter:junit-jupiter-api:5.13.3" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Client.main" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Client.main" />
+    <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Client.main" />
+    <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Client.main" />
+    <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Client.main" />
+    <orderEntry type="module" module-name="Granite.Agent.Components.Granite.Agent.Client.main" />
     <orderEntry type="library" name="Gradle: strata.frontendcontroller:strata-frontendcontroller-server:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
     <orderEntry type="module" module-name="Granite.FrontEndController.Components.Granite.FrontEndController.Service.main" />
@@ -61,6 +65,10 @@
     <orderEntry type="library" name="Gradle: org.jboss.resteasy:resteasy-client:7.0.0.Final" level="project" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Service.main" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-jose:6.2.1" level="project" />
+    <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Service.main" />
+    <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Service.main" />
+    <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Service.main" />
+    <orderEntry type="module" module-name="Granite.Agent.Components.Granite.Agent.Service.main" />
     <orderEntry type="library" name="Gradle: strata.frontendcontroller:strata-frontendcontroller-service:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.modelmapper:modelmapper:3.2.6" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.4.2" level="project" />
