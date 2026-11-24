@@ -1,0 +1,5 @@
+window.__GRANITE_CONFIG__ = {
+    apiBaseUrl: "${API_BASE_URL}",
+    cookiePrefix: "${COOKIE_PREFIX}",
+    application: "client"
+};

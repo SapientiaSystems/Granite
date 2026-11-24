@@ -8,13 +8,17 @@ import { CompletionError }                                                    fr
 import type { IGraniteFrontEndControllerServiceClient }                       from "granite.frontendcontroller.client/RequestReply";
 import type { GetSessionOutputReply, HandleSessionInputReply,
               SessionInput, SessionOutput }                                   from "granite.frontendcontroller.service/RequestReply";
-import type { ILoginMethods, ILogoutResult, ISessionService, ISessionStatus } from "./ISessionService";
+import { APPLICATION }                                                       from "./RuntimeConfig";
+import type { IChangePasswordResult, ILoginMethods, ILogoutResult, ISessionService,
+              ISessionStatus }                                                    from "./ISessionService";
 
 const NEW_SOURCE:          string = "Session.New";
 const CURRENT_SOURCE:      string = "Session.Current";
 const LOGIN_DESTINATION:   string = "LoginView";
 const SESSION_DESTINATION: string = "SessionView";
 const AUTHENTICATED:       string = "AUTHENTICATED";
+const CHANGED:             string = "CHANGED";
+const CHANGE_FAILED:       string = "Unable to change password";
 
 export const UNAUTHENTICATED: ISessionStatus = { authenticated: false, authorities: [] };
 
@@ -37,12 +41,12 @@ export class FrontEndSessionService
 
     async login(userName: string,password: string): Promise<ISessionStatus>
     {
-        return toStatus(await this.send(NEW_SOURCE,"Login",LOGIN_DESTINATION,{ userName, password }));
+        return toStatus(await this.send(NEW_SOURCE,"Login",LOGIN_DESTINATION,{ userName, password, application: APPLICATION }));
     }
 
     async startOktaLogin(returnTo: string): Promise<string | undefined>
     {
-        const output: SessionOutput = await this.send(NEW_SOURCE,"StartOktaLogin",LOGIN_DESTINATION,{ returnTo });
+        const output: SessionOutput = await this.send(NEW_SOURCE,"StartOktaLogin",LOGIN_DESTINATION,{ returnTo, application: APPLICATION });
 
         return typeof output.redirectUrl === "string" && output.redirectUrl.length > 0 ? output.redirectUrl : undefined;
     }
@@ -81,6 +85,23 @@ export class FrontEndSessionService
                 return { loggedOut: true };
 
             throw error;
+        }
+    }
+
+    async changePassword(currentPassword: string,newPassword: string): Promise<IChangePasswordResult>
+    {
+        try
+        {
+            const output: SessionOutput = await this.send(CURRENT_SOURCE,"ChangePassword","ChangePasswordView",{ currentPassword, newPassword });
+
+            if (output.status === CHANGED)
+                return { success: true };
+
+            return { success: false, message: output.failureMessages?.[0] || CHANGE_FAILED };
+        }
+        catch
+        {
+            return { success: false, message: CHANGE_FAILED };
         }
     }
 
@@ -139,6 +160,8 @@ function toStatus(output: SessionOutput): ISessionStatus
         userName:      output.userName ?? undefined,
         authorities:   output.authorities ?? [],
         returnTo:      output.returnTo ?? undefined,
+        passwordEnabled: output.passwordEnabled === true,
+        passwordSet:     output.passwordSet === true,
     };
 }
 

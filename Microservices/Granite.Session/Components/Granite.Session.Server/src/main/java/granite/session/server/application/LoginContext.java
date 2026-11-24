@@ -26,6 +26,8 @@ class LoginContext
     private String             refreshToken;
     private String             sessionHandle;
     private LoginLifecycle     lifecycle;
+    private boolean            invalidApplication;
+    private boolean            passwordUnavailable;
 
     public
     LoginContext(LoginRequest req)
@@ -40,6 +42,8 @@ class LoginContext
         refreshToken         = null;
         sessionHandle        = null;
         lifecycle            = null;
+        invalidApplication   = false;
+        passwordUnavailable  = false;
     }
 
     public LoginContext
@@ -60,6 +64,20 @@ class LoginContext
     setValidatedValues(Map<String,Object> values)
     {
         validatedValues = values != null ? values : new LinkedHashMap<>();
+        return this;
+    }
+
+    public LoginContext
+    setInvalidApplication(boolean value)
+    {
+        invalidApplication = value;
+        return this;
+    }
+
+    public LoginContext
+    setPasswordUnavailable(boolean value)
+    {
+        passwordUnavailable = value;
         return this;
     }
 
@@ -118,6 +136,17 @@ class LoginContext
     getCredentialKind() { return request.getCredentialKind(); }
 
     public String
+    getApplication()
+    {
+        String application = request.getApplication();
+
+        return application == null || application.isBlank() ? Session.DEFAULT_APPLICATION : application;
+    }
+
+    public boolean
+    isInvalidApplication() { return invalidApplication; }
+
+    public String
     getDeviceId() { return request.getDeviceId(); }
 
     public Long
@@ -128,6 +157,9 @@ class LoginContext
 
     public Map<String,Object>
     getValidatedValues() { return validatedValues; }
+
+    public boolean
+    isPasswordUnavailable() { return passwordUnavailable; }
 
     public boolean
     isUnsupportedKind() { return unsupportedKind; }

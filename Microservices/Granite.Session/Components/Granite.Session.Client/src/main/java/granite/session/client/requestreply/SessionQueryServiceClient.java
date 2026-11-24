@@ -6,9 +6,13 @@ package granite.session.client.requestreply;
 
 import granite.session.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
+import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class SessionQueryServiceClient
@@ -22,6 +26,28 @@ class SessionQueryServiceClient
             builder,
             preprocessBaseUrl(baseUrl),
             "session-query-service/");
+    }
+
+    public
+    SessionQueryServiceClient(CountedClient client, String baseUrl)
+    {
+        super(
+            client,
+            preprocessBaseUrl(baseUrl),
+            "session-query-service/");
+    }
+
+    public
+    SessionQueryServiceClient(CountedClient client, ExecutorService executor, String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "session-query-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override
@@ -75,10 +101,6 @@ class SessionQueryServiceClient
         setHeader("Authorization","Bearer " + accessToken);
         return this;
     }
-
-    @Override
-    public void
-    close() {}
 
     private static String
     preprocessBaseUrl(String baseUrl)

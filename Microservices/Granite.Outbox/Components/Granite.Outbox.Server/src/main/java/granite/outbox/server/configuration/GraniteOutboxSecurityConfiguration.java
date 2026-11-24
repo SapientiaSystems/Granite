@@ -13,7 +13,6 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,6 +20,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
+import strata.foundation.spring.inject.SingletonScoped;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ class GraniteOutboxSecurityConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public JwtDecoder
     jwtDecoder(Environment environment,ObjectProvider<SslBundles> sslBundles)
     {

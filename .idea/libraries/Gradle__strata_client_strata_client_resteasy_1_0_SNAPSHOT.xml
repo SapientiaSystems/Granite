@@ -2,7 +2,7 @@
   <library name="Gradle: strata.client:strata-client-resteasy:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
     <properties groupId="strata.client" artifactId="strata-client-resteasy" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.client/strata-client-resteasy/1.0-SNAPSHOT/64f604e842b8fd32554a1726f135bd2406a16b1b/strata-client-resteasy-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.client/strata-client-resteasy/1.0-SNAPSHOT/d8a67dd86e46ce24acf3f92931b2e52ec240f437/strata-client-resteasy-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

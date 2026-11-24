@@ -9,7 +9,7 @@ import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.foundation.core.security.RoleDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import strata.foundation.spring.inject.SingletonScoped;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ class PoplarUserCommandServerConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ApplicationRolesManager
     applicationRoles()
     {
@@ -38,7 +38,7 @@ class PoplarUserCommandServerConfiguration
         List<RoleDefinition> roles = new ArrayList<>();
 
         for (RoleDefinition role : new GraniteApplicationRolesManagerSupplier().get().getRoles())
-            if (!ApplicationRolesManager.ADMIN.equals(role.getName()))
+            if (!ApplicationRolesManager.ADMIN.equals(role.getName()) && !ApplicationRolesManager.CLIENT_ADMIN.equals(role.getName()))
                 roles.add(role);
 
         roles.add(new RoleDefinition(REVIEWER,"Promotions Reviewer",Set.of(GraniteApplicationRolesManagerSupplier.USER)));

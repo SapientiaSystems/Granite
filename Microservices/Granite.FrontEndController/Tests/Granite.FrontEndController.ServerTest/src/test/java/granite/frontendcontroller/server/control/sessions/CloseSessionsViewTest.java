@@ -4,6 +4,7 @@
 
 package granite.frontendcontroller.server.control.sessions;
 
+import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.frontendcontroller.server.control.session.SessionTestSupport;
 import granite.frontendcontroller.service.requestreply.SessionsInput;
 import granite.frontendcontroller.service.requestreply.SessionsOutput;
@@ -139,7 +140,8 @@ class CloseSessionsViewTest
             new CloseSessionsView(
                 commandClient,
                 new SessionsLoader(sessionQueryClient,userQueryClient),
-                SessionTestSupport.context("d",sessionId,caller));
+                SessionTestSupport.context("d",sessionId,caller),
+                new GraniteApplicationRolesManagerSupplier().get());
     }
 
     private SessionsInput

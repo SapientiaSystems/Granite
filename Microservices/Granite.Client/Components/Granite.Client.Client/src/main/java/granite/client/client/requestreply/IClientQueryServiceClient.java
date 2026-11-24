@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+// IClientQueryServiceClient.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.client.client.requestreply;
+
+import granite.client.service.requestreply.IClientQueryService;
+
+public
+interface IClientQueryServiceClient
+    extends IClientQueryService
+{
+    IClientQueryServiceClient
+    setAuthorizationHeader(String accessToken);
+
+    void
+    close();
+}
+
+//////////////////////////////////////////////////////////////////////////////

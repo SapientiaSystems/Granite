@@ -13,6 +13,8 @@ import {DestroyUsersRequest} from "./DestroyUsersRequest";
 import {DestroyUsersReply} from "./DestroyUsersReply";
 import {AuthenticateUserRequest} from "./AuthenticateUserRequest";
 import {AuthenticateUserReply} from "./AuthenticateUserReply";
+import {ChangeUserPasswordRequest} from "./ChangeUserPasswordRequest";
+import {ChangeUserPasswordReply} from "./ChangeUserPasswordReply";
 
 export
 interface IUserCommandService
@@ -37,5 +39,8 @@ interface IUserCommandService
 
     authenticateUser(request: AuthenticateUserRequest):
         ICompletionStage<AuthenticateUserReply>;
+
+    changeUserPassword(request: ChangeUserPasswordRequest):
+        ICompletionStage<ChangeUserPasswordReply>;
 }
 

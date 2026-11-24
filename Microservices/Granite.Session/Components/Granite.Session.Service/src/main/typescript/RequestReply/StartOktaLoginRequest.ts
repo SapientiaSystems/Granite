@@ -6,4 +6,5 @@ interface StartOktaLoginRequest
 {
     deviceId?: string;
     returnTo?: string;
+    application?: string;
 }

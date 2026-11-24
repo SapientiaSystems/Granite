@@ -92,7 +92,7 @@ describe("browser storage",() =>
 
         await manager.login("alice","secret");
 
-        expect(Object.keys(manager.getState()).sort()).toEqual(["authorities","status","userName"]);
+        expect(Object.keys(manager.getState()).sort()).toEqual(["authorities","passwordEnabled","passwordSet","status","userName"]);
     });
 });
 

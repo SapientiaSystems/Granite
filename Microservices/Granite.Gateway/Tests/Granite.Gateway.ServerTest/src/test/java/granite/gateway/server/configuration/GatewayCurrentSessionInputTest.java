@@ -103,6 +103,29 @@ class GatewayCurrentSessionInputTest
 
     @Test
     public void
+    anyRoleCanChangePassword()
+        throws Exception
+    {
+        String body = input("Session.Current","ChangePassword","ChangePasswordView");
+
+        for (String authority : List.of("ROLE_USER","ROLE_AUDITOR","ROLE_CLIENT_ADMIN"))
+        {
+            String handle = handleFor(authority);
+            String bearer = backend.sign(List.of(authority));
+
+            for (String host : HOSTS)
+            {
+                assertEquals(200,postWithCookie(host + "/handle-session-input",body,handle),host + " " + authority);
+                assertEquals(200,postWithBearer(host + "/handle-session-input",body,bearer),host + " " + authority);
+            }
+        }
+
+        for (String host : HOSTS)
+            assertEquals(401,postWithBearer(host + "/handle-session-input",body,null),host);
+    }
+
+    @Test
+    public void
     auditorIsStillDeniedOtherInputs()
         throws Exception
     {

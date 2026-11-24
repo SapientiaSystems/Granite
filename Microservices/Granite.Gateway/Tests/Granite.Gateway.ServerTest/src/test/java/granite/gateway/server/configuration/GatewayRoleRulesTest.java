@@ -148,6 +148,16 @@ class GatewayRoleRulesTest
 
     @Test
     public void
+    changePasswordIsOnlyForServiceTokens()
+        throws Exception
+    {
+        assertForbidden(HttpMethod.POST,"/session-command-service/change-password",backend.sign(List.of("ROLE_ADMIN")));
+        assertAllowed(HttpMethod.POST,"/session-command-service/change-password",backend.signServiceToken(List.of("SCOPE_internal")));
+        assertEquals(401,call(HttpMethod.POST,"/session-command-service/change-password",null));
+    }
+
+    @Test
+    public void
     agentMatrix()
         throws Exception
     {
@@ -222,6 +232,24 @@ class GatewayRoleRulesTest
         assertForbidden(HttpMethod.POST,"/survey-command-service/submit-survey-response",auditor);
         assertAllowed(HttpMethod.POST,"/survey-command-service/submit-survey-response",backend.signServiceToken(List.of("SCOPE_internal")));
         assertEquals(401,call(HttpMethod.POST,"/frontendcontroller-user-service/handle-survey-input",null));
+    }
+
+    @Test
+    public void
+    homeDashboardIsForUsersReaders()
+        throws Exception
+    {
+        String admin   = backend.sign(List.of("ROLE_ADMIN"));
+        String auditor = backend.sign(List.of("ROLE_AUDITOR"));
+        String user    = backend.sign(List.of("ROLE_USER"));
+
+        for (String path : List.of("/frontendcontroller-user-service/get-home-output","/frontendcontroller-admin-service/get-home-output"))
+        {
+            assertAllowed(HttpMethod.POST,path,admin);
+            assertAllowed(HttpMethod.POST,path,auditor);
+            assertForbidden(HttpMethod.POST,path,user);
+            assertEquals(401,call(HttpMethod.POST,path,null));
+        }
     }
 
     @Test

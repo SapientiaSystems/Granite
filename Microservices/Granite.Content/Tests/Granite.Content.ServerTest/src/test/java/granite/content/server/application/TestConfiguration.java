@@ -9,10 +9,10 @@ import granite.content.server.configuration.GraniteContentCommandServerConfigura
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
+import strata.foundation.spring.inject.SingletonScoped;
 
 @Configuration
 @PropertySource({"classpath:application.properties","classpath:application-local.properties"})
@@ -22,7 +22,7 @@ class TestConfiguration
 {
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -30,7 +30,7 @@ class TestConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapper
     objectMapper()
     {

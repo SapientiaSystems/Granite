@@ -6,15 +6,17 @@ export type AuthenticationStatus = "restoring" | "anonymous" | "authenticated" |
 
 export interface IAuthenticationState
 {
-    status:      AuthenticationStatus;
-    userId?:     number;
-    userName?:   string;
-    authorities: Array<string>;
-    error?:      string;
+    status:          AuthenticationStatus;
+    userId?:         number;
+    userName?:       string;
+    authorities:     Array<string>;
+    passwordEnabled: boolean;
+    passwordSet:     boolean;
+    error?:          string;
 }
 
-export const RESTORING: IAuthenticationState = { status: "restoring", authorities: [] };
+export const RESTORING: IAuthenticationState = { status: "restoring", authorities: [], passwordEnabled: false, passwordSet: false };
 
-export const ANONYMOUS: IAuthenticationState = { status: "anonymous", authorities: [] };
+export const ANONYMOUS: IAuthenticationState = { status: "anonymous", authorities: [], passwordEnabled: false, passwordSet: false };
 
 //////////////////////////////////////////////////////////////////////////////

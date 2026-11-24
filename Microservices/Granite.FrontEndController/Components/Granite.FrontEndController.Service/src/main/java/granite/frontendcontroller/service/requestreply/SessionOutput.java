@@ -6,21 +6,25 @@ package granite.frontendcontroller.service.requestreply;
 
 import strata.frontendcontroller.service.requestreply.FrontEndOutput;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public
 class SessionOutput
     extends FrontEndOutput
 {
-    private String      status;
-    private String      userName;
-    private Set<String> authorities;
-    private String      returnTo;
-    private boolean     passwordEnabled;
-    private boolean     oktaEnabled;
-    private String      redirectUrl;
-    private boolean     loggedOut;
+    private String       status;
+    private String       userName;
+    private Set<String>  authorities;
+    private String       returnTo;
+    private boolean      passwordEnabled;
+    private boolean      oktaEnabled;
+    private String       redirectUrl;
+    private boolean      loggedOut;
+    private boolean      passwordSet;
+    private List<String> failureMessages;
 
     public
     SessionOutput()
@@ -34,6 +38,8 @@ class SessionOutput
         oktaEnabled     = false;
         redirectUrl     = null;
         loggedOut       = false;
+        passwordSet     = false;
+        failureMessages = new ArrayList<>();
     }
 
     @Override
@@ -120,6 +126,20 @@ class SessionOutput
         return this;
     }
 
+    public SessionOutput
+    setPasswordSet(boolean value)
+    {
+        passwordSet = value;
+        return this;
+    }
+
+    public SessionOutput
+    setFailureMessages(List<String> value)
+    {
+        failureMessages = value;
+        return this;
+    }
+
     public String
     getStatus() { return status; }
 
@@ -143,6 +163,12 @@ class SessionOutput
 
     public boolean
     isLoggedOut() { return loggedOut; }
+
+    public boolean
+    isPasswordSet() { return passwordSet; }
+
+    public List<String>
+    getFailureMessages() { return failureMessages; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

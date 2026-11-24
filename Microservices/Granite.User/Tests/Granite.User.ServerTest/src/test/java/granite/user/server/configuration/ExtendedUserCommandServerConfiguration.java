@@ -11,11 +11,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
-import org.springframework.web.context.annotation.RequestScope;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 @Configuration
@@ -26,7 +26,7 @@ class ExtendedUserCommandServerConfiguration
 {
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -35,7 +35,7 @@ class ExtendedUserCommandServerConfiguration
 
     @Override
     @Bean
-    @RequestScope
+    @RequestScoped
     public IUserEventSender
     userEventSender(IOutboxEventRepository repository)
     {
@@ -43,7 +43,7 @@ class ExtendedUserCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapper
     objectMapper()
     {

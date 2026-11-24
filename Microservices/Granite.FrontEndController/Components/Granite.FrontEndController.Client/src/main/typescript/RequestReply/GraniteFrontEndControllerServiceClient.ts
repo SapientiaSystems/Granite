@@ -17,12 +17,17 @@ import type { HandleUsersInputRequest, HandleUsersInputReply,
               HandleSurveyReviewInputRequest, HandleSurveyReviewInputReply,
               GetFeedbackReviewOutputRequest, GetFeedbackReviewOutputReply,
               GetSurveyReviewOutputRequest, GetSurveyReviewOutputReply,
+              GetHomeOutputRequest, GetHomeOutputReply,
               HandleSessionsInputRequest, HandleSessionsInputReply,
               GetSessionsOutputRequest, GetSessionsOutputReply,
               HandleSessionInputRequest, HandleSessionInputReply,
               GetSessionOutputRequest, GetSessionOutputReply,
               HandlePreferencesInputRequest, HandlePreferencesInputReply,
-              GetPreferencesOutputRequest, GetPreferencesOutputReply }  from "granite.frontendcontroller.service/RequestReply";
+              GetPreferencesOutputRequest, GetPreferencesOutputReply,
+              HandleClientsInputRequest, HandleClientsInputReply,
+              GetClientsOutputRequest, GetClientsOutputReply,
+              HandleOwnedClientSecretInputRequest, HandleOwnedClientSecretInputReply,
+              GetOwnedClientsOutputRequest, GetOwnedClientsOutputReply }  from "granite.frontendcontroller.service/RequestReply";
 import { AbstractGraniteFrontEndControllerServiceClient } from "./AbstractGraniteFrontEndControllerServiceClient";
 import type { FetchFunction }                             from "./FetchFunction";
 import type { IGraniteFrontEndControllerServiceClient }   from "./IGraniteFrontEndControllerServiceClient";
@@ -135,6 +140,13 @@ class GraniteFrontEndControllerServiceClient
             this.initializeRequest(request));
     }
 
+    getHomeOutput(request: GetHomeOutputRequest): ICompletionStage<GetHomeOutputReply>
+    {
+        return this.doPost<GetHomeOutputReply,GetHomeOutputRequest>(
+            "get-home-output",
+            this.initializeRequest(request));
+    }
+
     handleSessionsInput(request: HandleSessionsInputRequest): ICompletionStage<HandleSessionsInputReply>
     {
         return this.doPost<HandleSessionsInputReply,HandleSessionsInputRequest>(
@@ -174,6 +186,34 @@ class GraniteFrontEndControllerServiceClient
     {
         return this.doPost<GetPreferencesOutputReply,GetPreferencesOutputRequest>(
             "get-preferences-output",
+            this.initializeRequest(request));
+    }
+
+    handleClientsInput(request: HandleClientsInputRequest): ICompletionStage<HandleClientsInputReply>
+    {
+        return this.doPost<HandleClientsInputReply,HandleClientsInputRequest>(
+            "handle-clients-input",
+            this.initializeRequest(request));
+    }
+
+    getClientsOutput(request: GetClientsOutputRequest): ICompletionStage<GetClientsOutputReply>
+    {
+        return this.doPost<GetClientsOutputReply,GetClientsOutputRequest>(
+            "get-clients-output",
+            this.initializeRequest(request));
+    }
+
+    handleOwnedClientSecretInput(request: HandleOwnedClientSecretInputRequest): ICompletionStage<HandleOwnedClientSecretInputReply>
+    {
+        return this.doPost<HandleOwnedClientSecretInputReply,HandleOwnedClientSecretInputRequest>(
+            "handle-owned-client-secret-input",
+            this.initializeRequest(request));
+    }
+
+    getOwnedClientsOutput(request: GetOwnedClientsOutputRequest): ICompletionStage<GetOwnedClientsOutputReply>
+    {
+        return this.doPost<GetOwnedClientsOutputReply,GetOwnedClientsOutputRequest>(
+            "get-owned-clients-output",
             this.initializeRequest(request));
     }
 }

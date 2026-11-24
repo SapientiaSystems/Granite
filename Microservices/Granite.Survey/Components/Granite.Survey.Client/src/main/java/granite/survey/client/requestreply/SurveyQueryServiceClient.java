@@ -6,9 +6,13 @@ package granite.survey.client.requestreply;
 
 import granite.survey.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
+import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class SurveyQueryServiceClient
@@ -22,6 +26,28 @@ class SurveyQueryServiceClient
             builder,
             preprocessBaseUrl(baseUrl),
             "survey-query-service/");
+    }
+
+    public
+    SurveyQueryServiceClient(CountedClient client,String baseUrl)
+    {
+        super(
+            client,
+            preprocessBaseUrl(baseUrl),
+            "survey-query-service/");
+    }
+
+    public
+    SurveyQueryServiceClient(CountedClient client,ExecutorService executor,String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "survey-query-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override
@@ -52,10 +78,6 @@ class SurveyQueryServiceClient
         setHeader("Authorization","Bearer " + accessToken);
         return this;
     }
-
-    @Override
-    public void
-    close() {}
 
     private static String
     preprocessBaseUrl(String baseUrl)

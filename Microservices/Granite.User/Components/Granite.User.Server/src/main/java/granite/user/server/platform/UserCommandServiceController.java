@@ -114,6 +114,16 @@ class UserCommandServiceController
         logger.info("delegating authenticateUser to implementation service");
         return implementation.authenticateUser(request);
     }
+
+    @PostMapping(
+        value = "/change-user-password",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody CompletionStage<ChangeUserPasswordReply>
+    changeUserPassword(@RequestBody ChangeUserPasswordRequest request)
+    {
+        logger.info("delegating changeUserPassword to implementation service");
+        return implementation.changeUserPassword(request);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

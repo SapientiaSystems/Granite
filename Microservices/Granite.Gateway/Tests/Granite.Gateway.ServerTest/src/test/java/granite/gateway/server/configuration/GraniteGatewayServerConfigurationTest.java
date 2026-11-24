@@ -49,7 +49,7 @@ class GraniteGatewayServerConfigurationTest
     {
         Map<String,URI> routes = getRoutes();
 
-        assertEquals(15,routes.size());
+        assertEquals(17,routes.size());
         assertEquals(URI.create("http://frontendcontroller-user.test:8081"),routes.get("frontendcontroller-user-route"));
         assertEquals(URI.create("http://frontendcontroller-admin.test:8082"),routes.get("frontendcontroller-admin-route"));
         assertEquals(URI.create("http://user-command.test:8083"),routes.get("user-command-route"));
@@ -64,6 +64,8 @@ class GraniteGatewayServerConfigurationTest
         assertEquals(URI.create("http://survey-query.test:8092"),routes.get("survey-query-route"));
         assertEquals(URI.create("http://agent-query.test:8096"),routes.get("agent-query-route"));
         assertEquals(URI.create("http://content-query.test:8094"),routes.get("content-query-route"));
+        assertEquals(URI.create("http://client-command.test:8097"),routes.get("client-command-route"));
+        assertEquals(URI.create("http://client-query.test:8098"),routes.get("client-query-route"));
         assertEquals(URI.create("http://outbox.test:8085"),routes.get("outbox-route"));
     }
 

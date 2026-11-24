@@ -32,6 +32,8 @@ import type { GetFeedbackReviewOutputRequest }     from "./GetFeedbackReviewOutp
 import type { GetSurveyReviewOutputRequest }     from "./GetSurveyReviewOutputRequest";
 import type { GetFeedbackReviewOutputReply }       from "./GetFeedbackReviewOutputReply";
 import type { GetSurveyReviewOutputReply }       from "./GetSurveyReviewOutputReply";
+import type { GetHomeOutputRequest }             from "./GetHomeOutputRequest";
+import type { GetHomeOutputReply }               from "./GetHomeOutputReply";
 import type { HandleSessionsInputRequest } from "./HandleSessionsInputRequest";
 import type { HandleSessionsInputReply }   from "./HandleSessionsInputReply";
 import type { GetSessionsOutputRequest }   from "./GetSessionsOutputRequest";
@@ -44,6 +46,14 @@ import type { HandlePreferencesInputRequest } from "./HandlePreferencesInputRequ
 import type { HandlePreferencesInputReply }   from "./HandlePreferencesInputReply";
 import type { GetPreferencesOutputRequest }   from "./GetPreferencesOutputRequest";
 import type { GetPreferencesOutputReply }     from "./GetPreferencesOutputReply";
+import type { HandleClientsInputRequest }     from "./HandleClientsInputRequest";
+import type { HandleClientsInputReply }       from "./HandleClientsInputReply";
+import type { GetClientsOutputRequest }       from "./GetClientsOutputRequest";
+import type { GetClientsOutputReply }         from "./GetClientsOutputReply";
+import type { HandleOwnedClientSecretInputRequest } from "./HandleOwnedClientSecretInputRequest";
+import type { HandleOwnedClientSecretInputReply }   from "./HandleOwnedClientSecretInputReply";
+import type { GetOwnedClientsOutputRequest }  from "./GetOwnedClientsOutputRequest";
+import type { GetOwnedClientsOutputReply }    from "./GetOwnedClientsOutputReply";
 
 export
 interface IGraniteFrontEndControllerService
@@ -73,6 +83,8 @@ interface IGraniteFrontEndControllerService
     getFeedbackReviewOutput(request: GetFeedbackReviewOutputRequest): ICompletionStage<GetFeedbackReviewOutputReply>;
     getSurveyReviewOutput(request: GetSurveyReviewOutputRequest): ICompletionStage<GetSurveyReviewOutputReply>;
 
+    getHomeOutput(request: GetHomeOutputRequest): ICompletionStage<GetHomeOutputReply>;
+
     handleSessionsInput(request: HandleSessionsInputRequest): ICompletionStage<HandleSessionsInputReply>;
 
     getSessionsOutput(request: GetSessionsOutputRequest): ICompletionStage<GetSessionsOutputReply>;
@@ -84,6 +96,14 @@ interface IGraniteFrontEndControllerService
     handlePreferencesInput(request: HandlePreferencesInputRequest): ICompletionStage<HandlePreferencesInputReply>;
 
     getPreferencesOutput(request: GetPreferencesOutputRequest): ICompletionStage<GetPreferencesOutputReply>;
+
+    handleClientsInput(request: HandleClientsInputRequest): ICompletionStage<HandleClientsInputReply>;
+
+    getClientsOutput(request: GetClientsOutputRequest): ICompletionStage<GetClientsOutputReply>;
+
+    handleOwnedClientSecretInput(request: HandleOwnedClientSecretInputRequest): ICompletionStage<HandleOwnedClientSecretInputReply>;
+
+    getOwnedClientsOutput(request: GetOwnedClientsOutputRequest): ICompletionStage<GetOwnedClientsOutputReply>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

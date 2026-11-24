@@ -29,6 +29,7 @@ class SessionData
     private Long                copiedFrom;
     private Instant             lastActivity;
     private SessionLoginMethod  loginMethod;
+    private String              application;
 
     public
     SessionData()
@@ -46,6 +47,7 @@ class SessionData
         copiedFrom   = null;
         lastActivity = null;
         loginMethod  = null;
+        application  = null;
     }
 
     public SessionData
@@ -139,6 +141,13 @@ class SessionData
         return this;
     }
 
+    public SessionData
+    setApplication(String name)
+    {
+        application = name;
+        return this;
+    }
+
     public Long
     getSessionId() { return sessionId; }
 
@@ -177,6 +186,9 @@ class SessionData
 
     public SessionLoginMethod
     getLoginMethod() { return loginMethod; }
+
+    public String
+    getApplication() { return application; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -3,8 +3,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { describe, expect, it }  from "vitest";
-import { authoritiesLabel, canEndSelection, detailRowHeight, displayValue, endableSessionIds, formatInstant,
-         isCurrent, isOpen, toSessionRows, userLabel, valueEntries, withDetailRow } from "granite.web.session/View";
+import { applicationLabel, authoritiesLabel, canEndSelection, detailRowHeight, displayValue, endableSessionIds, formatInstant,
+         isCurrent, isOpen, roleLabel, toSessionRows, userLabel, valueEntries, withDetailRow } from "granite.web.session/View";
 import type { SessionRowData }  from "granite.frontendcontroller.service/RequestReply";
 
 const open:    SessionRowData = { sessionId: 11, userId: 7, userName: "admin", values: { cart: 3 } };
@@ -62,6 +62,15 @@ describe("SessionRows", () =>
         expect(authoritiesLabel({ sessionId: 1 })).toBe("");
     });
 
+    it("shows authorities by their catalog labels", () =>
+    {
+        const roles = [{ name: "ROLE_ADMIN", label: "Admin", impliedRoles: [] }, { name: "ROLE_USER", label: "User", impliedRoles: [] }];
+
+        expect(roleLabel("ROLE_ADMIN",roles)).toBe("Admin");
+        expect(roleLabel("ROLE_OTHER",roles)).toBe("ROLE_OTHER");
+        expect(authoritiesLabel({ sessionId: 1, authorities: ["ROLE_USER","ROLE_ADMIN"] },roles)).toBe("Admin, User");
+    });
+
     it("renders values as read-only entries", () =>
     {
         expect(valueEntries({ cart: 3, flags: { a: true }, none: null }))
@@ -83,6 +92,13 @@ describe("SessionRows", () =>
     {
         expect(detailRowHeight(0)).toBe(detailRowHeight(1));
         expect(detailRowHeight(20)).toBe(detailRowHeight(8));
+    });
+
+    it("labels the application, treating a missing one as granite", () =>
+    {
+        expect(applicationLabel({ ...open, application: "client" })).toBe("client");
+        expect(applicationLabel(open)).toBe("granite");
+        expect(applicationLabel({ ...open, application: "" })).toBe("granite");
     });
 });
 

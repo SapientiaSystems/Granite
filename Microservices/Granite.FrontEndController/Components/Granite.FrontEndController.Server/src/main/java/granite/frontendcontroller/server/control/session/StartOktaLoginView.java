@@ -53,7 +53,8 @@ class StartOktaLoginView
                 .startOktaLogin(
                     new StartOktaLoginRequest()
                         .setDeviceId(deviceId.get())
-                        .setReturnTo(input.getReturnTo()))
+                        .setReturnTo(input.getReturnTo())
+                        .setApplication(SessionApplication.resolve(input.getApplication())))
                 .thenApply(reply -> toOutput(input,reply))
                 .exceptionally(e -> refused(input));
     }

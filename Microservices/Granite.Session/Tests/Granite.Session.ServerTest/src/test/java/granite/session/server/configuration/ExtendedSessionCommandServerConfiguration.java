@@ -10,8 +10,8 @@ import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 import java.time.Clock;
@@ -27,7 +27,7 @@ class ExtendedSessionCommandServerConfiguration
 
     @Override
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISessionEventSender
     sessionEventSender(IOutboxEventRepository repository)
     {
@@ -36,7 +36,7 @@ class ExtendedSessionCommandServerConfiguration
 
     @Override
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public Clock
     clock()
     {

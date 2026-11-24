@@ -6,9 +6,13 @@ package granite.content.client.requestreply;
 
 import granite.content.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
+import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class ContentCommandServiceClient
@@ -22,6 +26,28 @@ class ContentCommandServiceClient
             builder,
             preprocessBaseUrl(baseUrl),
             "content-command-service/");
+    }
+
+    public
+    ContentCommandServiceClient(CountedClient client,String baseUrl)
+    {
+        super(
+            client,
+            preprocessBaseUrl(baseUrl),
+            "content-command-service/");
+    }
+
+    public
+    ContentCommandServiceClient(CountedClient client,ExecutorService executor,String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "content-command-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override
@@ -52,10 +78,6 @@ class ContentCommandServiceClient
         setHeader("Authorization","Bearer " + accessToken);
         return this;
     }
-
-    @Override
-    public void
-    close() {}
 
     private static String
     preprocessBaseUrl(String baseUrl)

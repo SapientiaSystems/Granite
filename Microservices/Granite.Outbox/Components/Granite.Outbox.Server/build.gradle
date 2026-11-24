@@ -43,6 +43,7 @@ dependencies {
     api "granite.survey:granite-survey-service:$version"
     api "granite.agent:granite-agent-service:$version"
     api "granite.content:granite-content-service:$version"
+    api "granite.client:granite-client-service:$version"
     api "granite.foundation:granite-foundation-core:$system_version"
     api "org.springframework.boot:spring-boot-starter-security:$springboot_version"
 }

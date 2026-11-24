@@ -5,6 +5,7 @@
 package granite.session.server.application;
 
 import granite.session.server.domain.OktaLoginTransaction;
+import granite.session.server.domain.Session;
 import granite.session.service.requestreply.StartOktaLoginRequest;
 
 public
@@ -17,6 +18,7 @@ class StartOktaLoginContext
     private OktaLoginTransaction        transaction;
     private String                      authorizeUrl;
     private boolean                     rejected;
+    private boolean                     invalidApplication;
 
     public
     StartOktaLoginContext(StartOktaLoginRequest request)
@@ -28,6 +30,7 @@ class StartOktaLoginContext
         transaction   = null;
         authorizeUrl  = null;
         rejected      = false;
+        invalidApplication = false;
     }
 
     public StartOktaLoginContext
@@ -66,6 +69,13 @@ class StartOktaLoginContext
     }
 
     public StartOktaLoginContext
+    setInvalidApplication(boolean value)
+    {
+        invalidApplication = value;
+        return this;
+    }
+
+    public StartOktaLoginContext
     setRejected(boolean value)
     {
         rejected = value;
@@ -74,6 +84,17 @@ class StartOktaLoginContext
 
     public StartOktaLoginRequest
     getRequest() { return request; }
+
+    public String
+    getApplication()
+    {
+        String application = request.getApplication();
+
+        return application == null || application.isBlank() ? Session.DEFAULT_APPLICATION : application;
+    }
+
+    public boolean
+    isInvalidApplication() { return invalidApplication; }
 
     public String
     getDeviceId() { return request.getDeviceId(); }

@@ -5,9 +5,17 @@
 package granite.frontendcontroller.server.application;
 
 import granite.frontendcontroller.server.control.IInputAction;
+import granite.frontendcontroller.server.control.client.ClientsLoader;
+import granite.frontendcontroller.server.control.client.DeleteClientsView;
+import granite.frontendcontroller.server.control.client.InitializeClientsView;
+import granite.frontendcontroller.server.control.client.InitializeOwnedClientsView;
+import granite.frontendcontroller.server.control.client.RotateClientSecret;
+import granite.frontendcontroller.server.control.client.RotateOwnedClientSecret;
+import granite.frontendcontroller.server.control.client.UpdateClientsView;
 import granite.frontendcontroller.server.control.IOutputAction;
 import granite.frontendcontroller.server.control.preference.InitializePreferencesView;
 import granite.frontendcontroller.server.control.preference.SavePreferencesView;
+import granite.frontendcontroller.server.control.session.ChangePasswordView;
 import granite.frontendcontroller.server.control.session.CompleteOktaLoginView;
 import granite.frontendcontroller.server.control.session.LoginMethodsView;
 import granite.frontendcontroller.server.control.session.LoginView;
@@ -31,6 +39,9 @@ import granite.frontendcontroller.server.control.feedback.SaveFeedbackReviewView
 import granite.frontendcontroller.server.control.survey.SaveSurveyReviewView;
 import granite.frontendcontroller.server.control.feedback.SubmitFeedbackView;
 import granite.frontendcontroller.server.control.survey.SubmitSurveyView;
+import granite.frontendcontroller.server.control.home.HomeMetricsCalculator;
+import granite.frontendcontroller.server.control.home.HomeMetricsLoader;
+import granite.frontendcontroller.server.control.home.InitializeHomeView;
 import granite.frontendcontroller.server.control.sessions.CloseSessionsView;
 import granite.frontendcontroller.server.control.sessions.InitializeSessionsView;
 import granite.frontendcontroller.server.control.sessions.SessionsLoader;
@@ -39,7 +50,21 @@ import granite.frontendcontroller.server.control.user.InitializeUsersView;
 import granite.frontendcontroller.server.control.user.UpdateUsersView;
 import granite.frontendcontroller.server.platform.SessionCookies;
 import granite.frontendcontroller.server.platform.SessionRequestContext;
+import granite.frontendcontroller.service.requestreply.ClientsInput;
+import granite.frontendcontroller.service.requestreply.ClientsOutput;
+import granite.frontendcontroller.service.requestreply.GetClientsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetClientsOutputRequest;
+import granite.frontendcontroller.service.requestreply.GetOwnedClientsOutputReply;
+import granite.frontendcontroller.service.requestreply.GetOwnedClientsOutputRequest;
+import granite.frontendcontroller.service.requestreply.HandleClientsInputReply;
+import granite.frontendcontroller.service.requestreply.HandleClientsInputRequest;
+import granite.frontendcontroller.service.requestreply.HandleOwnedClientSecretInputReply;
+import granite.frontendcontroller.service.requestreply.HandleOwnedClientSecretInputRequest;
+import granite.frontendcontroller.service.requestreply.OwnedClientSecretInput;
 import granite.frontendcontroller.service.requestreply.GetFeedbackOutputReply;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputReply;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputRequest;
+import granite.frontendcontroller.service.requestreply.HomeOutput;
 import granite.frontendcontroller.service.requestreply.AgentInput;
 import granite.frontendcontroller.service.requestreply.AgentOutput;
 import granite.frontendcontroller.service.requestreply.GetAgentOutputReply;
@@ -111,6 +136,7 @@ import strata.frontendcontroller.service.requestreply.FrontEndInput;
 import strata.frontendcontroller.service.requestreply.FrontEndOutput;
 import strata.frontendcontroller.service.requestreply.GetOutputRequest;
 
+import java.time.Clock;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -137,10 +163,15 @@ class GraniteFrontEndControllerService
     private final Map<String,IOutputAction<GetSurveyReviewOutputRequest,SurveyReviewOutput>> surveyReviewOutputActions;
     private final Map<String,IInputAction<SessionsInput,SessionsOutput>>           sessionsInputActions;
     private final Map<String,IOutputAction<GetSessionsOutputRequest,SessionsOutput>> sessionsOutputActions;
+    private final Map<String,IOutputAction<GetHomeOutputRequest,HomeOutput>>         homeOutputActions;
     private final Map<String,IInputAction<SessionInput,SessionOutput>>             sessionInputActions;
     private final Map<String,IOutputAction<GetSessionOutputRequest,SessionOutput>> sessionOutputActions;
     private final Map<String,IInputAction<PreferencesInput,PreferencesOutput>>             preferencesInputActions;
     private final Map<String,IOutputAction<GetPreferencesOutputRequest,PreferencesOutput>> preferencesOutputActions;
+    private final Map<String,IInputAction<ClientsInput,ClientsOutput>>                     clientsInputActions;
+    private final Map<String,IOutputAction<GetClientsOutputRequest,ClientsOutput>>         clientsOutputActions;
+    private final Map<String,IInputAction<OwnedClientSecretInput,ClientsOutput>>           ownedClientInputActions;
+    private final Map<String,IOutputAction<GetOwnedClientsOutputRequest,ClientsOutput>>    ownedClientOutputActions;
 
     public
     GraniteFrontEndControllerService(GraniteFrontEndControllerContext context)
@@ -211,32 +242,62 @@ class GraniteFrontEndControllerService
             Map.of(
                 "Survey.All->SurveyReviewView",new InitializeSurveyReviewView(surveyReviewLoader,requestContext));
 
+        HomeMetricsLoader homeLoader =
+            new HomeMetricsLoader(
+                context.getHelpServiceClients(),
+                userQueryClient,
+                sessionQueryClient,
+                new HomeMetricsCalculator(context.getApplicationRoles(),Clock.systemDefaultZone()));
+
+        homeOutputActions =
+            Map.of(
+                "Home.Current->HomeView",new InitializeHomeView(homeLoader,requestContext));
+
         SessionsLoader sessionsLoader = new SessionsLoader(sessionQueryClient,userQueryClient);
 
         sessionsInputActions =
             Map.of(
-                "Session.Open->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext),
-                "Session.All->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext));
+                "Session.Open->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext,context.getApplicationRoles()),
+                "Session.All->Close->SessionsView",new CloseSessionsView(sessionCommandClient,sessionsLoader,requestContext,context.getApplicationRoles()));
         sessionsOutputActions =
             Map.of(
-                "Session.Open->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext),
-                "Session.All->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext));
+                "Session.Open->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext,context.getApplicationRoles()),
+                "Session.All->SessionsView",new InitializeSessionsView(sessionsLoader,requestContext,context.getApplicationRoles()));
         sessionInputActions =
             Map.of(
                 "Session.New->Login->LoginView",new LoginView(sessionCommandClient,requestContext,settings,cookies),
                 "Session.New->StartOktaLogin->LoginView",new StartOktaLoginView(sessionCommandClient,requestContext,settings,cookies),
                 "Session.New->CompleteOktaLogin->LoginView",new CompleteOktaLoginView(sessionCommandClient,requestContext,settings,cookies),
-                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext,cookies));
+                "Session.Current->Logout->LoginView",new LogoutView(sessionCommandClient,requestContext,cookies),
+                "Session.Current->ChangePassword->ChangePasswordView",new ChangePasswordView(sessionCommandClient,requestContext,settings));
         sessionOutputActions =
             Map.of(
                 "Session.New->LoginView",new LoginMethodsView(settings),
-                "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,requestContext));
+                "Session.Current->SessionView",new SessionStatusView(sessionQueryClient,userQueryClient,requestContext,settings));
         preferencesInputActions =
             Map.of(
                 "Preferences.Current->Save->PreferencesView",new SavePreferencesView(userQueryClient,userCommandClient,requestContext,context.getPreferenceDefinitions()));
         preferencesOutputActions =
             Map.of(
                 "Preferences.Current->PreferencesView",new InitializePreferencesView(userQueryClient,requestContext,context.getPreferenceDefinitions()));
+
+        ClientsLoader clientsLoader =
+            new ClientsLoader(context.getClientServiceClients(),userQueryClient,context.getApplicationRoles());
+
+        clientsInputActions =
+            Map.of(
+                "Client.All->Save->ClientsEditableView",new UpdateClientsView(context.getClientServiceClients(),clientsLoader,requestContext),
+                "Client.All->Delete->ClientsEditableView",new DeleteClientsView(context.getClientServiceClients(),clientsLoader,requestContext),
+                "Client.All->Rotate->ClientsEditableView",new RotateClientSecret(context.getClientServiceClients(),clientsLoader,requestContext));
+        clientsOutputActions =
+            Map.of(
+                "Client.All->ClientsEditableView",new InitializeClientsView(clientsLoader,requestContext));
+        ownedClientInputActions =
+            Map.of(
+                "Client.Owned->Rotate->OwnedClientsView",new RotateOwnedClientSecret(context.getClientServiceClients(),clientsLoader,requestContext));
+        ownedClientOutputActions =
+            Map.of(
+                "Client.Owned->OwnedClientsView",new InitializeOwnedClientsView(clientsLoader,requestContext));
     }
 
     @Override
@@ -338,6 +399,13 @@ class GraniteFrontEndControllerService
     }
 
     @Override
+    public CompletionStage<GetHomeOutputReply>
+    getHomeOutput(GetHomeOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(homeOutputActions,context),GetHomeOutputReply::new);
+    }
+
+    @Override
     public CompletionStage<HandleSessionsInputReply>
     handleSessionsInput(HandleSessionsInputRequest request)
     {
@@ -377,6 +445,34 @@ class GraniteFrontEndControllerService
     getPreferencesOutput(GetPreferencesOutputRequest request)
     {
         return getOutput(request,context -> dispatchOutput(preferencesOutputActions,context),GetPreferencesOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleClientsInputReply>
+    handleClientsInput(HandleClientsInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(clientsInputActions,context),HandleClientsInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetClientsOutputReply>
+    getClientsOutput(GetClientsOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(clientsOutputActions,context),GetClientsOutputReply::new);
+    }
+
+    @Override
+    public CompletionStage<HandleOwnedClientSecretInputReply>
+    handleOwnedClientSecretInput(HandleOwnedClientSecretInputRequest request)
+    {
+        return handleInput(request,context -> dispatchInput(ownedClientInputActions,context),HandleOwnedClientSecretInputReply::new);
+    }
+
+    @Override
+    public CompletionStage<GetOwnedClientsOutputReply>
+    getOwnedClientsOutput(GetOwnedClientsOutputRequest request)
+    {
+        return getOutput(request,context -> dispatchOutput(ownedClientOutputActions,context),GetOwnedClientsOutputReply::new);
     }
 
     protected GraniteFrontEndControllerContext

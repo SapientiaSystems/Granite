@@ -25,7 +25,6 @@ import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -39,6 +38,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.foundation.spring.mapper.StrataModelResolver;
 import strata.foundation.spring.mapper.StrataObjectMapperProvider;
@@ -72,7 +72,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -80,7 +80,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ModelMapper
     mapper()
     {
@@ -88,7 +88,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ApplicationRolesManager
     applicationRoles()
     {
@@ -96,7 +96,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public InitializingBean
     applicationRolesStartupLog(ApplicationRolesManager roles)
     {
@@ -111,7 +111,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public Clock
     clock()
     {
@@ -119,7 +119,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public InitializingBean
     schemaInitializer(EntityManagerFactory factory)
     {
@@ -133,7 +133,7 @@ class AbstractGraniteSessionServerConfiguration
     public CommonsRequestLoggingFilter
     requestLoggingFilter()
     {
-        CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
+        CommonsRequestLoggingFilter filter = new TokenPathRedactingRequestLoggingFilter();
 
         filter.setIncludeQueryString(true);
         filter.setIncludePayload(false);
@@ -160,7 +160,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public JwtDecoder
     jwtDecoder(
         Environment                     environment,
@@ -178,7 +178,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public GroupedOpenApi
     openApi()
     {
@@ -196,7 +196,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapperProvider
     objectMapperProvider(SpringDocConfigProperties properties)
     {
@@ -204,7 +204,7 @@ class AbstractGraniteSessionServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SpringDocConfigProperties
     springDocConfigProperties()
     {

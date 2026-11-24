@@ -12,6 +12,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../../../../Shared/Granite.Foundation/Tests/Granite.Foundation.CoreTest/src/test">
       <sourceFolder url="file://$MODULE_DIR$/../../../../../../Shared/Granite.Foundation/Tests/Granite.Foundation.CoreTest/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../../../../Shared/Granite.Foundation/Tests/Granite.Foundation.CoreTest/src/test/resources" type="java-test-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

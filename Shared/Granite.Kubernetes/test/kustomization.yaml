@@ -31,8 +31,14 @@ patches:
         path: /spec/rules/0/host
         value: granite-test.__domain__
       - op: replace
+        path: /spec/rules/1/host
+        value: client.granite-test.__domain__
+      - op: replace
         path: /spec/tls/0/hosts/0
         value: granite-test.__domain__
+      - op: replace
+        path: /spec/tls/0/hosts/1
+        value: client.granite-test.__domain__
       - op: add
         path: /metadata/annotations/cert-manager.io~1cluster-issuer
         value: granite-letsencrypt-staging

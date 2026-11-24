@@ -16,6 +16,8 @@ interface SessionOutput
     oktaEnabled?:     boolean;
     redirectUrl?:     string | null;
     loggedOut?:       boolean;
+    passwordSet?:     boolean;
+    failureMessages?: Array<string>;
 }
 
 //////////////////////////////////////////////////////////////////////////////

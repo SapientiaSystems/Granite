@@ -6,9 +6,13 @@ package granite.session.client.requestreply;
 
 import granite.session.service.requestreply.*;
 import jakarta.ws.rs.client.ClientBuilder;
+import strata.client.core.service.CountedClient;
+import strata.client.core.service.StandardResponseProcessor;
 import strata.client.resteasy.service.RestEasyRestClient;
+import strata.foundation.core.utility.BasicRetryExecutor;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 public
 class SessionCommandServiceClient
@@ -22,6 +26,28 @@ class SessionCommandServiceClient
             builder,
             preprocessBaseUrl(baseUrl),
             "session-command-service/");
+    }
+
+    public
+    SessionCommandServiceClient(CountedClient client, String baseUrl)
+    {
+        super(
+            client,
+            preprocessBaseUrl(baseUrl),
+            "session-command-service/");
+    }
+
+    public
+    SessionCommandServiceClient(CountedClient client, ExecutorService executor, String baseUrl)
+    {
+        super(
+            client,
+            executor,
+            false,
+            preprocessBaseUrl(baseUrl),
+            "session-command-service/",
+            new StandardResponseProcessor(),
+            new BasicRetryExecutor());
     }
 
     @Override
@@ -91,6 +117,17 @@ class SessionCommandServiceClient
     }
 
     @Override
+    public CompletionStage<ChangePasswordReply>
+    changePassword(ChangePasswordRequest request)
+    {
+        return
+            doPostAsync(
+                "change-password",
+                ChangePasswordReply.class,
+                request);
+    }
+
+    @Override
     public CompletionStage<RefreshReply>
     refresh(RefreshRequest request)
     {
@@ -141,10 +178,6 @@ class SessionCommandServiceClient
         setHeader("Authorization","Bearer " + accessToken);
         return this;
     }
-
-    @Override
-    public void
-    close() {}
 
     private static String
     preprocessBaseUrl(String baseUrl)

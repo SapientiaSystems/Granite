@@ -15,6 +15,8 @@ import granite.session.server.domain.LoginMethod;
 import granite.session.service.requestreply.SessionClosedReason;
 import granite.session.service.event.ISessionEventSender;
 import granite.session.service.event.SessionEvent;
+import granite.session.service.requestreply.ChangePasswordReply;
+import granite.session.service.requestreply.ChangePasswordRequest;
 import granite.session.service.requestreply.CloseSessionsReply;
 import granite.session.service.requestreply.CloseSessionsRequest;
 import granite.session.service.requestreply.IssueDelegatedTokenReply;
@@ -40,6 +42,8 @@ import granite.user.client.requestreply.IUserCommandServiceClient;
 import granite.user.client.requestreply.IUserQueryServiceClient;
 import granite.user.service.requestreply.AuthenticateUserReply;
 import granite.user.service.requestreply.AuthenticateUserRequest;
+import granite.user.service.requestreply.ChangeUserPasswordReply;
+import granite.user.service.requestreply.ChangeUserPasswordRequest;
 import granite.user.service.requestreply.CreateUserData;
 import granite.user.service.requestreply.CreateUserReply;
 import granite.user.service.requestreply.CreateUserRequest;
@@ -102,9 +106,10 @@ class SessionCommandService
     private final IUserQueryServiceClient         userQueryServiceClient;
     private final IOktaClient                     oktaClient;
     private final OktaSettings                    oktaSettings;
+    private final PasswordLoginSettings           passwordSettings;
     private final OktaRoles                       oktaRoles;
     private final ApplicationRolesManager roles;
-    private final ILoginGate                      loginGate;
+    private final IApplicationLoginGate           loginGate;
     private final ISessionEventSender             sender;
     private final ModelMapper                     mapper;
     private final Duration                        maxLifetime;
@@ -118,11 +123,14 @@ class SessionCommandService
     private static final Duration ACTIVITY_INTERVAL   = Duration.ofMinutes(1);
     private static final String   INVALID_SESSION     = "invalid session";
     private static final String   INVALID_CREDENTIALS = "invalid credentials";
+    private static final String   INVALID_APPLICATION = "invalid application";
+    private static final String   PASSWORD_LOGIN_UNAVAILABLE  = "Password login is not available";
+    private static final String   PASSWORD_CHANGE_UNAVAILABLE = "password change is not available";
+    private static final String   UNABLE_TO_CHANGE_PASSWORD   = "Unable to change password";
     private static final String   OKTA_PROVIDER       = "okta";
 
     public static final Duration  DELEGATED_TOKEN_LIFETIME = Duration.ofMinutes(5);
 
-    @Inject
     public
     SessionCommandService(
         ISessionRepository              repository,
@@ -142,6 +150,85 @@ class SessionCommandService
         ApplicationRolesManager         roles,
         IServiceTokenIssuer             serviceTokenIssuer)
     {
+        this(
+            repository,
+            transactionRepository,
+            jwtTokenService,
+            refreshTokenService,
+            userCommandServiceClient,
+            userQueryServiceClient,
+            oktaClient,
+            oktaSettings,
+            new ApplicationLoginGate(List.of(Session.DEFAULT_APPLICATION),loginGate,Map.of()),
+            sender,
+            mapper,
+            maxLifetime,
+            renewalMargin,
+            clock,
+            roles,
+            serviceTokenIssuer);
+    }
+
+    public
+    SessionCommandService(
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        IApplicationLoginGate           loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
+        Duration                        maxLifetime,
+        Duration                        renewalMargin,
+        Clock                           clock,
+        ApplicationRolesManager         roles,
+        IServiceTokenIssuer             serviceTokenIssuer)
+    {
+        this(
+            repository,
+            transactionRepository,
+            jwtTokenService,
+            refreshTokenService,
+            userCommandServiceClient,
+            userQueryServiceClient,
+            oktaClient,
+            oktaSettings,
+            new PasswordLoginSettings(),
+            loginGate,
+            sender,
+            mapper,
+            maxLifetime,
+            renewalMargin,
+            clock,
+            roles,
+            serviceTokenIssuer);
+    }
+
+    @Inject
+    public
+    SessionCommandService(
+        ISessionRepository              repository,
+        IOktaLoginTransactionRepository transactionRepository,
+        IJwtTokenService                jwtTokenService,
+        IRefreshTokenService            refreshTokenService,
+        IUserCommandServiceClient       userCommandServiceClient,
+        IUserQueryServiceClient         userQueryServiceClient,
+        IOktaClient                     oktaClient,
+        OktaSettings                    oktaSettings,
+        PasswordLoginSettings           passwordSettings,
+        IApplicationLoginGate           loginGate,
+        ISessionEventSender             sender,
+        ModelMapper                     mapper,
+        Duration                        maxLifetime,
+        Duration                        renewalMargin,
+        Clock                           clock,
+        ApplicationRolesManager         roles,
+        IServiceTokenIssuer             serviceTokenIssuer)
+    {
         this.repository              = repository;
         this.transactionRepository    = transactionRepository;
         this.jwtTokenService          = jwtTokenService;
@@ -150,6 +237,7 @@ class SessionCommandService
         this.userQueryServiceClient   = userQueryServiceClient;
         this.oktaClient               = oktaClient;
         this.oktaSettings             = oktaSettings != null ? oktaSettings : new OktaSettings();
+        this.passwordSettings         = passwordSettings != null ? passwordSettings : new PasswordLoginSettings();
         this.roles                    = roles;
         this.oktaRoles                = new OktaRoles(this.oktaSettings,roles);
         this.loginGate                = loginGate;
@@ -278,6 +366,25 @@ class SessionCommandService
                 .thenApply(this::closeSelected)
                 .thenApply(this::buildCloseSessionsReply)
                 .exceptionally(e -> buildCloseSessionsReply(e,request));
+    }
+
+    @Override
+    public CompletionStage<ChangePasswordReply>
+    changePassword(ChangePasswordRequest request)
+    {
+        logger.debug(
+            "changePassword({})",
+            request != null ? request.getRequestId() : null);
+        return
+            CompletableFuture
+                .supplyAsync(() -> validateChangePassword(request),new CurrentThreadExecutor())
+                .thenApply(this::mapToChangePasswordContext)
+                .thenApply(this::checkPasswordEnabled)
+                .thenApply(this::loadForChangePassword)
+                .thenApply(this::changeUserPassword)
+                .thenApply(this::closeOtherSessions)
+                .thenApply(this::buildChangePasswordReply)
+                .exceptionally(e -> buildChangePasswordReply(e,request));
     }
 
     @Override
@@ -421,9 +528,18 @@ class SessionCommandService
     {
         logger.debug("<login> dispatch(kind={})",context.getCredentialKind());
 
+        if (!loginGate.isKnown(context.getApplication()))
+        {
+            logger.info("<login> unknown application");
+            return context.setInvalidApplication(true);
+        }
+
         switch (context.getCredentialKind())
         {
             case PASSWORD:
+                if (!passwordSettings.isEnabled())
+                    return context.setPasswordUnavailable(true);
+
                 return dispatchPassword(context);
 
             case ACCESS_TOKEN:
@@ -491,7 +607,7 @@ class SessionCommandService
         if (context.getValidatedUserId() == null || context.isUnsupportedKind())
             return context;
 
-        if (loginGate.permits(context.getValidatedAuthorities()))
+        if (loginGate.permits(context.getApplication(),context.getValidatedAuthorities()))
             return context;
 
         logger.info("<login> refused by login gate");
@@ -534,7 +650,8 @@ class SessionCommandService
                         sessionHandle,
                         context.getCredentialKind() == CredentialKind.ACCESS_TOKEN
                             ? LoginMethod.ACCESS_TOKEN
-                            : LoginMethod.PASSWORD))
+                            : LoginMethod.PASSWORD)
+                        .setApplication(context.getApplication()))
                 .setRefreshToken(refreshToken)
                 .setSessionHandle(sessionHandle);
     }
@@ -613,6 +730,12 @@ class SessionCommandService
         if (!oktaSettings.isEnabled())
             return context.setRejected(true);
 
+        if (!loginGate.isKnown(context.getApplication()))
+            return context.setRejected(true).setInvalidApplication(true);
+
+        if (oktaSettings.getRedirectUri(context.getApplication()) == null)
+            return context.setRejected(true);
+
         Instant now           = Instant.now(clock);
         String  transactionId = refreshTokenService.generate();
         String  verifier      = refreshTokenService.generate();
@@ -630,6 +753,7 @@ class SessionCommandService
                         .setCodeVerifier(verifier)
                         .setReturnTo(sanitizeReturnTo(context.getReturnTo()))
                         .setDeviceId(context.getDeviceId())
+                        .setApplication(context.getApplication())
                         .setExpires(now.plus(oktaSettings.getTransactionTtl())));
     }
 
@@ -649,7 +773,8 @@ class SessionCommandService
                     transaction.getState(),
                     transaction.getNonce(),
                     context.getCodeChallenge(),
-                    context.isPromptLogin()));
+                    context.isPromptLogin(),
+                    oktaSettings.getRedirectUri(context.getApplication())));
     }
 
     protected StartOktaLoginContext
@@ -739,7 +864,8 @@ class SessionCommandService
                 oktaClient.exchange(
                     context.getCode(),
                     transaction.getCodeVerifier(),
-                    transaction.getNonce());
+                    transaction.getNonce(),
+                    oktaSettings.getRedirectUri(transaction.getApplication()));
 
             exchangedIdentities.put(context.getHashedTransactionId(),identity);
             return context.setIdentity(identity);
@@ -796,7 +922,7 @@ class SessionCommandService
     {
         logger.debug("<completeOktaLogin> applyLoginGate");
 
-        if (context.isRejected() || loginGate.permits(context.getAuthorities()))
+        if (context.isRejected() || loginGate.permits(context.getApplication(),context.getAuthorities()))
             return context;
 
         logger.info("<completeOktaLogin> refused by login gate");
@@ -838,6 +964,7 @@ class SessionCommandService
                         refreshToken,
                         sessionHandle,
                         LoginMethod.OKTA)
+                        .setApplication(context.getApplication())
                         .setOktaGroups(context.getIdentity().getGroups()))
                 .setSessionHandle(sessionHandle);
     }
@@ -950,6 +1077,23 @@ class SessionCommandService
                         "CredentialKind "
                             + context.getCredentialKind()
                             + " is not supported");
+        }
+
+        if (context.isInvalidApplication())
+        {
+            return
+                new LoginReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage(INVALID_APPLICATION);
+        }
+
+        if (context.isPasswordUnavailable())
+        {
+            logger.info("<login> password login is disabled");
+            return
+                new LoginReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage(PASSWORD_LOGIN_UNAVAILABLE);
         }
 
         if (context.getValidatedUserId() == null || context.getCreated() == null)
@@ -1125,6 +1269,115 @@ class SessionCommandService
 
             closeSession(loaded.get(),SessionClosedReason.ADMIN,now);
             closed.add(loaded.get());
+        }
+
+        return context.setClosed(closed);
+    }
+
+    protected ChangePasswordRequest
+    validateChangePassword(ChangePasswordRequest request)
+    {
+        logger.debug("<changePassword> validate");
+
+        Objects.requireNonNull(request,"request");
+        Objects.requireNonNull(
+            request.getSessionId(),
+            "validation failed: sessionId was not provided");
+        Objects.requireNonNull(
+            request.getCurrentPassword(),
+            "validation failed: currentPassword was not provided");
+        Objects.requireNonNull(
+            request.getNewPassword(),
+            "validation failed: newPassword was not provided");
+        return request;
+    }
+
+    protected ChangePasswordContext
+    mapToChangePasswordContext(ChangePasswordRequest request)
+    {
+        logger.debug("<changePassword> mapToContext({})",request.getRequestId());
+        return new ChangePasswordContext(request);
+    }
+
+    protected ChangePasswordContext
+    checkPasswordEnabled(ChangePasswordContext context)
+    {
+        logger.debug("<changePassword> checkPasswordEnabled");
+
+        if (!passwordSettings.isEnabled())
+            return context.setFailureMessage(PASSWORD_CHANGE_UNAVAILABLE);
+
+        return context;
+    }
+
+    protected ChangePasswordContext
+    loadForChangePassword(ChangePasswordContext context)
+    {
+        logger.debug("<changePassword> load({})",context.getSessionId());
+
+        if (context.isRefused())
+            return context;
+
+        Optional<Session> found = repository.findById(context.getSessionId());
+
+        if (found.isEmpty()
+            || found.get().isClosed()
+            || found.get().getExpires() == null
+            || !found.get().getExpires().isAfter(Instant.now(clock)))
+            return context.setFailureMessage(INVALID_CREDENTIALS);
+
+        return context.setLoaded(found.get());
+    }
+
+    protected ChangePasswordContext
+    changeUserPassword(ChangePasswordContext context)
+    {
+        logger.debug("<changePassword> changeUserPassword");
+
+        if (context.isRefused())
+            return context;
+
+        ChangeUserPasswordReply reply =
+            userCommandServiceClient
+                .changeUserPassword(
+                    new ChangeUserPasswordRequest()
+                        .setUserId(context.getLoaded().getUserId())
+                        .setCurrentPassword(context.getRequest().getCurrentPassword())
+                        .setNewPassword(context.getRequest().getNewPassword()))
+                .toCompletableFuture()
+                .join();
+
+        if (reply == null)
+            return context.setFailureMessage(UNABLE_TO_CHANGE_PASSWORD);
+
+        if (!reply.isSuccess())
+            return
+                context.setFailureMessage(
+                    reply.getFailureMessage() != null
+                        ? reply.getFailureMessage()
+                        : UNABLE_TO_CHANGE_PASSWORD);
+
+        return context;
+    }
+
+    protected ChangePasswordContext
+    closeOtherSessions(ChangePasswordContext context)
+    {
+        logger.debug("<changePassword> closeOthers");
+
+        if (context.isRefused())
+            return context;
+
+        List<Session> closed = new ArrayList<>();
+        Instant       now    = Instant.now(clock);
+
+        for (Session session : repository.findOpenByUserId(context.getLoaded().getUserId()))
+        {
+            if (session.getSessionId().equals(context.getSessionId()) || session.isClosed())
+                continue;
+
+            closeSession(session,SessionClosedReason.PASSWORD_CHANGED,now);
+            closed.add(session);
         }
 
         return context.setClosed(closed);
@@ -1527,6 +1780,39 @@ class SessionCommandService
                 .setFailedSessionIds(new TreeSet<>(request.getSessionIds()));
 
         return reply;
+    }
+
+    private ChangePasswordReply
+    buildChangePasswordReply(ChangePasswordContext context)
+    {
+        if (context.isRefused())
+        {
+            logger.info("<changePassword> refused: {}",context.getFailureMessage());
+            return
+                new ChangePasswordReply(context.getRequest())
+                    .setSuccess(false)
+                    .setFailureMessage(context.getFailureMessage());
+        }
+
+        logger.info(
+            "<changePassword> session: {} changed password, closed {} other session(s)",
+            context.getSessionId(),
+            context.getClosed().size());
+        return
+            new ChangePasswordReply(context.getRequest())
+                .setSuccess(true)
+                .setSuccessMessage("Password changed");
+    }
+
+    private ChangePasswordReply
+    buildChangePasswordReply(Throwable e,ChangePasswordRequest request)
+    {
+        logger.info("<changePassword> exception reply: {}",rootCauseName(e));
+        return
+            new ChangePasswordReply(request)
+                .setSuccess(false)
+                .setFailureMessage(UNABLE_TO_CHANGE_PASSWORD)
+                .setException(ExceptionData.of(e));
     }
 
     private RefreshReply
@@ -2031,6 +2317,12 @@ class SessionCommandService
         if (context.isRejected())
         {
             logger.info("<startOktaLogin> Okta login is disabled");
+            if (context.isInvalidApplication())
+                return
+                    new StartOktaLoginReply(context.getRequest())
+                        .setSuccess(false)
+                        .setFailureMessage(INVALID_APPLICATION);
+
             return
                 new StartOktaLoginReply(context.getRequest())
                     .setSuccess(false)

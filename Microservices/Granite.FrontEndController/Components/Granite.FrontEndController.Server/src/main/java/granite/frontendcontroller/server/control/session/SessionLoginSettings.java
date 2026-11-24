@@ -11,6 +11,8 @@ class SessionLoginSettings
 {
     public static final String PASSWORD_ENABLED = "granite.session.login.password.enabled";
     public static final String OKTA_ENABLED     = "granite.session.login.okta.enabled";
+    public static final String NONE_ENABLED     =
+        "at least one login method must be enabled: " + PASSWORD_ENABLED + " or " + OKTA_ENABLED;
 
     private final boolean passwordEnabled;
     private final boolean oktaEnabled;
@@ -18,6 +20,9 @@ class SessionLoginSettings
     public
     SessionLoginSettings(boolean passwordEnabled,boolean oktaEnabled)
     {
+        if (!passwordEnabled && !oktaEnabled)
+            throw new IllegalStateException(NONE_ENABLED);
+
         this.passwordEnabled = passwordEnabled;
         this.oktaEnabled = oktaEnabled;
     }

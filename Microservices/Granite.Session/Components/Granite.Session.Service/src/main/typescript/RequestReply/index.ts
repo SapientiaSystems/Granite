@@ -13,6 +13,8 @@ export {LogoutRequest} from "./LogoutRequest";
 export {LogoutReply} from "./LogoutReply";
 export {LogoutAllForUserRequest} from "./LogoutAllForUserRequest";
 export {LogoutAllForUserReply} from "./LogoutAllForUserReply";
+export {ChangePasswordRequest} from "./ChangePasswordRequest";
+export {ChangePasswordReply} from "./ChangePasswordReply";
 export {CloseSessionsRequest} from "./CloseSessionsRequest";
 export {CloseSessionsReply} from "./CloseSessionsReply";
 export {RefreshRequest} from "./RefreshRequest";

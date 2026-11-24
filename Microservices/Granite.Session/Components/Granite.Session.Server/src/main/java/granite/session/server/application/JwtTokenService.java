@@ -39,6 +39,7 @@ class JwtTokenService
     private static final String AUTHORITIES_CLAIM = "authorities";
     private static final String CONTINUITY_CLAIM  = "cid";
     private static final String ACTOR_CLAIM       = "act";
+    private static final String APPLICATION_CLAIM = "app";
 
     private final RSASSASigner    signer;
     private final RSASSAVerifier  verifier;
@@ -90,6 +91,7 @@ class JwtTokenService
                 .expirationTime(Date.from(exp))
                 .audience(audience)
                 .claim(DEVICE_ID_CLAIM,session.getDeviceId())
+                .claim(APPLICATION_CLAIM,session.getApplication())
                 .claim(
                     CONTINUITY_CLAIM,
                     session.getContinuityId() != null ? session.getContinuityId().toString() : null)
@@ -125,6 +127,7 @@ class JwtTokenService
                 .expirationTime(Date.from(exp))
                 .audience(audience)
                 .claim(DEVICE_ID_CLAIM,session.getDeviceId())
+                .claim(APPLICATION_CLAIM,session.getApplication())
                 .claim(AUTHORITIES_CLAIM,sessionAuthorities(session.getAuthorities()))
                 .claim(ACTOR_CLAIM,Map.of("sub",actor))
                 .build();

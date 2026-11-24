@@ -3,7 +3,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import type { ReactElement }   from "react";
-import type { SessionRowData } from "granite.frontendcontroller.service/RequestReply";
+import type { RoleData,
+              SessionRowData } from "granite.frontendcontroller.service/RequestReply";
 
 export interface ISessionsResult
 {
@@ -15,6 +16,7 @@ export interface ISessionsGridProps
 {
     readonly sessions?:              Array<SessionRowData>;
     readonly currentSessionId?:      number | null;
+    readonly roles?:                 Array<RoleData>;
     readonly loading?:               boolean;
     readonly includeClosed?:         boolean;
     readonly showEnd?:               boolean;

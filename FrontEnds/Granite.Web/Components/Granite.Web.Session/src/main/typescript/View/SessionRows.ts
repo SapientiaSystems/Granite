@@ -2,7 +2,7 @@
 // Granite.Web.Session
 //////////////////////////////////////////////////////////////////////////////
 
-import type { SessionRowData } from "granite.frontendcontroller.service/RequestReply";
+import type { RoleData, SessionRowData } from "granite.frontendcontroller.service/RequestReply";
 
 export interface ISessionRow
     extends SessionRowData
@@ -62,6 +62,13 @@ export function canEndSelection(selected: Array<SessionRowData>, currentSessionI
     return !selected.some(row => isCurrent(row,currentSessionId)) && endableSessionIds(selected,currentSessionId).length > 0;
 }
 
+export const DEFAULT_APPLICATION: string = "granite";
+
+export function applicationLabel(row: SessionRowData): string
+{
+    return row.application == null || row.application === "" ? DEFAULT_APPLICATION : row.application;
+}
+
 export function userLabel(row: SessionRowData): string
 {
     if (row.userName != null && row.userName !== "")
@@ -72,9 +79,14 @@ export function userLabel(row: SessionRowData): string
     return row.userId == null ? "" : "#" + row.userId;
 }
 
-export function authoritiesLabel(row: SessionRowData): string
+export function roleLabel(authority: string, roles?: Array<RoleData>): string
 {
-    return [...(row.authorities ?? [])].sort().join(", ");
+    return roles?.find(r => r.name === authority)?.label ?? authority;
+}
+
+export function authoritiesLabel(row: SessionRowData, roles?: Array<RoleData>): string
+{
+    return [...(row.authorities ?? [])].sort().map(a => roleLabel(a,roles)).join(", ");
 }
 
 export function displayValue(value: unknown): string

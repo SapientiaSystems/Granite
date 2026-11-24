@@ -16,6 +16,9 @@ import granite.agent.service.event.AgentEvent;
 import granite.outbox.server.content.KafkaAvroContentEventSender;
 import granite.outbox.server.content.ContentEventOutboxEventReceiver;
 import granite.content.service.event.ContentEvent;
+import granite.outbox.server.client.ClientEventOutboxEventReceiver;
+import granite.outbox.server.client.KafkaAvroClientEventSender;
+import granite.client.service.event.ClientEvent;
 import granite.user.service.event.UserEvent;
 import granite.outbox.server.configuration.GraniteOutboxSecurityConfiguration;
 import granite.outbox.server.user.KafkaAvroUserEventSender;
@@ -23,7 +26,6 @@ import granite.outbox.server.user.UserEventOutboxEventReceiver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -31,6 +33,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.kafka.event.IKafkaConfigurationProvider;
 import strata.foundation.kafka.event.KafkaConfigurationProvider;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.outbox.core.receiver.IOutboxEventReceiverMapProvider;
 import strata.outbox.server.configuration.StrataPollingOutboxServerConfiguration;
@@ -91,11 +94,18 @@ class HostConfiguration
                     new AgentEventOutboxEventReceiver(
                         new KafkaAvroAgentEventSender(
                             provider,
-                            "granite.agentevent.avro")));
+                            "granite.agentevent.avro")),
+                    ClientEvent
+                        .class
+                        .getSimpleName(),
+                    new ClientEventOutboxEventReceiver(
+                        new KafkaAvroClientEventSender(
+                            provider,
+                            "granite.clientevent.avro")));
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {

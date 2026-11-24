@@ -11,6 +11,9 @@ import granite.foundation.core.security.GraniteJwtAuthenticationConverter;
 import granite.foundation.core.security.GraniteJwtDecoderFactory;
 import granite.foundation.core.security.GraniteResourceServerSettings;
 import granite.gateway.server.health.GatewayHealthCheckController;
+import granite.gateway.server.security.ApplicationSessionPathWebFilter;
+import granite.gateway.server.security.ClientTokenPathWebFilter;
+import granite.gateway.server.security.ClientTokenPerClientRateLimitWebFilter;
 import granite.gateway.server.security.CookieCsrfProtectionMatcher;
 import granite.gateway.server.security.CsrfCookieWebFilter;
 import granite.gateway.server.security.CurrentSessionFrontEndInputMatcher;
@@ -73,7 +76,9 @@ import java.util.List;
 public
 class GraniteGatewayServerConfiguration
 {
-    public static final String ISSUE_SERVICE_TOKEN_PATH = "/session-command-service/issue-service-token";
+    public static final String ISSUE_SERVICE_TOKEN_PATH         = "/session-command-service/issue-service-token";
+    public static final String CLIENT_TOKEN_PATH                = "/session-command-service/oauth2/token";
+    public static final String ROTATE_OWN_CLIENT_SECRET_PATH    = "/client-command-service/rotate-own-client-secret";
 
     @Bean
     public InitializingBean
@@ -123,6 +128,21 @@ class GraniteGatewayServerConfiguration
                             .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
                             .requireCsrfProtectionMatcher(new CookieCsrfProtectionMatcher()))
                 .addFilterBefore(createServiceTokenRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
+                .addFilterBefore(createClientTokenRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
+                .addFilterBefore(createClientTokenPerClientRateLimitWebFilter(environment),SecurityWebFiltersOrder.CSRF)
+                .addFilterBefore(
+                    new ClientTokenPathWebFilter(
+                        ServerWebExchangeMatchers.pathMatchers(getClientDeniedPathPatterns(environment).toArray(String[]::new)),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST,ROTATE_OWN_CLIENT_SECRET_PATH)),
+                    SecurityWebFiltersOrder.AUTHORIZATION)
+                .addFilterBefore(
+                    new ApplicationSessionPathWebFilter(
+                        getClientApplicationNames(environment),
+                        new OrServerWebExchangeMatcher(
+                            ServerWebExchangeMatchers.pathMatchers(
+                                getClientApplicationPathPatterns(environment).toArray(String[]::new)),
+                            getAuthenticatedExchangeMatcher(environment))),
+                    SecurityWebFiltersOrder.AUTHORIZATION)
                 .addFilterBefore(
                     new FrontEndInputKeyWebFilter(
                         environment.getProperty("granite.gateway.front-end-input.max-bytes",Integer.class,1048576)),
@@ -142,7 +162,8 @@ class GraniteGatewayServerConfiguration
                             .pathMatchers(
                                 "/session-command-service/start-okta-login",
                                 "/session-command-service/complete-okta-login",
-                                "/session-command-service/issue-delegated-token")
+                                "/session-command-service/issue-delegated-token",
+                                "/session-command-service/change-password")
                             .hasAuthority(GraniteAuthorities.SCOPE_INTERNAL);
                         exchanges.pathMatchers(HttpMethod.OPTIONS,"/**").permitAll();
                         exchanges.matchers(publicMatcher).permitAll();
@@ -325,6 +346,7 @@ class GraniteGatewayServerConfiguration
                 List.of(
                     environment.getProperty("strata.health.base-path","/health") + "/**",
                     ISSUE_SERVICE_TOKEN_PATH,
+                    CLIENT_TOKEN_PATH,
                     "/",
                     "/index.html",
                     "/config.js",
@@ -360,6 +382,74 @@ class GraniteGatewayServerConfiguration
                     Clock.systemUTC()));
     }
 
+    protected RateLimitWebFilter
+    createClientTokenRateLimitWebFilter(Environment environment)
+    {
+        return
+            new RateLimitWebFilter(
+                ServerWebExchangeMatchers.pathMatchers(CLIENT_TOKEN_PATH),
+                new FixedWindowRateLimiter(
+                    environment.getProperty("granite.gateway.client-token.rate-limit.requests",Integer.class,600),
+                    Duration.parse(environment.getProperty("granite.gateway.client-token.rate-limit.window","PT1M")),
+                    environment.getProperty("granite.gateway.client-token.rate-limit.max-clients",Integer.class,10000),
+                    Clock.systemUTC()));
+    }
+
+    protected ClientTokenPerClientRateLimitWebFilter
+    createClientTokenPerClientRateLimitWebFilter(Environment environment)
+    {
+        return
+            new ClientTokenPerClientRateLimitWebFilter(
+                CLIENT_TOKEN_PATH,
+                new FixedWindowRateLimiter(
+                    environment.getProperty("granite.gateway.client-token.per-client-rate-limit.requests",Integer.class,10),
+                    Duration.parse(
+                        environment.getProperty("granite.gateway.client-token.per-client-rate-limit.window","PT1M")),
+                    environment.getProperty(
+                        "granite.gateway.client-token.per-client-rate-limit.max-clients",
+                        Integer.class,
+                        10000),
+                    Clock.systemUTC()));
+    }
+
+    protected List<String>
+    getClientDeniedPathPatterns(Environment environment)
+    {
+        return
+            List.of(
+                "/frontendcontroller-*/**",
+                "/user-*-service/**",
+                "/session-*-service/**",
+                "/client-*-service/**",
+                "/outbox-service/**");
+    }
+
+    protected List<String>
+    getClientApplicationNames(Environment environment)
+    {
+        String[]     configured =
+            environment.getProperty(ApplicationSessionPathWebFilter.CLIENT_ADMIN_APPLICATIONS_PROPERTY,String[].class);
+        List<String> names      = new ArrayList<>();
+
+        if (configured != null)
+            for (String name : configured)
+                if (name != null && !name.isBlank())
+                    names.add(name.trim());
+
+        return names.isEmpty() ? ApplicationSessionPathWebFilter.DEFAULT_CLIENT_ADMIN_APPLICATIONS : names;
+    }
+
+    protected List<String>
+    getClientApplicationPathPatterns(Environment environment)
+    {
+        return
+            List.of(
+                "/frontendcontroller-user-service/get-owned-clients-output",
+                "/frontendcontroller-user-service/handle-owned-client-secret-input",
+                "/frontendcontroller-user-service/get-preferences-output",
+                "/frontendcontroller-user-service/handle-preferences-input");
+    }
+
     protected CookieServerCsrfTokenRepository
     createCsrfTokenRepository(GraniteCookieNames cookieNames)
     {
@@ -392,9 +482,17 @@ class GraniteGatewayServerConfiguration
         String[] readers = getUsersReaderAuthorities(environment).toArray(String[]::new);
         String[] admins  = {ApplicationRolesManager.ADMIN,GraniteAuthorities.SCOPE_INTERNAL};
 
+        String[] clientAdmins = {ApplicationRolesManager.CLIENT_ADMIN,ApplicationRolesManager.ADMIN,GraniteAuthorities.SCOPE_INTERNAL};
+
+        exchanges
+            .pathMatchers(HttpMethod.POST,ROTATE_OWN_CLIENT_SECRET_PATH)
+                .hasAuthority(ApplicationRolesManager.CLIENT_ADMIN);
+
         if (environment.acceptsProfiles(Profiles.of("production")))
             exchanges
                 .pathMatchers(
+                    "/client-query-service/**",
+                    "/client-command-service/**",
                     "/user-query-service/**",
                     "/user-command-service/**",
                     "/session-query-service/**",
@@ -443,15 +541,31 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/get-feedback-review-output",
                 "/frontendcontroller-user-service/get-survey-review-output",
                 "/frontendcontroller-admin-service/get-feedback-review-output",
-                "/frontendcontroller-admin-service/get-survey-review-output")
+                "/frontendcontroller-admin-service/get-survey-review-output",
+                "/frontendcontroller-user-service/get-home-output",
+                "/frontendcontroller-admin-service/get-home-output",
+                "/frontendcontroller-user-service/get-clients-output",
+                "/frontendcontroller-admin-service/get-clients-output")
                 .hasAnyAuthority(readers)
+            .pathMatchers(
+                HttpMethod.POST,
+                "/frontendcontroller-user-service/get-owned-clients-output",
+                "/frontendcontroller-admin-service/get-owned-clients-output",
+                "/frontendcontroller-user-service/handle-owned-client-secret-input",
+                "/frontendcontroller-admin-service/handle-owned-client-secret-input")
+                .hasAnyAuthority(clientAdmins)
             .pathMatchers("/user-query-service/**")
                 .hasAnyAuthority(readers)
             .pathMatchers(HttpMethod.POST,"/session-command-service/logout")
                 .hasAnyAuthority(readers)
             .pathMatchers("/session-query-service/**")
                 .hasAnyAuthority(readers)
-            .pathMatchers("/feedback-query-service/**","/survey-query-service/**","/content-query-service/**","/agent-query-service/**")
+            .pathMatchers(
+                "/feedback-query-service/**",
+                "/survey-query-service/**",
+                "/content-query-service/**",
+                "/agent-query-service/**",
+                "/client-query-service/**")
                 .hasAnyAuthority(readers)
             .pathMatchers(
                 HttpMethod.POST,
@@ -462,7 +576,9 @@ class GraniteGatewayServerConfiguration
                 "/frontendcontroller-user-service/handle-feedback-review-input",
                 "/frontendcontroller-user-service/handle-survey-review-input",
                 "/frontendcontroller-admin-service/handle-feedback-review-input",
-                "/frontendcontroller-admin-service/handle-survey-review-input")
+                "/frontendcontroller-admin-service/handle-survey-review-input",
+                "/frontendcontroller-user-service/handle-clients-input",
+                "/frontendcontroller-admin-service/handle-clients-input")
                 .hasAnyAuthority(admins)
             .pathMatchers(
                 "/frontendcontroller-user-service/handle-input",
@@ -475,6 +591,7 @@ class GraniteGatewayServerConfiguration
                 "/survey-command-service/**",
                 "/content-command-service/**",
                 "/agent-command-service/**",
+                "/client-command-service/**",
                 "/outbox-service/**")
                 .hasAnyAuthority(admins);
 
@@ -585,6 +702,18 @@ class GraniteGatewayServerConfiguration
             "content-query-route",
             "/content-query-service/**",
             "granite.content-query-service.host",
+            environment);
+        addRoute(
+            routes,
+            "client-command-route",
+            "/client-command-service/**",
+            "granite.client-command-service.host",
+            environment);
+        addRoute(
+            routes,
+            "client-query-route",
+            "/client-query-service/**",
+            "granite.client-query-service.host",
             environment);
         addRoute(
             routes,

@@ -7,7 +7,15 @@ package granite.frontendcontroller.server.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import granite.frontendcontroller.service.requestreply.GetPreferencesOutputReply;
 import granite.frontendcontroller.service.requestreply.GetSessionOutputReply;
+import granite.frontendcontroller.service.requestreply.GetHomeOutputReply;
 import granite.frontendcontroller.service.requestreply.GetUsersOutputReply;
+import granite.frontendcontroller.service.requestreply.HomeAverageData;
+import granite.frontendcontroller.service.requestreply.HomeBreakdownData;
+import granite.frontendcontroller.service.requestreply.HomeCountData;
+import granite.frontendcontroller.service.requestreply.HomeOutput;
+import granite.frontendcontroller.service.requestreply.HomeSessionMetrics;
+import granite.frontendcontroller.service.requestreply.HomeSurveyMetrics;
+import granite.frontendcontroller.service.requestreply.HomeUserMetrics;
 import granite.frontendcontroller.service.requestreply.HandlePreferencesInputRequest;
 import granite.frontendcontroller.service.requestreply.PreferenceDefinitionData;
 import granite.frontendcontroller.service.requestreply.PreferencesInput;
@@ -136,6 +144,34 @@ class FrontEndJsonSerializationTest
         assertTrue(json.contains("\"roles\":[{\"name\":\"ROLE_MANAGER\",\"label\":\"Manager\",\"impliedRoles\":[\"ROLE_CLERK\"]}]"),json);
         assertEquals("ROLE_MANAGER",actual.getOutput().getRoles().get(0).getName());
         assertEquals(List.of("ROLE_CLERK"),actual.getOutput().getRoles().get(0).getImpliedRoles());
+    }
+
+    @Test
+    public void
+    homeReplyRoundTrips()
+        throws Exception
+    {
+        GetHomeOutputReply reply =
+            new GetHomeOutputReply()
+                .setSuccess(true)
+                .setOutput(
+                    new HomeOutput()
+                        .setUserName("alice")
+                        .setRoles(List.of("Admin"))
+                        .setGenerated("2026-11-02T18:00:00Z")
+                        .setUsers(new HomeUserMetrics().setTotal(2).setByRole(List.of(new HomeCountData("ROLE_ADMIN","Admin",1))))
+                        .setSessions(new HomeSessionMetrics().setOpen(3).setDailyLogins(List.of(new HomeBreakdownData("2026-11-02","2",Map.of("OKTA",4L)))))
+                        .setSurvey(new HomeSurveyMetrics().setAverages(List.of(new HomeAverageData("satisfied","Satisfied?",4.25)))));
+
+        String             json   = mapper.writeValueAsString(reply);
+        GetHomeOutputReply actual = mapper.readValue(json,GetHomeOutputReply.class);
+
+        assertEquals("alice",actual.getOutput().getUserName());
+        assertEquals(List.of("Admin"),actual.getOutput().getRoles());
+        assertEquals(1L,actual.getOutput().getUsers().getByRole().get(0).getCount());
+        assertEquals(4L,actual.getOutput().getSessions().getDailyLogins().get(0).getCounts().get("OKTA"));
+        assertEquals(4.25,actual.getOutput().getSurvey().getAverages().get(0).getAverage());
+        assertNull(actual.getOutput().getFeedback());
     }
 
     @Test

@@ -16,6 +16,7 @@ class SessionsOutput
     private List<SessionRowData> sessions;
     private Long                 currentSessionId;
     private List<String>         failureMessages;
+    private List<RoleData>       roles;
 
     public
     SessionsOutput()
@@ -24,6 +25,7 @@ class SessionsOutput
         sessions         = new ArrayList<>();
         currentSessionId = null;
         failureMessages  = new ArrayList<>();
+        roles            = new ArrayList<>();
     }
 
     @Override
@@ -75,6 +77,13 @@ class SessionsOutput
         return this;
     }
 
+    public SessionsOutput
+    setRoles(List<RoleData> r)
+    {
+        roles = r;
+        return this;
+    }
+
     public List<SessionRowData>
     getSessions() { return sessions; }
 
@@ -83,6 +92,9 @@ class SessionsOutput
 
     public List<String>
     getFailureMessages() { return failureMessages; }
+
+    public List<RoleData>
+    getRoles() { return roles; }
 }
 
 //////////////////////////////////////////////////////////////////////////////

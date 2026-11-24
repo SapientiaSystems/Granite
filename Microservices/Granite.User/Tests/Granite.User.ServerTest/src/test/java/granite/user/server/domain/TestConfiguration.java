@@ -11,6 +11,7 @@ import org.springframework.web.context.request.RequestScope;
 import granite.user.server.platform.PlatformConfiguration;
 import strata.foundation.core.configuration.IConfiguration;
 import strata.foundation.core.inject.ApplicationConfigurationProvider;
+import strata.foundation.spring.inject.SingletonScoped;
 
 @Configuration
 @EnableTransactionManagement
@@ -31,7 +32,7 @@ class TestConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration()
     {

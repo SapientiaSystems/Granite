@@ -62,7 +62,7 @@ class DeleteUsersViewTest
     {
         UsersOutput output = run(new UsersInput().setUserId(8L).setUserIdsToDelete(List.of(7L,8L)));
 
-        assertEquals(3,output.getRoles().size());
+        assertEquals(4,output.getRoles().size());
 
         Mockito.verify(commandClient).destroyUsers(Mockito.argThat(r -> r.getUserIds().equals(Set.of(8L))));
         assertEquals(1,output.getFailureMessages().size());

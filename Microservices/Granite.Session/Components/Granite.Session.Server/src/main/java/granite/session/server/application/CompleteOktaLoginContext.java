@@ -127,6 +127,12 @@ class CompleteOktaLoginContext
     getTransactionId() { return request.getTransactionId(); }
 
     public String
+    getApplication()
+    {
+        return transaction != null ? transaction.getApplication() : Session.DEFAULT_APPLICATION;
+    }
+
+    public String
     getDeviceId() { return request.getDeviceId(); }
 
     public String

@@ -4,11 +4,17 @@
 
 package granite.session.server.configuration;
 
+import granite.client.client.requestreply.ClientCommandServiceClient;
+import granite.client.client.requestreply.IClientCommandServiceClient;
 import granite.foundation.core.security.ApplicationRolesManager;
 import granite.foundation.core.security.GraniteAuthorities;
+import granite.session.server.application.ApplicationLoginGate;
 import granite.session.server.application.CatalogRoleLoginGate;
+import granite.session.server.application.ClientTokenIssuer;
+import granite.session.server.application.IClientTokenIssuer;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.IJwtTokenService;
+import granite.session.server.application.IApplicationLoginGate;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.IOktaClient;
 import granite.session.server.application.IRefreshTokenService;
@@ -16,11 +22,13 @@ import granite.session.server.application.IServiceTokenProvider;
 import granite.session.server.application.IServiceTokenIssuer;
 import granite.session.server.application.JwkSetProvider;
 import granite.session.server.application.JwtTokenService;
+import granite.session.server.application.LoginMethods;
 import granite.session.server.application.OktaClient;
 import granite.session.server.application.OktaGroupMappingCheck;
 import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
 import granite.session.server.application.OktaUnmappedGroups;
+import granite.session.server.application.PasswordLoginSettings;
 import granite.session.server.application.RefreshTokenService;
 import granite.session.server.application.RequiredAuthoritiesCheck;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
@@ -35,6 +43,9 @@ import granite.session.server.platform.ServiceTokenClientRequestFilter;
 import granite.session.server.platform.SessionPurgeJob;
 import granite.session.server.domain.IOktaLoginTransactionRepository;
 import granite.session.server.domain.ISessionRepository;
+import granite.session.server.domain.Session;
+import strata.foundation.spring.inject.RequestScoped;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.server.spring.unitofwork.ISpringUnitOfWorkManager;
 import granite.session.service.event.ISessionEventSender;
 import granite.user.client.requestreply.IUserCommandServiceClient;
@@ -50,12 +61,10 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.web.context.annotation.RequestScope;
 import strata.outbox.core.repository.IOutboxEventRepository;
 
 import java.security.KeyPair;
@@ -64,6 +73,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,7 +84,7 @@ class GraniteSessionCommandServerConfiguration
     extends AbstractGraniteSessionServerConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ISessionEventSender
     sessionEventSender(IOutboxEventRepository repository)
     {
@@ -82,7 +92,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IJwtTokenService
     jwtTokenService(Environment environment,ResourceLoader loader)
     {
@@ -106,7 +116,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IJwkSetProvider
     jwkSetProvider(Environment environment,ResourceLoader loader)
     {
@@ -124,7 +134,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IRefreshTokenService
     refreshTokenService()
     {
@@ -132,7 +142,25 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
+    public PasswordLoginSettings
+    passwordLoginSettings(Environment environment)
+    {
+        return
+            new PasswordLoginSettings()
+                .setEnabled(environment.getProperty("granite.session.login.password.enabled",Boolean.class,true));
+    }
+
+    @Bean
+    @SingletonScoped
+    public LoginMethods
+    loginMethods(PasswordLoginSettings passwordLoginSettings,OktaSettings oktaSettings)
+    {
+        return new LoginMethods(passwordLoginSettings.isEnabled(),oktaSettings.isEnabled());
+    }
+
+    @Bean
+    @SingletonScoped
     public OktaSettings
     oktaSettings(Environment environment)
     {
@@ -142,6 +170,11 @@ class GraniteSessionCommandServerConfiguration
                 .setIssuer(environment.getProperty("granite.session.okta.issuer"))
                 .setClientId(environment.getProperty("granite.session.okta.client-id"))
                 .setRedirectUri(environment.getProperty("granite.session.okta.redirect-uri"))
+                .setRedirectUris(
+                    Binder
+                        .get(environment)
+                        .bind("granite.session.okta.redirect-uris",Bindable.mapOf(String.class,String.class))
+                        .orElse(Map.of()))
                 .setRoleAssignment(
                     OktaRoleAssignment.valueOf(
                         environment.getProperty("granite.session.okta.role-assignment","ON_CREATE").trim().toUpperCase()))
@@ -160,7 +193,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IOktaClient
     oktaClient(OktaSettings settings,Environment environment,ResourceLoader loader,Clock clock)
     {
@@ -172,7 +205,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SessionPurgeJob
     sessionPurgeJob(
         ObjectProvider<ISessionRepository>              repositories,
@@ -193,7 +226,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IServiceTokenProvider
     serviceTokenProvider(IJwtTokenService jwtTokenService,Clock clock,Environment environment)
     {
@@ -210,7 +243,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IServiceTokenIssuer
     serviceTokenIssuer(IJwtTokenService jwtTokenService,Environment environment)
     {
@@ -249,9 +282,47 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
-    public ILoginGate
-    loginGate(Environment environment,ApplicationRolesManager roles)
+    @SingletonScoped
+    public IClientTokenIssuer
+    clientTokenIssuer(
+        IJwtTokenService            jwtTokenService,
+        IClientCommandServiceClient clientCommandServiceClient,
+        Environment                 environment)
+    {
+        Duration lifetime =
+            Duration.parse(environment.getProperty("granite.session.client-token.lifetime","PT15M"));
+
+        if (lifetime.isZero() || lifetime.isNegative() || lifetime.compareTo(Duration.ofHours(1)) > 0)
+            throw
+                new IllegalArgumentException(
+                    "granite.session.client-token.lifetime must be positive and at most PT1H");
+
+        Duration verifyTimeout =
+            Duration.parse(environment.getProperty("granite.session.client-token.verify-timeout","PT5S"));
+
+        if (verifyTimeout.isZero() || verifyTimeout.isNegative())
+            throw
+                new IllegalArgumentException(
+                    "granite.session.client-token.verify-timeout must be positive");
+
+        return new ClientTokenIssuer(jwtTokenService,clientCommandServiceClient,lifetime,verifyTimeout);
+    }
+
+    @Bean
+    @SingletonScoped
+    public IApplicationLoginGate
+    applicationLoginGate(Environment environment,ApplicationRolesManager roles)
+    {
+        return
+            new ApplicationLoginGate(
+                applications(environment),
+                clientAdminApplications(environment),
+                graniteLoginGate(environment,roles),
+                applicationGates(environment));
+    }
+
+    protected ILoginGate
+    graniteLoginGate(Environment environment,ApplicationRolesManager roles)
     {
         List<String> required =
             Binder
@@ -266,22 +337,97 @@ class GraniteSessionCommandServerConfiguration
         return new CatalogRoleLoginGate(roles);
     }
 
+    protected List<String>
+    applications(Environment environment)
+    {
+        List<String> defaults = new ArrayList<>();
+
+        defaults.add(Session.DEFAULT_APPLICATION);
+        defaults.addAll(clientAdminApplications(environment));
+
+        return
+            Binder
+                .get(environment)
+                .bind("granite.session.applications",Bindable.listOf(String.class))
+                .orElse(defaults);
+    }
+
+    protected List<String>
+    clientAdminApplications(Environment environment)
+    {
+        List<String> names = new ArrayList<>();
+
+        for (String name : Binder
+                               .get(environment)
+                               .bind(ApplicationLoginGate.CLIENT_ADMIN_APPLICATIONS_PROPERTY,Bindable.listOf(String.class))
+                               .orElse(ApplicationLoginGate.DEFAULT_CLIENT_ADMIN_APPLICATIONS))
+            if (name != null && !name.isBlank())
+                names.add(name.trim());
+
+        return names.isEmpty() ? ApplicationLoginGate.DEFAULT_CLIENT_ADMIN_APPLICATIONS : names;
+    }
+
+    protected Map<String,ILoginGate>
+    applicationGates(Environment environment)
+    {
+        Map<String,ILoginGate> gates = new LinkedHashMap<>();
+
+        for (String application : applications(environment))
+        {
+            if ("granite".equals(application))
+                continue;
+
+            List<String> required = applicationRequiredAuthorities(environment,application);
+
+            if (!required.isEmpty())
+                gates.put(application,new RequiredAuthoritiesLoginGate(required));
+        }
+
+        return gates;
+    }
+
+    protected List<String>
+    applicationRequiredAuthorities(Environment environment,String application)
+    {
+        List<String> configured =
+            Binder
+                .get(environment)
+                .bind(
+                    "granite.session.login.applications." + application + ".required-authorities",
+                    Bindable.listOf(String.class))
+                .orElse(List.of());
+
+        for (String authority : configured)
+            if (authority != null && !authority.isBlank())
+                return configured;
+
+        return
+            clientAdminApplications(environment).contains(application)
+                ? List.of(ApplicationRolesManager.CLIENT_ADMIN)
+                : List.of();
+    }
+
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public RequiredAuthoritiesCheck
     requiredAuthoritiesCheck(Environment environment,ApplicationRolesManager roles)
     {
         List<String> required =
-            Binder
-                .get(environment)
-                .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
-                .orElse(List.of());
+            new ArrayList<>(
+                Binder
+                    .get(environment)
+                    .bind("granite.session.login.required-authorities",Bindable.listOf(String.class))
+                    .orElse(List.of()));
+
+        for (String application : applications(environment))
+            if (!"granite".equals(application))
+                required.addAll(applicationRequiredAuthorities(environment,application));
 
         return new RequiredAuthoritiesCheck(required,roles);
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public OktaGroupMappingCheck
     oktaGroupMappingCheck(OktaSettings settings,ApplicationRolesManager roles)
     {
@@ -289,7 +435,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IUserCommandServiceClient
     userCommandServiceClient(
         ObjectProvider<SslBundles> sslBundles,
@@ -303,7 +449,7 @@ class GraniteSessionCommandServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IUserQueryServiceClient
     userQueryServiceClient(
         ObjectProvider<SslBundles> sslBundles,
@@ -315,6 +461,20 @@ class GraniteSessionCommandServerConfiguration
                 createClientBuilder(sslBundles,environment,serviceTokenProvider),
                 environment.getRequiredProperty("granite.user-query-service.host"));
     }
+    @Bean
+    @SingletonScoped
+    public IClientCommandServiceClient
+    clientCommandServiceClient(
+        ObjectProvider<SslBundles> sslBundles,
+        Environment                environment,
+        IServiceTokenProvider      serviceTokenProvider)
+    {
+        return
+            new ClientCommandServiceClient(
+                createClientBuilder(sslBundles,environment,serviceTokenProvider),
+                environment.getRequiredProperty("granite.client-command-service.host"));
+    }
+
 
     @Override
     protected List<String>
@@ -328,6 +488,7 @@ class GraniteSessionCommandServerConfiguration
                 "/session-command-service/refresh",
                 "/session-command-service/resolve-session",
                 "/session-command-service/issue-service-token",
+                "/session-command-service/oauth2/token",
                 "/.well-known/jwks.json"));
         return paths;
     }

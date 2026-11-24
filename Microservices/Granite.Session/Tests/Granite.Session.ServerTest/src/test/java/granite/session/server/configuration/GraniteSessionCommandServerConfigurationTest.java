@@ -4,12 +4,26 @@
 
 package granite.session.server.configuration;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import granite.client.client.requestreply.IClientCommandServiceClient;
+import granite.client.service.requestreply.VerifyClientCredentialsRequest;
 import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
+import granite.foundation.core.security.GraniteJwtDecoderFactory;
+import granite.foundation.core.security.GraniteResourceServerSettings;
+import granite.session.server.application.IJwtTokenService;
+import granite.session.server.application.IServiceTokenProvider;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.security.oauth2.jwt.Jwt;
 import granite.session.server.application.CatalogRoleLoginGate;
+import granite.session.server.application.IApplicationLoginGate;
 import granite.session.server.application.IJwkSetProvider;
 import granite.session.server.application.RequiredAuthoritiesLoginGate;
 import granite.session.server.application.ILoginGate;
 import granite.session.server.application.JwtTokenService;
+import granite.session.server.application.LoginMethods;
 import granite.session.server.application.IOktaClient;
 import granite.session.server.application.OktaRoleAssignment;
 import granite.session.server.application.OktaSettings;
@@ -29,6 +43,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -68,7 +89,7 @@ class GraniteSessionCommandServerConfigurationTest
 
         env.setProperty("granite.session.login.required-authorities","ROLE_ADMIN,ROLE_AUDITOR");
 
-        ILoginGate gate = subject.loginGate(env,new GraniteApplicationRolesManagerSupplier().get());
+        ILoginGate gate = subject.graniteLoginGate(env,new GraniteApplicationRolesManagerSupplier().get());
 
         assertInstanceOf(RequiredAuthoritiesLoginGate.class,gate);
         assertFalse(gate.permits(Set.of("ROLE_USER")));
@@ -79,7 +100,7 @@ class GraniteSessionCommandServerConfigurationTest
     public void
     loginGateAbsentUsesCatalogRoles()
     {
-        ILoginGate gate = subject.loginGate(new MockEnvironment(),new GraniteApplicationRolesManagerSupplier().get());
+        ILoginGate gate = subject.graniteLoginGate(new MockEnvironment(),new GraniteApplicationRolesManagerSupplier().get());
 
         assertInstanceOf(CatalogRoleLoginGate.class,gate);
         assertTrue(gate.permits(Set.of("ROLE_USER")));
@@ -89,12 +110,41 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    clientAdminApplicationsDefaultToClient()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        assertEquals(List.of("client"),subject.clientAdminApplications(env));
+        assertEquals(List.of("granite","client"),subject.applications(env));
+        assertEquals(List.of("ROLE_CLIENT_ADMIN"),subject.applicationRequiredAuthorities(env,"client"));
+    }
+
+    @Test
+    public void
+    clientAdminApplicationsComeFromTheSharedClientProperty()
+    {
+        MockEnvironment env = new MockEnvironment();
+
+        env.setProperty("granite.client.admin-applications","poplar-clients");
+
+        IApplicationLoginGate gate = subject.applicationLoginGate(env,new GraniteApplicationRolesManagerSupplier().get());
+
+        assertEquals(List.of("granite","poplar-clients"),subject.applications(env));
+        assertEquals(List.of("ROLE_CLIENT_ADMIN"),subject.applicationRequiredAuthorities(env,"poplar-clients"));
+        assertTrue(subject.applicationRequiredAuthorities(env,"client").isEmpty());
+        assertTrue(gate.permits("poplar-clients",Set.of("ROLE_CLIENT_ADMIN")));
+        assertFalse(gate.permits("poplar-clients",Set.of("ROLE_USER")));
+        assertFalse(gate.isKnown("client"));
+    }
+
+    @Test
+    public void
     loginGateEmptyPropertyUsesCatalogRoles()
     {
         MockEnvironment env = new MockEnvironment();
 
         env.setProperty("granite.session.login.required-authorities","");
-        assertInstanceOf(CatalogRoleLoginGate.class,subject.loginGate(env,new GraniteApplicationRolesManagerSupplier().get()));
+        assertInstanceOf(CatalogRoleLoginGate.class,subject.graniteLoginGate(env,new GraniteApplicationRolesManagerSupplier().get()));
     }
 
     @Test
@@ -365,6 +415,42 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    loginMethodsRefusesBothDisabled()
+    {
+        MockEnvironment env =
+            new MockEnvironment()
+                .withProperty("granite.session.login.password.enabled","false")
+                .withProperty("granite.session.login.okta.enabled","false");
+
+        IllegalStateException failure =
+            assertThrows(
+                IllegalStateException.class,
+                () -> subject.loginMethods(subject.passwordLoginSettings(env),subject.oktaSettings(env)));
+
+        assertEquals(LoginMethods.NONE_ENABLED,failure.getMessage());
+    }
+
+    @Test
+    public void
+    loginMethodsAcceptsEitherEnabled()
+    {
+        MockEnvironment passwordOnly = new MockEnvironment();
+        MockEnvironment oktaOnly     =
+            new MockEnvironment()
+                .withProperty("granite.session.login.password.enabled","false")
+                .withProperty("granite.session.login.okta.enabled","true");
+
+        LoginMethods password = subject.loginMethods(subject.passwordLoginSettings(passwordOnly),subject.oktaSettings(passwordOnly));
+        LoginMethods okta     = subject.loginMethods(subject.passwordLoginSettings(oktaOnly),subject.oktaSettings(oktaOnly));
+
+        assertTrue(password.isPasswordEnabled());
+        assertFalse(password.isOktaEnabled());
+        assertFalse(okta.isPasswordEnabled());
+        assertTrue(okta.isOktaEnabled());
+    }
+
+    @Test
+    public void
     oktaSettingsBindFromTheEnvironment()
     {
         MockEnvironment env =
@@ -391,6 +477,22 @@ class GraniteSessionCommandServerConfigurationTest
 
     @Test
     public void
+    oktaRedirectUrisBindFromEnvironmentVariableNames()
+    {
+        org.springframework.core.env.StandardEnvironment env = new org.springframework.core.env.StandardEnvironment();
+
+        env.getPropertySources().replace(org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+            new org.springframework.core.env.SystemEnvironmentPropertySource(
+                org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+                new java.util.HashMap<String,Object>(
+                    Map.of("GRANITE_SESSION_OKTA_REDIRECTURIS_CLIENT","https://client.granite.localhost/login/callback"))));
+        OktaSettings settings = subject.oktaSettings(env);
+
+        assertEquals("https://client.granite.localhost/login/callback",settings.getRedirectUri("client"));
+    }
+
+    @Test
+    public void
     oktaIsDisabledByDefaultAndNeedsNoKeyStore()
     {
         MockEnvironment env      = new MockEnvironment();
@@ -402,6 +504,67 @@ class GraniteSessionCommandServerConfigurationTest
         assertInstanceOf(
             IOktaClient.class,
             subject.oktaClient(settings,env,new DefaultResourceLoader(),java.time.Clock.systemUTC()));
+    }
+
+    @Test
+    public void
+    clientCommandClientTargetsGatewayWithServiceToken()
+    {
+        WireMockServer gateway = new WireMockServer(wireMockConfig().dynamicPort());
+
+        gateway.start();
+
+        try
+        {
+            gateway.stubFor(
+                post(urlEqualTo("/client-command-service/verify-client-credentials"))
+                    .willReturn(okJson("{\"success\":true,\"valid\":true,\"clientId\":\"gc_x\"}")));
+
+            MockEnvironment env = new MockEnvironment();
+
+            env.setActiveProfiles("local");
+            env.setProperty("granite.client-command-service.host",gateway.baseUrl());
+
+            IJwtTokenService            tokens   = subject.jwtTokenService(env,new DefaultResourceLoader());
+            IServiceTokenProvider       provider = subject.serviceTokenProvider(tokens,java.time.Clock.systemUTC(),env);
+            IClientCommandServiceClient client   = subject.clientCommandServiceClient(noSslBundles(),env,provider);
+
+            assertTrue(
+                client
+                    .verifyClientCredentials(
+                        new VerifyClientCredentialsRequest().setClientId("gc_x").setClientSecret("s"))
+                    .toCompletableFuture()
+                    .join()
+                    .isValid());
+
+            List<LoggedRequest> requests = gateway.findAll(postRequestedFor(anyUrl()));
+
+            assertEquals(1,requests.size());
+
+            String header = requests.get(0).getHeader("Authorization");
+
+            assertTrue(header != null && header.startsWith("Bearer "));
+
+            Jwt jwt =
+                new GraniteJwtDecoderFactory()
+                    .create(
+                        subject.jwkSetProvider(env,new DefaultResourceLoader()).getPublicJwkSet(),
+                        GraniteResourceServerSettings.from(env))
+                    .decode(header.substring("Bearer ".length()));
+
+            assertEquals("service:granite-session",jwt.getSubject());
+        }
+        finally
+        {
+            gateway.stop();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ObjectProvider<SslBundles>
+    noSslBundles()
+    {
+        return Mockito.mock(ObjectProvider.class);
     }
 
     private Object

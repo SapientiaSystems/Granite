@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+// ClientDestroyed.java
+//////////////////////////////////////////////////////////////////////////////
+
+package granite.client.server.domain;
+
+public
+class ClientDestroyed
+    extends AbstractClientEvent
+{
+    public
+    ClientDestroyed(Client src)
+    {
+        super("ClientDestroyed",src);
+    }
+
+    public
+    ClientDestroyed(String correlId,Client src)
+    {
+        super("ClientDestroyed",correlId,src);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////

@@ -19,10 +19,11 @@
   "license": "ISC",
   "dependencies": {
     "granite.agent.service": "1.0.0-snapshot",
-    "granite.content.service": "1.0.0-snapshot",
+    "granite.client.service": "1.0.0-snapshot",
+    "granite.content.service": "^1.0.0-snapshot.1793681651968",
     "granite.feedback.service": "1.0.0-snapshot",
-    "granite.survey.service": "1.0.0-snapshot",
-    "granite.user.service": "1.0.0-snapshot",
+    "granite.survey.service": "^1.0.0-snapshot.1793670356458",
+    "granite.user.service": "^1.0.0-snapshot.1793681227600",
     "strata.foundation.core": "0.0.0-snapshot",
     "strata.frontendcontroller.service": "0.0.0-snapshot"
   },

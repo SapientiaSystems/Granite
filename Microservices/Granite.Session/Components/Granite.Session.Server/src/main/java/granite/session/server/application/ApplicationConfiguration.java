@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.context.annotation.RequestScope;
+import strata.foundation.spring.inject.RequestScoped;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -26,7 +26,7 @@ public
 class ApplicationConfiguration
 {
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalSessionCommandService
     sessionCommandService(
         ISessionRepository              repository,
@@ -37,7 +37,8 @@ class ApplicationConfiguration
         IUserQueryServiceClient         userQueryServiceClient,
         IOktaClient                     oktaClient,
         OktaSettings                    oktaSettings,
-        ILoginGate                      loginGate,
+        PasswordLoginSettings           passwordSettings,
+        IApplicationLoginGate           loginGate,
         ISessionEventSender             sender,
         ModelMapper                     mapper,
         @Value("${granite.session.max-lifetime:PT24H}") String maxLifetime,
@@ -56,6 +57,7 @@ class ApplicationConfiguration
                 userQueryServiceClient,
                 oktaClient,
                 oktaSettings,
+                passwordSettings,
                 loginGate,
                 sender,
                 mapper,
@@ -67,7 +69,7 @@ class ApplicationConfiguration
     }
 
     @Bean
-    @RequestScope
+    @RequestScoped
     public ITransactionalSessionQueryService
     sessionQueryService(ISessionRepository repository,ModelMapper mapper)
     {

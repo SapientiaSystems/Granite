@@ -31,7 +31,8 @@ class MappingModule
             .addMapping(Session::getReplacedBy,SessionData::setReplacedBy)
             .addMapping(Session::getCopiedFrom,SessionData::setCopiedFrom)
             .addMapping(Session::getLastActivity,SessionData::setLastActivity)
-            .addMapping(Session::getLoginMethod,SessionData::setLoginMethod);
+            .addMapping(Session::getLoginMethod,SessionData::setLoginMethod)
+            .addMapping(Session::getApplication,SessionData::setApplication);
     }
 }
 

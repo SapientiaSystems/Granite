@@ -92,6 +92,8 @@ class GatewayProductionApplicationRoutesTest
                 "agent-query-route",
                 "content-query-route",
                 "outbox-route",
+                "client-command-route",
+                "client-query-route",
                 "promotion-query-route"),
             ids);
     }

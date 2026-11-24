@@ -32,6 +32,7 @@ class SessionQueryRevocationChecker
     implements ISessionRevocationChecker
 {
     public static final String SERVICE_SUBJECT_PREFIX = "service:";
+    public static final String CLIENT_SUBJECT_PREFIX  = "client:";
     public static final String AUTHORITIES_CLAIM      = "authorities";
     public static final String DEVICE_ID_CLAIM        = "did";
 
@@ -122,7 +123,8 @@ class SessionQueryRevocationChecker
     private static boolean
     isServiceToken(Jwt jwt)
     {
-        if (jwt.getSubject() != null && jwt.getSubject().startsWith(SERVICE_SUBJECT_PREFIX))
+        if (jwt.getSubject() != null
+            && (jwt.getSubject().startsWith(SERVICE_SUBJECT_PREFIX) || jwt.getSubject().startsWith(CLIENT_SUBJECT_PREFIX)))
             return true;
 
         List<String> authorities = jwt.getClaimAsStringList(AUTHORITIES_CLAIM);

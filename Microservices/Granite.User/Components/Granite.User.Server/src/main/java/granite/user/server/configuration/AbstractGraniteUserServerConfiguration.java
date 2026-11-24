@@ -13,6 +13,7 @@ import granite.foundation.core.security.GraniteApplicationRolesManagerSupplier;
 import granite.user.server.application.ApplicationConfiguration;
 import granite.user.server.application.LoginLockoutPolicy;
 import granite.user.server.application.MappingModule;
+import granite.user.server.application.PasswordPolicy;
 import granite.user.server.domain.DomainConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.modelmapper.ModelMapper;
@@ -26,7 +27,6 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -41,6 +41,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import strata.foundation.core.configuration.IConfiguration;
+import strata.foundation.spring.inject.SingletonScoped;
 import strata.foundation.spring.inject.SpringConfigurationProvider;
 import strata.foundation.spring.mapper.StrataModelResolver;
 import strata.foundation.spring.mapper.StrataObjectMapperProvider;
@@ -75,7 +76,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public IConfiguration
     configuration(Environment environment)
     {
@@ -83,7 +84,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ApplicationRolesManager
     applicationRoles()
     {
@@ -91,7 +92,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public InitializingBean
     applicationRolesStartupLog(ApplicationRolesManager roles)
     {
@@ -106,7 +107,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ModelMapper
     mapper()
     {
@@ -114,7 +115,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public PasswordEncoder
     passwordEncoder()
     {
@@ -122,7 +123,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public LoginLockoutPolicy
     loginLockoutPolicy(Environment environment)
     {
@@ -131,6 +132,17 @@ class AbstractGraniteUserServerConfiguration
                 environment.getProperty("granite.user.lockout.max-attempts",Integer.class,5),
                 Duration.parse(environment.getProperty("granite.user.lockout.duration","PT15M")),
                 Clock.systemUTC());
+    }
+
+    @Bean
+    @SingletonScoped
+    public PasswordPolicy
+    passwordPolicy(Environment environment)
+    {
+        return
+            new PasswordPolicy(
+                environment.getProperty("granite.user.password.min-length",Integer.class,8),
+                PasswordPolicy.MAX_LENGTH);
     }
 
     @Bean
@@ -164,7 +176,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public JwtDecoder
     jwtDecoder(Environment environment,ObjectProvider<SslBundles> sslBundles)
     {
@@ -176,7 +188,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public GroupedOpenApi
     openApi()
     {
@@ -194,7 +206,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public ObjectMapperProvider
     objectMapperProvider(SpringDocConfigProperties properties)
     {
@@ -202,7 +214,7 @@ class AbstractGraniteUserServerConfiguration
     }
 
     @Bean
-    @Scope("singleton")
+    @SingletonScoped
     public SpringDocConfigProperties
     springDocConfigProperties()
     {

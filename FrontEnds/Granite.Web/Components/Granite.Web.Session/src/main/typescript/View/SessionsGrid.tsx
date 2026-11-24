@@ -14,9 +14,10 @@ import type { ColDef, PostSortRowsParams,
               RowClassParams }                    from "ag-grid-community";
 import type { ISessionsGridProps }                from "./ISessionsGridProps";
 import { authoritiesLabel, canEndSelection, detailRowHeight, endableSessionIds, formatInstant,
-         isCurrent, toSessionRows, userLabel, withDetailRow } from "./SessionRows";
+         applicationLabel, isCurrent, toSessionRows, userLabel, withDetailRow } from "./SessionRows";
 import type { ISessionRow }                       from "./SessionRows";
 import { ExpandCellRenderer }                     from "./ExpandCellRenderer";
+import { AuthoritiesCellRenderer }                from "./AuthoritiesCellRenderer";
 import { SessionValuesDetail }                    from "./SessionValuesDetail";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -165,8 +166,11 @@ export function SessionsGrid(props: ISessionsGridProps): ReactElement
         { colId: "user",         headerName: "User",          flex: 2, headerTooltip: "User name (user id)",
           valueGetter: (p) => p.data == null ? "" : userLabel(p.data) },
         { colId: "authorities",  headerName: "Authorities",   flex: 2, headerTooltip: "Authorities",
-          valueGetter: (p) => p.data == null ? "" : authoritiesLabel(p.data) },
+          valueGetter: (p) => p.data == null ? "" : authoritiesLabel(p.data,props.roles),
+          cellRenderer: AuthoritiesCellRenderer },
         { field: "userId",       headerName: "User Id",       width: 100, hide: true, filter: "agNumberColumnFilter" },
+        { field: "application",  headerName: "Application",   width: 130, headerTooltip: "Web application the session is bound to",
+          valueGetter: (p) => p.data == null ? "" : applicationLabel(p.data) },
         { field: "deviceId",     headerName: "Device",        flex: 2, headerTooltip: "Device id" },
         { field: "loginMethod",  headerName: "Login Method",  width: 130 },
         { field: "created",      headerName: "Created",       flex: 2, valueFormatter: (p) => formatInstant(p.value) },
@@ -178,7 +182,7 @@ export function SessionsGrid(props: ISessionsGridProps): ReactElement
         { field: "copiedFrom",   headerName: "Copied From",   width: 120, filter: "agNumberColumnFilter" },
     ];
 
-    const gridContext = { expandedKey, toggleExpand };
+    const gridContext = { expandedKey, toggleExpand, roles: props.roles };
 
     const isGrowMode: boolean = props.height === "grow" || props.height == null;
     const isDetached: boolean = isGrowMode && props.onRenderToolbar != null;
