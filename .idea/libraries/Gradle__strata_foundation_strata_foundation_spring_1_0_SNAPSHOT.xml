@@ -2,7 +2,7 @@
   <library name="Gradle: strata.foundation:strata-foundation-spring:1.0-SNAPSHOT" type="java-imported" external-system-id="GRADLE">
     <properties groupId="strata.foundation" artifactId="strata-foundation-spring" version="1.0-SNAPSHOT" baseVersion="1.0-SNAPSHOT" />
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.foundation/strata-foundation-spring/1.0-SNAPSHOT/f40df1f691737f51a0b59c6a2a35cab7e600f1dd/strata-foundation-spring-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/strata.foundation/strata-foundation-spring/1.0-SNAPSHOT/fdec4808555f8c461fce05eeab7fd5165c7f0c9c/strata-foundation-spring-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

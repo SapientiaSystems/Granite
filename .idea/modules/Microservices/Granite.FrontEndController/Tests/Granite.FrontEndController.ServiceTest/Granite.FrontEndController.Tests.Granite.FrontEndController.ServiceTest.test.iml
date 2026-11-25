@@ -19,6 +19,7 @@
     <orderEntry type="module" module-name="Granite.FrontEndController.Tests.Granite.FrontEndController.ServiceTest.main" />
     <orderEntry type="library" name="Gradle: strata.frontendcontroller:strata-frontendcontroller-service:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Service.main" />
+    <orderEntry type="module" module-name="granite.client.Granite.Client.Components.Granite.Client.Service.main" />
     <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Service.main" />
     <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Service.main" />
     <orderEntry type="module" module-name="Granite.Content.Components.Granite.Content.Service.main" />

@@ -23,7 +23,7 @@
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.junit.jupiter:junit-jupiter-api:5.13.3" level="project" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Client.main" />
-    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Client.main" />
+    <orderEntry type="module" module-name="granite.client.Granite.Client.Components.Granite.Client.Client.main" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Client.main" />
     <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Client.main" />
     <orderEntry type="module" module-name="Granite.Survey.Components.Granite.Survey.Client.main" />
@@ -64,7 +64,7 @@
     <orderEntry type="library" name="Gradle: strata.client:strata-client-resteasy:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-kafka:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.jboss.resteasy:resteasy-client:7.0.0.Final" level="project" />
-    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Service.main" />
+    <orderEntry type="module" module-name="granite.client.Granite.Client.Components.Granite.Client.Service.main" />
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Service.main" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-jose:6.2.1" level="project" />
     <orderEntry type="module" module-name="Granite.Feedback.Components.Granite.Feedback.Service.main" />

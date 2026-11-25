@@ -20,7 +20,7 @@
     <orderEntry type="module" module-name="Granite.Session.Components.Granite.Session.Service.main" />
     <orderEntry type="module" module-name="Granite.User.Components.Granite.User.Client.main" />
     <orderEntry type="module" module-name="Granite.Foundation.Components.Granite.Foundation.Core.main" />
-    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Client.main" />
+    <orderEntry type="module" module-name="granite.client.Granite.Client.Components.Granite.Client.Client.main" />
     <orderEntry type="library" name="Gradle: strata.server:strata-server-spring:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.outbox:strata-outbox-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
@@ -39,7 +39,7 @@
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-web:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-oauth2-resource-server:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-config:6.4.2" level="project" />
-    <orderEntry type="module" module-name="Granite.Client.Components.Granite.Client.Service.main" />
+    <orderEntry type="module" module-name="granite.client.Granite.Client.Components.Granite.Client.Service.main" />
     <orderEntry type="library" name="Gradle: strata.server:strata-server-core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-spring:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: strata.foundation:strata-foundation-guice:1.0-SNAPSHOT" level="project" />
