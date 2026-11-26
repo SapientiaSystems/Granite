@@ -3,16 +3,16 @@
   "version": "1.0.0-snapshot.1793660512948",
   "license": "Apache-2.0",
   "scripts": {
-    "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0"
+    "increment-snapshot": "npm-prerelease-timestamp -v 1.1.0"
   },
   "dependencies": {
     "@mantine/core": "^7.17.0",
     "@mantine/hooks": "^7.17.0",
-    "granite.agent.service": "snapshot-1.0.0",
-    "granite.frontendcontroller.client": "snapshot-1.0.0",
-    "granite.frontendcontroller.service": "snapshot-1.0.0",
-    "granite.web.authentication": "snapshot-1.0.0",
-    "granite.web.content": "snapshot-1.0.0",
+    "granite.agent.service": "snapshot-1.1.0",
+    "granite.frontendcontroller.client": "snapshot-1.1.0",
+    "granite.frontendcontroller.service": "snapshot-1.1.0",
+    "granite.web.authentication": "snapshot-1.1.0",
+    "granite.web.content": "snapshot-1.1.0",
     "react": "^19.0.0",
     "react-router-dom": "^7.0.0",
     "strata.client.core": "release-1.0.0",

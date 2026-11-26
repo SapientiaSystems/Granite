@@ -2,7 +2,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Snapshot](https://img.shields.io/badge/snapshot-1.0.0--SNAPSHOT-orange.svg)]()
+[![Release](https://img.shields.io/badge/release-1.0.0-blue.svg)](https://github.com/SapientiaSystems/Granite/releases/tag/v1.0.0)
+[![Snapshot](https://img.shields.io/badge/snapshot-1.1.0--SNAPSHOT-orange.svg)]()
 
 Granite is a reusable, multi-service Spring Boot backend with a React web front end, built on the Strata Framework Set. It provides the parts every business application needs: users, sessions with password and Okta login, a role catalog, preferences, API clients, help content, feedback, surveys and a virtual assistant, all behind one Gateway that performs authentication and authorization. Applications (for example Poplar) reuse Granite by extending each service's entry configuration and overriding its seams, and by composing their own web app from Granite's published React components.
 
@@ -125,18 +126,18 @@ The production overlay publishes only the FEC paths, `/gateway-service`, the tok
 
 ## Installation
 
-Granite is in development; the current version is **1.0.0-SNAPSHOT**, built against Strata.Foundation, Strata.Client, Strata.Server, Strata.FrontEndController and Strata.Outbox **1.0.0** (see [Versioning](#versioning)).
+The current release is **1.0.0**, built against Strata.Foundation, Strata.Client, Strata.Server, Strata.FrontEndController and Strata.Outbox **1.0.0**. To try the latest development build, use `1.1.0-SNAPSHOT` instead (see [Versioning](#versioning)).
 
 ### Gradle
 
 ```gradle
 dependencies {
-    implementation 'granite.foundation:granite-foundation-core:1.0.0-SNAPSHOT'
-    implementation 'granite.user:granite-user-server:1.0.0-SNAPSHOT'
-    implementation 'granite.session:granite-session-server:1.0.0-SNAPSHOT'
-    implementation 'granite.client:granite-client-server:1.0.0-SNAPSHOT'
-    implementation 'granite.frontendcontroller:granite-frontendcontroller-server:1.0.0-SNAPSHOT'
-    implementation 'granite.gateway:granite-gateway-server:1.0.0-SNAPSHOT'
+    implementation 'granite.foundation:granite-foundation-core:1.0.0'
+    implementation 'granite.user:granite-user-server:1.0.0'
+    implementation 'granite.session:granite-session-server:1.0.0'
+    implementation 'granite.client:granite-client-server:1.0.0'
+    implementation 'granite.frontendcontroller:granite-frontendcontroller-server:1.0.0'
+    implementation 'granite.gateway:granite-gateway-server:1.0.0'
 }
 ```
 
@@ -148,7 +149,7 @@ Every service publishes `granite.<service>:granite-<service>-service`, `-client`
 <dependency>
     <groupId>granite.user</groupId>
     <artifactId>granite-user-server</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -157,11 +158,14 @@ Every service publishes `granite.<service>:granite-<service>-service`, `-client`
 The TypeScript packages are published to npmjs.org. Install them by dist-tag:
 
 ```bash
-# Latest development snapshot (1.0.0)
-npm install granite.web.authentication@snapshot-1.0.0 granite.web.account@snapshot-1.0.0
+# Current release (1.0.0)
+npm install granite.web.authentication@release-1.0.0 granite.web.account@release-1.0.0
+
+# Latest development snapshot (1.1.0)
+npm install granite.web.authentication@snapshot-1.1.0 granite.web.account@snapshot-1.1.0
 
 # or, with yarn
-yarn add granite.web.authentication@snapshot-1.0.0 granite.web.user@snapshot-1.0.0 granite.web.client@snapshot-1.0.0
+yarn add granite.web.authentication@release-1.0.0 granite.web.user@release-1.0.0 granite.web.client@release-1.0.0
 ```
 
 The service-level packages (`granite.<service>.service`, `granite.<service>.client`, `granite.frontendcontroller.service` / `.client`) use the same dist-tags.
@@ -171,8 +175,8 @@ The service-level packages (`granite.<service>.service`, `granite.<service>.clie
 All 29 images (every host, every test suite and the two web apps) are published to GitHub Container Registry under one tag per build, `<version>-<yyyyMMddHHmmss>-<local|dev|test|prod>`; there is no `latest`.
 
 ```bash
-docker pull ghcr.io/johnliebenau/granite/granite-gateway-servicehost:1.0.0-SNAPSHOT-20261126173343-dev
-docker pull ghcr.io/johnliebenau/granite/granite-web-apphost:1.0.0-SNAPSHOT-20261126173343-dev
+docker pull ghcr.io/johnliebenau/granite/granite-gateway-servicehost:1.0.0-SNAPSHOT-20261126191720-dev
+docker pull ghcr.io/johnliebenau/granite/granite-web-apphost:1.0.0-SNAPSHOT-20261126191720-dev
 ```
 
 ### Kubernetes
@@ -208,7 +212,7 @@ repositories {
 
 | | Development snapshot | Release |
 |---|---|---|
-| Maven jars | `X.Y.0-SNAPSHOT` (e.g. `1.0.0-SNAPSHOT`) | `X.Y.0` (e.g. `1.0.0`) |
+| Maven jars | `X.Y.0-SNAPSHOT` (e.g. `1.1.0-SNAPSHOT`) | `X.Y.0` (e.g. `1.0.0`) |
 | npm packages | `X.Y.0-snapshot.<timestamp>`, dist-tag `snapshot-X.Y.0` | `X.Y.0-release.<timestamp>`, dist-tags `release-X.Y.0` and `latest` |
 | Docker images | `<version>-<yyyyMMddHHmmss>-local` (developer) or `-dev` (pipeline) | promoted by retag to `-test` and `-prod` (same digest) |
 
@@ -240,10 +244,10 @@ Each Poplar host depends on the matching Granite `-server` artifact (Gradle abov
 
 ```json
 "dependencies": {
-    "granite.web.authentication": "snapshot-1.0.0",
-    "granite.web.account": "snapshot-1.0.0",
-    "granite.web.user": "snapshot-1.0.0",
-    "granite.web.client": "snapshot-1.0.0"
+    "granite.web.authentication": "release-1.0.0",
+    "granite.web.account": "release-1.0.0",
+    "granite.web.user": "release-1.0.0",
+    "granite.web.client": "release-1.0.0"
 }
 ```
 

@@ -1,6 +1,6 @@
 ext {
     major = "1"
-    minor = ".0"
+    minor = ".1"
     patch = ".0-SNAPSHOT"
 
     system_version = "$major$minor$patch"

@@ -13,12 +13,12 @@ Sources: `gradle/granite-image.gradle`, `FrontEnds/Granite.Web/docker-image.js`,
 
 ```
 <version>-<yyyyMMddHHmmss>-<suffix>
-e.g. 1.0.0-SNAPSHOT-20261125120000-local
+e.g. 1.1.0-SNAPSHOT-20261125120000-local
 ```
 
 | Part | Source |
 |---|---|
-| `version` | `gradle/granite-versions.gradle`: `major` + `minor` + `patch` (currently `1` `.0` `.0-SNAPSHOT` = `1.0.0-SNAPSHOT`). Every script reads it from this file. |
+| `version` | `gradle/granite-versions.gradle`: `major` + `minor` + `patch` (currently `1` `.1` `.0-SNAPSHOT` = `1.1.0-SNAPSHOT`). Every script reads it from this file. |
 | timestamp | UTC build time, 14 digits |
 | `suffix` | `local` (developer build), `dev` (CI build), `test` / `prod` (created only by promotion) |
 
@@ -128,8 +128,8 @@ refuses `unset` or a tag without the `-test` / `-prod` suffix.
 |---|---|---|
 | `local` | `granite-local` | `unset` (always overridden by the deploy script) |
 | `development` | `granite-dev` | `unset` (always overridden by the deploy script) |
-| `test` | `granite-test` | the promoted test tag, e.g. `1.0.0-SNAPSHOT-20261125120000-test` |
-| `production` | `granite-prod` | the promoted production tag, e.g. `1.0.0-SNAPSHOT-20261125120000-prod` |
+| `test` | `granite-test` | the promoted test tag, e.g. `1.1.0-SNAPSHOT-20261125120000-test` |
+| `production` | `granite-prod` | the promoted production tag, e.g. `1.1.0-SNAPSHOT-20261125120000-prod` |
 
 For test and production the overlay value **is** the release record: after `granite-image-tags promote`, set `IMAGE_TAG`
 in `Shared/Granite.Kubernetes/<test|production>/kustomization.yaml`, commit it, then deploy.

@@ -12,8 +12,8 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "granite.user.service": "snapshot-1.0.0",
-        "granite.web.user": "snapshot-1.0.0",
+        "granite.user.service": "snapshot-1.1.0",
+        "granite.web.user": "snapshot-1.1.0",
         "jsdom": "^25.0.1",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",

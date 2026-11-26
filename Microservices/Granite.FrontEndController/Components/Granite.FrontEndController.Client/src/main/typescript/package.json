@@ -3,14 +3,14 @@
   "version": "1.0.0-snapshot.1793660166219",
   "license": "Apache-2.0",
   "scripts": {
-    "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",
+    "increment-snapshot": "npm-prerelease-timestamp -v 1.1.0",
     "increment-major": "npm version major",
     "increment-minor": "npm version minor",
     "increment-patch": "npm version patch"
   },
   "dependencies": {
-    "granite.frontendcontroller.service": "snapshot-1.0.0",
-    "granite.user.service": "snapshot-1.0.0",
+    "granite.frontendcontroller.service": "snapshot-1.1.0",
+    "granite.user.service": "snapshot-1.1.0",
     "strata.frontendcontroller.client": "release-1.0.0",
     "strata.frontendcontroller.service": "release-1.0.0",
     "strata.client.core": "release-1.0.0",

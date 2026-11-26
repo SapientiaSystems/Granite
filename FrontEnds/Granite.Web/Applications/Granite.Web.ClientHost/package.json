@@ -14,9 +14,9 @@
         "@mantine/hooks": "^7.17.0",
         "ag-grid-community": "^33.0.0",
         "ag-grid-react": "^33.0.0",
-        "granite.web.account": "snapshot-1.0.0",
-        "granite.web.authentication": "snapshot-1.0.0",
-        "granite.web.client": "snapshot-1.0.0",
+        "granite.web.account": "snapshot-1.1.0",
+        "granite.web.authentication": "snapshot-1.1.0",
+        "granite.web.client": "snapshot-1.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-router-dom": "^7.0.0"
