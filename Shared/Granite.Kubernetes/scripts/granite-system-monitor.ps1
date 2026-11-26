@@ -1,11 +1,19 @@
 #Requires -Version 5.1
+param(
+    [ValidateSet("local", "development", "test", "production")]
+    [string] $Environment
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Namespace = "granite"
+. (Join-Path $PSScriptRoot "granite-environment.ps1")
+$selection = Select-GraniteEnvironment $Environment
+$DeployEnv = $selection.Environment
+$Namespace = $selection.Namespace
+Use-GraniteKubeContext $DeployEnv
 
 Write-Host ""
-Write-Host "Granite System Status" -ForegroundColor Cyan
+Write-Host "Granite System Status ($DeployEnv, namespace $Namespace)" -ForegroundColor Cyan
 Write-Host "========================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -33,6 +41,3 @@ Write-Host "Certificates and Issuers:" -ForegroundColor Yellow
 kubectl get certificate,issuer --namespace=$Namespace
 Write-Host ""
 
-Write-Host "ClusterIssuers:" -ForegroundColor Yellow
-kubectl get clusterissuer
-Write-Host ""

@@ -8,13 +8,13 @@
   "dependencies": {
     "@mantine/core": "^7.17.0",
     "@mantine/hooks": "^7.17.0",
-    "granite.frontendcontroller.client": "1.0.0-snapshot",
-    "granite.frontendcontroller.service": "1.0.0-snapshot",
+    "granite.frontendcontroller.client": "snapshot-1.0.0",
+    "granite.frontendcontroller.service": "snapshot-1.0.0",
     "react": "^19.0.0",
     "react-router-dom": "^7.0.0",
-    "strata.client.core": "0.0.0-snapshot",
-    "strata.foundation.core": "0.0.0-snapshot",
-    "strata.frontendcontroller.client": "0.0.0-snapshot",
-    "strata.frontendcontroller.service": "0.0.0-snapshot"
+    "strata.client.core": "release-1.0.0",
+    "strata.foundation.core": "release-1.0.0",
+    "strata.frontendcontroller.client": "release-1.0.0",
+    "strata.frontendcontroller.service": "release-1.0.0"
   }
 }

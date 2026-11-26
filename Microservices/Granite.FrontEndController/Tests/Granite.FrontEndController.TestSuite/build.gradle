@@ -77,7 +77,6 @@ jib {
     }
     to {
         image = "ghcr.io/johnliebenau/granite/granite-frontendcontroller-testsuite"
-        tags = ["${version}", "latest"]
         auth {
             username = "$System.env.REPOSITORY_USER"
             password = "$System.env.REPOSITORY_PASSWORD"
@@ -108,6 +107,7 @@ jib {
         format = 'OCI'
     }
 }
+apply from: rootProject.file('../../gradle/granite-image.gradle')
 
 task printJibClasspath {
     doLast {
@@ -129,8 +129,5 @@ task printJibClasspath {
 }
 
 tasks.named('build') {
-    doLast {
-        println "*** Configure jib to image for granite-frontendcontroller-testsuite, then uncomment finalizedBy(jib)"
-    }
-    //finalizedBy('jib')
+    finalizedBy('jib')
 }

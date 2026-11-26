@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NAMESPACE="granite"
+NAMESPACE="granite-local"
 MANIFEST_DIR="$SCRIPT_DIR/../oauth2-mock"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; CYAN=$'\033[36m'; GRAY=$'\033[90m'; RESET=$'\033[0m'
@@ -20,16 +20,11 @@ fi
 # =============================================================================
 # Confirm cluster
 # =============================================================================
-context="$(kubectl config current-context 2>/dev/null || true)"
-say "  Current context: $context" "$GRAY"
-if [[ "$context" != "docker-desktop" ]]; then
-    say "The OAuth2 mock server is for local testing only." "$YELLOW"
-    read -r -p "Deploy it to context '$context' anyway? (y/N): " answer || answer=""
-    if [[ ! "$answer" =~ ^[Yy]$ ]]; then
-        say "Aborted." "$RED"
-        exit 0
-    fi
-fi
+# shellcheck source=granite-environment.sh
+source "$(cd "$(dirname "$0")" && pwd)/granite-environment.sh"
+granite_select_environment local
+granite_use_kube_context
+say "  The OAuth2 mock server is for local testing only (namespace $NAMESPACE)." "$GRAY"
 
 # =============================================================================
 # Create namespace

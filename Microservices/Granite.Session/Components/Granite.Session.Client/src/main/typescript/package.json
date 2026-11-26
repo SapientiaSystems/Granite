@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "rxjs": "^6.5.5",
-    "strata.client.core": "0.0.0-snapshot",
-    "strata.foundation.core": "0.0.0-snapshot",
+    "strata.client.core": "release-1.0.0",
+    "strata.foundation.core": "release-1.0.0",
     "guid-typescript": "^1.0.9",
-    "granite.session.service": "1.0.0-snapshot"
+    "granite.session.service": "snapshot-1.0.0"
   }
 }

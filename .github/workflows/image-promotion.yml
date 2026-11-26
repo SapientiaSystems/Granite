@@ -1,0 +1,47 @@
+name: Image-Promotion
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_tag:
+        description: 'Tag to promote: <version>-<yyyyMMddHHmmss>-dev (to test) or -test (to prod)'
+        required: true
+        type: string
+      target:
+        description: 'Target environment suffix'
+        required: true
+        type: choice
+        options:
+          - test
+          - prod
+
+concurrency:
+  group: image-promotion
+  cancel-in-progress: false
+
+env:
+  REPOSITORY_USER: ${{vars.REPOSITORY_USER}}
+  REPOSITORY_PASSWORD: ${{secrets.REPOSITORY_PASSWORD}}
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Promote images
+        env:
+          CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+          TARGET: ${{ inputs.target }}
+        run: bash Shared/Granite.Kubernetes/scripts/granite-image-tags.sh promote "$CANDIDATE_TAG" "$TARGET" --yes
+
+      - name: Next step
+        env:
+          CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          case "$TARGET" in test) FROM=dev; OVERLAY=test ;; prod) FROM=test; OVERLAY=production ;; esac
+          echo "Set IMAGE_TAG=${CANDIDATE_TAG%-$FROM}-$TARGET in Shared/Granite.Kubernetes/$OVERLAY/kustomization.yaml, commit it, then run granite-system-deploy $OVERLAY." >> "$GITHUB_STEP_SUMMARY"

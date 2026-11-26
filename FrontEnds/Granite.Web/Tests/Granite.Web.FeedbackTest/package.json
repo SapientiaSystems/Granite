@@ -12,9 +12,9 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "granite.feedback.service": "1.0.0-snapshot",
-        "granite.frontendcontroller.service": "1.0.0-snapshot",
-        "granite.web.feedback": "1.0.0-snapshot",
+        "granite.feedback.service": "snapshot-1.0.0",
+        "granite.frontendcontroller.service": "snapshot-1.0.0",
+        "granite.web.feedback": "snapshot-1.0.0",
         "jsdom": "^25.0.1",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",

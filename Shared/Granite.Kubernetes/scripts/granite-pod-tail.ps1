@@ -1,8 +1,16 @@
 #Requires -Version 5.1
+param(
+    [ValidateSet("local", "development", "test", "production")]
+    [string] $Environment
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Namespace = "granite"
+. (Join-Path $PSScriptRoot "granite-environment.ps1")
+$selection = Select-GraniteEnvironment $Environment
+$DeployEnv = $selection.Environment
+$Namespace = $selection.Namespace
+Use-GraniteKubeContext $DeployEnv
 
 # =============================================================================
 # List pods

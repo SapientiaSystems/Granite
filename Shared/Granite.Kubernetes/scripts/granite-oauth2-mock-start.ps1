@@ -2,7 +2,9 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Namespace = "granite"
+. (Join-Path $PSScriptRoot "granite-environment.ps1")
+$Namespace = Get-GraniteNamespace "local"
+Use-GraniteKubeContext "local"
 $Port      = "8090"
 $IssuerId  = "default"
 $Issuer    = "http://oauth2-mock.localhost:$Port/$IssuerId"

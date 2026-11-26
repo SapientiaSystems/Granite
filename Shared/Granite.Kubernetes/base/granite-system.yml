@@ -7,7 +7,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-frontendcontroller-userhost
-  namespace: granite
   labels:
     app: granite-frontendcontroller-userhost
     system: granite
@@ -29,7 +28,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: userhost
-          image: ghcr.io/johnliebenau/granite/granite-frontendcontroller-userhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-frontendcontroller-userhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
@@ -76,7 +75,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-frontendcontroller-userhost
-  namespace: granite
   labels:
     app: granite-frontendcontroller-userhost
 spec:
@@ -92,7 +90,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-frontendcontroller-userhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -112,7 +109,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-frontendcontroller-adminhost
-  namespace: granite
   labels:
     app: granite-frontendcontroller-adminhost
     system: granite
@@ -134,7 +130,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: adminhost
-          image: ghcr.io/johnliebenau/granite/granite-frontendcontroller-adminhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-frontendcontroller-adminhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
@@ -181,7 +177,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-frontendcontroller-adminhost
-  namespace: granite
   labels:
     app: granite-frontendcontroller-adminhost
 spec:
@@ -197,7 +192,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-frontendcontroller-adminhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -217,7 +211,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-user-commandhost
-  namespace: granite
   labels:
     app: granite-user-commandhost
     system: granite
@@ -239,7 +232,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-user-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-user-commandhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8083
@@ -280,7 +273,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-user-commandhost
-  namespace: granite
   labels:
     app: granite-user-commandhost
 spec:
@@ -296,7 +288,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-user-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -316,7 +307,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-user-queryhost
-  namespace: granite
   labels:
     app: granite-user-queryhost
     system: granite
@@ -338,7 +328,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-user-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-user-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8084
@@ -379,7 +369,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-user-queryhost
-  namespace: granite
   labels:
     app: granite-user-queryhost
 spec:
@@ -395,7 +384,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-user-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -416,7 +404,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-feedback-commandhost
-  namespace: granite
   labels:
     app: granite-feedback-commandhost
     system: granite
@@ -438,7 +425,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-feedback-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-feedback-commandhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8086
@@ -479,7 +466,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-feedback-commandhost
-  namespace: granite
   labels:
     app: granite-feedback-commandhost
 spec:
@@ -495,7 +481,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-feedback-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -515,7 +500,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-feedback-queryhost
-  namespace: granite
   labels:
     app: granite-feedback-queryhost
     system: granite
@@ -537,7 +521,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-feedback-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-feedback-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8087
@@ -578,7 +562,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-feedback-queryhost
-  namespace: granite
   labels:
     app: granite-feedback-queryhost
 spec:
@@ -594,7 +577,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-feedback-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -614,7 +596,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-client-commandhost
-  namespace: granite
   labels:
     app: granite-client-commandhost
     system: granite
@@ -636,7 +617,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-client-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-client-commandhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8097
@@ -677,7 +658,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-client-commandhost
-  namespace: granite
   labels:
     app: granite-client-commandhost
 spec:
@@ -693,7 +673,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-client-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -713,7 +692,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-client-queryhost
-  namespace: granite
   labels:
     app: granite-client-queryhost
     system: granite
@@ -735,7 +713,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-client-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-client-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8098
@@ -776,7 +754,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-client-queryhost
-  namespace: granite
   labels:
     app: granite-client-queryhost
 spec:
@@ -792,7 +769,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-client-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -813,7 +789,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-survey-commandhost
-  namespace: granite
   labels:
     app: granite-survey-commandhost
     system: granite
@@ -835,7 +810,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-survey-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-survey-commandhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8091
@@ -876,7 +851,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-survey-commandhost
-  namespace: granite
   labels:
     app: granite-survey-commandhost
 spec:
@@ -892,7 +866,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-survey-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -912,7 +885,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-survey-queryhost
-  namespace: granite
   labels:
     app: granite-survey-queryhost
     system: granite
@@ -934,7 +906,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-survey-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-survey-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8092
@@ -975,7 +947,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-survey-queryhost
-  namespace: granite
   labels:
     app: granite-survey-queryhost
 spec:
@@ -991,7 +962,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-survey-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1012,7 +982,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-agent-commandhost
-  namespace: granite
   labels:
     app: granite-agent-commandhost
     system: granite
@@ -1034,7 +1003,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-agent-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-agent-commandhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8095
@@ -1087,7 +1056,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-agent-commandhost
-  namespace: granite
   labels:
     app: granite-agent-commandhost
 spec:
@@ -1103,7 +1071,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-agent-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1123,7 +1090,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-agent-queryhost
-  namespace: granite
   labels:
     app: granite-agent-queryhost
     system: granite
@@ -1145,7 +1111,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-agent-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-agent-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8096
@@ -1186,7 +1152,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-agent-queryhost
-  namespace: granite
   labels:
     app: granite-agent-queryhost
 spec:
@@ -1202,7 +1167,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-agent-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1223,7 +1187,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-content-commandhost
-  namespace: granite
   labels:
     app: granite-content-commandhost
     system: granite
@@ -1245,7 +1208,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-content-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-content-commandhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8093
@@ -1286,7 +1249,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-content-commandhost
-  namespace: granite
   labels:
     app: granite-content-commandhost
 spec:
@@ -1302,7 +1264,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-content-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1322,7 +1283,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-content-queryhost
-  namespace: granite
   labels:
     app: granite-content-queryhost
     system: granite
@@ -1344,7 +1304,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-content-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-content-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8094
@@ -1385,7 +1345,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-content-queryhost
-  namespace: granite
   labels:
     app: granite-content-queryhost
 spec:
@@ -1401,7 +1360,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-content-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1421,7 +1379,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-session-commandhost
-  namespace: granite
   labels:
     app: granite-session-commandhost
     system: granite
@@ -1443,7 +1400,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: commandhost
-          image: ghcr.io/johnliebenau/granite/granite-session-commandhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-session-commandhost:unset
           imagePullPolicy: Always
           env:
             - name: GRANITE_SESSION_JWT_PRIVATE_KEY_LOCATION
@@ -1507,7 +1464,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-session-commandhost
-  namespace: granite
   labels:
     app: granite-session-commandhost
 spec:
@@ -1523,7 +1479,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-session-commandhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1543,7 +1498,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-session-queryhost
-  namespace: granite
   labels:
     app: granite-session-queryhost
     system: granite
@@ -1565,7 +1519,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: queryhost
-          image: ghcr.io/johnliebenau/granite/granite-session-queryhost:latest
+          image: ghcr.io/johnliebenau/granite/granite-session-queryhost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8089
@@ -1606,7 +1560,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-session-queryhost
-  namespace: granite
   labels:
     app: granite-session-queryhost
 spec:
@@ -1622,7 +1575,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-session-queryhost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1642,7 +1594,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-gateway-servicehost
-  namespace: granite
   labels:
     app: granite-gateway-servicehost
     system: granite
@@ -1664,7 +1615,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: servicehost
-          image: ghcr.io/johnliebenau/granite/granite-gateway-servicehost:latest
+          image: ghcr.io/johnliebenau/granite/granite-gateway-servicehost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8181
@@ -1705,7 +1656,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-gateway-servicehost
-  namespace: granite
   labels:
     app: granite-gateway-servicehost
 spec:
@@ -1721,7 +1671,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-gateway-servicehost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1741,7 +1690,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-outbox-servicehost
-  namespace: granite
   labels:
     app: granite-outbox-servicehost
     system: granite
@@ -1763,7 +1711,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: servicehost
-          image: ghcr.io/johnliebenau/granite/granite-outbox-servicehost:latest
+          image: ghcr.io/johnliebenau/granite/granite-outbox-servicehost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 8085
@@ -1804,7 +1752,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-outbox-servicehost
-  namespace: granite
   labels:
     app: granite-outbox-servicehost
 spec:
@@ -1820,7 +1767,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-outbox-servicehost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1840,7 +1786,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-web-apphost
-  namespace: granite
   labels:
     app: granite-web-apphost
     system: granite
@@ -1862,7 +1807,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: apphost
-          image: ghcr.io/johnliebenau/granite/granite-web-apphost:latest
+          image: ghcr.io/johnliebenau/granite/granite-web-apphost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 443
@@ -1897,7 +1842,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-web-apphost
-  namespace: granite
   labels:
     app: granite-web-apphost
 spec:
@@ -1913,7 +1857,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-web-apphost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -1933,7 +1876,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granite-web-clienthost
-  namespace: granite
   labels:
     app: granite-web-clienthost
     system: granite
@@ -1955,7 +1897,7 @@ spec:
         - name: ghcr-registry
       containers:
         - name: clienthost
-          image: ghcr.io/johnliebenau/granite/granite-web-clienthost:latest
+          image: ghcr.io/johnliebenau/granite/granite-web-clienthost:unset
           imagePullPolicy: Always
           ports:
             - containerPort: 443
@@ -1990,7 +1932,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granite-web-clienthost
-  namespace: granite
   labels:
     app: granite-web-clienthost
 spec:
@@ -2006,7 +1947,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: granite-web-clienthost
-  namespace: granite
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -2026,7 +1966,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: granite-ingress
-  namespace: granite
   labels:
     system: granite
   annotations:

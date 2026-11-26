@@ -1,0 +1,13 @@
+ext {
+    major = "1"
+    minor = ".0"
+    patch = ".0-SNAPSHOT"
+
+    system_version = "$major$minor$patch"
+
+    strata_foundation_version = "1.0.0"
+    strata_server_version = "1.0.0"
+    strata_client_version = "1.0.0"
+    strata_frontendcontroller_version = "1.0.0"
+    strata_outbox_version = "1.0.0"
+}

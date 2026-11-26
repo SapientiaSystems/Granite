@@ -1,0 +1,192 @@
+name: Build-Pipeline
+on:
+  push:
+    branches: [ development, 'release-*' ]
+  pull_request:
+    branches: [ development, 'release-*' ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: build-pipeline-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROPERTIES_ENCRYPTION_KEY: ${{secrets.PROPERTIES_ENCRYPTION_KEY}}
+  REPOSITORY_USER: ${{vars.REPOSITORY_USER}}
+  REPOSITORY_PASSWORD: ${{secrets.REPOSITORY_PASSWORD}}
+  DOCKER_USER: ${{vars.DOCKER_USER}}
+  DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+jobs:
+  prepare-build-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      BUILD_IMAGE_TAG: ${{ steps.tag.outputs.BUILD_IMAGE_TAG }}
+      BUILD_GIT_SHA: ${{ steps.tag.outputs.BUILD_GIT_SHA }}
+      BUILD_CREATED: ${{ steps.tag.outputs.BUILD_CREATED }}
+      BUILD_USER: ${{ steps.tag.outputs.BUILD_USER }}
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Compute build image tag
+        id: tag
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then echo "Pull request: no image is published"; exit 0; fi
+          gradle_value() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p" gradle/granite-versions.gradle | head -n 1; }
+          VERSION="$(gradle_value major)$(gradle_value minor)$(gradle_value patch)"
+          [ -n "$VERSION" ] || { echo "ERROR: cannot read the version from gradle/granite-versions.gradle"; exit 1; }
+          BUILD_IMAGE_TAG="$VERSION-$(date -u +%Y%m%d%H%M%S)-dev"
+          VERSION_PATTERN="$(printf '%s' "$VERSION" | sed 's/[.]/[.]/g')"
+          echo "$BUILD_IMAGE_TAG" | grep -Eq "^$VERSION_PATTERN-[0-9]{14}-dev\$" || { echo "ERROR: invalid build tag '$BUILD_IMAGE_TAG'"; exit 1; }
+          {
+            echo "BUILD_IMAGE_TAG=$BUILD_IMAGE_TAG"
+            echo "BUILD_GIT_SHA=$GITHUB_SHA"
+            echo "BUILD_CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "BUILD_USER=$GITHUB_ACTOR"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  java-commit-stage:
+    runs-on: ubuntu-latest
+    needs: prepare-build-tag
+    env:
+      BUILD_IMAGE_TAG: ${{ needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG }}
+      BUILD_GIT_SHA: ${{ needs.prepare-build-tag.outputs.BUILD_GIT_SHA }}
+      BUILD_CREATED: ${{ needs.prepare-build-tag.outputs.BUILD_CREATED }}
+      BUILD_USER: ${{ needs.prepare-build-tag.outputs.BUILD_USER }}
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          java-version: '23'
+          distribution: 'corretto'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle
+            build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Chmod GradleW
+        run: chmod a+x gradlew
+
+      - name: Build Java with Gradle (pushes images unless pull request)
+        run: ./gradlew build
+
+      - name: Publish Test Report (Commit Stage)
+        uses: mikepenz/action-junit-report@v3
+        if: success() || failure()
+        with:
+            report_paths: '**/.build/test-results/test/TEST-*.xml'
+
+  typescript-commit-stage:
+    runs-on: ubuntu-latest
+    needs: prepare-build-tag
+    env:
+      BUILD_IMAGE_TAG: ${{ needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG }}
+      BUILD_GIT_SHA: ${{ needs.prepare-build-tag.outputs.BUILD_GIT_SHA }}
+      BUILD_CREATED: ${{ needs.prepare-build-tag.outputs.BUILD_CREATED }}
+      BUILD_USER: ${{ needs.prepare-build-tag.outputs.BUILD_USER }}
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies with Yarn
+        run: |
+          yarn --version
+          npm config set //registry.npmjs.org/:_authToken ${{secrets.NODE_AUTH_TOKEN}}
+          yarn config set registry https://registry.npmjs.org/
+          yarn install
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+
+      - name: Build, Publish (snapshot) and Test Typescript with Yarn
+        if: github.event_name != 'pull_request'
+        run: |
+          npm config set //registry.npmjs.org/:_authToken ${{secrets.NODE_AUTH_TOKEN}}
+          yarn config set registry https://registry.npmjs.org/
+          yarn run test
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+
+      - name: Build and Push Web Images
+        if: github.event_name != 'pull_request'
+        run: |
+          yarn run containerize-granite-web
+          yarn run push-granite-web
+
+  java-integration-stage:
+    runs-on: ubuntu-latest
+    needs: [prepare-build-tag, java-commit-stage]
+    if: needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG != ''
+    env:
+      BUILD_IMAGE_TAG: ${{ needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG }}
+    steps:
+      - name: Integration Tests (placeholder)
+        run: echo "Granite runs no IntegrationStage tests yet; TestSuite images are ghcr.io/johnliebenau/granite/granite-<service>-testsuite:$BUILD_IMAGE_TAG"
+
+  java-acceptance-stage:
+    runs-on: ubuntu-latest
+    needs: [prepare-build-tag, java-integration-stage]
+    if: needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG != ''
+    env:
+      BUILD_IMAGE_TAG: ${{ needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG }}
+    steps:
+      - name: Acceptance Tests (placeholder)
+        run: echo "Granite runs no AcceptanceStage tests yet; TestSuite images are ghcr.io/johnliebenau/granite/granite-<service>-testsuite:$BUILD_IMAGE_TAG"
+
+  deploy-stage:
+    runs-on: ubuntu-latest
+    needs: [java-acceptance-stage, typescript-commit-stage]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          java-version: '23'
+          distribution: 'corretto'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Chmod GradleW
+        run: chmod a+x gradlew
+
+      - name: Publish Maven snapshots to GitHub Packages
+        run: ./gradlew publishToGitHubPackages
+
+  cleanup-failed-build:
+    runs-on: ubuntu-latest
+    needs: [prepare-build-tag, java-commit-stage, typescript-commit-stage, java-integration-stage, java-acceptance-stage, deploy-stage]
+    if: failure() && needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG != ''
+    env:
+      BUILD_IMAGE_TAG: ${{ needs.prepare-build-tag.outputs.BUILD_IMAGE_TAG }}
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Delete the failed build's images
+        run: bash Shared/Granite.Kubernetes/scripts/granite-image-tags.sh delete "$BUILD_IMAGE_TAG" --yes

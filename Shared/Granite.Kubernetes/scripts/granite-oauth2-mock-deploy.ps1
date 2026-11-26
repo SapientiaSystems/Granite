@@ -2,7 +2,9 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Namespace   = "granite"
+. (Join-Path $PSScriptRoot "granite-environment.ps1")
+$Namespace = Get-GraniteNamespace "local"
+Use-GraniteKubeContext "local"
 $ManifestDir = Join-Path $PSScriptRoot "..\oauth2-mock"
 
 # =============================================================================
@@ -17,18 +19,7 @@ if (-not (Get-Command kubectl -ErrorAction SilentlyContinue)) {
 # =============================================================================
 # Confirm cluster
 # =============================================================================
-$ErrorActionPreference = "Continue"
-$context = kubectl config current-context
-$ErrorActionPreference = "Stop"
-Write-Host "  Current context: $context" -ForegroundColor DarkGray
-if ($context -ne "docker-desktop") {
-    Write-Host "The OAuth2 mock server is for local testing only." -ForegroundColor Yellow
-    $answer = Read-Host "Deploy it to context '$context' anyway? (y/N)"
-    if ($answer -notmatch '^[Yy]$') {
-        Write-Host "Aborted." -ForegroundColor Red
-        exit 0
-    }
-}
+Write-Host "  The OAuth2 mock server is for local testing only (namespace $Namespace)." -ForegroundColor DarkGray
 
 # =============================================================================
 # Create namespace

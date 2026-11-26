@@ -1,14 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: granite-local
 resources:
   - ../base
   - granite-local.yml
 configMapGenerator:
   - name: granite-environment
-    namespace: granite
     literals:
       - DEPLOY_ENV=local
-      - IMAGE_TAG=latest
+      - IMAGE_TAG=unset
 replacements:
   - source:
       kind: ConfigMap

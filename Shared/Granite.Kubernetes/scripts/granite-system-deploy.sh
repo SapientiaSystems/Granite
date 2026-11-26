@@ -2,37 +2,110 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NAMESPACE="granite"
+KUBERNETES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 CERTS_DIR="$SCRIPT_DIR/../../Granite.Foundation/Components/Granite.Foundation.Core/certs"
 CA_CERT="$CERTS_DIR/ca.crt"
 CA_KEY="$CERTS_DIR/ca.key"
+IMAGE_TAG_FILE="$REPO_DIR/.build/image-tag"
+VERSIONS_FILE="$REPO_DIR/gradle/granite-versions.gradle"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; CYAN=$'\033[36m'; GRAY=$'\033[90m'; RESET=$'\033[0m'
 say() { printf '%s%s%s\n' "$2" "$1" "$RESET"; }
 
-# =============================================================================
-# Prompt for DEPLOY_ENV
-# =============================================================================
-echo ""
-say "Select deployment environment:" "$CYAN"
-echo "  1) local"
-echo "  2) development"
-echo "  3) test"
-echo "  4) production"
-echo ""
+# shellcheck source=granite-environment.sh
+source "$SCRIPT_DIR/granite-environment.sh"
 
-while true; do
-    read -r -p "Enter choice (1-4): " choice
-    case "$choice" in
-        1) DEPLOY_ENV="local"; break ;;
-        2) DEPLOY_ENV="development"; break ;;
-        3) DEPLOY_ENV="test"; break ;;
-        4) DEPLOY_ENV="production"; break ;;
+usage() {
+    cat >&2 <<EOF
+usage: $(basename "$0") [local|development|test|production] [--tag <tag>] [--print-current-tag]
+                        [--yes] [--wait] [--timeout <seconds>]
+EOF
+    exit 1
+}
+
+# =============================================================================
+# Arguments
+# =============================================================================
+REQUESTED_ENV=""
+REQUESTED_TAG=""
+PRINT_CURRENT_TAG=false
+ASSUME_YES=false
+WAIT=false
+TIMEOUT=300
+while (( $# > 0 )); do
+    case "$1" in
+        --tag)               REQUESTED_TAG="${2:-}"; shift 2 || { say "--tag needs a value" "$RED"; exit 1; } ;;
+        --tag=*)             REQUESTED_TAG="${1#--tag=}"; shift ;;
+        --print-current-tag) PRINT_CURRENT_TAG=true; shift ;;
+        --yes)               ASSUME_YES=true; shift ;;
+        --wait)              WAIT=true; shift ;;
+        --timeout)           TIMEOUT="${2:-}"; shift 2 || { say "--timeout needs a value" "$RED"; exit 1; } ;;
+        --timeout=*)         TIMEOUT="${1#--timeout=}"; shift ;;
+        -h|--help)           usage ;;
+        -*)                  say "Unknown option: $1" "$RED"; usage ;;
+        *)                   [[ -z "$REQUESTED_ENV" ]] || usage; REQUESTED_ENV="$1"; shift ;;
     esac
 done
+[[ "$TIMEOUT" =~ ^[1-9][0-9]*$ ]] || { say "--timeout must be a positive number of seconds" "$RED"; exit 1; }
+if [[ "$ASSUME_YES" == true && -z "$REQUESTED_ENV" ]]; then
+    say "--yes needs an environment argument" "$RED"; exit 1
+fi
+if [[ "$PRINT_CURRENT_TAG" == true && -z "$REQUESTED_ENV" ]]; then
+    say "--print-current-tag needs an environment argument" "$RED"; exit 1
+fi
 
-OVERLAY_DIR="$SCRIPT_DIR/../$DEPLOY_ENV"
-say "Selected: $DEPLOY_ENV" "$GREEN"
+granite_select_environment "$REQUESTED_ENV"
+granite_use_kube_context
+
+if [[ "$PRINT_CURRENT_TAG" == true ]]; then
+    image="$(kubectl -n "$NAMESPACE" get deployment granite-gateway-servicehost \
+             -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+    [[ -n "$image" ]] || exit 1
+    echo "${image##*:}"
+    exit 0
+fi
+
+OVERLAY_DIR="$KUBERNETES_DIR/$DEPLOY_ENV"
+say "Selected: $DEPLOY_ENV (namespace $NAMESPACE)" "$GREEN"
+echo ""
+
+# =============================================================================
+# Resolve the image tag
+# =============================================================================
+gradle_value() { tr -d '\r' < "$VERSIONS_FILE" | sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -n 1; }
+VERSION="$(gradle_value major)$(gradle_value minor)$(gradle_value patch)"
+[[ -n "$VERSION" ]] || { say "Error: cannot read the version from $VERSIONS_FILE" "$RED"; exit 1; }
+VERSION_PATTERN="$(printf '%s' "$VERSION" | sed 's/[.]/\\./g')"
+
+case "$DEPLOY_ENV" in
+    local)       TAG_SUFFIX="local" ;;
+    development) TAG_SUFFIX="dev" ;;
+    test)        TAG_SUFFIX="test" ;;
+    production)  TAG_SUFFIX="prod" ;;
+esac
+
+if [[ "$DEPLOY_ENV" == "local" || "$DEPLOY_ENV" == "development" ]]; then
+    IMAGE_TAG="$REQUESTED_TAG"
+    if [[ -z "$IMAGE_TAG" && -s "$IMAGE_TAG_FILE" ]]; then
+        IMAGE_TAG="$(tr -d '\r\n' < "$IMAGE_TAG_FILE")"
+    fi
+    [[ -n "$IMAGE_TAG" ]] || { say "Error: no image tag; build first: granite-build-images (or pass --tag)" "$RED"; exit 1; }
+else
+    [[ -z "$REQUESTED_TAG" ]] || { say "Error: --tag applies to local and development only; $DEPLOY_ENV uses IMAGE_TAG in $DEPLOY_ENV/kustomization.yaml" "$RED"; exit 1; }
+    IMAGE_TAG="$(tr -d '\r' < "$OVERLAY_DIR/kustomization.yaml" | sed -n 's/^[[:space:]]*-[[:space:]]*IMAGE_TAG=\(.*\)$/\1/p' | head -n 1)"
+    VERSION_PATTERN="[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?"
+    VERSION="<version>"
+fi
+if ! printf '%s' "$IMAGE_TAG" | grep -Eq "^$VERSION_PATTERN-[0-9]{14}-$TAG_SUFFIX\$"; then
+    if [[ "$IMAGE_TAG" == "unset" ]]; then
+        say "Error: IMAGE_TAG in $DEPLOY_ENV/kustomization.yaml is unset; promote a tag with granite-image-tags, set it there and commit it" "$RED"
+    else
+        say "Error: image tag '$IMAGE_TAG' is not valid for $DEPLOY_ENV; expected $VERSION-<yyyyMMddHHmmss>-$TAG_SUFFIX" "$RED"
+    fi
+    exit 1
+fi
+say "Image tag: $IMAGE_TAG" "$GREEN"
 echo ""
 
 # =============================================================================
@@ -165,6 +238,21 @@ fi
 say "Creating namespace $NAMESPACE..." "$CYAN"
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
+if [[ "$DEPLOY_ENV" == "local" ]] && kubectl get namespace "$GRANITE_LEGACY_NAMESPACE" >/dev/null 2>&1; then
+    say "  The legacy namespace '$GRANITE_LEGACY_NAMESPACE' still exists; its Ingress claims the same hosts as $NAMESPACE." "$YELLOW"
+    if [[ "$ASSUME_YES" == true ]]; then
+        legacy_confirm=""
+    else
+        read -r -p "  Delete namespace '$GRANITE_LEGACY_NAMESPACE' and everything in it? Type 'yes' to delete: " legacy_confirm
+    fi
+    if [[ "$legacy_confirm" == "yes" ]]; then
+        kubectl delete namespace "$GRANITE_LEGACY_NAMESPACE" --wait
+        say "  Deleted namespace '$GRANITE_LEGACY_NAMESPACE'." "$GREEN"
+    else
+        say "  Kept namespace '$GRANITE_LEGACY_NAMESPACE'. Remove it later with: kubectl delete namespace $GRANITE_LEGACY_NAMESPACE" "$YELLOW"
+    fi
+fi
+
 # =============================================================================
 # Deploy application secrets
 # =============================================================================
@@ -270,6 +358,10 @@ elif [[ -e "$JWT_PRIVATE_KEY_FILE" || -e "$JWT_PUBLIC_KEY_FILE" ]]; then
 else
     if [[ "$DEPLOY_ENV" == "test" || "$DEPLOY_ENV" == "production" ]]; then
         say "  No JWT keys found for $DEPLOY_ENV. New keys invalidate every token issued with previous keys." "$YELLOW"
+        if [[ "$ASSUME_YES" == true ]]; then
+            say "Aborted (--yes): no JWT keys for $DEPLOY_ENV; set GRANITE_JWT_PRIVATE_KEY_FILE and GRANITE_JWT_PUBLIC_KEY_FILE" "$RED"
+            exit 1
+        fi
         read -r -p "  Generate a new JWT key pair? (y/N): " answer
         if [[ ! "$answer" =~ ^[Yy]$ ]]; then
             say "Aborted: set GRANITE_JWT_PRIVATE_KEY_FILE and GRANITE_JWT_PUBLIC_KEY_FILE to the existing keys." "$RED"
@@ -403,18 +495,46 @@ fi
 # =============================================================================
 # Deploy system manifest
 # =============================================================================
-say "Deploying overlay $DEPLOY_ENV..." "$CYAN"
-kubectl apply -k "$OVERLAY_DIR"
-
-# =============================================================================
-# Restart all deployments
-# =============================================================================
 if [[ "$DEPLOY_ENV" == "local" || "$DEPLOY_ENV" == "development" ]]; then
-    say "Restarting all deployments to pick up latest images..." "$CYAN"
-    deployments="$(kubectl -n "$NAMESPACE" get deployments -o jsonpath='{.items[*].metadata.name}')"
-    for dep in $deployments; do
+    say "Deploying overlay $DEPLOY_ENV with image tag $IMAGE_TAG..." "$CYAN"
+    deploy_dir="$KUBERNETES_DIR/.build/deploy-$DEPLOY_ENV-$(date -u +%Y%m%d%H%M%S)"
+    mkdir -p "$deploy_dir"
+    trap 'rm -rf "$deploy_dir"' EXIT
+    repositories="$(kubectl kustomize "$OVERLAY_DIR" | sed -n 's/^[[:space:]]*image:[[:space:]]*\([^[:space:]]*\).*/\1/p' \
+                    | sed 's/:[^:/]*$//' | sort -u)"
+    {
+        echo "apiVersion: kustomize.config.k8s.io/v1beta1"
+        echo "kind: Kustomization"
+        echo "resources:"
+        echo "  - ../../$DEPLOY_ENV"
+        echo "images:"
+        for repository in $repositories; do
+            echo "  - name: $repository"
+            echo "    newTag: $IMAGE_TAG"
+        done
+    } > "$deploy_dir/kustomization.yaml"
+    kubectl apply -k "$deploy_dir"
+    rm -rf "$deploy_dir"
+    trap - EXIT
+
+    say "Restarting the Granite deployments in $NAMESPACE..." "$CYAN"
+    for dep in $(kubectl -n "$NAMESPACE" get deployments -l system=granite -o jsonpath='{.items[*].metadata.name}'); do
         say "    - $dep" "$GRAY"
         kubectl -n "$NAMESPACE" rollout restart "deployment/$dep"
+    done
+else
+    say "Deploying overlay $DEPLOY_ENV (image tag $IMAGE_TAG)..." "$CYAN"
+    kubectl apply -k "$OVERLAY_DIR"
+fi
+
+# =============================================================================
+# Wait for the rollouts
+# =============================================================================
+if [[ "$WAIT" == true ]]; then
+    say "Waiting for rollouts (timeout ${TIMEOUT}s each)..." "$CYAN"
+    for dep in $(kubectl -n "$NAMESPACE" get deployments -l system=granite -o jsonpath='{.items[*].metadata.name}'); do
+        kubectl -n "$NAMESPACE" rollout status "deployment/$dep" --timeout="${TIMEOUT}s" \
+            || { say "Rollout of $dep did not finish" "$RED"; exit 1; }
     done
 fi
 

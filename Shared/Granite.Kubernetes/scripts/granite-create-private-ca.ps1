@@ -11,7 +11,8 @@ param(
     [string]   $KeystorePassword,
     [string]   $TruststorePassword,
     [string[]] $ServiceNames,
-    [string]   $KubernetesNamespace = "granite",
+    [string]   $KubernetesNamespace = "granite-local",
+    [string[]] $SanNamespaces      = @("granite-local","granite-dev","granite-test"),
     [string]   $ClusterDomain      = "cluster.local",
     [int]      $KeySize            = 2048,
     [switch]   $CreateK8sSecrets,
@@ -219,6 +220,7 @@ Write-Host "  Cert validity:        $CertValidityDays days" -ForegroundColor Dar
 Write-Host "  Key size:             $KeySize bits" -ForegroundColor DarkGray
 Write-Host "  SAN services:         $($ServiceNames.Count)" -ForegroundColor DarkGray
 Write-Host "  K8s namespace:        $KubernetesNamespace" -ForegroundColor DarkGray
+Write-Host "  SAN namespaces:       $($SanNamespaces -join ', ')" -ForegroundColor DarkGray
 Write-Host "  Cluster domain:       $ClusterDomain" -ForegroundColor DarkGray
 Write-Host "  Create K8s secrets:   $CreateK8sSecrets" -ForegroundColor DarkGray
 Write-Host ""
@@ -307,8 +309,10 @@ $dnsIndex++
 foreach ($svc in $ServiceNames) {
     $altNamesLines += "DNS.$dnsIndex = $svc"
     $dnsIndex++
-    $altNamesLines += "DNS.$dnsIndex = $svc.$KubernetesNamespace.svc.$ClusterDomain"
-    $dnsIndex++
+    foreach ($sanNamespace in $SanNamespaces) {
+        $altNamesLines += "DNS.$dnsIndex = $svc.$sanNamespace.svc.$ClusterDomain"
+        $dnsIndex++
+    }
 }
 
 $altNamesLines += "IP.1 = 127.0.0.1"

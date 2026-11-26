@@ -1,32 +1,104 @@
 #Requires -Version 5.1
+param(
+    [ValidateSet("local", "development", "test", "production")]
+    [string] $Environment,
+    [string] $Tag,
+    [switch] $PrintCurrentTag,
+    [switch] $Yes,
+    [switch] $Wait,
+    [int]    $TimeoutSeconds = 300
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Namespace = "granite"
-$CertsDir  = Join-Path $PSScriptRoot "..\..\Granite.Foundation\Components\Granite.Foundation.Core\certs"
-$CaCert    = Join-Path $CertsDir "ca.crt"
-$CaKey     = Join-Path $CertsDir "ca.key"
+$KubernetesDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$RepoDir       = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+$CertsDir      = Join-Path $PSScriptRoot "..\..\Granite.Foundation\Components\Granite.Foundation.Core\certs"
+$CaCert        = Join-Path $CertsDir "ca.crt"
+$CaKey         = Join-Path $CertsDir "ca.key"
+$ImageTagFile  = Join-Path $RepoDir ".build\image-tag"
+$VersionsFile  = Join-Path $RepoDir "gradle\granite-versions.gradle"
+
+. (Join-Path $PSScriptRoot "granite-environment.ps1")
 
 # =============================================================================
-# Prompt for DEPLOY_ENV
+# Arguments
 # =============================================================================
+if ($TimeoutSeconds -le 0) {
+    Write-Host "-TimeoutSeconds must be a positive number of seconds" -ForegroundColor Red
+    exit 1
+}
+if ($Yes -and -not $Environment) {
+    Write-Host "-Yes needs -Environment" -ForegroundColor Red
+    exit 1
+}
+if ($PrintCurrentTag -and -not $Environment) {
+    Write-Host "-PrintCurrentTag needs -Environment" -ForegroundColor Red
+    exit 1
+}
+
+$selection = Select-GraniteEnvironment $Environment
+$DeployEnv = $selection.Environment
+$Namespace = $selection.Namespace
+Use-GraniteKubeContext $DeployEnv
+
+if ($PrintCurrentTag) {
+    $image = $null
+    try { $image = kubectl -n $Namespace get deployment granite-gateway-servicehost -o jsonpath='{.spec.template.spec.containers[0].image}' 2>$null } catch { }
+    if ([string]::IsNullOrWhiteSpace($image)) { exit 1 }
+    Write-Output ($image -replace '^.*:', '')
+    exit 0
+}
+
+$OverlayDir = Join-Path $KubernetesDir $DeployEnv
+Write-Host "Selected: $DeployEnv (namespace $Namespace)" -ForegroundColor Green
 Write-Host ""
-Write-Host "Select deployment environment:" -ForegroundColor Cyan
-Write-Host "  1) local"
-Write-Host "  2) development"
-Write-Host "  3) test"
-Write-Host "  4) production"
-Write-Host ""
 
-$envMap = @{ "1" = "local"; "2" = "development"; "3" = "test"; "4" = "production" }
+# =============================================================================
+# Resolve the image tag
+# =============================================================================
+function Get-GradleValue([string]$Name) {
+    $match = Select-String -Path $VersionsFile -Pattern "^\s*$Name\s*=\s*`"([^`"]*)`"" | Select-Object -First 1
+    if ($match) { return $match.Matches[0].Groups[1].Value }
+    return ""
+}
+$Version = (Get-GradleValue "major") + (Get-GradleValue "minor") + (Get-GradleValue "patch")
+if (-not $Version) {
+    Write-Host "Error: cannot read the version from $VersionsFile" -ForegroundColor Red
+    exit 1
+}
+$TagSuffix = @{ "local" = "local"; "development" = "dev"; "test" = "test"; "production" = "prod" }[$DeployEnv]
 
-do {
-    $choice = Read-Host "Enter choice (1-4)"
-} while (-not $envMap.ContainsKey($choice))
-
-$DeployEnv = $envMap[$choice]
-$OverlayDir = Join-Path $PSScriptRoot "..\$DeployEnv"
-Write-Host "Selected: $DeployEnv" -ForegroundColor Green
+if ($DeployEnv -eq "local" -or $DeployEnv -eq "development") {
+    $ImageTag = $Tag
+    if (-not $ImageTag -and (Test-Path $ImageTagFile)) {
+        $ImageTag = (Get-Content -Raw $ImageTagFile).Trim()
+    }
+    if (-not $ImageTag) {
+        Write-Host "Error: no image tag; build first: granite-build-images (or pass -Tag)" -ForegroundColor Red
+        exit 1
+    }
+    $VersionPattern = [regex]::Escape($Version)
+    $VersionLabel   = $Version
+} else {
+    if ($Tag) {
+        Write-Host "Error: -Tag applies to local and development only; $DeployEnv uses IMAGE_TAG in $DeployEnv/kustomization.yaml" -ForegroundColor Red
+        exit 1
+    }
+    $tagLine  = Select-String -Path (Join-Path $OverlayDir "kustomization.yaml") -Pattern '^\s*-\s*IMAGE_TAG=(.*)$' | Select-Object -First 1
+    $ImageTag = if ($tagLine) { $tagLine.Matches[0].Groups[1].Value.Trim() } else { "" }
+    $VersionPattern = '[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?'
+    $VersionLabel   = "<version>"
+}
+if ($ImageTag -notmatch "^$VersionPattern-[0-9]{14}-$TagSuffix$") {
+    if ($ImageTag -eq "unset") {
+        Write-Host "Error: IMAGE_TAG in $DeployEnv/kustomization.yaml is unset; promote a tag with granite-image-tags, set it there and commit it" -ForegroundColor Red
+    } else {
+        Write-Host "Error: image tag '$ImageTag' is not valid for $DeployEnv; expected $VersionLabel-<yyyyMMddHHmmss>-$TagSuffix" -ForegroundColor Red
+    }
+    exit 1
+}
+Write-Host "Image tag: $ImageTag" -ForegroundColor Green
 Write-Host ""
 
 # =============================================================================
@@ -186,6 +258,23 @@ Write-Host "Creating namespace $Namespace..." -ForegroundColor Cyan
 kubectl create namespace $Namespace --dry-run=client -o yaml | kubectl apply -f -
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+if ($DeployEnv -eq "local") {
+    $legacy = $null
+    try { $legacy = kubectl get namespace $GraniteLegacyNamespace -o jsonpath='{.metadata.name}' 2>$null } catch { }
+    if (-not [string]::IsNullOrWhiteSpace($legacy)) {
+        Write-Host "  The legacy namespace '$GraniteLegacyNamespace' still exists; its Ingress claims the same hosts as $Namespace." -ForegroundColor Yellow
+        $legacyConfirm = if ($Yes) { "" } else { Read-Host "  Delete namespace '$GraniteLegacyNamespace' and everything in it? Type 'yes' to delete" }
+        if ($legacyConfirm -eq "yes") {
+            kubectl delete namespace $GraniteLegacyNamespace --wait
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Write-Host "  Deleted namespace '$GraniteLegacyNamespace'." -ForegroundColor Green
+        } else {
+            Write-Host "  Kept namespace '$GraniteLegacyNamespace'. Remove it later with: kubectl delete namespace $GraniteLegacyNamespace" -ForegroundColor Yellow
+        }
+    }
+}
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # =============================================================================
 # Deploy application secrets
 # =============================================================================
@@ -298,6 +387,10 @@ elseif ($hasPrivate -or $hasPublic) {
 else {
     if ($DeployEnv -eq "test" -or $DeployEnv -eq "production") {
         Write-Host "  No JWT keys found for $DeployEnv. New keys invalidate every token issued with previous keys." -ForegroundColor Yellow
+        if ($Yes) {
+            Write-Host "Aborted (-Yes): no JWT keys for $DeployEnv; set GRANITE_JWT_PRIVATE_KEY_FILE and GRANITE_JWT_PUBLIC_KEY_FILE" -ForegroundColor Red
+            exit 1
+        }
         $answer = Read-Host "  Generate a new JWT key pair? (y/N)"
         if ($answer -notmatch '^[Yy]$') {
             Write-Host "Aborted: set GRANITE_JWT_PRIVATE_KEY_FILE and GRANITE_JWT_PUBLIC_KEY_FILE to the existing keys." -ForegroundColor Red
@@ -487,21 +580,61 @@ if ($DeployEnv -eq "local") {
 # =============================================================================
 # Deploy system manifest
 # =============================================================================
-Write-Host "Deploying overlay $DeployEnv..." -ForegroundColor Cyan
-kubectl apply -k $OverlayDir
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+function Get-GraniteDeployments {
+    $names = kubectl -n $Namespace get deployments -l system=granite -o jsonpath='{.items[*].metadata.name}'
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    return @("$names".Split(' ') | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
 
-# =============================================================================
-# Restart all deployments
-# =============================================================================
 if ($DeployEnv -eq "local" -or $DeployEnv -eq "development") {
-    Write-Host "Restarting all deployments to pick up latest images..." -ForegroundColor Cyan
-    $deployments = kubectl -n $Namespace get deployments -o jsonpath='{.items[*].metadata.name}'
-    foreach ($dep in $deployments.Split(' ')) {
-        if ([string]::IsNullOrWhiteSpace($dep)) { continue }
+    Write-Host "Deploying overlay $DeployEnv with image tag $ImageTag..." -ForegroundColor Cyan
+    $deployDir = Join-Path $KubernetesDir (".build\deploy-$DeployEnv-" + [DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))
+    New-Item -ItemType Directory -Force -Path $deployDir | Out-Null
+    try {
+        $rendered = kubectl kustomize $OverlayDir
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $repositories = @($rendered | ForEach-Object { if ($_ -match '^\s*image:\s*(\S+)') { $Matches[1] -replace ':[^:/]*$', '' } } | Sort-Object -Unique)
+        $lines = @(
+            "apiVersion: kustomize.config.k8s.io/v1beta1",
+            "kind: Kustomization",
+            "resources:",
+            "  - ../../$DeployEnv",
+            "images:"
+        )
+        foreach ($repository in $repositories) {
+            $lines += "  - name: $repository"
+            $lines += "    newTag: $ImageTag"
+        }
+        [System.IO.File]::WriteAllLines((Join-Path $deployDir "kustomization.yaml"), [string[]]$lines)
+        kubectl apply -k $deployDir
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    } finally {
+        Remove-Item -Recurse -Force $deployDir -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Restarting the Granite deployments in $Namespace..." -ForegroundColor Cyan
+    foreach ($dep in Get-GraniteDeployments) {
         Write-Host "    - $dep" -ForegroundColor DarkGray
         kubectl -n $Namespace rollout restart deployment/$dep
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+} else {
+    Write-Host "Deploying overlay $DeployEnv (image tag $ImageTag)..." -ForegroundColor Cyan
+    kubectl apply -k $OverlayDir
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
+# =============================================================================
+# Wait for the rollouts
+# =============================================================================
+if ($Wait) {
+    Write-Host "Waiting for rollouts (timeout ${TimeoutSeconds}s each)..." -ForegroundColor Cyan
+    foreach ($dep in Get-GraniteDeployments) {
+        kubectl -n $Namespace rollout status deployment/$dep --timeout="${TimeoutSeconds}s"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Rollout of $dep did not finish" -ForegroundColor Red
+            exit 1
+        }
     }
 }
 

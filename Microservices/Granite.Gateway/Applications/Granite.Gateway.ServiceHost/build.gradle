@@ -28,7 +28,6 @@ jib {
     }
     to {
         image = "ghcr.io/johnliebenau/granite/granite-gateway-servicehost"
-        tags = ["${version}","latest"]
         auth {
             username = "$System.env.REPOSITORY_USER"
             password = "$System.env.REPOSITORY_PASSWORD"
@@ -43,10 +42,15 @@ jib {
         format = 'OCI'
     }
 }
+apply from: rootProject.file('../../gradle/granite-image.gradle')
 
 
 dependencies {
     implementation "strata.foundation:strata-foundation-spring:$strata_foundation_version"
     implementation "org.springframework.boot:spring-boot-starter-security:$springboot_version"
     implementation "org.springframework.security:spring-security-core:$spring_security_version"
+}
+
+tasks.named('build') {
+    finalizedBy('jib')
 }

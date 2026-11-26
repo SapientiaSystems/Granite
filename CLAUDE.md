@@ -94,11 +94,37 @@ An application (for example Poplar) gives its ClientAdmins their own web app the
 - `granite.session.okta.unmapped-groups`: `DEFAULT_ROLE` (default) or `REFUSE`.
 - `granite.session.okta.authorities-source` is removed.
 
+## Versioning and Release
+
+| | Development snapshot | Release |
+|---|---|---|
+| Maven jars | `X.Y.0-SNAPSHOT` (e.g. `1.0.0-SNAPSHOT`) | `X.Y.0` (e.g. `1.0.0`) |
+| npm packages | `X.Y.0-snapshot.<timestamp>`, dist-tag `snapshot-X.Y.0` | `X.Y.0-release.<timestamp>`, dist-tags `release-X.Y.0` and `latest` |
+| Docker images | `<version>-<yyyyMMddHHmmss>-local` (developer) or `-dev` (pipeline), e.g. `1.0.0-SNAPSHOT-20261125120000-dev` | promoted by retag to `-test` and `-prod` (same digest) |
+
+Images follow `Shared/Granite.Kubernetes/IMAGE-TAGGING.md`: one tag for all 29 images of a build, no `latest`, builds produce only `-local`/`-dev`, and `granite-image-tags` promotes `-dev` to `-test` to `-prod`.
+
+- The version is set once by `major`/`minor`/`patch` in `gradle/granite-versions.gradle`, applied by the root build and every included build (`system_version`). The same file pins the Strata versions (`strata_*_version`, currently `1.0.0`). The npm version base is set by `increment-snapshot` (`npm-prerelease-timestamp -v X.Y.0`) and the `snapshot-X.Y.0` publish tag in each TypeScript component.
+- npm dependency specs are dist-tags: Strata packages use `release-X.Y.0` (`strata.foundation.core`, `strata.client.core`, `strata.frontendcontroller.service`/`.client` at `release-1.0.0`), Granite packages use `snapshot-X.Y.0`. Each component's `build-init` refreshes them with `yarn upgrade --pattern "granite|strata"`. Every `build-granite-<x>` script waits with `await-published.js` until the snapshot it just published is visible on npmjs before the next component builds.
+- `.github/workflows/build-pipeline.yml` runs on `development` and `release-*` (pull requests build and test only, and publish nothing). Its stages are:
+  - **prepare-build-tag**: computes `BUILD_IMAGE_TAG` = `<version>-<yyyyMMddHHmmss>-dev` from `gradle/granite-versions.gradle` (full version, e.g. `1.0.0-SNAPSHOT`)
+  - **java-commit-stage** and **typescript-commit-stage**, in parallel: the Gradle build and tests push every host and TestSuite image (tagged by `gradle/granite-image.gradle` from `BUILD_IMAGE_TAG`); `yarn run test` builds every TypeScript component and publishes its npm snapshot (secret `NODE_AUTH_TOKEN`), then `containerize-granite-web` and `push-granite-web` build and push `granite-web-apphost` and `granite-web-clienthost` the same way (`FrontEnds/Granite.Web/docker-image.js`)
+  - **java-integration-stage** and **java-acceptance-stage**: placeholders
+  - **deploy-stage**: publishes the snapshot jars to GitHub Packages (`./gradlew publishToGitHubPackages`)
+  - **cleanup-failed-build**: on failure, deletes that build's `-dev` images (`granite-image-tags.sh delete`)
+- `.github/workflows/image-promotion.yml` (manual, inputs `candidate_tag` and `target`) retags `-dev` to `-test` or `-test` to `-prod`; then set `IMAGE_TAG` in the `test` or `production` overlay and commit it.
+- Locally, `./gradlew build` and `./gradlew jib` skip Jib, and `containerize-granite-web` and `push-granite-web` skip the web images, unless `BUILD_IMAGE_TAG` is set to `<version>-<yyyyMMddHHmmss>-<local|dev>`. Build all images locally with `Shared/Granite.Kubernetes/scripts/granite-build-images` (writes `.build/image-tag`) and deploy with `granite-system-deploy local`.
+- A release is made on a `release-X.Y` branch:
+  - merge `development` into `release-X.Y` and let the pipeline publish its snapshot
+  - promote that snapshot with `granite-promote.ps1` / `granite-promote.sh` (run with `-DryRun` / `--dry-run` first): jars are republished as `X.Y.0` and npm packages get their `strata.*` and `granite.*` dependencies pinned to exact release versions; images are not touched by `granite-promote` (use `granite-image-tags promote`)
+  - tag the commit `vX.Y.0`
+  - move `development` to the next minor version (`gradle/granite-versions.gradle`, `increment-snapshot`, publish tags and `snapshot-*` specs)
+
 ## TypeScript tests
 
 - Layout mirrors Java: `<Group>/Tests/<Component>Test/src/test/typescript/<Subject>Test.ts(x)` (for example `FrontEnds/Granite.Web/Tests/Granite.Web.AuthenticationTest`). The same convention applies to microservice TypeScript components when they get tests; the only microservice TypeScript test project today is `Granite.FrontEndController.ServiceTest`, which has no tests yet and is not wired into `test-granite`.
-- A test project is private and never published. It depends on the component's published package (`1.0.0-snapshot` from the local Verdaccio) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source. Test projects run vitest without type-checking (no `tsc`).
-- Root scripts: `yarn run test-granite-web` (web test projects) and `yarn run test-granite` (every TypeScript test project). Each publishes the component to the local Verdaccio first (the component's existing `publish-package`), then runs its test project.
+- A test project is private and never published. It depends on the component's published package (dist-tag `snapshot-1.0.0` on npmjs) and imports its public subpaths (for example `granite.web.authentication/Authentication`), never the component's source. Test projects run vitest without type-checking (no `tsc`).
+- Root scripts: `yarn run test-granite-web` (web test projects) and `yarn run test-granite` (every TypeScript test project). Each publishes the component to npmjs first (the component's existing `publish-package`), then runs its test project.
 
 ## Security split and call routing
 
@@ -208,4 +234,5 @@ Every service (User, Session, Outbox and the services added after them) shares o
 
 ## Kubernetes network policies
 
+- Each environment runs in its own namespace: `granite-local`, `granite-dev`, `granite-test`, `granite-prod` (top-level `namespace:` in each overlay; `scripts/granite-environment` maps environments to namespaces and checks the kubectl context: `local` needs `docker-desktop`, `development` needs `GRANITE_DEVELOPMENT_CONTEXT`). The shared namespace `granite` is legacy.
 - No overlay deploys a NetworkPolicy; they were removed because kindnet enforced them unreliably. Every pod in the namespace can reach every service port, so routing through the Gateway is a convention backed only by the hosts' JWT check, not by the network. The tokenless Session Command endpoints (resolve-session, login, refresh, issue-service-token) are reachable from any pod in the cluster.

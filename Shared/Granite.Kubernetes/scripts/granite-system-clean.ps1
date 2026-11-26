@@ -1,17 +1,25 @@
 #Requires -Version 5.1
+param(
+    [ValidateSet("local", "development", "test", "production")]
+    [string] $Environment
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Namespace = "granite"
+. (Join-Path $PSScriptRoot "granite-environment.ps1")
+$selection = Select-GraniteEnvironment $Environment
+$DeployEnv = $selection.Environment
+$Namespace = $selection.Namespace
+Use-GraniteKubeContext $DeployEnv
 
 # =============================================================================
 # Confirm
 # =============================================================================
 Write-Host ""
-Write-Host "This will delete ALL resources in the '$Namespace' namespace:" -ForegroundColor Yellow
+Write-Host "This will delete ALL resources in the '$Namespace' namespace ($DeployEnv):" -ForegroundColor Yellow
 Write-Host "  - Deployments, Services, HPAs, Ingresses"
 Write-Host "  - Secrets (granite-secrets, granite-tls, granite-ca-key-pair, ghcr-registry, granite-session-jwt, granite-fec-service-client)"
-Write-Host "  - ClusterIssuers (granite-letsencrypt-staging, granite-letsencrypt-prod)"
+Write-Host "  - Issuers (namespaced)"
 Write-Host "  - Namespace"
 Write-Host ""
 
@@ -42,8 +50,8 @@ kubectl delete secret ghcr-registry --namespace=$Namespace --ignore-not-found
 kubectl delete secret granite-session-jwt --namespace=$Namespace --ignore-not-found
 kubectl delete secret granite-fec-service-client --namespace=$Namespace --ignore-not-found
 
-Write-Host "Deleting ClusterIssuers..." -ForegroundColor Cyan
-kubectl delete clusterissuer granite-letsencrypt-staging granite-letsencrypt-prod --ignore-not-found
+Write-Host "Deleting Issuers..." -ForegroundColor Cyan
+kubectl delete issuer --all --namespace=$Namespace --ignore-not-found
 
 Write-Host "Deleting HPAs..." -ForegroundColor Cyan
 kubectl delete hpa --all --namespace=$Namespace

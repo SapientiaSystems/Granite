@@ -9,11 +9,11 @@
     "increment-patch": "npm version patch"
   },
   "dependencies": {
-    "granite.frontendcontroller.service": "1.0.0-snapshot",
-    "granite.user.service": "1.0.0-snapshot",
-    "strata.frontendcontroller.client": "0.0.0-snapshot",
-    "strata.frontendcontroller.service": "0.0.0-snapshot",
-    "strata.client.core": "0.0.0-snapshot",
-    "strata.foundation.core": "0.0.0-snapshot"
+    "granite.frontendcontroller.service": "snapshot-1.0.0",
+    "granite.user.service": "snapshot-1.0.0",
+    "strata.frontendcontroller.client": "release-1.0.0",
+    "strata.frontendcontroller.service": "release-1.0.0",
+    "strata.client.core": "release-1.0.0",
+    "strata.foundation.core": "release-1.0.0"
   }
 }

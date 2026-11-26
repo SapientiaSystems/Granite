@@ -29,7 +29,6 @@ jib {
     }
     to {
         image = "ghcr.io/johnliebenau/granite/granite-frontendcontroller-adminhost"
-        tags = ["${version}","latest"]
         auth {
             username = "$System.env.REPOSITORY_USER"
             password = "$System.env.REPOSITORY_PASSWORD"
@@ -43,4 +42,9 @@ jib {
         ports = ['8082']
         format = 'OCI'
     }
+}
+apply from: rootProject.file('../../gradle/granite-image.gradle')
+
+tasks.named('build') {
+    finalizedBy('jib')
 }

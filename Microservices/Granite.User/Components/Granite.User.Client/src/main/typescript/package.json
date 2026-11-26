@@ -1,6 +1,6 @@
 {
   "name": "granite.user.client",
-  "version": "1.0.0-snapshot.1793659699943",
+  "version": "1.0.0-snapshot.1795642914598",
   "license": "Apache-2.0",
   "scripts": {
     "increment-snapshot": "npm-prerelease-timestamp -v 1.0.0",
@@ -9,9 +9,9 @@
     "increment-patch": "npm version patch"
   },
   "dependencies": {
-    "granite.user.service": "1.0.0-snapshot",
-    "strata.client.core": "0.0.0-snapshot",
-    "strata.foundation.core": "0.0.0-snapshot",
+    "granite.user.service": "snapshot-1.0.0",
+    "strata.client.core": "release-1.0.0",
+    "strata.foundation.core": "release-1.0.0",
     "web-vitals": "^2.1.4"
   }
 }

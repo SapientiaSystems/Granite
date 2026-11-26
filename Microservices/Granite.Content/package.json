@@ -16,8 +16,8 @@
         "deep-clean-granite-content-client": "cd Components/Granite.Content.Client && yarn run clean",
         "deep-clean-components": "yarn run deep-clean-granite-content-service && yarn run deep-clean-granite-content-client",
         "deep-clean": "yarn run dev-init && yarn run deep-clean-components",
-        "build-granite-content-service": "cd Components/Granite.Content.Service && yarn run publish-package",
-        "build-granite-content-client": "cd Components/Granite.Content.Client && yarn run publish-package",
+        "build-granite-content-service": "cd Components/Granite.Content.Service && yarn run publish-package && node ../../../../await-published.js src/main/typescript/package.json",
+        "build-granite-content-client": "cd Components/Granite.Content.Client && yarn run publish-package && node ../../../../await-published.js src/main/typescript/package.json",
         "build-components": "yarn run build-granite-content-service && yarn run build-granite-content-client",
         "build": "yarn run dev-init && yarn run build-components",
         "test": "yarn run build"

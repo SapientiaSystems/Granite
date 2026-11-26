@@ -6,8 +6,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "granite.frontendcontroller.service": "1.0.0-snapshot",
-    "strata.frontendcontroller.service": "0.0.0-snapshot"
+    "granite.frontendcontroller.service": "snapshot-1.0.0",
+    "strata.frontendcontroller.service": "release-1.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

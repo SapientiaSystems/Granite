@@ -9,12 +9,12 @@
     "increment-patch": "npm version patch"
   },
   "dependencies": {
-    "granite.feedback.service": "1.0.0-snapshot",
-    "granite.survey.service": "1.0.0-snapshot",
-    "granite.content.service": "1.0.0-snapshot",
-    "granite.agent.service": "1.0.0-snapshot",
-    "granite.user.service": "1.0.0-snapshot",
-    "strata.frontendcontroller.service": "0.0.0-snapshot",
-    "strata.foundation.core": "0.0.0-snapshot"
+    "granite.feedback.service": "snapshot-1.0.0",
+    "granite.survey.service": "snapshot-1.0.0",
+    "granite.content.service": "snapshot-1.0.0",
+    "granite.agent.service": "snapshot-1.0.0",
+    "granite.user.service": "snapshot-1.0.0",
+    "strata.frontendcontroller.service": "release-1.0.0",
+    "strata.foundation.core": "release-1.0.0"
   }
 }

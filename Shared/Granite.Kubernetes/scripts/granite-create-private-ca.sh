@@ -12,7 +12,8 @@ CERT_VALIDITY_DAYS=825
 KEYSTORE_PASSWORD=""
 TRUSTSTORE_PASSWORD=""
 SERVICE_NAMES=""
-KUBERNETES_NAMESPACE="granite"
+KUBERNETES_NAMESPACE="granite-local"
+SAN_NAMESPACES="granite-local,granite-dev,granite-test"
 CLUSTER_DOMAIN="cluster.local"
 KEY_SIZE=2048
 CREATE_K8S_SECRETS=false
@@ -60,7 +61,8 @@ Usage: $(basename "$0") [options]
   --keystore-password <password>
   --truststore-password <password>
   --service-names <a,b,c>
-  --kubernetes-namespace <name>    (default: $KUBERNETES_NAMESPACE)
+  --kubernetes-namespace <name>    namespace for --create-k8s-secrets (default: $KUBERNETES_NAMESPACE)
+  --san-namespaces <a,b,c>         namespaces in the service SANs (default: $SAN_NAMESPACES)
   --cluster-domain <domain>        (default: $CLUSTER_DOMAIN)
   --key-size <bits>                (default: $KEY_SIZE)
   --create-k8s-secrets
@@ -80,6 +82,7 @@ while [[ $# -gt 0 ]]; do
         --truststore-password)  TRUSTSTORE_PASSWORD="$2"; shift 2 ;;
         --service-names)        SERVICE_NAMES="$2"; shift 2 ;;
         --kubernetes-namespace) KUBERNETES_NAMESPACE="$2"; shift 2 ;;
+        --san-namespaces)       SAN_NAMESPACES="$2"; shift 2 ;;
         --cluster-domain)       CLUSTER_DOMAIN="$2"; shift 2 ;;
         --key-size)             KEY_SIZE="$2"; shift 2 ;;
         --create-k8s-secrets)   CREATE_K8S_SECRETS=true; shift ;;
@@ -236,6 +239,7 @@ write_gray "  Cert validity:        $CERT_VALIDITY_DAYS days"
 write_gray "  Key size:             $KEY_SIZE bits"
 write_gray "  SAN services:         ${#SERVICES[@]}"
 write_gray "  K8s namespace:        $KUBERNETES_NAMESPACE"
+write_gray "  SAN namespaces:       $SAN_NAMESPACES"
 write_gray "  Cluster domain:       $CLUSTER_DOMAIN"
 write_gray "  Create K8s secrets:   $CREATE_K8S_SECRETS"
 echo ""
@@ -317,8 +321,11 @@ DNS_INDEX=$((DNS_INDEX + 1))
 for svc in "${SERVICES[@]}"; do
     ALT_NAMES_BLOCK+=$'\n'"DNS.$DNS_INDEX = $svc"
     DNS_INDEX=$((DNS_INDEX + 1))
-    ALT_NAMES_BLOCK+=$'\n'"DNS.$DNS_INDEX = $svc.$KUBERNETES_NAMESPACE.svc.$CLUSTER_DOMAIN"
-    DNS_INDEX=$((DNS_INDEX + 1))
+    IFS=',' read -r -a san_namespaces <<< "$SAN_NAMESPACES"
+    for san_namespace in "${san_namespaces[@]}"; do
+        ALT_NAMES_BLOCK+=$'\n'"DNS.$DNS_INDEX = $svc.$san_namespace.svc.$CLUSTER_DOMAIN"
+        DNS_INDEX=$((DNS_INDEX + 1))
+    done
 done
 
 ALT_NAMES_BLOCK+=$'\n'"IP.1 = 127.0.0.1"

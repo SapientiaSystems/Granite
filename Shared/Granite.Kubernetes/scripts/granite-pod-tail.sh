@@ -2,10 +2,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NAMESPACE="granite"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; CYAN=$'\033[36m'; GRAY=$'\033[90m'; RESET=$'\033[0m'
 say() { printf '%s%s%s\n' "$2" "$1" "$RESET"; }
+
+# shellcheck source=granite-environment.sh
+source "$SCRIPT_DIR/granite-environment.sh"
+granite_select_environment "${1:-}"
+granite_use_kube_context
 
 # =============================================================================
 # List pods

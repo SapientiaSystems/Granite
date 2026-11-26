@@ -2,19 +2,23 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NAMESPACE="granite"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; CYAN=$'\033[36m'; RESET=$'\033[0m'
 say() { printf '%s%s%s\n' "$2" "$1" "$RESET"; }
+
+# shellcheck source=granite-environment.sh
+source "$SCRIPT_DIR/granite-environment.sh"
+granite_select_environment "${1:-}"
+granite_use_kube_context
 
 # =============================================================================
 # Confirm
 # =============================================================================
 echo ""
-say "This will delete ALL resources in the '$NAMESPACE' namespace:" "$YELLOW"
+say "This will delete ALL resources in the '$NAMESPACE' namespace ($DEPLOY_ENV):" "$YELLOW"
 echo "  - Deployments, Services, HPAs, Ingresses"
 echo "  - Secrets (granite-secrets, granite-tls, granite-ca-key-pair, ghcr-registry, granite-session-jwt, granite-fec-service-client)"
-echo "  - ClusterIssuers (granite-letsencrypt-staging, granite-letsencrypt-prod)"
+echo "  - Issuers (namespaced)"
 echo "  - Namespace"
 echo ""
 
@@ -47,8 +51,8 @@ kubectl delete secret ghcr-registry --namespace="$NAMESPACE" --ignore-not-found 
 kubectl delete secret granite-session-jwt --namespace="$NAMESPACE" --ignore-not-found || true
 kubectl delete secret granite-fec-service-client --namespace="$NAMESPACE" --ignore-not-found || true
 
-say "Deleting ClusterIssuers..." "$CYAN"
-kubectl delete clusterissuer granite-letsencrypt-staging granite-letsencrypt-prod --ignore-not-found || true
+say "Deleting Issuers..." "$CYAN"
+kubectl delete issuer --all --namespace="$NAMESPACE" --ignore-not-found || true
 
 say "Deleting HPAs..." "$CYAN"
 if ! kubectl delete hpa --all --namespace="$NAMESPACE"; then

@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NAMESPACE="granite"
+# shellcheck source=granite-environment.sh
+source "$(cd "$(dirname "$0")" && pwd)/granite-environment.sh"
+granite_select_environment local
+granite_use_kube_context
 PORT="8090"
 ISSUER_ID="default"
 ISSUER="http://oauth2-mock.localhost:$PORT/$ISSUER_ID"

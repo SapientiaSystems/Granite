@@ -9,9 +9,9 @@
     "increment-patch": "npm version patch"
   },
   "dependencies": {
-    "granite.client.service": "1.0.0-snapshot",
-    "strata.client.core": "0.0.0-snapshot",
-    "strata.foundation.core": "0.0.0-snapshot",
+    "granite.client.service": "snapshot-1.0.0",
+    "strata.client.core": "release-1.0.0",
+    "strata.foundation.core": "release-1.0.0",
     "web-vitals": "^2.1.4"
   }
 }
