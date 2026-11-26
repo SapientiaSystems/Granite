@@ -9,6 +9,7 @@
     "increment-patch": "npm version patch"
   },
   "dependencies": {
+    "granite.client.service": "snapshot-1.0.0",
     "granite.feedback.service": "snapshot-1.0.0",
     "granite.survey.service": "snapshot-1.0.0",
     "granite.content.service": "snapshot-1.0.0",
