@@ -109,31 +109,46 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Start Verdaccio (build registry)
+        run: |
+          docker run -d --name verdaccio -p 4873:4873 -v "$GITHUB_WORKSPACE/.github/verdaccio:/verdaccio/conf:ro" verdaccio/verdaccio:6
+          for i in $(seq 1 60); do curl -sf http://localhost:4873/-/ping >/dev/null && break; sleep 1; done
+          curl -sf http://localhost:4873/-/ping >/dev/null || { docker logs verdaccio; exit 1; }
+          PASSWORD="$(openssl rand -hex 24)"
+          echo "::add-mask::$PASSWORD"
+          TOKEN="$(curl -sf -X PUT http://localhost:4873/-/user/org.couchdb.user:ci -H 'content-type: application/json' \
+            -d "{\"name\":\"ci\",\"password\":\"$PASSWORD\"}" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s).token||""))')"
+          [ -n "$TOKEN" ] || { echo "ERROR: cannot register the Verdaccio CI user"; docker logs verdaccio; exit 1; }
+          echo "::add-mask::$TOKEN"
+          npm config set //localhost:4873/:_authToken "$TOKEN"
+          yarn config set registry http://localhost:4873/
 
       - name: Install dependencies with Yarn
         run: |
           yarn --version
-          npm config set //registry.npmjs.org/:_authToken ${{secrets.NODE_AUTH_TOKEN}}
-          yarn config set registry https://registry.npmjs.org/
           yarn install
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
 
-      - name: Build, Publish (snapshot) and Test Typescript with Yarn
-        if: github.event_name != 'pull_request'
-        run: |
-          npm config set //registry.npmjs.org/:_authToken ${{secrets.NODE_AUTH_TOKEN}}
-          yarn config set registry https://registry.npmjs.org/
-          yarn run test
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Build and Test Typescript with Yarn (against Verdaccio)
+        run: yarn run test
 
       - name: Build and Push Web Images
         if: github.event_name != 'pull_request'
         run: |
           yarn run containerize-granite-web
           yarn run push-granite-web
+
+      - name: Publish snapshots to npmjs
+        if: github.event_name != 'pull_request'
+        run: |
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+          node publish-npm.js --registry https://registry.npmjs.org/
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+
+      - name: Verdaccio log
+        if: failure()
+        run: docker logs --tail 100 verdaccio
 
   java-integration-stage:
     runs-on: ubuntu-latest

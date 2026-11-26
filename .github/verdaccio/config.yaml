@@ -1,0 +1,36 @@
+storage: /verdaccio/storage/data
+
+auth:
+  htpasswd:
+    file: /verdaccio/storage/htpasswd
+    max_users: 1000
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+    timeout: 60s
+    maxage: 30m
+
+packages:
+  'granite.*':
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+  '**':
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+server:
+  keepAliveTimeout: 60
+
+max_body_size: 100mb
+
+web:
+  enable: false
+
+log:
+  type: stdout
+  format: pretty
+  level: warn

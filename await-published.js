@@ -7,7 +7,7 @@ const path = require('path');
 const USAGE = 'usage: node await-published.js <path/to/package.json> [--registry <url>] [--timeout <seconds>]';
 
 function parseArguments(argv) {
-    const options = { manifest: null, registry: 'https://registry.npmjs.org/', timeout: 600 };
+    const options = { manifest: null, registry: process.env.npm_config_registry || 'https://registry.npmjs.org/', timeout: 600 };
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
         if (arg === '--registry') options.registry = argv[++i];
@@ -71,7 +71,7 @@ async function main() {
 
     const elapsed = () => Math.round((Date.now() - started) / 1000);
 
-    console.log('await-published: waiting for ' + manifest.name + '@' + tag + ' -> ' + manifest.version);
+    console.log('await-published: waiting for ' + manifest.name + '@' + tag + ' -> ' + manifest.version + ' (registry=' + options.registry + ')');
     let tarball = null;
     while (true) {
         const seen = [];
